@@ -115,7 +115,7 @@ Instalar y ejecutar:
 ```bash
 pnpm --dir src/Frontend install      # dependencias del frontend
 dotnet build src/Backend             # compilar el backend
-docker compose up                    # levantar PostgreSQL y la aplicación
+cp .env.example .env && docker compose up --build   # levantar PostgreSQL y la aplicación
 ```
 
 Pruebas y calidad:

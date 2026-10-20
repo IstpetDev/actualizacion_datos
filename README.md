@@ -47,7 +47,8 @@ Las reglas de negocio completas (acceso por cédula, campañas, estados, exporta
 Requisitos: Docker, .NET SDK 10.0.100+ (`global.json`), Node.js 22.22.3+ o 26+, pnpm 12.4+.
 
 ```bash
-docker compose up
+cp .env.example .env   # valores ficticios de desarrollo
+docker compose up --build
 ```
 
 Levanta PostgreSQL, el backend y el frontend para desarrollo. Las credenciales de desarrollo son valores locales de ejemplo; nunca se usan en otro entorno.

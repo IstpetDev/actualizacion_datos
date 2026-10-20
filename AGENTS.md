@@ -22,7 +22,7 @@ dotnet test src/Backend --filter "Categoria!=Integracion"   # unitarias, sin Doc
 pnpm --dir src/Frontend test:ci
 dotnet format src/Backend
 pnpm --dir src/Frontend lint
-docker compose up
+cp .env.example .env && docker compose up --build
 ```
 
 Ejecutar compilación y pruebas antes de dar una tarea por terminada, y reportar la salida real.
