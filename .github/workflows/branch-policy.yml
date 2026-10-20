@@ -1,0 +1,36 @@
+# Política de ramas y título del PR (ADR-0002). La llama ci.yml en cada PR
+# para que su resultado forme parte de ci-ok.
+name: Política de ramas
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validar:
+    name: Ramas y título
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # El script se toma de la rama base: un PR no puede relajar su propia política.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.base_ref }}
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+
+      # El título se lee de la API y no del evento, para que volver a ejecutar
+      # el job tras corregir el título use el título nuevo.
+      - name: Validar rama de origen, destino y título
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORIO: ${{ github.repository }}
+          NUMERO: ${{ github.event.pull_request.number }}
+          BASE: ${{ github.base_ref }}
+          CABEZA: ${{ github.head_ref }}
+        run: |
+          titulo="$(gh api "repos/$REPOSITORIO/pulls/$NUMERO" --jq .title)"
+          bash .github/scripts/validar-rama.sh "$BASE" "$CABEZA" "$titulo"

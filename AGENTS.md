@@ -29,7 +29,7 @@ Ejecutar compilación y pruebas antes de dar una tarea por terminada, y reportar
 
 ## Ramas y commits
 
-- `main`: solo PR desde `develop` y `hotfix/*`. `develop`: PR desde `feature|fix|docs|chore|refactor|test|ci/*` y desde `main` solo para devolver un hotfix (título p. ej. `chore: devolver hotfix de main a develop`).
+- `main`: solo PR desde `develop` y `hotfix/*`. `develop`: PR desde `feature|fix|docs|chore|refactor|test|ci/*` y desde `main` solo para devolver un hotfix (título p. ej. `chore: devolver hotfix de main a develop`). Dependabot abre PR a `develop` desde `dependabot/*`.
 - Nombre de rama: `<tipo>/<descripcion-corta>` en minúsculas con guiones.
 - Título de PR y commits: `<tipo>: <resumen en minúsculas>`; tipos `feat fix docs chore refactor test ci`.
 - Commits pequeños, en español. Detalle en [CONTRIBUTING.md](CONTRIBUTING.md).

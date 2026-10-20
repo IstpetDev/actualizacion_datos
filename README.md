@@ -77,7 +77,7 @@ Subir en el mismo PR los cambios de `openapi/v1.json` y del cliente. Decisión: 
 
 ## Modelo de ramas
 
-Dos ramas permanentes: `main` (estable; solo recibe PR de `develop` y `hotfix/*`) y `develop` (integración; recibe `feature|fix|docs|chore|refactor|test|ci/*` y, solo para devolver un hotfix, `main`). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
+Dos ramas permanentes: `main` (estable; solo recibe PR de `develop` y `hotfix/*`) y `develop` (integración; recibe `feature|fix|docs|chore|refactor|test|ci/*` y, solo para devolver un hotfix, `main`; también los PR de Dependabot desde `dependabot/*`). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
 
 ## CI por niveles
 
@@ -103,11 +103,13 @@ Velocidad: cachés de NuGet y pnpm, cancelación de ejecuciones previas del mism
 
 | Archivo | Se dispara en | Qué hace |
 | --- | --- | --- |
-| `branch-policy.yml` | PR a `develop` o `main` | Valida origen, nombre de rama y título |
-| `secrets-scan.yml` | PR y push | Escaneo de secretos (diff en `develop`, completo en `main`) |
-| `ci.yml` | PR, push a `develop` y semanal | Filtro por rutas, compilación, pruebas, formato, dependencias; cierra con `ci-ok` |
-| `codeql.yml` | PR a `main` y semanal | Análisis estático de C# y JavaScript/TypeScript |
-| `dependabot.yml` | Semanal | PRs de actualización a `develop` (nuget, npm, docker, github-actions) |
+| `ci.yml` | PR y push a `develop` o `main`, semanal (sobre `develop`) y manual | Filtro por rutas, compilación, pruebas, formato, dependencias, cliente OpenAPI, imágenes Docker y actionlint; llama a los dos siguientes y cierra con `ci-ok` |
+| `branch-policy.yml` | Lo llama `ci.yml` en cada PR | Valida origen, nombre de rama y título (script `.github/scripts/validar-rama.sh`) |
+| `secrets-scan.yml` | Lo llama `ci.yml` | Escaneo de secretos con gitleaks (commits del PR en `develop`; historial completo en `main` y semanal) |
+| `codeql.yml` | PR a `main`, semanal y manual | Análisis estático de C# y JavaScript/TypeScript |
+| `dependabot.yml` | Semanal | PRs de actualización a `develop` (nuget, npm, docker, docker-compose, github-actions) |
+
+La política de ramas y el escaneo de secretos se ejecutan dentro de `ci.yml` para que `ci-ok` sea el único check requerido. Si se corrige el título de un PR, hay que volver a ejecutar el workflow CI (el título se relee al reintentar).
 
 Todas las acciones de terceros se fijan por hash de commit, no solo por versión. Los workflows viven en [.github/workflows/](.github/workflows/).
 
@@ -134,10 +136,10 @@ Estas acciones las hace una persona con permisos; el código del repositorio no 
    - PR obligatorio (sin `push` directo).
    - Check `ci-ok` requerido.
    - Sin force push ni borrado.
-   - En `main`: al menos una aprobación y revisión de `CODEOWNERS`.
+   - En `main`: al menos una aprobación, revisión de `CODEOWNERS` y la regla *Require code scanning results* (CodeQL), que es la que hace bloqueante a CodeQL.
 3. Fijar `main` como rama por defecto y proteger también `develop`.
-4. Activar CodeQL y el escaneo de secretos con *push protection* si el plan lo permite.
-5. Activar Dependabot (alertas y actualizaciones de seguridad).
+4. Activar el escaneo de secretos con *push protection* si el plan lo permite. CodeQL corre con `codeql.yml` (configuración avanzada): **no** activar la configuración por defecto de CodeQL, porque entra en conflicto con el workflow.
+5. Activar las alertas de Dependabot. Las actualizaciones de versión llegan a `develop` con `dependabot.yml`; las *security updates* automáticas abren PR hacia `main` y la política de ramas las rechaza, así que conviene dejarlas desactivadas y aplicar el arreglo desde `develop`.
 6. Al implementar el despliegue (opción B), crear el *environment* con sus variables y secretos, restringido a `main`.
 
 ## Qué no se debe copiar al repositorio

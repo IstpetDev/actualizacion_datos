@@ -1,0 +1,59 @@
+# Análisis estático con CodeQL en PR a main y cada semana (ADR-0005).
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analizar:
+    name: Analizar (${{ matrix.lenguaje }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lenguaje: csharp
+            modo: manual
+          - lenguaje: javascript-typescript
+            modo: none
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - if: matrix.lenguaje == 'csharp'
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: src/Backend/global.json
+
+      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          languages: ${{ matrix.lenguaje }}
+          build-mode: ${{ matrix.modo }}
+
+      - if: matrix.modo == 'manual'
+        name: Compilar el backend
+        env:
+          DOTNET_NOLOGO: "true"
+          DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+        run: dotnet build src/Backend --configuration Release -p:GenerarClienteAngular=false
+
+      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          category: /language:${{ matrix.lenguaje }}

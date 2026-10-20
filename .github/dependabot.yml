@@ -1,0 +1,51 @@
+# Actualizaciones semanales hacia develop. Los PR llevan el prefijo "chore"
+# para cumplir la política de títulos; la revisión la asigna CODEOWNERS.
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: /src/Backend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: npm
+    directory: /src/Frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: docker
+    directories:
+      - /src/Backend
+      - /src/Frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore

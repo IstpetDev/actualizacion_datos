@@ -1,0 +1,390 @@
+# CI por niveles (ADR-0005). PR a develop y push a develop: ligero y filtrado
+# por rutas. PR a main, push a main, ejecución semanal (sobre develop) y
+# manual: completo. ci-ok es el único check requerido.
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  # schedule siempre corre sobre la rama por defecto; la ejecución semanal debe revisar develop.
+  REF_OBJETIVO: ${{ github.event_name == 'schedule' && 'develop' || '' }}
+
+jobs:
+  cambios:
+    name: Detectar cambios
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      completo: ${{ steps.nivel.outputs.completo }}
+      backend: ${{ steps.filtro.outputs.backend }}
+      frontend: ${{ steps.filtro.outputs.frontend }}
+      openapi: ${{ steps.filtro.outputs.openapi }}
+      workflows: ${{ steps.filtro.outputs.workflows }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Nivel del CI
+        id: nivel
+        env:
+          EVENTO: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+          REF: ${{ github.ref }}
+        run: |
+          completo=false
+          case "$EVENTO" in
+            pull_request) [ "$BASE" = "main" ] && completo=true ;;
+            push) [ "$REF" = "refs/heads/main" ] && completo=true ;;
+            schedule | workflow_dispatch) completo=true ;;
+          esac
+          echo "Nivel completo: $completo"
+          echo "completo=$completo" >> "$GITHUB_OUTPUT"
+
+      - name: Filtro por rutas
+        id: filtro
+        env:
+          COMPLETO: ${{ steps.nivel.outputs.completo }}
+          EVENTO: ${{ github.event_name }}
+          ANTES: ${{ github.event.before }}
+          DESPUES: ${{ github.sha }}
+        run: |
+          if [ "$COMPLETO" = "true" ]; then
+            printf 'backend=true\nfrontend=true\nopenapi=true\nworkflows=true\n' | tee -a "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$EVENTO" = "pull_request" ]; then
+            # HEAD es el commit de fusión del PR; HEAD^1 es la base.
+            git diff --name-only HEAD^1 HEAD > "$RUNNER_TEMP/cambios.txt"
+          elif git cat-file -e "${ANTES}^{commit}" 2>/dev/null; then
+            git diff --name-only "$ANTES" "$DESPUES" > "$RUNNER_TEMP/cambios.txt"
+          else
+            git ls-files > "$RUNNER_TEMP/cambios.txt"
+          fi
+          echo "Archivos cambiados:"
+          cat "$RUNNER_TEMP/cambios.txt"
+          bash .github/scripts/filtrar-rutas.sh < "$RUNNER_TEMP/cambios.txt" | tee -a "$GITHUB_OUTPUT"
+
+  politica:
+    name: Política de ramas
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/branch-policy.yml
+    permissions:
+      contents: read
+      pull-requests: read
+
+  secretos:
+    name: Secretos
+    needs: cambios
+    uses: ./.github/workflows/secrets-scan.yml
+    with:
+      completo: ${{ needs.cambios.outputs.completo == 'true' }}
+      ref: ${{ github.event_name == 'schedule' && 'develop' || '' }}
+
+  backend:
+    name: Backend
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPLETO: ${{ needs.cambios.outputs.completo }}
+      CONFIGURACION: ${{ needs.cambios.outputs.completo == 'true' && 'Release' || 'Debug' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: src/Backend/global.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('src/Backend/global.json', 'src/Backend/Directory.Packages.props', 'src/Backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restaurar
+        run: dotnet restore src/Backend
+
+      # El cliente OpenAPI se comprueba en su propio job; aquí no se regenera.
+      - name: Compilar (${{ env.CONFIGURACION }})
+        run: dotnet build src/Backend --no-restore --configuration "$CONFIGURACION" -p:GenerarClienteAngular=false
+
+      - name: Pruebas unitarias
+        run: dotnet test src/Backend --no-build --configuration "$CONFIGURACION" --filter "Categoria!=Integracion"
+
+      - name: Formato
+        continue-on-error: ${{ needs.cambios.outputs.completo != 'true' }}
+        run: |
+          if ! dotnet format src/Backend --no-restore --verify-no-changes; then
+            echo "::warning title=Formato del backend::Hay diferencias de formato. Ejecute 'dotnet format src/Backend'."
+            exit 1
+          fi
+
+      - name: Dependencias vulnerables
+        continue-on-error: ${{ needs.cambios.outputs.completo != 'true' }}
+        run: |
+          dotnet list src/Backend package --vulnerable --include-transitive
+          dotnet list src/Backend package --vulnerable --include-transitive --format json > "$RUNNER_TEMP/vulnerables.json"
+          graves="$(jq '[.projects[].frameworks[]? | (.topLevelPackages[]?, .transitivePackages[]?)
+                          | .vulnerabilities[]? | select(.severity == "High" or .severity == "Critical")] | length' \
+                    "$RUNNER_TEMP/vulnerables.json")"
+          if [ "$graves" -gt 0 ]; then
+            echo "::warning title=Dependencias del backend::$graves vulnerabilidades altas o críticas en paquetes NuGet."
+            exit 1
+          fi
+
+  backend-integracion:
+    name: Backend (integración)
+    needs: cambios
+    if: needs.cambios.outputs.completo == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: src/Backend/global.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('src/Backend/global.json', 'src/Backend/Directory.Packages.props', 'src/Backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # Testcontainers levanta PostgreSQL con el Docker del runner.
+      - name: Pruebas de integración
+        run: dotnet test src/Backend --configuration Release -p:GenerarClienteAngular=false --filter "Categoria=Integracion"
+
+  openapi:
+    name: Cliente OpenAPI al día
+    needs: cambios
+    if: needs.cambios.outputs.openapi == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: src/Backend/global.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('src/Backend/global.json', 'src/Backend/Directory.Packages.props', 'src/Backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # La compilación Debug exporta openapi/v1.json y regenera el cliente.
+      - name: Regenerar contrato y cliente
+        run: dotnet build src/Backend/src/Istpet.ActualizacionDatos.WebApi --configuration Debug
+
+      - name: Comparar con lo versionado
+        run: |
+          cambios="$(git status --porcelain --untracked-files=all -- openapi src/Frontend/src/app/api-client)"
+          if [ -n "$cambios" ]; then
+            echo "$cambios"
+            git --no-pager diff -- openapi src/Frontend/src/app/api-client
+            echo "::error title=Cliente OpenAPI::openapi/v1.json o el cliente generado no están al día. Compile el backend en Debug y versione el resultado."
+            exit 1
+          fi
+          echo "El contrato y el cliente están al día."
+
+  frontend:
+    name: Frontend
+    needs: cambios
+    if: needs.cambios.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPLETO: ${{ needs.cambios.outputs.completo }}
+    defaults:
+      run:
+        working-directory: src/Frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: src/Frontend/.nvmrc
+          package-manager-cache: false
+
+      # La versión de pnpm sale del campo packageManager de package.json.
+      - name: Instalar pnpm
+        id: pnpm
+        run: |
+          npm install --global "$(node -p "require('./package.json').packageManager")"
+          echo "almacen=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm.outputs.almacen }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('src/Frontend/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        continue-on-error: ${{ needs.cambios.outputs.completo != 'true' }}
+        run: |
+          if ! pnpm lint; then
+            echo "::warning title=Lint del frontend::Hay errores de lint. Ejecute 'pnpm --dir src/Frontend lint'."
+            exit 1
+          fi
+
+      - name: Formato
+        continue-on-error: ${{ needs.cambios.outputs.completo != 'true' }}
+        run: |
+          if ! pnpm format:check; then
+            echo "::warning title=Formato del frontend::Hay diferencias de formato. Ejecute 'pnpm --dir src/Frontend format'."
+            exit 1
+          fi
+
+      - name: Pruebas unitarias
+        run: pnpm test:ci
+
+      - name: Compilar
+        run: |
+          if [ "$COMPLETO" = "true" ]; then
+            pnpm build
+          else
+            pnpm build --configuration development
+          fi
+
+      - name: Dependencias vulnerables
+        continue-on-error: ${{ needs.cambios.outputs.completo != 'true' }}
+        run: |
+          if ! pnpm audit --audit-level=high; then
+            echo "::warning title=Dependencias del frontend::pnpm audit encontró vulnerabilidades altas o críticas."
+            exit 1
+          fi
+
+  imagenes:
+    name: Imagen Docker (${{ matrix.app }})
+    needs: cambios
+    if: needs.cambios.outputs.completo == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [Backend, Frontend]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      # Solo se construye; no se publica en ningún registro.
+      - name: Construir sin publicar
+        env:
+          APP: ${{ matrix.app }}
+        run: docker build --pull --tag "actualizacion-datos-${APP,,}:ci" "src/$APP"
+
+  workflows:
+    name: Workflows y scripts
+    needs: cambios
+    if: needs.cambios.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REF_OBJETIVO }}
+          persist-credentials: false
+
+      - name: actionlint
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color # 1.7.12
+
+      - name: shellcheck
+        run: docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d .github/scripts/*.sh .github/scripts/pruebas/*.sh # v0.11.0
+
+      - name: Pruebas de los scripts
+        run: |
+          bash .github/scripts/pruebas/validar-rama.test.sh
+          bash .github/scripts/pruebas/filtrar-rutas.test.sh
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [cambios, politica, secretos, backend, backend-integracion, openapi, frontend, imagenes, workflows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Falla si algún job falló o se canceló. "skipped" solo vale si el
+      # nivel o el filtro por rutas lo omitieron a propósito.
+      - name: Comprobar resultados
+        env:
+          RESULTADOS: ${{ toJSON(needs) }}
+          EVENTO: ${{ github.event_name }}
+          COMPLETO: ${{ needs.cambios.outputs.completo }}
+          BACKEND: ${{ needs.cambios.outputs.backend }}
+          FRONTEND: ${{ needs.cambios.outputs.frontend }}
+          OPENAPI: ${{ needs.cambios.outputs.openapi }}
+          WORKFLOWS: ${{ needs.cambios.outputs.workflows }}
+        run: |
+          debe_correr() {
+            case "$1" in
+              politica) [ "$EVENTO" = "pull_request" ] && echo true || echo false ;;
+              backend) echo "$BACKEND" ;;
+              frontend) echo "$FRONTEND" ;;
+              openapi) echo "$OPENAPI" ;;
+              workflows) echo "$WORKFLOWS" ;;
+              backend-integracion | imagenes) echo "$COMPLETO" ;;
+              *) echo true ;;
+            esac
+          }
+          jobs="$(jq -r 'keys[]' <<<"$RESULTADOS")"
+          [ -n "$jobs" ] || { echo "No se pudieron leer los resultados."; exit 1; }
+          fallo=0
+          for job in $jobs; do
+            resultado="$(jq -r --arg j "$job" '.[$j].result' <<<"$RESULTADOS")"
+            case "$resultado" in
+              success) echo "OK       $job" ;;
+              skipped)
+                if [ "$(debe_correr "$job")" = "true" ]; then
+                  echo "FALLA    $job: se omitió pero debía correr"
+                  fallo=1
+                else
+                  echo "OMITIDO  $job (no aplica a este cambio)"
+                fi
+                ;;
+              *)
+                echo "FALLA    $job: $resultado"
+                fallo=1
+                ;;
+            esac
+          done
+          exit "$fallo"
