@@ -1,1 +1,85 @@
 .superpowers/
+
+# Credenciales y configuración local — nunca al repositorio.
+# El job de secretos revisa el historial completo, no solo el diff, así que
+# añadir algo aquí DESPUÉS de haberlo commiteado no sirve de nada: hay que
+# rotar el secreto y limpiar el historial.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+kubeconfig
+kubeconfig.*
+credentials.json
+secrets.json
+secrets.yaml
+secrets.yml
+appsettings.Local.json
+appsettings.*.Local.json
+
+# Archivos subidos y comprimidos
+uploads/
+*.zip
+
+# Compilación de .NET
+src/Backend/**/bin/
+src/Backend/**/obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+publish/
+*.binlog
+
+# Pruebas y cobertura
+TestResults/
+coverage/
+coverage*.xml
+coverage*.json
+cobertura.xml
+junit.xml
+*.trx
+.coverage
+
+# Caché de NuGet dentro del workspace
+.nuget/
+
+# Angular / Node
+src/Frontend/dist/
+src/Frontend/tmp/
+src/Frontend/out-tsc/
+src/Frontend/.angular/
+src/Frontend/node_modules/
+node_modules/
+.pnpm-store/
+npm-debug.log
+pnpm-debug.log
+yarn-error.log
+
+# Herramientas y editores
+.vs/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+.idea/
+.project
+.classpath
+*.launch
+.settings/
+*.sublime-workspace
+*.user
+*.suo
+*.userprefs
+_ReSharper*/
+
+# Sistema operativo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Salida de gitleaks en local
+gitleaks.sarif

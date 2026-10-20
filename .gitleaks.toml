@@ -1,0 +1,11 @@
+# Configuración de gitleaks para este proyecto.
+#
+# El job de secretos del pipeline usa este archivo si existe. Aquí se
+# justifican los falsos positivos, uno por uno y por escrito: una allowlist
+# sin explicación es peor que no tenerla.
+
+[extend]
+useDefault = true
+
+# Sin excepciones por ahora. No hay secretos ni datos personales en el
+# repositorio; cualquier valor de ejemplo debe ser claramente ficticio.
