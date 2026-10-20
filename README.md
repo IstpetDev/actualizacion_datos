@@ -44,7 +44,7 @@ Las reglas de negocio completas (acceso por cédula, campañas, estados, exporta
 
 ## Cómo levantar con Docker
 
-Requisitos: Docker, .NET SDK 10.0.100+ (`global.json`), Node.js 22.22.3+ o 26+, pnpm 12.4+.
+Requisitos: Docker, .NET SDK 10.0.100+ (`global.json`), Node.js `^22.22.3 || ^24.15.0 || >=26` (rango de `engines` en `src/Frontend/package.json`; `src/Frontend/.nvmrc`, CI y Docker usan Node 24), pnpm 12.4+.
 
 ```bash
 cp .env.example .env   # valores ficticios de desarrollo
@@ -69,8 +69,8 @@ El backend exporta el contrato a `openapi/v1.json` al compilar. El cliente de An
 Para regenerarlos tras cambiar la API:
 
 ```bash
-dotnet build src/Backend                  # actualiza openapi/v1.json
-pnpm --dir src/Frontend generar:api       # regenera el cliente
+dotnet build src/Backend                  # en Debug regenera openapi/v1.json y el cliente
+pnpm --dir src/Frontend generar:api       # equivalente: ejecuta ese mismo build de la WebApi en Debug
 ```
 
 Subir en el mismo PR los cambios de `openapi/v1.json` y del cliente. Decisión: [ADR-0003](docs/decisiones/ADR-0003-cliente-openapi-generado.md).
@@ -137,6 +137,7 @@ Estas acciones las hace una persona con permisos; el código del repositorio no 
    - PR obligatorio (sin `push` directo).
    - Check `ci-ok` requerido.
    - Sin force push ni borrado.
+   - Recomendado (ruleset opcional): exigir revisión de code owners en `develop` para `.github/**`, porque los workflows corren desde la referencia de fusión del PR.
    - En `main`: al menos una aprobación, revisión de `CODEOWNERS` y la regla *Require code scanning results* (CodeQL), que es la que hace bloqueante a CodeQL.
 3. Fijar `main` como rama por defecto y proteger también `develop`.
 4. Activar el escaneo de secretos con *push protection* si el plan lo permite. CodeQL corre con `codeql.yml` (configuración avanzada): **no** activar la configuración por defecto de CodeQL, porque entra en conflicto con el workflow.

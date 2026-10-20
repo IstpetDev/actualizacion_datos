@@ -19,7 +19,7 @@
 - Sin `git push` ni cambios en GitHub (reglas, secretos, environments). Esas acciones se documentan como pasos manuales.
 - Acciones de terceros en workflows fijadas por hash de commit.
 - Sin lógica de negocio en el esqueleto.
-- Fuentes a copiar y adaptar (rutas bajo `/home/joeman/Documents/istpet-dev/`): `seguridad_redes/devops/plantilla-ci-cd/`, `gitlab/demos/plantilla-dotnet-angular`, `gitlab/demos/plantilla_angular`, `gitlab/departamento-medico/specs/plantillas`.
+- Fuentes a copiar y adaptar: plantillas internas del equipo (fuera de este repositorio): plantilla de CI/CD, `plantilla-dotnet-angular`, `plantilla_angular` y plantillas de spec.
 - Commits terminan con `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 
 ## Review Focus

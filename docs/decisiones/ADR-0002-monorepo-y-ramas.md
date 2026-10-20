@@ -30,7 +30,7 @@ La política se aplica con un workflow que valida rama de origen, destino y tít
 
 - Un solo PR puede cambiar backend, frontend y contrato de forma coherente.
 - El CI debe filtrar por rutas para no compilar lo que no cambió (ver ADR-0005).
-- Las reglas de protección de GitHub se configuran a mano y quedan documentadas en CONTRIBUTING.
+- Las reglas de protección de GitHub se configuran a mano y quedan documentadas en el README, sección "Pasos manuales en GitHub".
 - La excepción de `main` hacia `develop` debe usarse solo para hotfix.
 
 ## ADR relacionados

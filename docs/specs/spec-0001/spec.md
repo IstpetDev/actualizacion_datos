@@ -151,6 +151,7 @@ No se introducen requisitos de rendimiento ni de «seguridad» general sin métr
 | PD-10 | Texto legal del consentimiento de tratamiento de datos. | Contenido que se muestra en RF-DAT-001 | Institución, fuera de esta spec |
 | PD-11 | Qué datos incluye exactamente el Excel y el `.md` índice del `.zip`. | Formato verificable de RF-EXP-001 y 002 | Revisor funcional |
 | PD-12 | Qué ocurre con los datos de una persona si el admin la quita de la lista. | Retención y eliminación de datos personales | Revisor funcional |
+| PD-13 | ¿Puede el superadmin generar exportaciones? El diseño solo nombra al admin. | Alcance de RF-EXP-001 y 002 | Revisor funcional |
 
 ## Revisión funcional
 

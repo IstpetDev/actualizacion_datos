@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      # El script se toma de la rama base: un PR no puede relajar su propia política.
+      # El script de política se lee de la rama base, no de la del PR. Los archivos de
+      # workflow en sí corren desde la referencia de fusión del PR: los protege la
+      # revisión de CODEOWNERS, no este checkout.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.base_ref }}

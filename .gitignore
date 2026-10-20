@@ -19,6 +19,8 @@ secrets.yaml
 secrets.yml
 appsettings.Local.json
 appsettings.*.Local.json
+# Cargado por ASP.NET Core en Development (WebApplication.CreateBuilder); nunca se versiona.
+appsettings.Development.json
 
 # Archivos subidos y comprimidos
 uploads/

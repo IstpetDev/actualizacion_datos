@@ -11,7 +11,7 @@ Aplicación para que personas de una institución educativa actualicen sus datos
 - Backend: .NET 10, Clean Architecture (`Domain`, `Application`, `Infrastructure`, `WebApi`), xUnit, en `src/Backend`.
 - Frontend: Angular 22, pnpm, cliente OpenAPI generado con NSwag, en `src/Frontend`.
 - Base de datos: PostgreSQL. Despliegue: Docker (aún no implementado).
-- Entorno: .NET SDK 10.0.100+ (`global.json`), Node >=22.22.3 o >=26, pnpm >=12.4 (12.4.1), Docker.
+- Entorno: .NET SDK 10.0.100+ (`global.json`), Node `^22.22.3 || ^24.15.0 || >=26` (`src/Frontend/.nvmrc`, CI y Docker usan Node 24), pnpm >=12.4 (12.4.1), Docker.
 
 ## Comandos
 
@@ -22,6 +22,7 @@ dotnet test src/Backend --filter "Categoria!=Integracion"   # unitarias, sin Doc
 pnpm --dir src/Frontend test:ci
 dotnet format src/Backend
 pnpm --dir src/Frontend lint
+pnpm --dir src/Frontend format   # prettier --write; format:check solo verifica
 cp .env.example .env && docker compose up --build
 ```
 
@@ -31,7 +32,7 @@ Ejecutar compilación y pruebas antes de dar una tarea por terminada, y reportar
 
 - `main`: solo PR desde `develop` y `hotfix/*`. `develop`: PR desde `feature|fix|docs|chore|refactor|test|ci/*` y desde `main` solo para devolver un hotfix (título p. ej. `chore: devolver hotfix de main a develop`). Solo `dependabot[bot]` puede abrir PR a `develop` desde `dependabot/*`.
 - Nombre de rama: `<tipo>/<descripcion-corta>` en minúsculas con guiones.
-- Título de PR y commits: `<tipo>: <resumen en minúsculas>`; tipos `feat fix docs chore refactor test ci`.
+- Título de PR (se valida): `<tipo>: <resumen en minúsculas>`; tipos `feat fix docs chore refactor test ci`. Los commits no se validan; se recomienda Conventional Commits (`<tipo>: <resumen>`) sin exigir minúsculas.
 - Commits pequeños, en español. Detalle en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Flujo de trabajo

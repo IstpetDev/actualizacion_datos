@@ -1,7 +1,7 @@
 # Actualización de datos — Diseño de la fundación del repositorio
 
 **Fecha:** 2026-10-20
-**Estado:** Borrador para aprobación
+**Estado:** Aprobado el 2026-10-20
 **Repositorio:** `https://github.com/ItspetDev/actualizacion_datos` (público)
 
 ## Intención y porqué
@@ -15,7 +15,7 @@ Este diseño cubre **solo la fundación del repositorio**: documentación, decis
 ## Objetivos
 
 - Monorepo con `src/Frontend` y `src/Backend`.
-- Ramas, contribución y README basados en `seguridad_redes/devops/plantilla-ci-cd` (`CONTRIBUTING.md`, `README.md`).
+- Ramas, contribución y README basados en la plantilla interna de CI/CD del equipo (`CONTRIBUTING.md`, `README.md`).
 - CI en GitHub Actions rápido, con pruebas unitarias reales sobre un esqueleto compilable.
 - Decisiones registradas como ADR y cambios como specs, con plantillas que todos usen igual.
 - `AGENTS.md` para que cualquier agente de IA trabaje con las mismas reglas.
@@ -99,7 +99,7 @@ Este diseño cubre **solo la fundación del repositorio**: documentación, decis
     └── Frontend/             # Angular 22 mínimo con una prueba
 ```
 
-Las plantillas de spec se adaptan desde `gitlab/departamento-medico/specs/plantillas`: se sustituyen las rutas de ADR a `docs/decisiones/` y las referencias a datos clínicos por datos personales. Los ADR usan `docs/decisiones/ADR-NNNN-nombre.md` con una plantilla propia (contexto, opciones, decisión, consecuencias, estado).
+Las plantillas de spec se adaptan desde las plantillas internas de spec del equipo: se sustituyen las rutas de ADR a `docs/decisiones/` y las referencias a datos clínicos por datos personales. Los ADR usan `docs/decisiones/ADR-NNNN-nombre.md` con una plantilla propia (contexto, opciones, decisión, consecuencias, estado).
 
 ## CI por rama
 
@@ -143,15 +143,15 @@ Idea nueva o cambio: `brainstorming` → spec en `docs/specs/` → aprobación f
 
 ## Fuentes locales para copiar y adaptar
 
-Rutas bajo `/home/joeman/Documents/istpet-dev/`. El constructor las lee y adapta; no inventa su contenido.
+Plantillas internas del equipo (fuera de este repositorio). El constructor las lee y adapta; no inventa su contenido.
 
 | Para | Fuente |
 |---|---|
-| Ramas, política de PR, CONTRIBUTING, README, workflows previstos, `ci-ok` | `seguridad_redes/devops/plantilla-ci-cd/{CONTRIBUTING,README}.md` |
+| Ramas, política de PR, CONTRIBUTING, README, workflows previstos, `ci-ok` | plantilla interna de CI/CD del equipo (`CONTRIBUTING.md`, `README.md`) |
 | Política de ramas exacta | Tabla "Ramas" de ese CONTRIBUTING: `main` solo recibe PR de `develop` y `hotfix/*`; `develop` recibe `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*`, `ci/*`. Título del PR: `<tipo>: <resumen en minúsculas>` |
-| Cliente OpenAPI con NSwag, pnpm, Angular 22 | `gitlab/demos/plantilla-dotnet-angular` y `gitlab/demos/plantilla_angular` |
-| Plantillas de spec | `gitlab/departamento-medico/specs/plantillas` |
-| `.gitleaks.toml`, `.editorconfig`, Dockerfiles | Mismas carpetas de `demos` |
+| Cliente OpenAPI con NSwag, pnpm, Angular 22 | plantillas internas `plantilla-dotnet-angular` y `plantilla_angular` |
+| Plantillas de spec | plantillas internas de spec del equipo |
+| `.gitleaks.toml`, `.editorconfig`, Dockerfiles | Plantillas internas de demos |
 
 `plantilla-dotnet-clean` está vacía: la estructura de Clean Architecture es diseño propio (ADR-0001).
 
@@ -167,7 +167,7 @@ Rutas bajo `/home/joeman/Documents/istpet-dev/`. El constructor las lee y adapta
 
 - **Licencia:** PolyForm Noncommercial 1.0.0 (confirmada por el usuario). No es una licencia de código abierto según la OSI; el repo sigue siendo público y legible.
 - **Contacto de seguridad:** `istpetdev@istpet.edu.ec`.
-- **Propietario en `CODEOWNERS` y `dependabot`:** `@IstpetDev` (grafía dada por el usuario). La URL del remoto que le entregaron dice `ItspetDev`; el constructor usa `@IstpetDev` en `CODEOWNERS` y, al configurar el remoto, comprueba con el usuario cuál grafía es la real.
+- **Propietario en `CODEOWNERS` y `dependabot`:** `@IstpetDev` (grafía dada por el usuario). La URL del remoto dice `ItspetDev`; el constructor usa `@IstpetDev` en `CODEOWNERS` y, al configurar el remoto, comprueba con el usuario cuál grafía es la real.
 
 ## Qué queda al criterio de quien construya
 

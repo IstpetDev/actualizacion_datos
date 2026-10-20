@@ -2,6 +2,8 @@
 name: CodeQL
 
 on:
+  push:
+    branches: [main]
   pull_request:
     # edited: un cambio de rama base (o de título) vuelve a evaluar el PR.
     types: [opened, synchronize, reopened, edited]

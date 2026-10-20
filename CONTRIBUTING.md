@@ -90,14 +90,14 @@ Qué hacer si falla un check:
 
 - **Escaneo de secretos:** no basta con borrar la línea. Avisar al responsable para rotar la credencial.
 - **Compilación o pruebas:** reproducir en local con `dotnet build src/Backend`, `dotnet test src/Backend` y `pnpm --dir src/Frontend test:ci`.
-- **Formato:** ejecutar `dotnet format src/Backend` y `pnpm --dir src/Frontend lint`, y subir el cambio.
+- **Formato:** si falla `dotnet format`, ejecutar `dotnet format src/Backend`; si falla `format:check`, ejecutar `pnpm --dir src/Frontend format`; los fallos de lint se corrigen con `pnpm --dir src/Frontend lint`. Subir el cambio.
 - **Cliente OpenAPI:** regenerarlo (ver [README.md](README.md#cliente-openapi)) y versionar el resultado.
 - **Dependencias:** actualizar el paquete señalado o justificar la excepción en el PR.
 
 ## Secretos y configuración
 
 - No subir contraseñas, cadenas de conexión, claves privadas ni tokens. Tampoco en comentarios ni en archivos de ejemplo.
-- La configuración real vive en variables de entorno o en el entorno de despliegue, no en el repositorio. Los archivos `appsettings.Development.json` con valores propios no se publican.
+- La configuración real vive en variables de entorno o en el entorno de despliegue, no en el repositorio. Un `appsettings.Development.json` local (el que ASP.NET Core carga en Development) está en `.gitignore` y en `.dockerignore`: no se publica ni entra en la imagen. Aun así, no poner secretos en ningún `appsettings*.json`; usar variables de entorno (por ejemplo `ConnectionStrings__Default` en `.env`) o *user-secrets*.
 - En Angular todo lo que se compila es visible en el navegador: solo configuración pública, como la URL de la API.
 - Si cree haber subido una credencial: avisar de inmediato; no intentar limpiar el historial por su cuenta.
 
@@ -112,7 +112,7 @@ Qué hacer si falla un check:
 Requisitos:
 
 - .NET SDK 10.0.100 o superior (lo fija `global.json`).
-- Node.js 22.22.3 o superior (o 26 o superior).
+- Node.js `^22.22.3 || ^24.15.0 || >=26` (rango de `engines` en `src/Frontend/package.json`); `src/Frontend/.nvmrc`, CI y Docker usan Node 24.
 - pnpm 12.4 o superior (se probó con 12.4.1).
 - Docker, para PostgreSQL y las imágenes.
 
@@ -132,6 +132,7 @@ dotnet test src/Backend --filter "Categoria!=Integracion"      # solo unitarias 
 pnpm --dir src/Frontend test:ci                                # pruebas del frontend
 dotnet format src/Backend                                      # formato del backend
 pnpm --dir src/Frontend lint                                   # lint del frontend
+pnpm --dir src/Frontend format                                 # formato del frontend (prettier --write)
 ```
 
 ## Seguridad
