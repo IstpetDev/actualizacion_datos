@@ -2,11 +2,73 @@
 
   <PropertyGroup>
     <RootNamespace>Istpet.ActualizacionDatos.WebApi</RootNamespace>
+
+    <!-- Contrato OpenAPI en tiempo de compilación. Solo en Debug local se
+         exporta a openapi/v1.json y se regenera el cliente de Angular. En
+         Release y Docker se apaga (o con -p:GenerarClienteAngular=false): la
+         imagen del backend no debe depender de src/Frontend. -->
+    <GenerarClienteAngular Condition="'$(GenerarClienteAngular)' == '' AND '$(Configuration)' == 'Debug'">true</GenerarClienteAngular>
+    <GenerarClienteAngular Condition="'$(GenerarClienteAngular)' == ''">false</GenerarClienteAngular>
+    <OpenApiGenerateDocuments>$(GenerarClienteAngular)</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocumentsOnBuild>$(GenerarClienteAngular)</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)obj/openapi/</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Istpet.ActualizacionDatos.Application\Istpet.ActualizacionDatos.Application.csproj" />
     <ProjectReference Include="..\Istpet.ActualizacionDatos.Infrastructure\Istpet.ActualizacionDatos.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NSwag.MSBuild">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Copia el JSON que emite el SDK a openapi/v1.json y genera el cliente
+       TypeScript. Solo Debug local. -->
+  <Target Name="PublicarClienteAngular"
+          AfterTargets="GenerateOpenApiDocuments"
+          Condition="'$(GenerarClienteAngular)' == 'true' AND '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_NSwagExe Condition="'$(NSwagExe_Net100)' != ''">$(NSwagExe_Net100)</_NSwagExe>
+      <_NSwagExe Condition="'$(_NSwagExe)' == '' AND '$(NSwagExe_Net90)' != ''">$(NSwagExe_Net90)</_NSwagExe>
+      <_NSwagExe Condition="'$(_NSwagExe)' == ''">$(NSwagExe_Net80)</_NSwagExe>
+      <_DocumentoDestino>$(MSBuildThisFileDirectory)../../../../openapi/v1.json</_DocumentoDestino>
+    </PropertyGroup>
+    <ItemGroup>
+      <_DocumentoOpenApi Include="$(OpenApiDocumentsDirectory)*.json" />
+    </ItemGroup>
+    <MakeDir Directories="$(MSBuildThisFileDirectory)../../../../openapi" Condition="'@(_DocumentoOpenApi)' != ''" />
+    <Copy SourceFiles="@(_DocumentoOpenApi)"
+          DestinationFiles="$(_DocumentoDestino)"
+          Condition="'@(_DocumentoOpenApi)' != ''" />
+    <Error Text="NSwag.MSBuild no expuso NSwagExe_Net100, NSwagExe_Net90 ni NSwagExe_Net80." Condition="'$(_NSwagExe)' == ''" />
+    <Exec Command="$(_NSwagExe) run nswag.json"
+          WorkingDirectory="$(ProjectDir)" />
+    <PropertyGroup>
+      <ClienteAngularPublicado>true</ClienteAngularPublicado>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Si el SDK de OpenAPI no disparó la generación, regenera TypeScript
+       desde el JSON versionado. -->
+  <Target Name="PublicarClienteAngularRespaldo"
+          AfterTargets="Build"
+          Condition="'$(GenerarClienteAngular)' == 'true' AND '$(DesignTimeBuild)' != 'true' AND '$(ClienteAngularPublicado)' != 'true'">
+    <PropertyGroup>
+      <_NSwagExe Condition="'$(NSwagExe_Net100)' != ''">$(NSwagExe_Net100)</_NSwagExe>
+      <_NSwagExe Condition="'$(_NSwagExe)' == '' AND '$(NSwagExe_Net90)' != ''">$(NSwagExe_Net90)</_NSwagExe>
+      <_NSwagExe Condition="'$(_NSwagExe)' == ''">$(NSwagExe_Net80)</_NSwagExe>
+    </PropertyGroup>
+    <Error Text="NSwag.MSBuild no expuso NSwagExe_Net100, NSwagExe_Net90 ni NSwagExe_Net80." Condition="'$(_NSwagExe)' == ''" />
+    <Exec Command="$(_NSwagExe) run nswag.json"
+          WorkingDirectory="$(ProjectDir)" />
+  </Target>
 
 </Project>

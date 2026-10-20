@@ -1,0 +1,35 @@
+{
+  "runtime": "Net100",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "json": "../../../../openapi/v1.json",
+      "output": null
+    }
+  },
+  "codeGenerators": {
+    "openApiToTypeScriptClient": {
+      "className": "{controller}Client",
+      "template": "Angular",
+      "typeStyle": "Interface",
+      "promiseType": "Promise",
+      "httpClass": "HttpClient",
+      "injectionTokenType": "InjectionToken",
+      "rxJsVersion": 7.8,
+      "useSingletonProvider": true,
+      "markOptionalProperties": true,
+      "nullValue": "Undefined",
+      "typeScriptVersion": 5.0,
+      "generateClientClasses": true,
+      "generateClientInterfaces": false,
+      "generateDtoTypes": true,
+      "wrapDtoExceptions": false,
+      "useGetBaseUrlMethod": false,
+      "baseUrlTokenName": "API_BASE_URL",
+      "exportTypes": true,
+      "generateOptionalParameters": true,
+      "operationGenerationMode": "MultipleClientsFromFirstTagAndOperationId",
+      "output": "../../../Frontend/src/app/api-client/index.ts"
+    }
+  }
+}

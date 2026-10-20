@@ -1,0 +1,20 @@
+# Configuración de pnpm. Un solo paquete: este archivo existe porque desde
+# pnpm 11 la seguridad ya no se configura en package.json.
+#
+# Por qué pnpm y no npm: el aplanado de npm permite dependencias fantasma y
+# ejecuta postinstall de TODO el árbol. pnpm 10+ no corre esos scripts salvo
+# allowlist, y además espera un día antes de resolver una versión recién
+# publicada.
+
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+
+blockExoticSubdeps: true
+strictDepBuilds: true
+engineStrict: true
+
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true
