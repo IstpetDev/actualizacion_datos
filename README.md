@@ -131,7 +131,7 @@ La configuración de producción vive en el servidor o en el *environment* de Gi
 
 Estas acciones las hace una persona con permisos; el código del repositorio no las ejecuta.
 
-1. Crear o ajustar el remoto y confirmar la grafía del propietario (`IstpetDev` o `ItspetDev`), y hacer el primer `push` de `main` y `develop`.
+1. Remoto `https://github.com/IstpetDev/actualizacion_datos` (organización `IstpetDev`) y primer `push` de `main` y `develop`: hecho. El equipo `@IstpetDev/hijos-del-ing-henry` es el propietario en `CODEOWNERS` y necesita permiso de escritura en el repositorio (Settings → Collaborators and teams).
    - `main` y `develop` deben subirse desde el mismo commit: la política de ramas usa el script de la rama base, que tiene que existir en ambas.
 2. Crear los *rulesets* de GitHub para `main` y `develop`:
    - PR obligatorio (sin `push` directo).
