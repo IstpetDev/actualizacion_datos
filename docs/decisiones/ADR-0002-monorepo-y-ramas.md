@@ -20,7 +20,7 @@ Se adopta la opción 1.
 - `main` es la rama estable y solo recibe PR desde `develop` y `hotfix/*`.
 - `develop` es la rama de integración y recibe PR desde `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*` y `ci/*`.
 - **Excepción:** `develop` también acepta PR desde `main`, únicamente para devolver un hotfix y que `develop` no pierda esa corrección.
-- `develop` acepta además los PR de Dependabot (`dependabot/*`), cuyo título puede llevar mayúsculas en el nombre del paquete.
+- `develop` acepta además los PR que abre `dependabot[bot]` desde `dependabot/*` (la política comprueba el autor, no solo la rama), cuyo título puede llevar mayúsculas en el nombre del paquete.
 - Nadie hace `push` directo a `main` ni a `develop`.
 - El título del PR sigue `tipo: resumen en minúsculas`, con tipos `feat`, `fix`, `docs`, `chore`, `refactor`, `test` y `ci`.
 

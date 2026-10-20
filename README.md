@@ -77,7 +77,7 @@ Subir en el mismo PR los cambios de `openapi/v1.json` y del cliente. Decisión: 
 
 ## Modelo de ramas
 
-Dos ramas permanentes: `main` (estable; solo recibe PR de `develop` y `hotfix/*`) y `develop` (integración; recibe `feature|fix|docs|chore|refactor|test|ci/*` y, solo para devolver un hotfix, `main`; también los PR de Dependabot desde `dependabot/*`). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
+Dos ramas permanentes: `main` (estable; solo recibe PR de `develop` y `hotfix/*`) y `develop` (integración; recibe `feature|fix|docs|chore|refactor|test|ci/*` y, solo para devolver un hotfix, `main`; también los PR que abre `dependabot[bot]` desde `dependabot/*`). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
 
 ## CI por niveles
 
@@ -109,7 +109,7 @@ Velocidad: cachés de NuGet y pnpm, cancelación de ejecuciones previas del mism
 | `codeql.yml` | PR a `main`, semanal y manual | Análisis estático de C# y JavaScript/TypeScript |
 | `dependabot.yml` | Semanal | PRs de actualización a `develop` (nuget, npm, docker, docker-compose, github-actions) |
 
-La política de ramas y el escaneo de secretos se ejecutan dentro de `ci.yml` para que `ci-ok` sea el único check requerido. Si se corrige el título de un PR, hay que volver a ejecutar el workflow CI (el título se relee al reintentar).
+La política de ramas y el escaneo de secretos se ejecutan dentro de `ci.yml` para que `ci-ok` sea el único check requerido. Editar el PR (título o rama base) vuelve a ejecutar el CI.
 
 Todas las acciones de terceros se fijan por hash de commit, no solo por versión. Los workflows viven en [.github/workflows/](.github/workflows/).
 
@@ -132,6 +132,7 @@ La configuración de producción vive en el servidor o en el *environment* de Gi
 Estas acciones las hace una persona con permisos; el código del repositorio no las ejecuta.
 
 1. Crear o ajustar el remoto y confirmar la grafía del propietario (`IstpetDev` o `ItspetDev`), y hacer el primer `push` de `main` y `develop`.
+   - `main` y `develop` deben subirse desde el mismo commit: la política de ramas usa el script de la rama base, que tiene que existir en ambas.
 2. Crear los *rulesets* de GitHub para `main` y `develop`:
    - PR obligatorio (sin `push` directo).
    - Check `ci-ok` requerido.

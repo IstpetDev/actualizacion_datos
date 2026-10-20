@@ -15,7 +15,7 @@ Esta guía describe cómo se trabaja en este repositorio. Es público: no debe c
 | Rama | Para qué | Acepta PRs desde |
 | --- | --- | --- |
 | `main` | Estable. Rama por defecto | Solo `develop` y `hotfix/*` |
-| `develop` | Integración | `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*`, `ci/*`, `main` (solo para devolver un hotfix) y `dependabot/*` (actualizaciones automáticas) |
+| `develop` | Integración | `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*`, `ci/*`, `main` (solo para devolver un hotfix) y `dependabot/*` (solo PR abiertos por `dependabot[bot]`) |
 
 **Nombre de la rama:** `<tipo>/<descripcion-corta>`, en minúsculas y con guiones. Ejemplos: `feature/login-con-cedula`, `fix/fecha-fin-de-campana`, `hotfix/fecha-fin-de-campana`. Opcionalmente con el número de la incidencia: `feature/123-login-con-cedula`.
 
@@ -54,9 +54,7 @@ Reglas exactas (las comprueba `.github/scripts/validar-rama.sh`):
 
 - Un solo espacio después de los dos puntos; sin ámbito (`feat(api):`) ni `!`.
 - El resumen empieza por una letra minúscula o un dígito y no contiene mayúsculas, tampoco acentuadas (`fix: Algo` y `fix: corregir Error` se rechazan).
-- Excepción: los PR de Dependabot (`dependabot/*`) pueden llevar mayúsculas en el nombre del paquete.
-
-Si el check de la política falla por el título, corregirlo en GitHub y volver a ejecutar el workflow CI.
+- Excepción: los PR que abre `dependabot[bot]` desde `dependabot/*` pueden llevar mayúsculas en el nombre del paquete. Una persona que use una rama `dependabot/*` no tiene esa excepción y su PR se rechaza.
 
 ## Flujo con Superpowers
 
