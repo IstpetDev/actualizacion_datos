@@ -15,7 +15,7 @@ Esta guía describe cómo se trabaja en este repositorio. Es público: no debe c
 | Rama | Para qué | Acepta PRs desde |
 | --- | --- | --- |
 | `main` | Estable. Rama por defecto | Solo `develop` y `hotfix/*` |
-| `develop` | Integración | `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*`, `ci/*` |
+| `develop` | Integración | `feature/*`, `fix/*`, `docs/*`, `chore/*`, `refactor/*`, `test/*`, `ci/*` y `main` (solo para devolver un hotfix) |
 
 **Nombre de la rama:** `<tipo>/<descripcion-corta>`, en minúsculas y con guiones. Ejemplos: `feature/login-con-cedula`, `fix/fecha-fin-de-campana`, `hotfix/fecha-fin-de-campana`. Opcionalmente con el número de la incidencia: `feature/123-login-con-cedula`.
 
@@ -32,7 +32,7 @@ Esta guía describe cómo se trabaja en este repositorio. Es público: no debe c
 
 1. Crear `hotfix/<descripcion>` desde `main`.
 2. Abrir el PR hacia `main`. Pasa el mismo CI completo que un release, aunque sea urgente.
-3. Tras fusionar, **abrir otro PR de `main` hacia `develop`** para no perder el arreglo.
+3. Tras fusionar, **abrir otro PR de `main` hacia `develop`** para no perder el arreglo. `develop` acepta PRs desde `main` solo para esto; el título sigue el formato, por ejemplo `chore: devolver hotfix de main a develop`.
 
 ## Título del PR
 

@@ -76,7 +76,7 @@ Subir en el mismo PR los cambios de `openapi/v1.json` y del cliente. Decisión: 
 
 ## Modelo de ramas
 
-Dos ramas permanentes: `main` (estable) y `develop` (integración). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
+Dos ramas permanentes: `main` (estable; solo recibe PR de `develop` y `hotfix/*`) y `develop` (integración; recibe `feature|fix|docs|chore|refactor|test|ci/*` y, solo para devolver un hotfix, `main`). Nadie hace `push` directo. Detalle de nombres, flujo y hotfix en [CONTRIBUTING.md](CONTRIBUTING.md). Decisión: [ADR-0002](docs/decisiones/ADR-0002-monorepo-y-ramas.md).
 
 ## CI por niveles
 
