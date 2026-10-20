@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Istpet.ActualizacionDatos.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Istpet.ActualizacionDatos.Domain\Istpet.ActualizacionDatos.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

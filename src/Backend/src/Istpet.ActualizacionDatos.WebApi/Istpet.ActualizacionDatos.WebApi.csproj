@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Istpet.ActualizacionDatos.WebApi</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Istpet.ActualizacionDatos.Application\Istpet.ActualizacionDatos.Application.csproj" />
+    <ProjectReference Include="..\Istpet.ActualizacionDatos.Infrastructure\Istpet.ActualizacionDatos.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

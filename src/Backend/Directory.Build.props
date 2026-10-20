@@ -1,0 +1,37 @@
+<Project>
+
+  <!--
+    Ajustes comunes a TODOS los proyectos de la solución. Un solo sitio donde
+    subir de .NET o cambiar reglas del compilador.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Nullable ON: el compilador avisa de los NullReferenceException antes
+         de que se produzcan. Es la única regla que no negociamos. -->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Los nombres del dominio están en español (Institucion, Solicitud). El
+         compilador no se queja, pero dejamos constancia de que es a propósito. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- Necesario para formatear fechas y ordenar texto en es-EC. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- Compilación determinista: el mismo commit produce el mismo binario,
+         que es lo que permite auditar qué se desplegó. -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>
