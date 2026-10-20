@@ -41,3 +41,5 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Propuesto |
 | [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Propuesto |
 | [ADR-0009](ADR-0009-campos-configurables.md) | Campos configurables por institución | Propuesto |
+
+<!-- prueba del ci: este comentario se puede borrar -->
