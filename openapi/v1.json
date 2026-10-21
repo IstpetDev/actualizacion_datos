@@ -25,6 +25,218 @@
         }
       }
     },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "IniciarSesion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoLoginDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "CerrarSesion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sesion": {
+      "get": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "ObtenerSesionActual",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SesionUsuarioDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/auth/cambiar-clave": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "CambiarContrasena",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarContrasenaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/auth/enviar-codigo-correo": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "EnviarCodigoCorreo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnviarCodigoCorreoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/auth/verificar-codigo-correo": {
+      "post": {
+        "tags": [
+          "Autenticacion"
+        ],
+        "operationId": "VerificarCodigoCorreo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificarCodigoCorreoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/instituciones": {
       "post": {
         "tags": [
@@ -576,6 +788,24 @@
           }
         }
       },
+      "CambiarContrasenaRequest": {
+        "required": [
+          "contrasenaActual",
+          "nuevaContrasena"
+        ],
+        "type": "object",
+        "properties": {
+          "contrasenaActual": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nuevaContrasena": {
+            "type": "string"
+          }
+        }
+      },
       "CampanaDto": {
         "required": [
           "id",
@@ -670,6 +900,17 @@
           }
         }
       },
+      "EnviarCodigoCorreoRequest": {
+        "required": [
+          "correo"
+        ],
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string"
+          }
+        }
+      },
       "EstadoEdicionDto": {
         "required": [
           "puedeEditar",
@@ -745,6 +986,28 @@
           "fechaCreacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "LoginRequest": {
+        "required": [
+          "documento",
+          "contrasena"
+        ],
+        "type": "object",
+        "properties": {
+          "documento": {
+            "type": "string"
+          },
+          "contrasena": {
+            "type": "string"
+          },
+          "institucionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -886,6 +1149,100 @@
           }
         }
       },
+      "ResultadoLoginDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "documento",
+          "nombre",
+          "correo",
+          "rol",
+          "debeCambiarContrasena",
+          "correoVerificado"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rol": {
+            "type": "string"
+          },
+          "debeCambiarContrasena": {
+            "type": "boolean"
+          },
+          "correoVerificado": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SesionUsuarioDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "documento",
+          "nombre",
+          "correo",
+          "rol",
+          "debeCambiarContrasena",
+          "correoVerificado"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rol": {
+            "type": "string"
+          },
+          "debeCambiarContrasena": {
+            "type": "boolean"
+          },
+          "correoVerificado": {
+            "type": "boolean"
+          }
+        }
+      },
       "SubirArchivoRequest": {
         "required": [
           "nombreArchivo",
@@ -909,12 +1266,26 @@
             "format": "int64"
           }
         }
+      },
+      "VerificarCodigoCorreoRequest": {
+        "required": [
+          "codigo"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Salud"
+    },
+    {
+      "name": "Autenticacion"
     },
     {
       "name": "Instituciones"

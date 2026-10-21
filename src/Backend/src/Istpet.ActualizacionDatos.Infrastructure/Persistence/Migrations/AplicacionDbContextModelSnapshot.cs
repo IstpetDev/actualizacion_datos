@@ -142,14 +142,35 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("archivos_subidos_json");
 
+                    b.Property<DateTime?>("BloqueadoHastaUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("bloqueado_hasta_utc");
+
+                    b.Property<string>("CodigoVerificacionCorreoHash")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("codigo_verificacion_correo_hash");
+
+                    b.Property<DateTime?>("CodigoVerificacionExpiracionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("codigo_verificacion_expiracion_utc");
+
                     b.Property<string>("Correo")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("correo");
 
+                    b.Property<bool>("CorreoVerificado")
+                        .HasColumnType("boolean")
+                        .HasColumnName("correo_verificado");
+
                     b.Property<string>("DatosPersonalesJson")
                         .HasColumnType("text")
                         .HasColumnName("datos_personales_json");
+
+                    b.Property<bool>("DebeCambiarContrasena")
+                        .HasColumnType("boolean")
+                        .HasColumnName("debe_cambiar_contrasena");
 
                     b.Property<string>("Documento")
                         .IsRequired()
@@ -171,10 +192,23 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("institucion_id");
 
+                    b.Property<int>("IntentosCodigoVerificacion")
+                        .HasColumnType("integer")
+                        .HasColumnName("intentos_codigo_verificacion");
+
+                    b.Property<int>("IntentosFallidos")
+                        .HasColumnType("integer")
+                        .HasColumnName("intentos_fallidos");
+
                     b.Property<string>("Nombre")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("nombre");
+
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("password_hash");
 
                     b.Property<string>("Rol")
                         .IsRequired()

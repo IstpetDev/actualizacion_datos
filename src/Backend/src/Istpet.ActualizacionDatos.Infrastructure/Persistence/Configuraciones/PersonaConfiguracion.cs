@@ -58,6 +58,38 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
             .IsRequired()
             .HasColumnName("fecha_creacion_utc");
 
+        // Autenticación según ADR-0007
+        builder.Property(p => p.PasswordHash)
+            .HasMaxLength(500)
+            .HasColumnName("password_hash");
+
+        builder.Property(p => p.DebeCambiarContrasena)
+            .IsRequired()
+            .HasColumnName("debe_cambiar_contrasena");
+
+        builder.Property(p => p.IntentosFallidos)
+            .IsRequired()
+            .HasColumnName("intentos_fallidos");
+
+        builder.Property(p => p.BloqueadoHastaUtc)
+            .HasColumnName("bloqueado_hasta_utc");
+
+        // Verificación de correo según ADR-0007 (RF-ACC-005)
+        builder.Property(p => p.CorreoVerificado)
+            .IsRequired()
+            .HasColumnName("correo_verificado");
+
+        builder.Property(p => p.CodigoVerificacionCorreoHash)
+            .HasMaxLength(200)
+            .HasColumnName("codigo_verificacion_correo_hash");
+
+        builder.Property(p => p.CodigoVerificacionExpiracionUtc)
+            .HasColumnName("codigo_verificacion_expiracion_utc");
+
+        builder.Property(p => p.IntentosCodigoVerificacion)
+            .IsRequired()
+            .HasColumnName("intentos_codigo_verificacion");
+
         builder.HasOne<Institucion>()
             .WithMany()
             .HasForeignKey(p => p.InstitucionId)
