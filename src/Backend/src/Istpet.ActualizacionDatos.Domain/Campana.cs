@@ -34,4 +34,14 @@ public class Campana : EntidadInstitucional
         FechaFinUtc = fechaFinUtc;
         Activa = activa;
     }
+
+    public bool EstaAbiertaEn(DateTime fechaUtc)
+    {
+        return Activa && fechaUtc >= FechaInicioUtc && fechaUtc <= FechaFinUtc;
+    }
+
+    public bool SeSolapaCon(DateTime inicioUtc, DateTime finUtc)
+    {
+        return Activa && FechaInicioUtc <= finUtc && FechaFinUtc >= inicioUtc;
+    }
 }

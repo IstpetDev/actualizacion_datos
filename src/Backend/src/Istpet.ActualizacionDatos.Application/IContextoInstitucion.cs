@@ -6,4 +6,6 @@ public interface IContextoInstitucion
 {
     InstitucionId? InstitucionId { get; }
     bool EsSuperadmin { get; }
+    string? ActorActual { get; }
+    RolUsuario? RolActual { get; }
 }

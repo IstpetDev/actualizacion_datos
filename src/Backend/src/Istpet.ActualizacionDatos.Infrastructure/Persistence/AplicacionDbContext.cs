@@ -12,6 +12,8 @@ public class AplicacionDbContext : DbContext
 
     public DbSet<Institucion> Instituciones => Set<Institucion>();
     public DbSet<Campana> Campanas => Set<Campana>();
+    public DbSet<Persona> Personas => Set<Persona>();
+    public DbSet<Auditoria> Auditorias => Set<Auditoria>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,
@@ -64,5 +66,7 @@ public class AplicacionDbContext : DbContext
     {
         public InstitucionId? InstitucionId => null;
         public bool EsSuperadmin => false;
+        public string? ActorActual => null;
+        public RolUsuario? RolActual => null;
     }
 }
