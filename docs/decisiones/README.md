@@ -37,9 +37,9 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0003](ADR-0003-cliente-openapi-generado.md) | Cliente OpenAPI generado en el frontend | Vigente |
 | [ADR-0004](ADR-0004-multitenancia-esquema-unico.md) | Multitenancy: esquema único con `institucion_id` | Vigente |
 | [ADR-0005](ADR-0005-ci-por-niveles.md) | CI por niveles y filtro por rutas | Vigente |
-| [ADR-0006](ADR-0006-almacenamiento-de-archivos.md) | Almacenamiento de archivos | Propuesto |
-| [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Propuesto |
-| [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Propuesto |
+| [ADR-0006](ADR-0006-almacenamiento-de-archivos.md) | Almacenamiento de archivos | Vigente |
+| [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Vigente |
+| [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Vigente |
 | [ADR-0009](ADR-0009-campos-configurables.md) | Campos configurables por institución | Propuesto |
 
 <!-- prueba del ci: este comentario se puede borrar -->
