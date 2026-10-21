@@ -1,3 +1,92 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
+import { authGuard, AuthService, publicGuard, roleGuard } from './core/auth';
+import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
+import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  // Rutas públicas (Login) bajo AuthLayoutComponent
+  {
+    path: 'login',
+    component: AuthLayoutComponent,
+    canActivate: [publicGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/auth/login.component').then((m) => m.LoginComponent),
+      },
+    ],
+  },
+
+  // Vista de acceso denegado (HTTP 403 visual)
+  {
+    path: 'no-autorizado',
+    component: MainLayoutComponent,
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/no-autorizado/no-autorizado.component').then(
+            (m) => m.NoAutorizadoComponent,
+          ),
+      },
+    ],
+  },
+
+  // Rutas privadas protegidas por authGuard y envueltas en MainLayoutComponent
+  {
+    path: '',
+    component: MainLayoutComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: () => {
+          const authService = inject(AuthService);
+          const rol = authService.rolActual();
+          return rol ? `/${rol}` : '/login';
+        },
+      },
+      {
+        path: 'usuario',
+        canActivate: [roleGuard('usuario')],
+        loadComponent: () =>
+          import('./features/usuario/usuario-dashboard.component').then(
+            (m) => m.UsuarioDashboardComponent,
+          ),
+      },
+      {
+        path: 'supervisor',
+        canActivate: [roleGuard(['supervisor', 'admin'])],
+        loadComponent: () =>
+          import('./features/supervisor/supervisor-dashboard.component').then(
+            (m) => m.SupervisorDashboardComponent,
+          ),
+      },
+      {
+        path: 'admin',
+        canActivate: [roleGuard('admin')],
+        loadComponent: () =>
+          import('./features/admin/admin-dashboard.component').then(
+            (m) => m.AdminDashboardComponent,
+          ),
+      },
+      {
+        path: 'superadmin',
+        canActivate: [roleGuard('superadmin')],
+        loadComponent: () =>
+          import('./features/superadmin/superadmin-dashboard.component').then(
+            (m) => m.SuperadminDashboardComponent,
+          ),
+      },
+    ],
+  },
+
+  // Fallback para cualquier ruta no mapeada
+  {
+    path: '**',
+    redirectTo: '',
+  },
+];
