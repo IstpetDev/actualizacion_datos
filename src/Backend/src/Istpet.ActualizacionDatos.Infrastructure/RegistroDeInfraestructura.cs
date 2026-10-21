@@ -21,6 +21,8 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioInstituciones, ServicioInstituciones>();
         servicios.AddScoped<IServicioPersonas, ServicioPersonas>();
         servicios.AddScoped<IServicioCampanas, ServicioCampanas>();
+        servicios.AddScoped<IEnviadorCorreo, EnviadorCorreoLog>();
+        servicios.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
 
         var connectionString = configuracion.GetConnectionString("Default");
 
