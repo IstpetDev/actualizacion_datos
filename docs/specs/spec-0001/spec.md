@@ -22,12 +22,12 @@ La primera versión es para una institución concreta, pero el producto debe pod
 | Diseño de la fundación | `docs/superpowers/specs/2026-10-20-fundacion-repositorio-design.md`, secciones «Producto», «Roles» y «Reglas de negocio acordadas» | Roles, reglas de negocio 1 a 8 y sugerencia sobre archivos |
 | ADR vigente | ADR-0004, Vigente, `docs/decisiones/ADR-0004-multitenancia-esquema-unico.md` | Esquema único con `institucion_id`: todo dato pertenece a una institución |
 | ADR vigente | ADR-0003, Vigente, `docs/decisiones/ADR-0003-cliente-openapi-generado.md` | El contrato entre frontend y backend es OpenAPI |
-| ADR propuesto | ADR-0006, Propuesto, `docs/decisiones/ADR-0006-almacenamiento-de-archivos.md` | Almacenamiento de archivos: no decidido |
-| ADR propuesto | ADR-0007, Propuesto, `docs/decisiones/ADR-0007-autenticacion-con-cedula.md` | Autenticación, verificación de correo y recuperación: no decididas |
-| ADR propuesto | ADR-0008, Propuesto, `docs/decisiones/ADR-0008-granularidad-del-rechazo.md` | Granularidad del rechazo: no decidida |
+| ADR vigente | ADR-0006, Vigente, `docs/decisiones/ADR-0006-almacenamiento-de-archivos.md` | Archivos en disco del servidor por institución, servidos por el backend con permisos; máx. 10 MB; PDF, JPG y PNG |
+| ADR vigente | ADR-0007, Vigente, `docs/decisiones/ADR-0007-autenticacion-con-cedula.md` | Correo verificado por código; recuperación por correo o por el admin; bloqueo tras 5 intentos; sesión por cookie de 30 min de inactividad |
+| ADR vigente | ADR-0008, Vigente, `docs/decisiones/ADR-0008-granularidad-del-rechazo.md` | Rechazo general con observación obligatoria y marcas opcionales por campo o archivo |
 | ADR propuesto | ADR-0009, Propuesto, `docs/decisiones/ADR-0009-campos-configurables.md` | Campos configurables por institución: no decididos |
 
-Los ADR Propuestos no son decisiones; aquí solo delimitan puntos abiertos. No hay comportamiento existente que citar: el repositorio contiene solo la fundación, sin lógica de negocio.
+Los ADR Propuestos no son decisiones; aquí solo delimitan puntos abiertos. ADR-0006, 0007 y 0008 se decidieron el 2026-10-21 (issue #4) y resuelven PD-01 a PD-05. No hay comportamiento existente que citar: el repositorio contiene solo la fundación, sin lógica de negocio.
 
 ## Alcance
 
@@ -139,11 +139,11 @@ No se introducen requisitos de rendimiento ni de «seguridad» general sin métr
 
 | ID | Contradicción o dato faltante | Impacto | Quién decide |
 |---|---|---|---|
-| PD-01 | Almacenamiento de archivos: dónde se guardan, límites y tipos permitidos. El diseño solo sugiere una opción. | No pueden diseñarse la subida, descarga ni exportación de archivos | Quien desarrolle, mediante ADR-0006 |
-| PD-02 | Verificación del correo capturado en el primer ingreso. | No puede definirse si el correo se considera válido al capturarlo | Quien desarrolle, mediante ADR-0007 |
-| PD-03 | Recuperación de contraseña. | Una persona que olvide su contraseña no tiene camino definido | Quien desarrolle, mediante ADR-0007 |
-| PD-04 | Mecanismo de autenticación y cambio obligatorio (almacenamiento de credenciales, bloqueo por intentos, duración de sesión). | Cierra el diseño de RF-ACC-002 a 004 | Quien desarrolle, mediante ADR-0007 |
-| PD-05 | Granularidad del rechazo: por dato, por archivo o general. RF-FLU-003 se redactó sin asumirla. | Modelo de datos, pantalla del supervisor y corrección del usuario | Quien desarrolle, mediante ADR-0008 |
+| PD-01 | Almacenamiento de archivos: dónde se guardan, límites y tipos permitidos. El diseño solo sugiere una opción. | No pueden diseñarse la subida, descarga ni exportación de archivos | Resuelto en ADR-0006 (Vigente, 2026-10-21) |
+| PD-02 | Verificación del correo capturado en el primer ingreso. | No puede definirse si el correo se considera válido al capturarlo | Resuelto en ADR-0007 (Vigente, 2026-10-21) |
+| PD-03 | Recuperación de contraseña. | Una persona que olvide su contraseña no tiene camino definido | Resuelto en ADR-0007 (Vigente, 2026-10-21) |
+| PD-04 | Mecanismo de autenticación y cambio obligatorio (almacenamiento de credenciales, bloqueo por intentos, duración de sesión). | Cierra el diseño de RF-ACC-002 a 004 | Resuelto en ADR-0007 (Vigente, 2026-10-21) |
+| PD-05 | Granularidad del rechazo: por dato, por archivo o general. RF-FLU-003 se redactó sin asumirla. | Modelo de datos, pantalla del supervisor y corrección del usuario | Resuelto en ADR-0008 (Vigente, 2026-10-21) |
 | PD-06 | Campos y documentos concretos de cada institución y si son configurables. | Modelo de datos del formulario | Equipo, mediante ADR-0009; las plantillas de datos concretas quedan fuera de esta spec |
 | PD-07 | Una institución, ¿puede tener una sola campaña a la vez o varias? | Validación de RF-CAM-001 y qué campaña aplica en RF-CAM-002 | Revisor funcional |
 | PD-08 | Detalle de la auditoría: qué eventos exactos, retención y quién la consulta. | Alcance de RF-DAT-004 y 005 | Revisor funcional |
