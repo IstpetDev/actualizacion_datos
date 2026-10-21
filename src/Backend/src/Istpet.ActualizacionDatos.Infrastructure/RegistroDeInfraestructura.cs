@@ -1,8 +1,10 @@
 namespace Istpet.ActualizacionDatos.Infrastructure;
 
 using Istpet.ActualizacionDatos.Application;
+using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +17,10 @@ public static class RegistroDeInfraestructura
     {
         servicios.AddScoped<ContextoInstitucion>();
         servicios.AddScoped<IContextoInstitucion>(sp => sp.GetRequiredService<ContextoInstitucion>());
+
+        servicios.AddScoped<IServicioInstituciones, ServicioInstituciones>();
+        servicios.AddScoped<IServicioPersonas, ServicioPersonas>();
+        servicios.AddScoped<IServicioCampanas, ServicioCampanas>();
 
         var connectionString = configuracion.GetConnectionString("Default");
 

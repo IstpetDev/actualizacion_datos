@@ -50,4 +50,37 @@ public class CampanaTests
         Assert.Throws<ArgumentException>(() =>
             new Campana(Guid.NewGuid(), institucionId, nombreInvalido, inicio, fin));
     }
+
+    [Fact]
+    public void EstaAbiertaEn_evalua_correctamente_el_rango()
+    {
+        var inicio = new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc);
+        var fin = new DateTime(2026, 5, 31, 23, 59, 59, DateTimeKind.Utc);
+
+        var campana = new Campana(Guid.NewGuid(), InstitucionId.Nuevo(), "Campaña Mayo", inicio, fin);
+
+        Assert.True(campana.EstaAbiertaEn(new DateTime(2026, 5, 15, 12, 0, 0, DateTimeKind.Utc)));
+        Assert.False(campana.EstaAbiertaEn(new DateTime(2026, 4, 30, 23, 59, 59, DateTimeKind.Utc)));
+        Assert.False(campana.EstaAbiertaEn(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc)));
+    }
+
+    [Fact]
+    public void SeSolapaCon_detecta_solapamiento_entre_rangos()
+    {
+        var inicio = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc);
+        var fin = new DateTime(2026, 5, 20, 0, 0, 0, DateTimeKind.Utc);
+
+        var campana = new Campana(Guid.NewGuid(), InstitucionId.Nuevo(), "Campaña Base", inicio, fin);
+
+        // Solapamiento parcial anterior
+        Assert.True(campana.SeSolapaCon(new DateTime(2026, 5, 5, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 5, 12, 0, 0, 0, DateTimeKind.Utc)));
+        // Solapamiento interno
+        Assert.True(campana.SeSolapaCon(new DateTime(2026, 5, 12, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 5, 18, 0, 0, 0, DateTimeKind.Utc)));
+        // Solapamiento total envolvente
+        Assert.True(campana.SeSolapaCon(new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 5, 30, 0, 0, 0, DateTimeKind.Utc)));
+        // Sin solapamiento anterior
+        Assert.False(campana.SeSolapaCon(new DateTime(2026, 5, 1, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 5, 9, 0, 0, 0, DateTimeKind.Utc)));
+        // Sin solapamiento posterior
+        Assert.False(campana.SeSolapaCon(new DateTime(2026, 5, 21, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 5, 30, 0, 0, 0, DateTimeKind.Utc)));
+    }
 }

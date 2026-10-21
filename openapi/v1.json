@@ -24,10 +24,816 @@
           }
         }
       }
+    },
+    "/api/instituciones": {
+      "post": {
+        "tags": [
+          "Instituciones"
+        ],
+        "operationId": "CrearInstitucion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearInstitucionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitucionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Instituciones"
+        ],
+        "operationId": "ListarInstituciones",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InstitucionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instituciones/{id}": {
+      "get": {
+        "tags": [
+          "Instituciones"
+        ],
+        "operationId": "ObtenerInstitucionPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitucionDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/instituciones/{id}/admins": {
+      "post": {
+        "tags": [
+          "Instituciones"
+        ],
+        "operationId": "AsignarAdmins",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarAdminsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instituciones/{id}/habilitar-personas": {
+      "post": {
+        "tags": [
+          "Instituciones"
+        ],
+        "operationId": "HabilitarPersonas",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HabilitarPersonasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas/cargar": {
+      "post": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "CargarPersonas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CargarPersonasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoCargaPersonasDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas": {
+      "get": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "ListarPersonas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonaDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campanas": {
+      "post": {
+        "tags": [
+          "Campanas"
+        ],
+        "operationId": "CrearCampana",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearCampanaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampanaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Campanas"
+        ],
+        "operationId": "ListarCampanas",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CampanaDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campanas/activa": {
+      "get": {
+        "tags": [
+          "Campanas"
+        ],
+        "operationId": "ObtenerCampanaActiva",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampanaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/estado-edicion": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ObtenerEstadoEdicion",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoEdicionDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos": {
+      "put": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ActualizarMisDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarDatosRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/archivos": {
+      "post": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "SubirArchivoMisDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubirArchivoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ActualizarDatosRequest": {
+        "required": [
+          "datosJson"
+        ],
+        "type": "object",
+        "properties": {
+          "datosJson": {
+            "type": "string"
+          }
+        }
+      },
+      "AdminInicialRequest": {
+        "required": [
+          "documento"
+        ],
+        "type": "object",
+        "properties": {
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AsignarAdminsRequest": {
+        "required": [
+          "admins"
+        ],
+        "type": "object",
+        "properties": {
+          "admins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInicialRequest"
+            }
+          }
+        }
+      },
+      "CampanaDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "nombre",
+          "fechaInicioUtc",
+          "fechaFinUtc",
+          "activa",
+          "estaAbierta"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "fechaInicioUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFinUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "activa": {
+            "type": "boolean"
+          },
+          "estaAbierta": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CargarPersonasRequest": {
+        "required": [
+          "personas"
+        ],
+        "type": "object",
+        "properties": {
+          "personas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonaCargaItem"
+            }
+          }
+        }
+      },
+      "CrearCampanaRequest": {
+        "required": [
+          "nombre",
+          "fechaInicioUtc",
+          "fechaFinUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "fechaInicioUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFinUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CrearInstitucionRequest": {
+        "required": [
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "admins": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/AdminInicialRequest"
+            }
+          }
+        }
+      },
+      "EstadoEdicionDto": {
+        "required": [
+          "puedeEditar",
+          "mensaje"
+        ],
+        "type": "object",
+        "properties": {
+          "puedeEditar": {
+            "type": "boolean"
+          },
+          "mensaje": {
+            "type": "string"
+          },
+          "campanaActiva": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CampanaDto"
+              }
+            ]
+          }
+        }
+      },
+      "HabilitarPersonasRequest": {
+        "type": "object",
+        "properties": {
+          "documentos": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "personaIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "habilitarTodos": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InstitucionDto": {
+        "required": [
+          "id",
+          "nombre",
+          "activa",
+          "fechaCreacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "activa": {
+            "type": "boolean"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MensajeRespuesta": {
+        "required": [
+          "mensaje"
+        ],
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonaCargaItem": {
+        "required": [
+          "documento"
+        ],
+        "type": "object",
+        "properties": {
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PersonaDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "documento",
+          "nombre",
+          "correo",
+          "rol",
+          "accesoHabilitado",
+          "estadoActualizacion",
+          "fechaCreacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rol": {
+            "type": "string"
+          },
+          "accesoHabilitado": {
+            "type": "boolean"
+          },
+          "estadoActualizacion": {
+            "type": "string"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "RespuestaDeSalud": {
         "required": [
           "estado"
@@ -38,12 +844,89 @@
             "type": "string"
           }
         }
+      },
+      "ResultadoCargaPersonasDto": {
+        "required": [
+          "totalRecibidos",
+          "totalCargados",
+          "totalDuplicadosOmitidos",
+          "documentosCargados"
+        ],
+        "type": "object",
+        "properties": {
+          "totalRecibidos": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalCargados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalDuplicadosOmitidos": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "documentosCargados": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SubirArchivoRequest": {
+        "required": [
+          "nombreArchivo",
+          "tipoContenido",
+          "tamanoBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreArchivo": {
+            "type": "string"
+          },
+          "tipoContenido": {
+            "type": "string"
+          },
+          "tamanoBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Salud"
+    },
+    {
+      "name": "Instituciones"
+    },
+    {
+      "name": "Personas"
+    },
+    {
+      "name": "Campanas"
+    },
+    {
+      "name": "MisDatos"
     }
   ]
 }
