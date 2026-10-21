@@ -21,8 +21,12 @@ services:
     build:
       context: ./src/Backend
       dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     ports:
       - "127.0.0.1:${BACKEND_PUERTO:-8080}:8080"
     healthcheck:
