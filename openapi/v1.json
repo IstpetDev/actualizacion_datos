@@ -587,17 +587,16 @@
         }
       }
     },
-    "/api/mis-datos/estado-edicion": {
+    "/api/mis-datos": {
       "get": {
         "tags": [
           "MisDatos"
         ],
-        "operationId": "ObtenerEstadoEdicion",
+        "operationId": "ObtenerMisDatos",
         "parameters": [
           {
             "name": "documento",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -609,15 +608,36 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EstadoEdicionDto"
+                  "$ref": "#/components/schemas/MisDatosDto"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
-      }
-    },
-    "/api/mis-datos": {
+      },
       "put": {
         "tags": [
           "MisDatos"
@@ -627,7 +647,6 @@
           {
             "name": "documento",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -673,6 +692,51 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/estado-edicion": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ObtenerEstadoEdicion",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoEdicionDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         }
       }
@@ -687,7 +751,6 @@
           {
             "name": "documento",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -733,6 +796,369 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/aceptar-tratamiento": {
+      "post": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "AceptarTratamientoDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/enviar": {
+      "post": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "EnviarMisDatosARevision",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/observaciones": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ObtenerObservacionesMisDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ObservacionDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/revision/pendientes": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ListarPendientesRevision",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResumenRevisionPendienteDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/revision/{documento}": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ObtenerExpedienteParaRevision",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpedienteRevisionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/revision/{documento}/aprobar": {
+      "post": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "AprobarActualizacion",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/revision/{documento}/devolver": {
+      "post": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "DevolverActualizacion",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DevolverActualizacionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/auditoria": {
+      "get": {
+        "tags": [
+          "Auditoria"
+        ],
+        "operationId": "ListarAuditorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditoriaDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
           }
         }
       }
@@ -785,6 +1211,46 @@
             "items": {
               "$ref": "#/components/schemas/AdminInicialRequest"
             }
+          }
+        }
+      },
+      "AuditoriaDto": {
+        "required": [
+          "id",
+          "actor",
+          "accion",
+          "institucionId",
+          "fechaUtc",
+          "detalle"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "accion": {
+            "type": "string"
+          },
+          "institucionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "detalle": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -900,6 +1366,26 @@
           }
         }
       },
+      "DevolverActualizacionRequest": {
+        "required": [
+          "observacionGeneral"
+        ],
+        "type": "object",
+        "properties": {
+          "observacionGeneral": {
+            "type": "string"
+          },
+          "marcas": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MarcaObservacionItem"
+            }
+          }
+        }
+      },
       "EnviarCodigoCorreoRequest": {
         "required": [
           "correo"
@@ -933,6 +1419,84 @@
                 "$ref": "#/components/schemas/CampanaDto"
               }
             ]
+          },
+          "estadoActualizacion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ExpedienteRevisionDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "documento",
+          "nombre",
+          "correo",
+          "estadoActualizacion",
+          "datosPersonalesJson",
+          "archivosSubidosJson",
+          "tratamientoDatosAceptado",
+          "fechaAceptacionTratamientoDatosUtc",
+          "observaciones"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estadoActualizacion": {
+            "type": "string"
+          },
+          "datosPersonalesJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "archivosSubidosJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tratamientoDatosAceptado": {
+            "type": "boolean"
+          },
+          "fechaAceptacionTratamientoDatosUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "observaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservacionDto"
+            }
           }
         }
       },
@@ -1011,6 +1575,49 @@
           }
         }
       },
+      "MarcaObservacionDto": {
+        "required": [
+          "id",
+          "tipoDestino",
+          "claveDestino",
+          "texto"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoDestino": {
+            "type": "string"
+          },
+          "claveDestino": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          }
+        }
+      },
+      "MarcaObservacionItem": {
+        "required": [
+          "tipoDestino",
+          "claveDestino",
+          "texto"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoDestino": {
+            "type": "string"
+          },
+          "claveDestino": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          }
+        }
+      },
       "MensajeRespuesta": {
         "required": [
           "mensaje"
@@ -1019,6 +1626,131 @@
         "properties": {
           "mensaje": {
             "type": "string"
+          }
+        }
+      },
+      "MisDatosDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "documento",
+          "nombre",
+          "correo",
+          "correoVerificado",
+          "estadoActualizacion",
+          "datosPersonalesJson",
+          "archivosSubidosJson",
+          "tratamientoDatosAceptado",
+          "fechaAceptacionTratamientoDatosUtc",
+          "puedeEditar",
+          "mensajeEstado",
+          "observaciones"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correoVerificado": {
+            "type": "boolean"
+          },
+          "estadoActualizacion": {
+            "type": "string"
+          },
+          "datosPersonalesJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "archivosSubidosJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tratamientoDatosAceptado": {
+            "type": "boolean"
+          },
+          "fechaAceptacionTratamientoDatosUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "puedeEditar": {
+            "type": "boolean"
+          },
+          "mensajeEstado": {
+            "type": "string"
+          },
+          "observaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObservacionDto"
+            }
+          }
+        }
+      },
+      "ObservacionDto": {
+        "required": [
+          "id",
+          "ronda",
+          "autor",
+          "texto",
+          "fechaUtc",
+          "marcas"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ronda": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autor": {
+            "type": "string"
+          },
+          "texto": {
+            "type": "string"
+          },
+          "fechaUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "marcas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarcaObservacionDto"
+            }
           }
         }
       },
@@ -1196,6 +1928,45 @@
           }
         }
       },
+      "ResumenRevisionPendienteDto": {
+        "required": [
+          "id",
+          "documento",
+          "nombre",
+          "correo",
+          "estadoActualizacion",
+          "fechaCreacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estadoActualizacion": {
+            "type": "string"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "SesionUsuarioDto": {
         "required": [
           "id",
@@ -1298,6 +2069,12 @@
     },
     {
       "name": "MisDatos"
+    },
+    {
+      "name": "Revision"
+    },
+    {
+      "name": "Auditoria"
     }
   ]
 }

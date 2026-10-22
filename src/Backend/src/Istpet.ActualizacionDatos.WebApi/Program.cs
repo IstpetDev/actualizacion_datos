@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
@@ -454,22 +455,120 @@ campanas.MapGet("/activa", async (IServicioCampanas servicio, CancellationToken 
 .Produces<CampanaDto>()
 .Produces(StatusCodes.Status404NotFound);
 
-// --- Endpoints Mis Datos (RF-CAM-002, RF-CAM-003, RF-CAM-004) ---
+// --- Helpers de autorización y resolución de actor ---
+static string? ObtenerDocumentoActual(HttpContext httpContext, IContextoInstitucion contexto)
+{
+    return httpContext.User.FindFirst(ClaimTypes.Name)?.Value ?? contexto.ActorActual;
+}
+
+static bool EsRolSupervisorOAdmin(HttpContext httpContext, IContextoInstitucion contexto)
+{
+    var rol = contexto.RolActual;
+    if (rol == null)
+    {
+        var claimRol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+        if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
+        {
+            rol = r;
+        }
+    }
+    return rol is RolUsuario.Supervisor or RolUsuario.Admin or RolUsuario.Superadmin;
+}
+
+static bool ValidarAccesoMisDatos(string? docParam, string? docActual, HttpContext httpContext, IContextoInstitucion contexto)
+{
+    // RF-DAT-002: Un usuario solo accede a sus propios datos.
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        if (string.IsNullOrWhiteSpace(docActual))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(docParam) &&
+            !string.Equals(docParam, docActual, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+// --- Endpoints Mis Datos (RF-CAM-002, RF-CAM-003, RF-CAM-004, RF-FLU-001, RF-FLU-004, RF-DAT-001, RF-DAT-002) ---
 var misDatos = app.MapGroup("/api/mis-datos").WithTags("MisDatos");
 
-misDatos.MapGet("/estado-edicion", async (string documento, IServicioCampanas servicio, CancellationToken ct) =>
+misDatos.MapGet("/", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
-    var estado = await servicio.ObtenerEstadoEdicionAsync(documento, ct);
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para acceder a los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var datos = await servicio.ObtenerMisDatosAsync(docEfectivo, ct);
+        return Results.Ok(datos);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ObtenerMisDatos")
+.Produces<MisDatosDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+misDatos.MapGet("/estado-edicion", async (string? documento, HttpContext httpContext, IServicioCampanas servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para acceder a los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var estado = await servicio.ObtenerEstadoEdicionAsync(docEfectivo, ct);
     return Results.Ok(estado);
 })
 .WithName("ObtenerEstadoEdicion")
-.Produces<EstadoEdicionDto>();
+.Produces<EstadoEdicionDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
 
-misDatos.MapPut("/", async (string documento, ActualizarDatosRequest request, IServicioCampanas servicio, CancellationToken ct) =>
+misDatos.MapPut("/", async (string? documento, ActualizarDatosRequest request, HttpContext httpContext, IServicioCampanas servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
     try
     {
-        await servicio.ActualizarDatosUsuarioAsync(documento, request, ct);
+        await servicio.ActualizarDatosUsuarioAsync(docEfectivo, request, ct);
         return Results.Ok(new MensajeRespuesta("Datos actualizados correctamente en borrador."));
     }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
@@ -484,13 +583,27 @@ misDatos.MapPut("/", async (string documento, ActualizarDatosRequest request, IS
 .WithName("ActualizarMisDatos")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
-.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden);
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
 
-misDatos.MapPost("/archivos", async (string documento, SubirArchivoRequest request, IServicioCampanas servicio, CancellationToken ct) =>
+misDatos.MapPost("/archivos", async (string? documento, SubirArchivoRequest request, HttpContext httpContext, IServicioCampanas servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
     try
     {
-        await servicio.SubirArchivoUsuarioAsync(documento, request, ct);
+        await servicio.SubirArchivoUsuarioAsync(docEfectivo, request, ct);
         return Results.Ok(new MensajeRespuesta("Archivo subido correctamente."));
     }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
@@ -505,7 +618,216 @@ misDatos.MapPost("/archivos", async (string documento, SubirArchivoRequest reque
 .WithName("SubirArchivoMisDatos")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
-.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden);
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+misDatos.MapPost("/aceptar-tratamiento", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await servicio.AceptarTratamientoDatosAsync(docEfectivo, ct);
+        return Results.Ok(new MensajeRespuesta("Aceptación del tratamiento de datos personales registrada con éxito."));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("AceptarTratamientoDatos")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+misDatos.MapPost("/enviar", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await servicio.EnviarARevisionAsync(docEfectivo, ct);
+        return Results.Ok(new MensajeRespuesta("Actualización enviada a revisión exitosamente. La edición ha sido bloqueada."));
+    }
+    catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("EnviarMisDatosARevision")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+misDatos.MapGet("/observaciones", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para acceder a los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var observaciones = await servicio.ObtenerObservacionesAsync(docEfectivo, ct);
+        return Results.Ok(observaciones);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ObtenerObservacionesMisDatos")
+.Produces<List<ObservacionDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+// --- Endpoints Revision (RF-FLU-002, RF-FLU-003, RF-FLU-005, RF-FLU-006, RF-DAT-004, RF-DAT-005, ADR-0008) ---
+var revision = app.MapGroup("/api/revision").WithTags("Revision");
+
+revision.MapGet("/pendientes", async (HttpContext httpContext, IServicioRevision servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var pendientes = await servicio.ListarPendientesRevisionAsync(ct);
+    return Results.Ok(pendientes);
+})
+.WithName("ListarPendientesRevision")
+.Produces<List<ResumenRevisionPendienteDto>>()
+.Produces(StatusCodes.Status403Forbidden);
+
+revision.MapGet("/{documento}", async (string documento, HttpContext httpContext, IServicioRevision servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var supervisor = ObtenerDocumentoActual(httpContext, contexto) ?? "supervisor";
+
+    try
+    {
+        var expediente = await servicio.ObtenerExpedienteParaRevisionAsync(documento, supervisor, ct);
+        return Results.Ok(expediente);
+    }
+    catch (ReglaNegocioException ex) when (ex.Message.Contains("borrador", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status400BadRequest);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ObtenerExpedienteParaRevision")
+.Produces<ExpedienteRevisionDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status403Forbidden);
+
+revision.MapPost("/{documento}/aprobar", async (string documento, HttpContext httpContext, IServicioRevision servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var supervisor = ObtenerDocumentoActual(httpContext, contexto) ?? "supervisor";
+
+    try
+    {
+        await servicio.AprobarActualizacionAsync(documento, supervisor, ct);
+        return Results.Ok(new MensajeRespuesta("Actualización aprobada con éxito."));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("AprobarActualizacion")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status403Forbidden);
+
+revision.MapPost("/{documento}/devolver", async (string documento, DevolverActualizacionRequest request, HttpContext httpContext, IServicioRevision servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var supervisor = ObtenerDocumentoActual(httpContext, contexto) ?? "supervisor";
+
+    try
+    {
+        await servicio.DevolverActualizacionAsync(documento, request, supervisor, ct);
+        return Results.Ok(new MensajeRespuesta("Actualización devuelta al usuario con observaciones."));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("DevolverActualizacion")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status403Forbidden);
+
+// --- Endpoints Auditoria (RF-DAT-004, RF-DAT-005) ---
+var auditoriaGroup = app.MapGroup("/api/auditoria").WithTags("Auditoria");
+
+auditoriaGroup.MapGet("/", async (HttpContext httpContext, IServicioAuditoria servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var auditorias = await servicio.ListarAuditoriasAsync(ct);
+    return Results.Ok(auditorias);
+})
+.WithName("ListarAuditorias")
+.Produces<List<AuditoriaDto>>()
+.Produces(StatusCodes.Status403Forbidden);
 
 await app.RunAsync();
 

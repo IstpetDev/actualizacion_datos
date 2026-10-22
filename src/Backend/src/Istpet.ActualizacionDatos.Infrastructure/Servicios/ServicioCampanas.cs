@@ -105,20 +105,55 @@ public class ServicioCampanas : IServicioCampanas
     public async Task<EstadoEdicionDto> ObtenerEstadoEdicionAsync(string documento, CancellationToken ct = default)
     {
         var campanaActiva = await ObtenerCampanaActivaAsync(ct);
+        var persona = await _context.Personas.FirstOrDefaultAsync(p => p.Documento == documento, ct);
 
-        if (campanaActiva != null)
+        if (campanaActiva == null)
         {
-            // RF-CAM-002: Campaña abierta permite edición
+            // RF-CAM-003: Sin campaña abierta solo lectura
             return new EstadoEdicionDto(
-                PuedeEditar: true,
-                Mensaje: "Campaña abierta para edición y subida de archivos.",
-                CampanaActiva: campanaActiva);
+                PuedeEditar: false,
+                Mensaje: "Fuera de campaña: los datos se muestran en modo solo lectura.",
+                EstadoActualizacion: persona?.EstadoActualizacion.ToString());
         }
 
-        // RF-CAM-003: Sin campaña abierta solo lectura
+        if (persona != null)
+        {
+            if (persona.EstadoActualizacion == EstadoActualizacion.Enviado)
+            {
+                // RF-FLU-001: Bloquea edición si fue enviado
+                return new EstadoEdicionDto(
+                    PuedeEditar: false,
+                    Mensaje: "Su información ha sido enviada a revisión y se encuentra bloqueada para edición.",
+                    CampanaActiva: campanaActiva,
+                    EstadoActualizacion: persona.EstadoActualizacion.ToString());
+            }
+
+            if (persona.EstadoActualizacion == EstadoActualizacion.Aprobado)
+            {
+                return new EstadoEdicionDto(
+                    PuedeEditar: false,
+                    Mensaje: "Su información ya ha sido aprobada.",
+                    CampanaActiva: campanaActiva,
+                    EstadoActualizacion: persona.EstadoActualizacion.ToString());
+            }
+
+            if (persona.EstadoActualizacion == EstadoActualizacion.Devuelto)
+            {
+                // RF-FLU-004: Devuelta permite corregir y volver a enviar
+                return new EstadoEdicionDto(
+                    PuedeEditar: true,
+                    Mensaje: "Su solicitud ha sido devuelta con observaciones. Puede corregir y volver a enviar.",
+                    CampanaActiva: campanaActiva,
+                    EstadoActualizacion: persona.EstadoActualizacion.ToString());
+            }
+        }
+
+        // RF-CAM-002: Campaña abierta permite edición
         return new EstadoEdicionDto(
-            PuedeEditar: false,
-            Mensaje: "Fuera de campaña: los datos se muestran en modo solo lectura.");
+            PuedeEditar: true,
+            Mensaje: "Campaña abierta para edición y subida de archivos.",
+            CampanaActiva: campanaActiva,
+            EstadoActualizacion: persona?.EstadoActualizacion.ToString() ?? EstadoActualizacion.Borrador.ToString());
     }
 
     public async Task ActualizarDatosUsuarioAsync(string documento, ActualizarDatosRequest request, CancellationToken ct = default)
@@ -135,7 +170,7 @@ public class ServicioCampanas : IServicioCampanas
             .FirstOrDefaultAsync(p => p.Documento == documento, ct)
             ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
 
-        // RF-CAM-002: Permite editar y guardar borrador
+        // RF-FLU-001: Bloquea edición si el estado es Enviado o Aprobado
         persona.ActualizarBorrador(request.DatosJson);
         await _context.SaveChangesAsync(ct);
     }
@@ -154,7 +189,7 @@ public class ServicioCampanas : IServicioCampanas
             .FirstOrDefaultAsync(p => p.Documento == documento, ct)
             ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
 
-        // RF-CAM-002: Permite subida de archivos
+        // RF-FLU-001: Bloquea subida si el estado es Enviado o Aprobado
         persona.RegistrarArchivoSubido(request.NombreArchivo);
         await _context.SaveChangesAsync(ct);
     }

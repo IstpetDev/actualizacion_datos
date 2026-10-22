@@ -14,6 +14,8 @@ public class AplicacionDbContext : DbContext
     public DbSet<Campana> Campanas => Set<Campana>();
     public DbSet<Persona> Personas => Set<Persona>();
     public DbSet<Auditoria> Auditorias => Set<Auditoria>();
+    public DbSet<Observacion> Observaciones => Set<Observacion>();
+    public DbSet<MarcaObservacion> MarcasObservacion => Set<MarcaObservacion>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,
