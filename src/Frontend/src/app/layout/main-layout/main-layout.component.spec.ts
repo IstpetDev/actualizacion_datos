@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { AutenticacionClient } from '../../api-client';
 import { vi } from 'vitest';
 import { AuthService, Rol, SesionUsuario } from '../../core/auth';
 import { MainLayoutComponent } from './main-layout.component';
@@ -34,11 +36,28 @@ describe('MainLayoutComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent],
-      providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: AutenticacionClient,
+          useValue: { cerrarSesion: vi.fn(() => of({ mensaje: 'Sesión cerrada' })) },
+        },
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
+  });
+
+  it('conserva_la_sesion_si_falla_el_cierre_remoto', () => {
+    vi.spyOn(TestBed.inject(AutenticacionClient), 'cerrarSesion').mockReturnValue(
+      throwError(() => new Error()),
+    );
+    const fixture = TestBed.createComponent(MainLayoutComponent);
+    fixture.componentInstance.cerrarSesion();
+    expect(authServiceMock.cerrarSesion).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.errorCierre()).toContain('No se pudo');
   });
 
   it('crea_el_componente_layout', () => {

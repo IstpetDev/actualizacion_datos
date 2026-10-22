@@ -20,6 +20,9 @@ export interface SesionUsuario {
   readonly rol: Rol;
   readonly institucionId: string;
   readonly token?: string;
+  readonly debeCambiarContrasena?: boolean;
+  readonly correo?: string;
+  readonly correoVerificado?: boolean;
 }
 
 /**

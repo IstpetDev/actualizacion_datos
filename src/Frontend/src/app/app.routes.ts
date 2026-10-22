@@ -39,7 +39,13 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
+    canActivateChild: [authGuard],
     children: [
+      {
+        path: 'cambiar-clave',
+        loadComponent: () =>
+          import('./features/auth/cambiar-clave.component').then((m) => m.CambiarClaveComponent),
+      },
       {
         path: '',
         pathMatch: 'full',

@@ -1,4 +1,6 @@
-import { computed, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { AutenticacionClient, SesionUsuarioDto } from '../../api-client';
+import { map, Observable } from 'rxjs';
 import { esRolValido, Rol, SesionUsuario } from './auth.models';
 
 const CLAVE_STORAGE_SESION = 'istpet_actualizacion_datos_sesion';
@@ -7,6 +9,29 @@ const CLAVE_STORAGE_SESION = 'istpet_actualizacion_datos_sesion';
   providedIn: 'root',
 })
 export class AuthService {
+  private readonly cliente = inject(AutenticacionClient);
+
+  verificarSesion(): Observable<SesionUsuario> {
+    return this.cliente.obtenerSesionActual().pipe(map((datos) => this.recibirSesion(datos)));
+  }
+
+  recibirSesion(datos: SesionUsuarioDto): SesionUsuario {
+    const rol = datos.rol.toLowerCase();
+    if (!esRolValido(rol)) throw new Error('El servidor devolvió un rol desconocido.');
+    const sesion: SesionUsuario = {
+      id: datos.id,
+      institucionId: datos.institucionId,
+      cedula: datos.documento,
+      nombre: datos.nombre ?? 'Usuario',
+      rol,
+      debeCambiarContrasena: datos.debeCambiarContrasena,
+      correo: datos.correo,
+      correoVerificado: datos.correoVerificado,
+    };
+    this.iniciarSesion(sesion);
+    return sesion;
+  }
+
   private readonly _sesion = signal<SesionUsuario | null>(this.recuperarSesionInicial());
 
   /**
