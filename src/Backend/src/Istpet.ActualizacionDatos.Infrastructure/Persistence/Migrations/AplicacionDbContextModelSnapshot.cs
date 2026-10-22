@@ -1369,10 +1369,6 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("acceso_habilitado");
 
-                    b.Property<string>("ArchivosSubidosJson")
-                        .HasColumnType("text")
-                        .HasColumnName("archivos_subidos_json");
-
                     b.Property<DateTime?>("BloqueadoHastaUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("bloqueado_hasta_utc");

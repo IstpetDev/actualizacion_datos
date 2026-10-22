@@ -51,7 +51,6 @@ describe('SupervisorDashboardComponent', () => {
       apellidos: 'Prueba Uno',
       telefono: '0999999999',
     }),
-    archivosSubidosJson: '[]',
     tratamientoDatosAceptado: true,
     fechaAceptacionTratamientoDatosUtc: new Date('2026-10-22T09:30:00Z'),
     observaciones: [],

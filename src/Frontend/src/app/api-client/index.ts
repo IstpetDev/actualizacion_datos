@@ -767,152 +767,6 @@ export class MisDatosClient {
      * @param documento (optional) 
      * @return OK
      */
-    subirArchivoMisDatos(body: SubirArchivoRequest, documento?: string | undefined): Observable<MensajeRespuesta> {
-        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
-        if (documento === null)
-            throw new globalThis.Error("The parameter 'documento' cannot be null.");
-        else if (documento !== undefined)
-            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processSubirArchivoMisDatos(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processSubirArchivoMisDatos(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<MensajeRespuesta>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<MensajeRespuesta>;
-        }));
-    }
-
-    protected processSubirArchivoMisDatos(response: HttpResponseBase): Observable<MensajeRespuesta> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return _observableOf(result200);
-            }));
-        } else if (status === 400) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Bad Request", status, _responseText, _headers, result400);
-            }));
-        } else if (status === 401) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            }));
-        } else if (status === 403) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Forbidden", status, _responseText, _headers, result403);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param documento (optional) 
-     * @return OK
-     */
-    listarArchivosMisDatos(documento?: string | undefined): Observable<ArchivoDto[]> {
-        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
-        if (documento === null)
-            throw new globalThis.Error("The parameter 'documento' cannot be null.");
-        else if (documento !== undefined)
-            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processListarArchivosMisDatos(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processListarArchivosMisDatos(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<ArchivoDto[]>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<ArchivoDto[]>;
-        }));
-    }
-
-    protected processListarArchivosMisDatos(response: HttpResponseBase): Observable<ArchivoDto[]> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArchivoDto[];
-            return _observableOf(result200);
-            }));
-        } else if (status === 400) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Bad Request", status, _responseText, _headers, result400);
-            }));
-        } else if (status === 401) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            }));
-        } else if (status === 403) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Forbidden", status, _responseText, _headers, result403);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param documento (optional) 
-     * @return OK
-     */
     aceptarTratamientoDatos(documento?: string | undefined): Observable<MensajeRespuesta> {
         let url_ = this.baseUrl + "/api/mis-datos/aceptar-tratamiento?";
         if (documento === null)
@@ -1096,6 +950,77 @@ export class MisDatosClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ObservacionDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param documento (optional) 
+     * @return OK
+     */
+    listarArchivosMisDatos(documento?: string | undefined): Observable<ArchivoDto[]> {
+        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
+        if (documento === null)
+            throw new globalThis.Error("The parameter 'documento' cannot be null.");
+        else if (documento !== undefined)
+            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processListarArchivosMisDatos(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processListarArchivosMisDatos(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ArchivoDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ArchivoDto[]>;
+        }));
+    }
+
+    protected processListarArchivosMisDatos(response: HttpResponseBase): Observable<ArchivoDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArchivoDto[];
             return _observableOf(result200);
             }));
         } else if (status === 400) {
@@ -5138,6 +5063,7 @@ export interface EstadoEdicionDto {
     mensaje: string;
     campanaActiva?: CampanaDto | undefined;
     estadoActualizacion?: string | undefined;
+    puedeIniciarNuevaActualizacion?: boolean;
 
     [key: string]: any;
 }
@@ -5150,7 +5076,6 @@ export interface ExpedienteRevisionDto {
     correo: string | undefined;
     estadoActualizacion: string;
     datosPersonalesJson: string | undefined;
-    archivosSubidosJson: string | undefined;
     tratamientoDatosAceptado: boolean;
     fechaAceptacionTratamientoDatosUtc: Date | undefined;
     observaciones: ObservacionDto[];
@@ -5434,7 +5359,6 @@ export interface MisDatosDto {
     correoVerificado: boolean;
     estadoActualizacion: string;
     datosPersonalesJson: string | undefined;
-    archivosSubidosJson: string | undefined;
     tratamientoDatosAceptado: boolean;
     fechaAceptacionTratamientoDatosUtc: Date | undefined;
     puedeEditar: boolean;
@@ -5565,14 +5489,6 @@ export interface SesionUsuarioDto {
     rol: string;
     debeCambiarContrasena: boolean;
     correoVerificado: boolean;
-
-    [key: string]: any;
-}
-
-export interface SubirArchivoRequest {
-    nombreArchivo: string;
-    tipoContenido: string;
-    tamanoBytes: number;
 
     [key: string]: any;
 }

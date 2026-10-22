@@ -18,12 +18,8 @@ public sealed record EstadoEdicionDto(
     bool PuedeEditar,
     string Mensaje,
     CampanaDto? CampanaActiva = null,
-    string? EstadoActualizacion = null);
+    string? EstadoActualizacion = null,
+    bool PuedeIniciarNuevaActualizacion = false);
 
 public sealed record ActualizarDatosRequest(
     string DatosJson);
-
-public sealed record SubirArchivoRequest(
-    string NombreArchivo,
-    string TipoContenido,
-    long TamanoBytes);

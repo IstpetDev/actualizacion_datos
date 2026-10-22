@@ -124,7 +124,6 @@ public class ServicioArchivos : IServicioArchivos
             DateTime.UtcNow);
 
         _context.ArchivosAdjuntos.Add(entidad);
-        persona.RegistrarArchivoSubido(nombreOriginal);
 
         await _context.SaveChangesAsync(ct);
 

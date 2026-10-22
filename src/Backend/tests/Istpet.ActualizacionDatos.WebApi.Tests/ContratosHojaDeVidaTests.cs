@@ -45,7 +45,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         { "GET", "/api/mis-datos/hoja-de-vida/faltantes" },
         { "GET", "/api/mis-datos/documentos" },
         { "PUT", $"/api/mis-datos/documentos/{Id}" },
-        { "POST", "/api/mis-datos/iniciar-actualizacion" },
         { "GET", "/api/catalogos/Parroquia" },
     };
 

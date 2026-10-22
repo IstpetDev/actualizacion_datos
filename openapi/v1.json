@@ -905,121 +905,6 @@
         }
       }
     },
-    "/api/mis-datos/archivos": {
-      "post": {
-        "tags": [
-          "MisDatos"
-        ],
-        "operationId": "SubirArchivoMisDatos",
-        "parameters": [
-          {
-            "name": "documento",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubirArchivoRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "MisDatos"
-        ],
-        "operationId": "ListarArchivosMisDatos",
-        "parameters": [
-          {
-            "name": "documento",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArchivoDto"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/api/mis-datos/aceptar-tratamiento": {
       "post": {
         "tags": [
@@ -1148,6 +1033,61 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ObservacionDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/archivos": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ListarArchivosMisDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchivoDto"
                   }
                 }
               }
@@ -4056,6 +3996,10 @@
               "null",
               "string"
             ]
+          },
+          "puedeIniciarNuevaActualizacion": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4068,7 +4012,6 @@
           "correo",
           "estadoActualizacion",
           "datosPersonalesJson",
-          "archivosSubidosJson",
           "tratamientoDatosAceptado",
           "fechaAceptacionTratamientoDatosUtc",
           "observaciones"
@@ -4102,12 +4045,6 @@
             "type": "string"
           },
           "datosPersonalesJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "archivosSubidosJson": {
             "type": [
               "null",
               "string"
@@ -5368,7 +5305,6 @@
           "correoVerificado",
           "estadoActualizacion",
           "datosPersonalesJson",
-          "archivosSubidosJson",
           "tratamientoDatosAceptado",
           "fechaAceptacionTratamientoDatosUtc",
           "puedeEditar",
@@ -5407,12 +5343,6 @@
             "type": "string"
           },
           "datosPersonalesJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "archivosSubidosJson": {
             "type": [
               "null",
               "string"
@@ -5886,30 +5816,6 @@
           },
           "correoVerificado": {
             "type": "boolean"
-          }
-        }
-      },
-      "SubirArchivoRequest": {
-        "required": [
-          "nombreArchivo",
-          "tipoContenido",
-          "tamanoBytes"
-        ],
-        "type": "object",
-        "properties": {
-          "nombreArchivo": {
-            "type": "string"
-          },
-          "tipoContenido": {
-            "type": "string"
-          },
-          "tamanoBytes": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
           }
         }
       },

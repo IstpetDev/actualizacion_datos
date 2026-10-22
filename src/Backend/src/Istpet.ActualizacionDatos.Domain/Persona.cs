@@ -10,7 +10,6 @@ public class Persona : EntidadInstitucional
     public bool AccesoHabilitado { get; private set; }
     public EstadoActualizacion EstadoActualizacion { get; private set; }
     public string? DatosPersonalesJson { get; private set; }
-    public string? ArchivosSubidosJson { get; private set; }
     public DateTime FechaCreacionUtc { get; private set; }
 
     // ADR-0010: el tipo de funcionario define qué documentos personales se piden
@@ -106,14 +105,16 @@ public class Persona : EntidadInstitucional
         DatosPersonalesJson = datosJson;
     }
 
-    public void RegistrarArchivoSubido(string archivoInfo)
+    // PD-HDV-04 (spec-0003) y RF-FLU-005: quien ya fue aprobado vuelve a actualizar con una acción
+    // explícita al entrar. La campaña abierta la comprueba el servicio, que es quien la conoce.
+    public void IniciarNuevaActualizacion()
     {
-        if (!PuedeEditarHojaDeVida)
+        if (EstadoActualizacion != EstadoActualizacion.Aprobado)
         {
-            throw new ReglaNegocioException("No se puede subir archivos mientras la solicitud está en revisión o ya ha sido aprobada.");
+            throw new ReglaNegocioException("Solo se puede iniciar una nueva actualización cuando la anterior ya fue aprobada.");
         }
 
-        ArchivosSubidosJson = archivoInfo;
+        EstadoActualizacion = EstadoActualizacion.Borrador;
     }
 
     public void AceptarTratamientoDatos(DateTime fechaUtc)

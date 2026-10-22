@@ -593,41 +593,6 @@ misDatos.MapPut("/", async (string? documento, ActualizarDatosRequest request, H
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
-misDatos.MapPost("/archivos", async (string? documento, SubirArchivoRequest request, HttpContext httpContext, IServicioCampanas servicio, IContextoInstitucion contexto, CancellationToken ct) =>
-{
-    var docActual = ObtenerDocumentoActual(httpContext, contexto);
-    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
-
-    if (string.IsNullOrWhiteSpace(docEfectivo))
-    {
-        return Results.Unauthorized();
-    }
-
-    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
-    {
-        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
-    }
-
-    try
-    {
-        await servicio.SubirArchivoUsuarioAsync(docEfectivo, request, ct);
-        return Results.Ok(new MensajeRespuesta("Archivo subido correctamente."));
-    }
-    catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
-    {
-        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
-    }
-    catch (ReglaNegocioException ex)
-    {
-        return Results.BadRequest(new MensajeRespuesta(ex.Message));
-    }
-})
-.WithName("SubirArchivoMisDatos")
-.Produces<MensajeRespuesta>()
-.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
-.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
-.Produces(StatusCodes.Status401Unauthorized);
-
 misDatos.MapPost("/aceptar-tratamiento", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
     var docActual = ObtenerDocumentoActual(httpContext, contexto);
