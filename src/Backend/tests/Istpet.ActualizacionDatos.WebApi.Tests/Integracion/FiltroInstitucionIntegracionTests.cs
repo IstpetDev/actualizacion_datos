@@ -159,7 +159,7 @@ public sealed class FiltroInstitucionIntegracionTests : IAsyncLifetime
         }
     }
 
-    // RF-HDV-015 (spec-0002): las tablas de la hoja de vida quedan aisladas por institución.
+    // RF-HDV-015 (spec-0003): las tablas de la hoja de vida quedan aisladas por institución.
     [Fact]
     public async Task Hoja_de_vida_de_institucion_A_no_es_visible_desde_institucion_B()
     {
