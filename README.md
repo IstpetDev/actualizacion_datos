@@ -115,21 +115,29 @@ Todas las acciones de terceros se fijan por hash de commit, no solo por versión
 
 ## Despliegue
 
-El destino es Docker. El despliegue **no está implementado** en esta etapa. Como el repositorio es público, el despliegue futuro será la opción B; nunca un runner propio.
+El destino de producción es Docker sobre un servidor en la red privada institucional, implementado bajo la **Opción B: Empuje por red privada** ([ADR-0011](docs/decisiones/ADR-0011-despliegue-a-produccion.md)). Por seguridad, nunca se utiliza un GitHub Self-Hosted Runner.
 
-| Opción | Cómo funciona | Cuándo elegirla |
-| --- | --- | --- |
-| **A. Híbrida** | Compila GitHub; un runner propio en el servidor copia el resultado | Repositorio **privado** |
-| **B. Empuje por red privada** | Compila y despliega GitHub, que se une a una red privada como nodo temporal y despliega por SSH | Repositorio **público** (la elegida) |
-| **C. Compila el servidor** | El runner propio compila todo | No recomendada |
+### Flujo del despliegue automático (`deploy.yml`)
 
-**Regla de oro:** no usar un runner propio en un repositorio público. Un PR desde un fork podría ejecutar código en el servidor.
+1. **Disparador:** Se ejecuta automáticamente tras fusionar un PR a la rama `main` (o manualmente por `workflow_dispatch`).
+2. **Construcción:** El runner de GitHub Actions construye las imágenes Docker de backend y frontend, etiquetándolas con el SHA del commit (`${{ github.sha }}`) y `latest`.
+3. **Conexión privada:** El workflow se conecta de forma efímera a la red privada institucional mediante la acción oficial de **Tailscale** (`tailscale/github-action`).
+4. **Transferencia de imágenes:** Las imágenes se transfieren comprimidas por SSH directo (`docker save ... | gzip | ssh ... gunzip | docker load`) sin necesidad de un registro intermedio de imágenes.
+5. **Migraciones explícitas:** El contenedor del backend ejecuta `docker compose -f docker-compose.prod.yml run --rm backend --migrar`. Si la migración falla, el despliegue se detiene de inmediato sin tocar los servicios productivos en ejecución.
+6. **Arranque y origen único:** Se recrean los servicios (`docker compose -f docker-compose.prod.yml up -d --remove-orphans`). Un proxy inverso Nginx local (`actualizacion_proxy`) unifica el Frontend y la API bajo el mismo origen, garantizando el cumplimiento de la cookie de sesión `SameSite=Strict` ([ADR-0007](docs/decisiones/ADR-0007-autenticacion-con-cedula.md)).
+7. **Exposición:** **Cloudflare Tunnel (`cloudflared`)** apunta al puerto local del proxy inverso (8088), publicando la aplicación en el dominio institucional sin abrir ningún puerto entrante en el router ni en el firewall.
+8. **Smoke Tests:** Se verifica que `/health` responda HTTP 200 con `{"estado":"ok"}`.
 
-La configuración de producción vive en el servidor o en el *environment* de GitHub, nunca en el repositorio ni en la imagen. Ningún dato real ni secreto se incluye en las imágenes.
+### Procedimiento de reversión (*Rollback*)
+
+Si se detecta un incidente en producción tras un despliegue:
+1. Ir a la pestaña **Actions** en GitHub y seleccionar el workflow **Reversión en producción** (`rollback.yml`).
+2. Hacer clic en **Run workflow**, seleccionar la rama `main` e introducir el SHA del commit de la versión previa que se desea restaurar.
+3. El workflow conectará por VPN y reconfigurará los contenedores con dicha versión en menos de 60 segundos. *Nota: la reversión cambia los contenedores de software; no revierte migraciones de base de datos.*
 
 ## Pasos manuales en GitHub
 
-Estas acciones las hace una persona con permisos; el código del repositorio no las ejecuta.
+Estas acciones las hace una persona con permisos de administración; el código del repositorio no las ejecuta.
 
 1. Remoto `https://github.com/IstpetDev/actualizacion_datos` (organización `IstpetDev`) y primer `push` de `main` y `develop`: hecho. El equipo `@IstpetDev/hijos-del-ing-henry` es el propietario en `CODEOWNERS` y necesita permiso de escritura en el repositorio (Settings → Collaborators and teams).
    - `main` y `develop` deben subirse desde el mismo commit: la política de ramas usa el script de la rama base, que tiene que existir en ambas.
@@ -142,7 +150,14 @@ Estas acciones las hace una persona con permisos; el código del repositorio no 
 3. Fijar `main` como rama por defecto y proteger también `develop`.
 4. Activar el escaneo de secretos con *push protection* si el plan lo permite. CodeQL corre con `codeql.yml` (configuración avanzada): **no** activar la configuración por defecto de CodeQL, porque entra en conflicto con el workflow.
 5. Activar las alertas de Dependabot. Las actualizaciones de versión llegan a `develop` con `dependabot.yml`; las *security updates* automáticas abren PR hacia `main` y la política de ramas las rechaza, así que conviene dejarlas desactivadas y aplicar el arreglo desde `develop`.
-6. Al implementar el despliegue (opción B), crear el *environment* con sus variables y secretos, restringido a `main`.
+6. Configurar el **Environment `produccion`**:
+   - En `Settings` → `Environments`, crear el entorno `produccion` y restringir el despliegue únicamente a la rama `main`.
+   - Agregar los siguientes secretos en el entorno:
+     - `TAILSCALE_AUTHKEY`: Clave de autenticación efímera generada en la consola de Tailscale.
+     - `SSH_HOST`: Dirección IP privada del servidor dentro de la red Tailscale (ej. `100.x.y.z`).
+     - `SSH_USER`: Nombre del usuario de sistema en el servidor de producción.
+     - `SSH_PRIVATE_KEY`: Clave privada SSH autorizada en el servidor para despliegues.
+   - (Opcional) Variable de entorno `DEPLOY_DIR`: Ruta base en el servidor (por defecto `C:/actualizacion_datos`).
 
 ## Qué no se debe copiar al repositorio
 

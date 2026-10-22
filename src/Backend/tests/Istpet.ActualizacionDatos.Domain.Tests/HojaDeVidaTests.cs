@@ -165,6 +165,54 @@ public class HojaDeVidaTests
         Assert.Equal(Institucion, experiencia.InstitucionId);
     }
 
+    [Theory]
+    [InlineData("", "0990000000")]
+    [InlineData("Persona Ficticia", "  ")]
+    public void Referencia_sin_nombre_o_sin_telefono_lanza_excepcion(string nombre, string telefono)
+    {
+        var datos = new DatosReferencia(TipoReferencia.Personal, nombre, telefono);
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new ReferenciaPersonal(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Referencia_con_tipo_invalido_lanza_excepcion()
+    {
+        var datos = new DatosReferencia((TipoReferencia)99, "Persona Ficticia", "0990000000");
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new ReferenciaPersonal(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Referencia_limpia_opcionales_vacios_y_conserva_institucion()
+    {
+        var referencia = new ReferenciaPersonal(
+            Guid.NewGuid(),
+            Institucion,
+            PersonaId,
+            new DatosReferencia(TipoReferencia.Familiar, " Persona Ficticia ", "0990000000", Titulo: "  ", Empresa: "Empresa Ficticia"));
+
+        Assert.Equal("Persona Ficticia", referencia.NombresApellidos);
+        Assert.Null(referencia.Titulo);
+        Assert.Null(referencia.CargoActual);
+        Assert.Equal("Empresa Ficticia", referencia.Empresa);
+        Assert.Equal(Institucion, referencia.InstitucionId);
+    }
+
+    [Fact]
+    public void Ficha_personal_guarda_perfil_y_lo_limpia_si_esta_vacio()
+    {
+        var ficha = new FichaPersonal(Institucion, PersonaId);
+
+        ficha.Actualizar(new DatosFichaPersonal(Perfil: " Perfil ficticio. "));
+        Assert.Equal("Perfil ficticio.", ficha.Perfil);
+
+        ficha.Actualizar(new DatosFichaPersonal(Perfil: "   "));
+        Assert.Null(ficha.Perfil);
+    }
+
     [Fact]
     public void Documento_con_vencimiento_anterior_a_emision_lanza_excepcion()
     {
