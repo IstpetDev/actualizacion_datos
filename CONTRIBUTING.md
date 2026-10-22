@@ -28,6 +28,21 @@ Esta guía describe cómo se trabaja en este repositorio. Es público: no debe c
 5. Fusionar. La rama de trabajo se borra.
 6. Cada cierto tiempo, un PR de release `develop` → `main` agrupa lo acumulado. Pasa el CI completo y exige al menos una aprobación.
 
+## Incidencias y ramas
+
+Por defecto, una incidencia = una rama = un PR. Vincula la rama a la incidencia con `gh issue develop <n> --base develop --name <tipo>/<n>-<descripcion>`.
+
+Los PR a `develop` no cierran la incidencia solos, porque `main` es la rama por defecto. Ciérrala a mano al fusionar el último PR.
+
+Si una incidencia es grande, divídela en sub-incidencias (lista de tareas `- [ ] #N` en la incidencia padre), cada una con su rama y su PR.
+
+Si una incidencia necesita varias ramas:
+
+- Todas empiezan por el número: `feature/7-login-api`, `feature/7-login-correo`. Así `gh issue develop --list 7` las muestra todas.
+- Todas salen de `develop`, nunca una de otra. Si una depende de otra, espera a que se fusione la primera.
+- Los PR intermedios escriben "Parte de #7" en la descripción; solo el último escribe "Cierra #7".
+- Evita ramas paralelas que toquen los mismos archivos.
+
 ## Hotfix (arreglo urgente)
 
 1. Crear `hotfix/<descripcion>` desde `main`.
