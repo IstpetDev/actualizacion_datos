@@ -188,10 +188,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 5. Intentar importar como admin.
 
 **Resultado esperado:** solo activos y por orden; el filtro por padre funciona; la segunda importación no duplica; el padre de otro tipo se rechaza; el admin no puede importar.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** respuestas y recuento de filas  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** aprobado mediante solicitudes HTTP automatizadas con cookies (WebApplicationFactory/SQLite), pruebas de integración PostgreSQL y carga/reinicio real en Docker. Se verificaron los cinco pasos; 2.104 registros e ids estables tras repetir la carga.\
+**Evidencia:** [issue-29: pruebas, comandos, recuentos y límites](../../evidencia/issue-29.md), `CatalogosTests.cs` y `CatalogosIntegracionTests.cs`.\
+**Fecha y ejecutor:** 2026-10-22, agente de implementación por encargo del solicitante.\
+**Incidencia:** ninguna en este recorrido. No se ejecutaron pantallas ni los demás recorridos.
 
 ## E2E-10 — Segunda campaña
 

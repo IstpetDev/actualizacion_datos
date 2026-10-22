@@ -11,13 +11,16 @@ public class ServicioRevision : IServicioRevision
 {
     private readonly AplicacionDbContext _context;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IAlmacenArchivos _almacenArchivos;
 
     public ServicioRevision(
         AplicacionDbContext context,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IAlmacenArchivos almacenArchivos)
     {
         _context = context;
         _contextoInstitucion = contextoInstitucion;
+        _almacenArchivos = almacenArchivos;
     }
 
     public async Task<List<ResumenRevisionPendienteDto>> ListarPendientesRevisionAsync(CancellationToken ct = default)
@@ -89,7 +92,6 @@ public class ServicioRevision : IServicioRevision
             persona.Correo,
             persona.EstadoActualizacion.ToString(),
             persona.DatosPersonalesJson,
-            persona.ArchivosSubidosJson,
             persona.TratamientoDatosAceptado,
             persona.FechaAceptacionTratamientoDatosUtc,
             observacionesDto);
@@ -116,8 +118,62 @@ public class ServicioRevision : IServicioRevision
             ahoraUtc,
             detalle: $"Actualización del usuario {persona.Documento} aprobada por supervisor."));
 
+        // ADR-0006: al aprobarse, los archivos que sustituye se eliminan.
+        var sustituidos = await ObtenerArchivosSustituidosAsync(persona.Id, ct);
+        _context.ArchivosAdjuntos.RemoveRange(sustituidos);
+        if (sustituidos.Count > 0)
+        {
+            _context.Auditorias.Add(new Auditoria(
+                Guid.NewGuid(),
+                supervisor,
+                "EliminarArchivosSustituidos",
+                persona.InstitucionId,
+                ahoraUtc,
+                detalle: $"{sustituidos.Count} archivo(s) sin uso eliminados al aprobar."));
+        }
+
         await _context.SaveChangesAsync(ct);
+
+        // El disco se limpia después de confirmar la base: si falla, queda un archivo sin registro,
+        // nunca un registro que apunte a un archivo inexistente.
+        foreach (var archivo in sustituidos)
+        {
+            await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+        }
     }
+
+    /// <summary>
+    /// Archivos de la persona que ya no respaldan nada: sin clave de destino (los de la hoja de vida se asocian
+    /// por archivo_id, no por clave) y sin ningún ítem, documento o foto que los referencie. Los que tienen clave
+    /// los gestiona la subida por clave, que ya reemplaza el anterior al subir (ServicioArchivos).
+    /// </summary>
+    private async Task<List<ArchivoAdjunto>> ObtenerArchivosSustituidosAsync(Guid personaId, CancellationToken ct)
+    {
+        var referenciados = new HashSet<Guid>();
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.TitulosAcademicos, personaId, ct));
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.TitulosEnCurso, personaId, ct));
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.Capacitaciones, personaId, ct));
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.ExperienciasLaborales, personaId, ct));
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.ReferenciasPersonales, personaId, ct));
+        referenciados.UnionWith(await IdsReferenciadosAsync(_context.DocumentosPersonales, personaId, ct));
+        referenciados.UnionWith(await _context.FichasPersonales
+            .Where(f => f.PersonaId == personaId && f.FotoArchivoId != null)
+            .Select(f => f.FotoArchivoId!.Value)
+            .ToListAsync(ct));
+
+        var sinClave = await _context.ArchivosAdjuntos
+            .Where(a => a.PersonaId == personaId && a.ClaveDestino == null)
+            .ToListAsync(ct);
+
+        return sinClave.Where(a => !referenciados.Contains(a.Id)).ToList();
+    }
+
+    private static Task<List<Guid>> IdsReferenciadosAsync<T>(IQueryable<T> registros, Guid personaId, CancellationToken ct)
+        where T : Domain.HojaDeVida.RegistroHojaDeVida =>
+        registros
+            .Where(r => r.PersonaId == personaId && r.ArchivoId != null)
+            .Select(r => r.ArchivoId!.Value)
+            .ToListAsync(ct);
 
     public async Task DevolverActualizacionAsync(string documento, DevolverActualizacionRequest request, string supervisor, CancellationToken ct = default)
     {

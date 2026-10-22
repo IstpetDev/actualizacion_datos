@@ -244,4 +244,44 @@ public sealed class FiltroInstitucionIntegracionTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<DbUpdateException>(() => contexto.SaveChangesAsync());
     }
+
+    // ADR-0013 (#45): la cuenta de A no se ve desde B, una cuenta por persona y la base exige un solo origen de banco.
+    [Fact]
+    public async Task Cuenta_bancaria_aislada_unica_por_persona_y_con_banco_coherente()
+    {
+        var opciones = CrearOpciones();
+        var idA = InstitucionId.Nuevo();
+        var idB = InstitucionId.Nuevo();
+        var personaA = new Persona(Guid.NewGuid(), idA, "0000000040");
+        var numero = new NumeroCuentaProtegido("v1.cifrado-ficticio", "1234", new string('a', 64));
+        var datos = new DatosCuentaBancaria(71, null, "Banco ficticio", numero);
+
+        await using (var semilla = new AplicacionDbContext(opciones, new ContextoInstitucion(null, esSuperadmin: true)))
+        {
+            semilla.Instituciones.AddRange(new Institucion(idA, "Instituto A"), new Institucion(idB, "Instituto B"));
+            semilla.Personas.Add(personaA);
+            semilla.CuentasBancarias.Add(CuentaBancaria.DesdeNomina(Guid.NewGuid(), idA, personaA.Id, datos, DateTime.UtcNow));
+            await semilla.SaveChangesAsync();
+        }
+
+        await using (var desdeB = new AplicacionDbContext(opciones, new ContextoInstitucion(idB, esSuperadmin: false)))
+        {
+            Assert.Empty(await desdeB.CuentasBancarias.ToListAsync());
+        }
+
+        await using (var desdeA = new AplicacionDbContext(opciones, new ContextoInstitucion(idA, esSuperadmin: false)))
+        {
+            var cuenta = await desdeA.CuentasBancarias.SingleAsync();
+            Assert.Equal(EstadoCuentaBancaria.SinConfirmar, cuenta.Estado);
+            Assert.Equal("1234", cuenta.UltimosDigitos);
+
+            desdeA.CuentasBancarias.Add(CuentaBancaria.RegistradaPorPersona(Guid.NewGuid(), idA, personaA.Id, datos, DateTime.UtcNow));
+            await Assert.ThrowsAsync<DbUpdateException>(() => desdeA.SaveChangesAsync());
+        }
+
+        // El dominio ya lo impide; la base lo impide también si alguien escribe por fuera de la aplicación.
+        await using var directo = new AplicacionDbContext(opciones, new ContextoInstitucion(null, esSuperadmin: true));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => directo.Database.ExecuteSqlRawAsync(
+            "UPDATE cuentas_bancarias SET nombre_banco_otro = NULL"));
+    }
 }

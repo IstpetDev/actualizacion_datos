@@ -163,15 +163,34 @@ public sealed class FlujoRevisionTests : IDisposable
         var respuestaModificar = await _cliente.SendAsync(requestModificarAjena);
         Assert.Equal(HttpStatusCode.Forbidden, respuestaModificar.StatusCode);
 
-        // Usuario "1700000001" intenta subir archivo a "1700000002"
-        var requestArchivoAjena = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/archivos?documento=1700000002");
+        // Usuario "1700000001" intenta subir archivo a "1700000002" por la única vía de subida (#32)
+        using var formulario = new MultipartFormDataContent();
+        using var pdf = new ByteArrayContent("%PDF-1.4 ficticio"u8.ToArray());
+        formulario.Add(pdf, "archivo", "virus.pdf");
+        var requestArchivoAjena = new HttpRequestMessage(HttpMethod.Post, "/api/archivos/subir?documento=1700000002&claveDestino=cedula");
         requestArchivoAjena.Headers.Add("X-Institucion-Id", institucionId.ToString());
         requestArchivoAjena.Headers.Add("X-Actor", "1700000001");
         requestArchivoAjena.Headers.Add("X-Rol", "Usuario");
-        requestArchivoAjena.Content = JsonContent.Create(new SubirArchivoRequest("virus.pdf", "application/pdf", 1024));
+        requestArchivoAjena.Content = formulario;
 
         var respuestaArchivo = await _cliente.SendAsync(requestArchivoAjena);
         Assert.Equal(HttpStatusCode.Forbidden, respuestaArchivo.StatusCode);
+    }
+
+    // #32: la ruta que guardaba solo el nombre del archivo, sin el archivo, ya no existe.
+    [Fact]
+    public async Task Ruta_de_metadatos_de_archivo_sin_archivo_fue_retirada()
+    {
+        var (institucionId, _, _) = await InicializarDatosPruebaAsync();
+        var peticion = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/archivos?documento=1700000001");
+        peticion.Headers.Add("X-Institucion-Id", institucionId.ToString());
+        peticion.Headers.Add("X-Actor", "1700000001");
+        peticion.Headers.Add("X-Rol", "Usuario");
+        peticion.Content = JsonContent.Create(new { NombreArchivo = "cedula.pdf", TipoContenido = "application/pdf", TamanoBytes = 1024 });
+
+        var respuesta = await _cliente.SendAsync(peticion);
+
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, respuesta.StatusCode);
     }
 
     [Fact]

@@ -60,14 +60,14 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0010 dec. 5  
 **Responsable:** @bryancito1090 (fuentes: @JorgeDoicela INEC, @AlexanderMartinez0410 SENESCYT, @AnthonyPilatasig UNESCO y sistema de talento humano)
 
-- [ ] Pruebas: importar dos veces no duplica; un padre de otro tipo se rechaza; `padreId` filtra; solo activos.
-- [ ] Implementar importación, consulta y validador.
-- [ ] Ejecutar `dotnet test src/Backend`: todas en verde.
-- [ ] Cargar los catálogos en desarrollo con Docker y documentar su origen en `data/catalogos/README.md`.
-- [ ] Entregar diff, resultado de pruebas y riesgos.
+- [x] Pruebas: importar dos veces no duplica; un padre de otro tipo se rechaza; `padreId` filtra; solo activos.
+- [x] Implementar importación, consulta y validador.
+- [x] Ejecutar `dotnet test src/Backend`: todas en verde.
+- [x] Cargar los catálogos en desarrollo con Docker y documentar su origen en `data/catalogos/README.md`.
+- [x] Entregar diff, resultado de pruebas y riesgos.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** fuentes de PD-HDV-03 entregadas por sus responsables
+**Resultado registrado:** completado el 2026-10-22; [diff, pruebas, carga Docker y límites](../../evidencia/issue-29.md). Contrato de catálogos de T-00 incluido en esta entrega.\
+**Bloqueos:** ninguno para T-01. Fuentes públicas verificadas; selección y límites autorizados por el solicitante y documentados en la evidencia y en `data/catalogos/README.md`.
 
 ## T-02 — Ficha e ítems de la hoja de vida (API del usuario)
 

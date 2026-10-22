@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -481,6 +482,34 @@ static bool EsRolSupervisorOAdmin(HttpContext httpContext, IContextoInstitucion 
     return rol is RolUsuario.Supervisor or RolUsuario.Admin or RolUsuario.Superadmin;
 }
 
+static bool EstaAutenticado(HttpContext httpContext, IContextoInstitucion contexto)
+{
+    if (httpContext.User.Identity?.IsAuthenticated == true)
+    {
+        return true;
+    }
+    return !string.IsNullOrWhiteSpace(contexto.ActorActual) || contexto.RolActual != null;
+}
+
+static bool EsRolAdmin(HttpContext httpContext, IContextoInstitucion contexto)
+{
+    if (contexto.EsSuperadmin)
+    {
+        return true;
+    }
+
+    var rol = contexto.RolActual;
+    if (rol == null)
+    {
+        var claimRol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+        if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
+        {
+            rol = r;
+        }
+    }
+    return rol is RolUsuario.Admin or RolUsuario.Superadmin;
+}
+
 static bool ValidarAccesoMisDatos(string? docParam, string? docActual, HttpContext httpContext, IContextoInstitucion contexto)
 {
     // RF-DAT-002: Un usuario solo accede a sus propios datos.
@@ -592,41 +621,6 @@ misDatos.MapPut("/", async (string? documento, ActualizarDatosRequest request, H
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
-misDatos.MapPost("/archivos", async (string? documento, SubirArchivoRequest request, HttpContext httpContext, IServicioCampanas servicio, IContextoInstitucion contexto, CancellationToken ct) =>
-{
-    var docActual = ObtenerDocumentoActual(httpContext, contexto);
-    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
-
-    if (string.IsNullOrWhiteSpace(docEfectivo))
-    {
-        return Results.Unauthorized();
-    }
-
-    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
-    {
-        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
-    }
-
-    try
-    {
-        await servicio.SubirArchivoUsuarioAsync(docEfectivo, request, ct);
-        return Results.Ok(new MensajeRespuesta("Archivo subido correctamente."));
-    }
-    catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
-    {
-        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
-    }
-    catch (ReglaNegocioException ex)
-    {
-        return Results.BadRequest(new MensajeRespuesta(ex.Message));
-    }
-})
-.WithName("SubirArchivoMisDatos")
-.Produces<MensajeRespuesta>()
-.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
-.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
-.Produces(StatusCodes.Status401Unauthorized);
-
 misDatos.MapPost("/aceptar-tratamiento", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
     var docActual = ObtenerDocumentoActual(httpContext, contexto);
@@ -678,6 +672,11 @@ misDatos.MapPost("/enviar", async (string? documento, HttpContext httpContext, I
         await servicio.EnviarARevisionAsync(docEfectivo, ct);
         return Results.Ok(new MensajeRespuesta("Actualización enviada a revisión exitosamente. La edición ha sido bloqueada."));
     }
+    catch (EnvioIncompletoException ex)
+    {
+        // RF-HDV-009: la respuesta dice qué falta, por sección e ítem (T-04 la produce).
+        return Results.BadRequest(new EnvioIncompletoRespuesta(ex.Message, [.. ex.Faltantes]));
+    }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
     {
         return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
@@ -689,7 +688,7 @@ misDatos.MapPost("/enviar", async (string? documento, HttpContext httpContext, I
 })
 .WithName("EnviarMisDatosARevision")
 .Produces<MensajeRespuesta>()
-.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<EnvioIncompletoRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
@@ -1082,6 +1081,87 @@ misDatos.MapGet("/archivos", async (
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
+// --- Endpoints Exportaciones (RF-EXP-001, RF-EXP-002, RF-EXP-003, RF-EXP-004, RF-DAT-004) ---
+var exportaciones = app.MapGroup("/api/exportaciones").WithTags("Exportaciones");
+
+exportaciones.MapGet("/zip", async (
+    Guid? institucionId,
+    HttpContext httpContext,
+    IServicioExportacion servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EstaAutenticado(httpContext, contexto))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!EsRolAdmin(httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para exportar datos. Se requiere rol de Administrador."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var archivo = await servicio.ExportarZipAsync(institucionId, ct);
+        return Results.File(archivo.Contenido, archivo.TipoContenido, archivo.NombreOriginal);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ExportarZip")
+.Produces(StatusCodes.Status200OK, contentType: "application/zip")
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+exportaciones.MapGet("/excel", async (
+    Guid? institucionId,
+    HttpContext httpContext,
+    IServicioExportacion servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EstaAutenticado(httpContext, contexto))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!EsRolAdmin(httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para exportar datos. Se requiere rol de Administrador."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var archivo = await servicio.ExportarExcelAsync(institucionId, ct);
+        return Results.File(archivo.Contenido, archivo.TipoContenido, archivo.NombreOriginal);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ExportarExcel")
+.Produces(StatusCodes.Status200OK, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+
+await app.CargarCatalogosDesarrolloAsync();
+
+app.MapCatalogos();
+
+// --- Hoja de vida (spec-0003). Un archivo por grupo en Endpoints/ y una línea aquí (plan.md, T-00).
+// Catálogos (#48) y exportación (#46) se integraron antes que este contrato y conservan su registro propio ---
+app.MapHojaDeVida();
+app.MapDocumentosPersonales();
+app.MapFlujoActualizacion();
+app.MapConfiguracionHojaDeVida();
+app.MapCuentaBancaria();
 
 await app.RunAsync();
 

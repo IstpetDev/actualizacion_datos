@@ -20,6 +20,7 @@ describe('SupervisorDashboardComponent', () => {
     listarArchivosExpediente: Mock;
     aprobarActualizacion: Mock;
     devolverActualizacion: Mock;
+    obtenerCuentaBancariaParaRevision: Mock;
   };
   let archivosClientMock: {
     descargarArchivo: Mock;
@@ -51,7 +52,6 @@ describe('SupervisorDashboardComponent', () => {
       apellidos: 'Prueba Uno',
       telefono: '0999999999',
     }),
-    archivosSubidosJson: '[]',
     tratamientoDatosAceptado: true,
     fechaAceptacionTratamientoDatosUtc: new Date('2026-10-22T09:30:00Z'),
     observaciones: [],
@@ -78,6 +78,14 @@ describe('SupervisorDashboardComponent', () => {
       listarArchivosExpediente: vi.fn().mockReturnValue(of(archivosMock)),
       aprobarActualizacion: vi.fn().mockReturnValue(of({ mensaje: 'Actualización aprobada' })),
       devolverActualizacion: vi.fn().mockReturnValue(of({ mensaje: 'Actualización devuelta' })),
+      obtenerCuentaBancariaParaRevision: vi.fn().mockReturnValue(
+        of({
+          banco: 'Banco ficticio',
+          tipoCuenta: 'Ahorros',
+          numeroEnmascarado: '******1234',
+          estado: 'coincide',
+        }),
+      ),
     };
 
     archivosClientMock = {
@@ -139,6 +147,18 @@ describe('SupervisorDashboardComponent', () => {
     expect(compiled.querySelector('[data-testid="expediente-doc"]')?.textContent).toContain(
       '1700000001',
     );
+  });
+
+  it('el_expediente_muestra_la_cuenta_bancaria_enmascarada_ADR_0013', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    const cuenta = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="cuenta-revision"]',
+    );
+    expect(revisionClientMock.obtenerCuentaBancariaParaRevision).toHaveBeenCalledWith('1700000001');
+    expect(cuenta?.textContent).toContain('******1234');
+    expect(cuenta?.textContent).toContain('Coincide con la nómina');
   });
 
   it('aprobar_debe_llamar_a_aprobarActualizacion_y_refrescar_la_bandeja', () => {
