@@ -36,5 +36,10 @@ internal static class SemillaCatalogos
         new(45, TipoCatalogo.TipoCapacitacion, "CONGRESO_SIMPOSIO", "Congreso / simposio", codigoExterno: "5", orden: 5),
         new(46, TipoCatalogo.TipoCapacitacion, "CERTIFICACION", "Certificación", codigoExterno: "6", orden: 6),
         new(47, TipoCatalogo.TipoCapacitacion, "OTRO", "Otro", codigoExterno: "7", orden: 7),
+
+        // ADR-0013 dec. 2. Los bancos no se siembran: se importan de la Superintendencia de Bancos (T-01);
+        // mientras tanto la persona escribe el nombre del banco.
+        new(51, TipoCatalogo.TipoCuentaBancaria, "AHORROS", "Ahorros", orden: 1),
+        new(52, TipoCatalogo.TipoCuentaBancaria, "CORRIENTE", "Corriente", orden: 2),
     ];
 }

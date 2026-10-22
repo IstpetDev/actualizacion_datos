@@ -1060,6 +1060,7 @@ app.MapDocumentosPersonales();
 app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapExportacion();
+app.MapCuentaBancaria();
 
 
 await app.RunAsync();

@@ -8,8 +8,11 @@ import {
   ArchivoDto,
   ArchivosClient,
   AutenticacionClient,
+  CatalogosClient,
+  CuentaBancariaClient,
   MisDatosClient,
   MisDatosDto,
+  SwaggerException,
 } from '../../api-client';
 import { UsuarioDashboardComponent } from './usuario-dashboard.component';
 
@@ -86,6 +89,14 @@ describe('panel de usuario', () => {
         { provide: MisDatosClient, useValue: datos },
         { provide: ArchivosClient, useValue: archivos },
         { provide: AutenticacionClient, useValue: auth },
+        {
+          provide: CuentaBancariaClient,
+          useValue: {
+            obtenerMiCuentaBancaria: () =>
+              throwError(() => new SwaggerException('No Content', 204, '', {}, null)),
+          },
+        },
+        { provide: CatalogosClient, useValue: { listarCatalogo: () => of([]) } },
       ],
     });
   });

@@ -36,6 +36,9 @@ services:
       Smtp__Usuario: ${SMTP_USUARIO:-}
       Smtp__Contrasenia: ${SMTP_CONTRASENIA:-}
       Smtp__Remitente: ${SMTP_REMITENTE:-}
+      # ADR-0013: sin estas claves la cuenta bancaria responde 503. Se definen solo en el .env del servidor.
+      CuentaBancaria__ClaveCifrado: ${CUENTA_BANCARIA_CLAVE_CIFRADO:-}
+      CuentaBancaria__ClaveHuella: ${CUENTA_BANCARIA_CLAVE_HUELLA:-}
     volumes:
       - archivos-almacenados:/datos/archivos
     healthcheck:

@@ -13,10 +13,11 @@ import {
   MisDatosDto,
 } from '../../api-client';
 import { mensajeError } from '../../core/auth/mensaje-error';
+import { MiCuentaBancariaComponent } from '../cuenta-bancaria/mi-cuenta-bancaria.component';
 
 @Component({
   selector: 'app-usuario-dashboard',
-  imports: [FormsModule, DatePipe, DecimalPipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, MiCuentaBancariaComponent],
   templateUrl: './usuario-dashboard.component.html',
   styleUrl: './usuario-dashboard.component.css',
 })

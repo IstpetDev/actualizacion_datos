@@ -249,6 +249,92 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.ToTable("capacitaciones", (string)null);
                 });
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CuentaBancaria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int?>("BancoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("banco_id");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("estado");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<string>("HuellaNomina")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("huella_nomina");
+
+                    b.Property<string>("HuellaNumero")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("huella_numero");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("NombreBancoOtro")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nombre_banco_otro");
+
+                    b.Property<string>("NumeroCifrado")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("numero_cifrado");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<int>("TipoCuentaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_cuenta_id");
+
+                    b.Property<string>("UltimosDigitos")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character(4)")
+                        .HasColumnName("ultimos_digitos")
+                        .IsFixedLength();
+
+                    b.HasKey("Id")
+                        .HasName("pk_cuentas_bancarias");
+
+                    b.HasIndex("BancoId")
+                        .HasDatabaseName("ix_cuentas_bancarias_banco_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_cuentas_bancarias_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_cuentas_bancarias_persona_id");
+
+                    b.HasIndex("TipoCuentaId")
+                        .HasDatabaseName("ix_cuentas_bancarias_tipo_cuenta_id");
+
+                    b.ToTable("cuentas_bancarias", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_cuentas_bancarias_banco", "(banco_id IS NOT NULL) <> (nombre_banco_otro IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_cuentas_bancarias_ultimos_digitos", "length(ultimos_digitos) = 4");
+                        });
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.DocumentoPersonal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -583,6 +669,24 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                             Nombre = "Otro",
                             Orden = 7,
                             Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 51,
+                            Activo = true,
+                            Codigo = "AHORROS",
+                            Nombre = "Ahorros",
+                            Orden = 1,
+                            Tipo = "TipoCuentaBancaria"
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Activo = true,
+                            Codigo = "CORRIENTE",
+                            Nombre = "Corriente",
+                            Orden = 2,
+                            Tipo = "TipoCuentaBancaria"
                         });
                 });
 
@@ -1522,6 +1626,36 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TipoCapacitacionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_capacitaciones_elementos_catalogo_tipo_capacitacion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CuentaBancaria", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("BancoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_cuentas_bancarias_elementos_catalogo_banco_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cuentas_bancarias_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_cuentas_bancarias_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("TipoCuentaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_cuentas_bancarias_elementos_catalogo_tipo_cuenta_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.DocumentoPersonal", b =>
