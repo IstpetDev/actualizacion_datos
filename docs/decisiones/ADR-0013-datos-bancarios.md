@@ -1,4 +1,4 @@
-# ADR-0012 — Datos bancarios del personal
+# ADR-0013 — Datos bancarios del personal
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-10-22
@@ -12,7 +12,7 @@ Hechos que condicionan la decisión:
 - Es un dato financiero personal. La Ley Orgánica de Protección de Datos Personales exige finalidad definida, mínimo necesario y medidas de seguridad. La persona ya acepta el tratamiento de sus datos (RF-DAT-001).
 - La nómina es lo que afirma la institución; si la persona cree que está mal, debe poder corregirlo sin que su corrección se pierda ni pise el dato de la nómina.
 - El número completo solo importa a quien paga y a su dueño. Al supervisor y al admin les basta saber si **coincide**.
-- `AGENTS.md` prohíbe guardar credenciales o cadenas de conexión reales en el repositorio; la clave de cifrado entra en esa categoría. Su ubicación depende del despliegue (issue #25).
+- `AGENTS.md` prohíbe guardar credenciales o cadenas de conexión reales en el repositorio; la clave de cifrado entra en esa categoría. ADR-0011 (Vigente) deja las credenciales sensibles en el `.env` del servidor o en los secretos de GitHub; la clave de cifrado seguiría ese camino.
 - Hay auditoría de accesos y exportaciones (spec-0001). Los archivos ya se descargan solo por el backend (ADR-0006).
 
 ## Opciones
@@ -29,7 +29,7 @@ Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la ci
 |---|---|---|
 | 1 | Modelo | Una cuenta por persona (`CuentaBancaria`, con `institucion_id` y `persona_id`, ADR-0004): tipo de cuenta, banco, número cifrado, últimos cuatro dígitos, huella del valor de la nómina, estado (sin confirmar, coincide, difiere) y fecha. |
 | 2 | Catálogos | `TipoCuenta` (ahorros, corriente) y `Banco` como catálogos compartidos de `elementos_catalogo` (ADR-0010 dec. 5). Fuente de bancos: Superintendencia de Bancos. Si el banco no está, la persona escribe el nombre. |
-| 3 | Cifrado | Cifrado autenticado en la capa de aplicación, con clave por entorno **fuera de la base y del repositorio**. La mecánica concreta (ASP.NET Core Data Protection u otra) se fija al implementar, con el ADR de despliegue como dependencia. |
+| 3 | Cifrado | Cifrado autenticado en la capa de aplicación, con clave por entorno **fuera de la base y del repositorio**. La mecánica concreta (ASP.NET Core Data Protection u otra) se fija al implementar, siguiendo la gestión de secretos de ADR-0011. |
 | 4 | Quién ve el número completo | Solo su dueño, en su propia pantalla. Supervisor y admin ven el banco, el tipo, los últimos cuatro dígitos y el estado de coincidencia. |
 | 5 | Exportación | El Excel y el `.zip` llevan la cuenta **enmascarada**. Un archivo con números completos para pagos queda fuera hasta una spec que lo pida. |
 | 6 | Auditoría | Cada lectura del número completo y cada cambio de cuenta se registra con quién y cuándo, sin guardar el número. |
@@ -47,7 +47,7 @@ Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la ci
 ## Puntos abiertos
 
 - **¿Quién cierra el ADR y con qué base legal?** La finalidad (comprobar pagos) y la base del tratamiento deben quedar por escrito.
-- **¿Quién administra la clave** y dónde se guarda en producción? Depende del despliegue (#25).
+- **¿Quién administra la clave** y dónde se guarda en producción? ADR-0011 fija dónde viven las credenciales (`.env` del servidor o secretos de GitHub); falta decidir quién rota esta clave y cómo se respalda por separado.
 - **¿La cuenta es obligatoria para enviar?** Propuesta en spec-0003 (PD-HDV-17): sí.
 - **¿Se necesitará un archivo con números completos para el pago?** Si sí, es otra spec y otro ADR.
 
@@ -56,4 +56,5 @@ Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la ci
 - ADR-0004 — Multitenancy: esquema único con `institucion_id`.
 - ADR-0006 — Almacenamiento de archivos.
 - ADR-0010 — Hoja de vida estructurada y catálogos.
-- ADR-0011 — Carga de nómina: columnas, valores nulos y división de nombres (Propuesto).
+- ADR-0011 — Despliegue automático a producción.
+- ADR-0012 — Carga de nómina: columnas, valores nulos y división de nombres (Propuesto).

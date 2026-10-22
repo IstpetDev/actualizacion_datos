@@ -1,4 +1,4 @@
-# ADR-0011 — Carga de nómina: columnas, valores nulos y división de nombres
+# ADR-0012 — Carga de nómina: columnas, valores nulos y división de nombres
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-10-22
@@ -15,7 +15,7 @@ Hechos que condicionan la decisión:
 - Faltan en el archivo: correo, sexo y etnia. El correo es necesario para verificar el acceso (ADR-0007).
 - `Persona.Nombre` y `Persona.Correo` ya admiten nulo. `FichaPersonal` guarda todo como opcional y valida la obligatoriedad al enviar (ADR-0009, ADR-0010).
 - PD-09 de spec-0001 ya decidió que, dentro de una institución, el documento es único y las listas se deduplican en la ingesta.
-- Las columnas bancarias son datos financieros personales. Se necesitan para comprobar que los pagos van a las cuentas correctas; su tratamiento (cifrado, quién las ve, exportación) se decide en **ADR-0012**, no aquí.
+- Las columnas bancarias son datos financieros personales. Se necesitan para comprobar que los pagos van a las cuentas correctas; su tratamiento (cifrado, quién las ve, exportación) se decide en **ADR-0013**, no aquí.
 - Los datos de la nómina son lo que la institución afirma; la persona todavía no los ha confirmado.
 
 ## Opciones
@@ -51,7 +51,7 @@ Todo lo demás es opcional: si falta o no se puede interpretar, queda en nulo y 
 | `Ciudad` | **No se guarda.** La residencia del modelo es una parroquia del catálogo y la ciudad no la determina. | La persona elige su parroquia. Ver «Puntos abiertos». |
 | `Fec. Ingreso` | **No se importa** en esta versión. | El modelo no tiene fecha de ingreso (ADR-0010, decisión 7). Ver «Puntos abiertos». |
 | `Teléfono 2` | `FichaPersonal.Celular` si son 10 dígitos y empiezan con `09`; si no, `FichaPersonal.TelefonoConvencional` | Nulo; advertencia. |
-| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | Cuenta **propuesta** de la persona, con la protección que fije ADR-0012. Hasta que ADR-0012 sea Vigente, la carga **las ignora** y no las guarda. | Sin cuenta propuesta; advertencia. En ningún caso se escriben en registros ni en el informe. |
+| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | Cuenta **propuesta** de la persona, con la protección que fije ADR-0013. Hasta que ADR-0013 sea Vigente, la carga **las ignora** y no las guarda. | Sin cuenta propuesta; advertencia. En ningún caso se escriben en registros ni en el informe. |
 
 ### División de nombres
 
@@ -96,11 +96,11 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - La carga actual (`PersonaCargaItem`) debe ampliarse con estas columnas. Eso cambia la API: hay que regenerar `openapi/v1.json` y el cliente del frontend en el mismo cambio (`AGENTS.md`).
 - El archivo de nómina contiene datos personales reales: **no se guarda en el repositorio**, ni en las pruebas, ni en capturas. Las pruebas usan filas ficticias.
 - Los nombres divididos automáticamente se equivocan en los casos ambiguos (tres palabras, apellidos compuestos poco comunes). Por eso son una propuesta y la persona los confirma.
-- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso` y `Edad`; pueden recuperarse si se decide guardarlos. Los datos bancarios se cargan solo cuando ADR-0012 sea Vigente.
+- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso` y `Edad`; pueden recuperarse si se decide guardarlos. Los datos bancarios se cargan solo cuando ADR-0013 sea Vigente.
 
 ## Puntos abiertos
 
-- **Datos bancarios.** Se necesitan (comprobar pagos). Falta cerrar ADR-0012: base legal, cifrado y quién los ve. Hasta entonces, la carga no los importa.
+- **Datos bancarios.** Se necesitan (comprobar pagos). Falta cerrar ADR-0013: base legal, cifrado y quién los ve. Hasta entonces, la carga no los importa.
 - **Fecha de ingreso.** ¿Se guarda como dato de la persona? Hoy no tiene dónde.
 - **Ciudad.** ¿Basta con que la persona elija su parroquia, o se guarda también un texto de ciudad?
 - **Pasaportes.** ¿La institución tiene personal sin cédula? Si es así, la regla de «solo dígitos» del documento cambia.
@@ -113,4 +113,4 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - ADR-0007 — Autenticación con cédula, cambio obligatorio y correo.
 - ADR-0009 — Campos configurables por institución (Propuesto).
 - ADR-0010 — Hoja de vida estructurada y catálogos.
-- ADR-0012 — Datos bancarios (Propuesto).
+- ADR-0013 — Datos bancarios (Propuesto).

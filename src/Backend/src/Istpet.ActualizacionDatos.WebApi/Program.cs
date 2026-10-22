@@ -141,6 +141,12 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     await db.Database.MigrateAsync();
 }
 
+if (args.Contains("--migrar") || args.Contains("--migrate"))
+{
+    Console.WriteLine("Migraciones de base de datos ejecutadas exitosamente. Finalizando proceso (--migrar).");
+    return;
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
