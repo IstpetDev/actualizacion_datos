@@ -147,6 +147,7 @@ public sealed class CatalogosTests : IDisposable
     [Theory]
     [InlineData("Desconocido")]
     [InlineData("999")]
+    [InlineData("Provincia,Canton")]
     [InlineData("Pais?padreId=-1")]
     public async Task Consulta_con_tipo_o_filtro_invalido_devuelve_400(string ruta)
     {

@@ -21,4 +21,64 @@ La spec aprobada propone códigos externos compatibles con talento humano. No se
 
 ## Resultados
 
-Pendientes de ejecución sobre la implementación. No se considera completo el issue sin comprobar sus criterios, incluida la carga de catálogos en Docker y sus fuentes.
+Verificación local realizada el 2026-10-22 sobre `feature/29-catalogos`, integrada con `develop` en `c312539` (exportación del PR #46). Se resolvieron los conflictos de registro de servicios, endpoints y archivos generados conservando ambas funcionalidades; Docker conserva tanto el volumen persistente de archivos como el montaje de catálogos de solo lectura.
+
+| Comprobación | Resultado real |
+| --- | --- |
+| `dotnet build src/Backend` | Correcta: 0 advertencias, 0 errores; OpenAPI y cliente regenerados, incluidos exportación y catálogos. |
+| `dotnet test src/Backend --no-build` | 173 aprobadas: Application 2, Domain 84, WebApi 87; 0 fallidas, 0 omitidas. Incluye integración PostgreSQL con Testcontainers. |
+| `dotnet format src/Backend --verify-no-changes --no-restore` | Correcto, sin diferencias. |
+| `pnpm test:ci` en Frontend | 87 aprobadas en 14 archivos. |
+| `pnpm lint` y `pnpm format:check` en Frontend | Correctos, sin incidencias. |
+| `pnpm build` en Frontend | Correcto. Advertencias existentes de presupuesto de estilos de admin y supervisor; no introducidas por esta tarea. |
+| Construcción Docker del backend | Release y publicación correctas usando el Dockerfile del repositorio. |
+| Compose de desarrollo, servicios postgres y backend | Ambos saludables; `/health` devuelve 200 y `{"estado":"ok"}`. GET de catálogos sin sesión devuelve 401. |
+| Verificación de fuentes | Los 15 CSV coinciden con los recuentos y SHA-256 de `data/catalogos/fuentes.json`. |
+
+### Criterios y permisos
+
+`CatalogosTests.cs` ejecuta solicitudes HTTP con cookies reales en WebApplicationFactory y SQLite: importación repetida sin duplicados, actualización con id estable, padre de tipo incorrecto rechazado sin cambios parciales, filtro por padre, solo activos y orden del CSV. Comprueba todos los roles autenticados, denegación de importación al admin y demás roles, sesión anónima, y que `X-Rol` no concede privilegios. También cubre tipos inexistentes o combinados, CSV inválido, duplicados normalizados, UTF-8 estricto, BOM, comillas/comas/CRLF, límites, protección de semillas y conservación de inactivos. Comprueba el validador compartido y que producción no ejecuta la carga automática.
+
+`CatalogosIntegracionTests.cs` carga los CSV completos en PostgreSQL 17, repite la carga conservando ids y valida las jerarquías y semillas. Una segunda prueba ejecuta importaciones concurrentes desde contextos distintos y comprueba que no colisionan ni duplican.
+
+### Carga real en Docker
+
+Se usó `docker compose --env-file /dev/null --project-name catalogos29 up --build --wait postgres backend`, con variables de prueba ficticias y sin leer `.env`. No se crearon personas ni se usaron credenciales institucionales. El montaje `/catalogos` está verificado como `ro`, `RW=false`.
+
+Después del primer arranque y de `docker restart catalogos29-backend-1`, PostgreSQL devolvió:
+
+```text
+total=2104; ids_distintos=2104; semillas(id<1000)=27; primer_importado=1000
+md5(tipo:codigo:id, ordenado por id)=57e351997a1db21b1bca375063610de3
+padres_ausentes=0
+```
+
+La huella y los recuentos son iguales antes y después del reinicio. En el segundo arranque los 15 tipos cargados registraron `0 creados, 0 actualizados`. Las cuatro filas de primaria/secundaria de los CSV coinciden con las semillas y no se duplican.
+
+| Tipo | Filas en PostgreSQL |
+| --- | ---: |
+| Pais | 248 |
+| Provincia | 24 |
+| Canton | 222 |
+| Parroquia | 1315 |
+| NivelAcademico | 9 |
+| GradoAcademico | 9 |
+| CampoAmplioUnesco | 10 |
+| CampoEspecificoUnesco | 26 |
+| CampoDetalladoUnesco | 97 |
+| Universidad | 64 |
+| Etnia | 9 |
+| NacionalidadIndigena | 34 |
+| Discapacidad | 7 |
+| TipoBeca | 3 |
+| FinanciamientoBeca | 4 |
+| Sexo | 2 |
+| EstadoCivil | 5 |
+| TipoSangre | 8 |
+| TipoCapacitacion | 8 |
+
+### Límites documentados
+
+Las fuentes y sus ediciones se detallan en [README de catálogos](../../data/catalogos/README.md). Los códigos públicos no se presentan como ids internos de talento humano; la cobertura de universidades es nacional. Las importaciones PostgreSQL se serializan por tabla, adecuado para esta operación administrativa ocasional. La carga automática es exclusivamente de desarrollo; producción requiere importación explícita del superadmin. El cliente conserva el formato generado por NSwag sin ediciones manuales.
+
+E2E-09 se verificó mediante pruebas HTTP automatizadas, integración PostgreSQL y el arranque/reinicio real descrito; no se afirma una ejecución de pantallas ni de otros recorridos de spec-0003.

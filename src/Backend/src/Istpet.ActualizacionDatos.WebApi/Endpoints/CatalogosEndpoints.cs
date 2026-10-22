@@ -13,7 +13,7 @@ public static class CatalogosEndpoints
         var grupo = app.MapGroup("/api/catalogos").WithTags("Catalogos").RequireAuthorization();
         grupo.MapGet("/{tipo}", async (string tipo, int? padreId, IServicioCatalogos servicio, CancellationToken ct) =>
         {
-            if (!Enum.TryParse<TipoCatalogo>(tipo, ignoreCase: true, out var tipoCatalogo) || !Enum.IsDefined(tipoCatalogo))
+            if (tipo.Contains(',') || !Enum.TryParse<TipoCatalogo>(tipo, ignoreCase: true, out var tipoCatalogo) || !Enum.IsDefined(tipoCatalogo))
             {
                 return Results.BadRequest(new MensajeRespuesta("El tipo de catálogo no existe."));
             }
@@ -34,7 +34,7 @@ public static class CatalogosEndpoints
 
         grupo.MapPost("/{tipo}/importar", async (string tipo, IFormFile archivo, IServicioCatalogos servicio, CancellationToken ct) =>
         {
-            if (!Enum.TryParse<TipoCatalogo>(tipo, ignoreCase: true, out var tipoCatalogo) || !Enum.IsDefined(tipoCatalogo))
+            if (tipo.Contains(',') || !Enum.TryParse<TipoCatalogo>(tipo, ignoreCase: true, out var tipoCatalogo) || !Enum.IsDefined(tipoCatalogo))
             {
                 return Results.BadRequest(new MensajeRespuesta("El tipo de catálogo no existe."));
             }
