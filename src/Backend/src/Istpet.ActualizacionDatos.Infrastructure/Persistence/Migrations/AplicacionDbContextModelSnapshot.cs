@@ -165,6 +165,1014 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.ToTable("campanas", (string)null);
                 });
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.Capacitacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaFin")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_fin");
+
+                    b.Property<DateOnly?>("FechaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
+
+                    b.Property<bool>("FinanciadaPorInstitucion")
+                        .HasColumnType("boolean")
+                        .HasColumnName("financiada_por_institucion");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("InstitucionOrganizadora")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("institucion_organizadora");
+
+                    b.Property<string>("Lugar")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("lugar");
+
+                    b.Property<string>("NombreEvento")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre_evento");
+
+                    b.Property<int?>("NumeroHoras")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero_horas");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<int?>("TipoCapacitacionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_capacitacion_id");
+
+                    b.Property<string>("TipoParticipacion")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tipo_participacion");
+
+                    b.HasKey("Id")
+                        .HasName("pk_capacitaciones");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_capacitaciones_archivo_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_capacitaciones_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_capacitaciones_persona_id");
+
+                    b.HasIndex("TipoCapacitacionId")
+                        .HasDatabaseName("ix_capacitaciones_tipo_capacitacion_id");
+
+                    b.ToTable("capacitaciones", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.DocumentoPersonal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<string>("CategoriaLicencia")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("categoria_licencia");
+
+                    b.Property<string>("EntidadEmisora")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("entidad_emisora");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaEmision")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_emision");
+
+                    b.Property<DateOnly?>("FechaVencimiento")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_vencimiento");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("NumeroDocumento")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("numero_documento");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<int?>("PuntosLicencia")
+                        .HasColumnType("integer")
+                        .HasColumnName("puntos_licencia");
+
+                    b.Property<Guid>("TipoDocumentoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_documento_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_documentos_personales");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_documentos_personales_archivo_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_documentos_personales_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_documentos_personales_persona_id");
+
+                    b.HasIndex("TipoDocumentoId")
+                        .HasDatabaseName("ix_documentos_personales_tipo_documento_id");
+
+                    b.HasIndex("PersonaId", "TipoDocumentoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_documentos_personales_persona_id_tipo_documento_id");
+
+                    b.ToTable("documentos_personales", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("codigo");
+
+                    b.Property<string>("CodigoExterno")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("codigo_externo");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer")
+                        .HasColumnName("orden");
+
+                    b.Property<int?>("PadreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("padre_id");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tipo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_elementos_catalogo");
+
+                    b.HasIndex("PadreId")
+                        .HasDatabaseName("ix_elementos_catalogo_padre_id");
+
+                    b.HasIndex("Tipo", "Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_elementos_catalogo_tipo_codigo");
+
+                    b.ToTable("elementos_catalogo", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Activo = true,
+                            Codigo = "HOMBRE",
+                            Nombre = "Hombre",
+                            Orden = 1,
+                            Tipo = "Sexo"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Activo = true,
+                            Codigo = "MUJER",
+                            Nombre = "Mujer",
+                            Orden = 2,
+                            Tipo = "Sexo"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Activo = true,
+                            Codigo = "SOLTERO",
+                            Nombre = "Soltero(a)",
+                            Orden = 1,
+                            Tipo = "EstadoCivil"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Activo = true,
+                            Codigo = "CASADO",
+                            Nombre = "Casado(a)",
+                            Orden = 2,
+                            Tipo = "EstadoCivil"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Activo = true,
+                            Codigo = "DIVORCIADO",
+                            Nombre = "Divorciado(a)",
+                            Orden = 3,
+                            Tipo = "EstadoCivil"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Activo = true,
+                            Codigo = "VIUDO",
+                            Nombre = "Viudo(a)",
+                            Orden = 4,
+                            Tipo = "EstadoCivil"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Activo = true,
+                            Codigo = "UNION_HECHO",
+                            Nombre = "Unión de hecho",
+                            Orden = 5,
+                            Tipo = "EstadoCivil"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Activo = true,
+                            Codigo = "A_POS",
+                            Nombre = "A+",
+                            Orden = 1,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Activo = true,
+                            Codigo = "A_NEG",
+                            Nombre = "A-",
+                            Orden = 2,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Activo = true,
+                            Codigo = "B_POS",
+                            Nombre = "B+",
+                            Orden = 3,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Activo = true,
+                            Codigo = "B_NEG",
+                            Nombre = "B-",
+                            Orden = 4,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Activo = true,
+                            Codigo = "AB_POS",
+                            Nombre = "AB+",
+                            Orden = 5,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Activo = true,
+                            Codigo = "AB_NEG",
+                            Nombre = "AB-",
+                            Orden = 6,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Activo = true,
+                            Codigo = "O_POS",
+                            Nombre = "O+",
+                            Orden = 7,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            Activo = true,
+                            Codigo = "O_NEG",
+                            Nombre = "O-",
+                            Orden = 8,
+                            Tipo = "TipoSangre"
+                        },
+                        new
+                        {
+                            Id = 41,
+                            Activo = true,
+                            Codigo = "PEDAGOGICA",
+                            CodigoExterno = "1",
+                            Nombre = "Capacitación pedagógica / docente",
+                            Orden = 1,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 42,
+                            Activo = true,
+                            Codigo = "TECNICA",
+                            CodigoExterno = "2",
+                            Nombre = "Capacitación técnica / profesional",
+                            Orden = 2,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 43,
+                            Activo = true,
+                            Codigo = "DISCIPLINAR",
+                            CodigoExterno = "3",
+                            Nombre = "Actualización disciplinar",
+                            Orden = 3,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 44,
+                            Activo = true,
+                            Codigo = "SEMINARIO_TALLER",
+                            CodigoExterno = "4",
+                            Nombre = "Seminario / taller",
+                            Orden = 4,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 45,
+                            Activo = true,
+                            Codigo = "CONGRESO_SIMPOSIO",
+                            CodigoExterno = "5",
+                            Nombre = "Congreso / simposio",
+                            Orden = 5,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 46,
+                            Activo = true,
+                            Codigo = "CERTIFICACION",
+                            CodigoExterno = "6",
+                            Nombre = "Certificación",
+                            Orden = 6,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 47,
+                            Activo = true,
+                            Codigo = "OTRO",
+                            CodigoExterno = "7",
+                            Nombre = "Otro",
+                            Orden = 7,
+                            Tipo = "TipoCapacitacion"
+                        });
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ExperienciaLaboral", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<string>("Cargo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("cargo");
+
+                    b.Property<string>("Ciudad")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("ciudad");
+
+                    b.Property<string>("Empleador")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("empleador");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaFin")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_fin");
+
+                    b.Property<DateOnly>("FechaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
+
+                    b.Property<string>("Funciones")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("funciones");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<int?>("PaisId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pais_id");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<bool>("TrabajaActualmente")
+                        .HasColumnType("boolean")
+                        .HasColumnName("trabaja_actualmente");
+
+                    b.HasKey("Id")
+                        .HasName("pk_experiencias_laborales");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_experiencias_laborales_archivo_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_experiencias_laborales_institucion_id");
+
+                    b.HasIndex("PaisId")
+                        .HasDatabaseName("ix_experiencias_laborales_pais_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_experiencias_laborales_persona_id");
+
+                    b.ToTable("experiencias_laborales", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.FichaPersonal", b =>
+                {
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<string>("CallePrincipal")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("calle_principal");
+
+                    b.Property<string>("CalleSecundaria")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("calle_secundaria");
+
+                    b.Property<string>("Celular")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("celular");
+
+                    b.Property<string>("CodigoPostal")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("codigo_postal");
+
+                    b.Property<string>("CorreoInstitucional")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("correo_institucional");
+
+                    b.Property<int?>("DiscapacidadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("discapacidad_id");
+
+                    b.Property<int?>("EstadoCivilId")
+                        .HasColumnType("integer")
+                        .HasColumnName("estado_civil_id");
+
+                    b.Property<int?>("EtniaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("etnia_id");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaNacimiento")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_nacimiento");
+
+                    b.Property<Guid?>("FotoArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("foto_archivo_id");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<int?>("NacionalidadIndigenaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("nacionalidad_indigena_id");
+
+                    b.Property<string>("NumeroCarnetDiscapacidad")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("numero_carnet_discapacidad");
+
+                    b.Property<string>("NumeroCasa")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("numero_casa");
+
+                    b.Property<int?>("PaisNacimientoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pais_nacimiento_id");
+
+                    b.Property<int?>("PaisNacionalidadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("pais_nacionalidad_id");
+
+                    b.Property<int?>("ParroquiaNacimientoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("parroquia_nacimiento_id");
+
+                    b.Property<int?>("ParroquiaResidenciaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("parroquia_residencia_id");
+
+                    b.Property<int?>("PorcentajeDiscapacidad")
+                        .HasColumnType("integer")
+                        .HasColumnName("porcentaje_discapacidad");
+
+                    b.Property<string>("PrimerApellido")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("primer_apellido");
+
+                    b.Property<string>("PrimerNombre")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("primer_nombre");
+
+                    b.Property<string>("ReferenciaDomicilio")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("referencia_domicilio");
+
+                    b.Property<string>("SegundoApellido")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("segundo_apellido");
+
+                    b.Property<string>("SegundoNombre")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("segundo_nombre");
+
+                    b.Property<int?>("SexoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("sexo_id");
+
+                    b.Property<string>("TelefonoConvencional")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("telefono_convencional");
+
+                    b.Property<int?>("TipoSangreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_sangre_id");
+
+                    b.HasKey("PersonaId")
+                        .HasName("pk_fichas_personales");
+
+                    b.HasIndex("DiscapacidadId")
+                        .HasDatabaseName("ix_fichas_personales_discapacidad_id");
+
+                    b.HasIndex("EstadoCivilId")
+                        .HasDatabaseName("ix_fichas_personales_estado_civil_id");
+
+                    b.HasIndex("EtniaId")
+                        .HasDatabaseName("ix_fichas_personales_etnia_id");
+
+                    b.HasIndex("FotoArchivoId")
+                        .HasDatabaseName("ix_fichas_personales_foto_archivo_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_fichas_personales_institucion_id");
+
+                    b.HasIndex("NacionalidadIndigenaId")
+                        .HasDatabaseName("ix_fichas_personales_nacionalidad_indigena_id");
+
+                    b.HasIndex("PaisNacimientoId")
+                        .HasDatabaseName("ix_fichas_personales_pais_nacimiento_id");
+
+                    b.HasIndex("PaisNacionalidadId")
+                        .HasDatabaseName("ix_fichas_personales_pais_nacionalidad_id");
+
+                    b.HasIndex("ParroquiaNacimientoId")
+                        .HasDatabaseName("ix_fichas_personales_parroquia_nacimiento_id");
+
+                    b.HasIndex("ParroquiaResidenciaId")
+                        .HasDatabaseName("ix_fichas_personales_parroquia_residencia_id");
+
+                    b.HasIndex("SexoId")
+                        .HasDatabaseName("ix_fichas_personales_sexo_id");
+
+                    b.HasIndex("TipoSangreId")
+                        .HasDatabaseName("ix_fichas_personales_tipo_sangre_id");
+
+                    b.ToTable("fichas_personales", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fichas_personales_porcentaje_discapacidad", "porcentaje_discapacidad IS NULL OR porcentaje_discapacidad BETWEEN 0 AND 100");
+                        });
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.RequisitoDocumento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<bool>("EsObligatorio")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_obligatorio");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<Guid>("TipoDocumentoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_documento_id");
+
+                    b.Property<Guid?>("TipoFuncionarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_funcionario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_requisitos_documento");
+
+                    b.HasIndex("TipoDocumentoId")
+                        .HasDatabaseName("ix_requisitos_documento_tipo_documento_id");
+
+                    b.HasIndex("TipoFuncionarioId")
+                        .HasDatabaseName("ix_requisitos_documento_tipo_funcionario_id");
+
+                    b.HasIndex("InstitucionId", "TipoDocumentoId", "TipoFuncionarioId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_requisitos_documento_unico");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("InstitucionId", "TipoDocumentoId", "TipoFuncionarioId"), false);
+
+                    b.ToTable("requisitos_documento", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("codigo");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descripcion");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer")
+                        .HasColumnName("orden");
+
+                    b.Property<bool>("TieneVencimiento")
+                        .HasColumnType("boolean")
+                        .HasColumnName("tiene_vencimiento");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tipos_documento");
+
+                    b.HasIndex("InstitucionId", "Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tipos_documento_institucion_id_codigo");
+
+                    b.ToTable("tipos_documento", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("codigo");
+
+                    b.Property<bool>("EsDocente")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_docente");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tipos_funcionario");
+
+                    b.HasIndex("InstitucionId", "Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tipos_funcionario_institucion_id_codigo");
+
+                    b.ToTable("tipos_funcionario", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TituloAcademico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<int?>("CampoDetalladoUnescoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("campo_detallado_unesco_id");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaObtencion")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_obtencion");
+
+                    b.Property<DateOnly?>("FechaRegistroSenescyt")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_registro_senescyt");
+
+                    b.Property<int>("GradoAcademicoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("grado_academico_id");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("NombreInstitucionOtra")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre_institucion_otra");
+
+                    b.Property<string>("NombreTitulo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre_titulo");
+
+                    b.Property<string>("NumeroRegistroSenescyt")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("numero_registro_senescyt");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<int?>("UniversidadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("universidad_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_titulos_academicos");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_titulos_academicos_archivo_id");
+
+                    b.HasIndex("CampoDetalladoUnescoId")
+                        .HasDatabaseName("ix_titulos_academicos_campo_detallado_unesco_id");
+
+                    b.HasIndex("GradoAcademicoId")
+                        .HasDatabaseName("ix_titulos_academicos_grado_academico_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_titulos_academicos_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_titulos_academicos_persona_id");
+
+                    b.HasIndex("UniversidadId")
+                        .HasDatabaseName("ix_titulos_academicos_universidad_id");
+
+                    b.ToTable("titulos_academicos", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_titulos_academicos_institucion", "universidad_id IS NOT NULL OR nombre_institucion_otra IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TituloEnCurso", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<int?>("CampoDetalladoUnescoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("campo_detallado_unesco_id");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateOnly?>("FechaFinEstimada")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_fin_estimada");
+
+                    b.Property<DateOnly?>("FechaInicio")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_inicio");
+
+                    b.Property<int?>("FinanciamientoBecaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("financiamiento_beca_id");
+
+                    b.Property<int>("GradoAcademicoId")
+                        .HasColumnType("integer")
+                        .HasColumnName("grado_academico_id");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<decimal?>("MontoBeca")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("monto_beca");
+
+                    b.Property<string>("NombreInstitucionOtra")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre_institucion_otra");
+
+                    b.Property<string>("NombrePrograma")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre_programa");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<int?>("PorcentajeBeca")
+                        .HasColumnType("integer")
+                        .HasColumnName("porcentaje_beca");
+
+                    b.Property<bool>("TieneBeca")
+                        .HasColumnType("boolean")
+                        .HasColumnName("tiene_beca");
+
+                    b.Property<int?>("TipoBecaId")
+                        .HasColumnType("integer")
+                        .HasColumnName("tipo_beca_id");
+
+                    b.Property<int?>("UniversidadId")
+                        .HasColumnType("integer")
+                        .HasColumnName("universidad_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_titulos_en_curso");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_titulos_en_curso_archivo_id");
+
+                    b.HasIndex("CampoDetalladoUnescoId")
+                        .HasDatabaseName("ix_titulos_en_curso_campo_detallado_unesco_id");
+
+                    b.HasIndex("FinanciamientoBecaId")
+                        .HasDatabaseName("ix_titulos_en_curso_financiamiento_beca_id");
+
+                    b.HasIndex("GradoAcademicoId")
+                        .HasDatabaseName("ix_titulos_en_curso_grado_academico_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_titulos_en_curso_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_titulos_en_curso_persona_id");
+
+                    b.HasIndex("TipoBecaId")
+                        .HasDatabaseName("ix_titulos_en_curso_tipo_beca_id");
+
+                    b.HasIndex("UniversidadId")
+                        .HasDatabaseName("ix_titulos_en_curso_universidad_id");
+
+                    b.ToTable("titulos_en_curso", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_titulos_en_curso_institucion", "universidad_id IS NOT NULL OR nombre_institucion_otra IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_titulos_en_curso_porcentaje_beca", "porcentaje_beca IS NULL OR porcentaje_beca BETWEEN 0 AND 100");
+                        });
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Institucion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -367,12 +1375,19 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("rol");
 
+                    b.Property<Guid?>("TipoFuncionarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_funcionario_id");
+
                     b.Property<bool>("TratamientoDatosAceptado")
                         .HasColumnType("boolean")
                         .HasColumnName("tratamiento_datos_aceptado");
 
                     b.HasKey("Id")
                         .HasName("pk_personas");
+
+                    b.HasIndex("TipoFuncionarioId")
+                        .HasDatabaseName("ix_personas_tipo_funcionario_id");
 
                     b.HasIndex("InstitucionId", "Documento")
                         .IsUnique()
@@ -406,6 +1421,325 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_campanas_instituciones_institucion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.Capacitacion", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_capacitaciones_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_capacitaciones_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_capacitaciones_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("TipoCapacitacionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_capacitaciones_elementos_catalogo_tipo_capacitacion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.DocumentoPersonal", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_documentos_personales_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_documentos_personales_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_documentos_personales_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", null)
+                        .WithMany()
+                        .HasForeignKey("TipoDocumentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_documentos_personales_tipos_documento_tipo_documento_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("PadreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_elementos_catalogo_elementos_catalogo_padre_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ExperienciaLaboral", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_experiencias_laborales_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_experiencias_laborales_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("PaisId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_experiencias_laborales_elementos_catalogo_pais_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_experiencias_laborales_personas_persona_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.FichaPersonal", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("DiscapacidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_discapacidad_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("EstadoCivilId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_estado_civil_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("EtniaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_etnia_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("FotoArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_fichas_personales_archivos_adjuntos_foto_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fichas_personales_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("NacionalidadIndigenaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_nacionalidad_indigena_");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("PaisNacimientoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_pais_nacimiento_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("PaisNacionalidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_pais_nacionalidad_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("ParroquiaNacimientoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_parroquia_nacimiento_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("ParroquiaResidenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_parroquia_residencia_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithOne()
+                        .HasForeignKey("Istpet.ActualizacionDatos.Domain.HojaDeVida.FichaPersonal", "PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_fichas_personales_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("SexoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_sexo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("TipoSangreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_fichas_personales_elementos_catalogo_tipo_sangre_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.RequisitoDocumento", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_requisitos_documento_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", null)
+                        .WithMany()
+                        .HasForeignKey("TipoDocumentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_requisitos_documento_tipos_documento_tipo_documento_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", null)
+                        .WithMany()
+                        .HasForeignKey("TipoFuncionarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_requisitos_documento_tipos_funcionario_tipo_funcionario_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tipos_documento_instituciones_institucion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tipos_funcionario_instituciones_institucion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TituloAcademico", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_titulos_academicos_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("CampoDetalladoUnescoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_academicos_elementos_catalogo_campo_detallado_unesc");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("GradoAcademicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_academicos_elementos_catalogo_grado_academico_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_academicos_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_academicos_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("UniversidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_academicos_elementos_catalogo_universidad_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TituloEnCurso", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_titulos_en_curso_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("CampoDetalladoUnescoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_en_curso_elementos_catalogo_campo_detallado_unesco_");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("FinanciamientoBecaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_en_curso_elementos_catalogo_financiamiento_beca_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("GradoAcademicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_en_curso_elementos_catalogo_grado_academico_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_en_curso_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_titulos_en_curso_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("TipoBecaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_en_curso_elementos_catalogo_tipo_beca_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
+                        .WithMany()
+                        .HasForeignKey("UniversidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_en_curso_elementos_catalogo_universidad_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.MarcaObservacion", b =>
@@ -443,6 +1777,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_personas_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", null)
+                        .WithMany()
+                        .HasForeignKey("TipoFuncionarioId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_personas_tipos_funcionario_tipo_funcionario_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Observacion", b =>

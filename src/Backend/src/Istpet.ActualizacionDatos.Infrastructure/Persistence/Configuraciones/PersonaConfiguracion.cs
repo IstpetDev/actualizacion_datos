@@ -1,6 +1,7 @@
 namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Configuraciones;
 
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -98,10 +99,19 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
         builder.Property(p => p.FechaAceptacionTratamientoDatosUtc)
             .HasColumnName("fecha_aceptacion_tratamiento_datos_utc");
 
+        // ADR-0010: tipo de funcionario, del que dependen los documentos que se piden
+        builder.Property(p => p.TipoFuncionarioId)
+            .HasColumnName("tipo_funcionario_id");
+
         builder.HasOne<Institucion>()
             .WithMany()
             .HasForeignKey(p => p.InstitucionId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<TipoFuncionario>()
+            .WithMany()
+            .HasForeignKey(p => p.TipoFuncionarioId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // PD-09: Unicidad del documento dentro de la misma institución;
         // permite que un mismo documento exista en instituciones distintas.

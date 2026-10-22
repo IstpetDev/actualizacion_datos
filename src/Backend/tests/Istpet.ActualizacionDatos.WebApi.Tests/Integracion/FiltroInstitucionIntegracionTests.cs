@@ -1,6 +1,7 @@
 namespace Istpet.ActualizacionDatos.WebApi.Tests.Integracion;
 
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -156,5 +157,91 @@ public sealed class FiltroInstitucionIntegracionTests : IAsyncLifetime
 
             Assert.Empty(resultado);
         }
+    }
+
+    // RF-HDV-015 (spec-0003): las tablas de la hoja de vida quedan aisladas por institución.
+    [Fact]
+    public async Task Hoja_de_vida_de_institucion_A_no_es_visible_desde_institucion_B()
+    {
+        var opciones = CrearOpciones();
+
+        var idA = InstitucionId.Nuevo();
+        var idB = InstitucionId.Nuevo();
+        var personaA = new Persona(Guid.NewGuid(), idA, "0000000001");
+        var personaB = new Persona(Guid.NewGuid(), idB, "0000000002");
+
+        // Catálogo compartido: un nivel y un grado ficticios (ids fuera del rango de la semilla).
+        var nivel = new ElementoCatalogo(9101, TipoCatalogo.NivelAcademico, "NIVEL_PRUEBA", "Nivel de prueba");
+        var grado = new ElementoCatalogo(9102, TipoCatalogo.GradoAcademico, "GRADO_PRUEBA", "Grado de prueba", padreId: nivel.Id);
+
+        var tituloA = new TituloAcademico(
+            Guid.NewGuid(),
+            idA,
+            personaA.Id,
+            new DatosTituloAcademico("Título ficticio A", grado.Id, NombreInstitucionOtra: "Universidad Ficticia"));
+        var tituloB = new TituloAcademico(
+            Guid.NewGuid(),
+            idB,
+            personaB.Id,
+            new DatosTituloAcademico("Título ficticio B", grado.Id, NombreInstitucionOtra: "Universidad Ficticia"));
+        var tipoDocumentoA = new TipoDocumento(Guid.NewGuid(), idA, "CEDULA", "Cédula");
+        var tipoDocumentoB = new TipoDocumento(Guid.NewGuid(), idB, "CEDULA", "Cédula");
+
+        await using (var contextoSembrado = new AplicacionDbContext(
+            opciones,
+            new ContextoInstitucion(null, esSuperadmin: true)))
+        {
+            contextoSembrado.Instituciones.AddRange(
+                new Institucion(idA, "Instituto Delta"),
+                new Institucion(idB, "Instituto Épsilon"));
+            contextoSembrado.Personas.AddRange(personaA, personaB);
+            contextoSembrado.ElementosCatalogo.AddRange(nivel, grado);
+            contextoSembrado.TitulosAcademicos.AddRange(tituloA, tituloB);
+            contextoSembrado.FichasPersonales.AddRange(
+                new FichaPersonal(idA, personaA.Id),
+                new FichaPersonal(idB, personaB.Id));
+            contextoSembrado.TiposDocumento.AddRange(tipoDocumentoA, tipoDocumentoB);
+            await contextoSembrado.SaveChangesAsync();
+        }
+
+        await using (var contextoB = new AplicacionDbContext(
+            opciones,
+            new ContextoInstitucion(idB, esSuperadmin: false)))
+        {
+            var titulos = await contextoB.TitulosAcademicos.ToListAsync();
+            Assert.Single(titulos);
+            Assert.Equal(tituloB.Id, titulos[0].Id);
+
+            // Con el id conocido de la otra institución, el filtro global lo oculta.
+            Assert.Null(await contextoB.TitulosAcademicos.FirstOrDefaultAsync(t => t.Id == tituloA.Id));
+            Assert.Null(await contextoB.FichasPersonales.FirstOrDefaultAsync(f => f.PersonaId == personaA.Id));
+            Assert.Null(await contextoB.TiposDocumento.FirstOrDefaultAsync(t => t.Id == tipoDocumentoA.Id));
+
+            // El catálogo es compartido: se ve desde cualquier institución.
+            Assert.NotNull(await contextoB.ElementosCatalogo.FirstOrDefaultAsync(e => e.Id == grado.Id));
+        }
+    }
+
+    // ADR-0010, decisión 9: un solo documento vigente por persona y tipo.
+    [Fact]
+    public async Task Base_rechaza_dos_documentos_del_mismo_tipo_para_una_persona()
+    {
+        var opciones = CrearOpciones();
+        var id = InstitucionId.Nuevo();
+        var persona = new Persona(Guid.NewGuid(), id, "0000000003");
+        var tipo = new TipoDocumento(Guid.NewGuid(), id, "CERT_VOTACION", "Certificado de votación");
+
+        await using var contexto = new AplicacionDbContext(
+            opciones,
+            new ContextoInstitucion(null, esSuperadmin: true));
+
+        contexto.Instituciones.Add(new Institucion(id, "Instituto Zeta"));
+        contexto.Personas.Add(persona);
+        contexto.TiposDocumento.Add(tipo);
+        contexto.DocumentosPersonales.AddRange(
+            new DocumentoPersonal(Guid.NewGuid(), id, persona.Id, tipo.Id, new DatosDocumentoPersonal()),
+            new DocumentoPersonal(Guid.NewGuid(), id, persona.Id, tipo.Id, new DatosDocumentoPersonal()));
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => contexto.SaveChangesAsync());
     }
 }

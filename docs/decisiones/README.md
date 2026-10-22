@@ -41,5 +41,6 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Vigente |
 | [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Vigente |
 | [ADR-0009](ADR-0009-campos-configurables.md) | Campos configurables por institución | Propuesto |
+| [ADR-0010](ADR-0010-hoja-de-vida-estructurada.md) | Hoja de vida estructurada y catálogos | Vigente |
 
 <!-- prueba del ci: este comentario se puede borrar -->

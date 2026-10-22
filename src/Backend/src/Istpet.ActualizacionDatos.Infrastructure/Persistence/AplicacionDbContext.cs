@@ -3,6 +3,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using System.Reflection;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence.Convertidores;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,18 @@ public class AplicacionDbContext : DbContext
     public DbSet<Observacion> Observaciones => Set<Observacion>();
     public DbSet<MarcaObservacion> MarcasObservacion => Set<MarcaObservacion>();
     public DbSet<ArchivoAdjunto> ArchivosAdjuntos => Set<ArchivoAdjunto>();
+
+    // Hoja de vida (ADR-0010)
+    public DbSet<ElementoCatalogo> ElementosCatalogo => Set<ElementoCatalogo>();
+    public DbSet<TipoFuncionario> TiposFuncionario => Set<TipoFuncionario>();
+    public DbSet<TipoDocumento> TiposDocumento => Set<TipoDocumento>();
+    public DbSet<RequisitoDocumento> RequisitosDocumento => Set<RequisitoDocumento>();
+    public DbSet<FichaPersonal> FichasPersonales => Set<FichaPersonal>();
+    public DbSet<TituloAcademico> TitulosAcademicos => Set<TituloAcademico>();
+    public DbSet<TituloEnCurso> TitulosEnCurso => Set<TituloEnCurso>();
+    public DbSet<Capacitacion> Capacitaciones => Set<Capacitacion>();
+    public DbSet<ExperienciaLaboral> ExperienciasLaborales => Set<ExperienciaLaboral>();
+    public DbSet<DocumentoPersonal> DocumentosPersonales => Set<DocumentoPersonal>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,
