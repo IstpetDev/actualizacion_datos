@@ -90,6 +90,14 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
             .IsRequired()
             .HasColumnName("intentos_codigo_verificacion");
 
+        // Tratamiento de datos según RF-DAT-001
+        builder.Property(p => p.TratamientoDatosAceptado)
+            .IsRequired()
+            .HasColumnName("tratamiento_datos_aceptado");
+
+        builder.Property(p => p.FechaAceptacionTratamientoDatosUtc)
+            .HasColumnName("fecha_aceptacion_tratamiento_datos_utc");
+
         builder.HasOne<Institucion>()
             .WithMany()
             .HasForeignKey(p => p.InstitucionId)
