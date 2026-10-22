@@ -9,13 +9,11 @@ Este documento es la guía para quien implementa T-01 a T-08: qué contrato qued
 
 | Capa | Archivo | Contenido |
 |---|---|---|
-| Application | `Modelos/ModelosHojaDeVida.cs` | DTO de entrada (`Guardar*Request`) y salida (`*Dto`) de catálogos, ficha, ítems, documentos, faltantes, configuración y exportación |
-| Application | `Servicios/IServicioCatalogos.cs` | `IServicioCatalogos` y `IValidadorCatalogos` (T-01) |
+| Application | `Modelos/ModelosHojaDeVida.cs` | DTO de entrada (`Guardar*Request`) y salida (`*Dto`) de ficha, ítems, documentos, faltantes y configuración |
 | Application | `Servicios/IServicioHojaDeVida.cs` | Ficha e ítems del usuario (T-02) |
 | Application | `Servicios/IServicioDocumentosPersonales.cs` | Documentos por requisito (T-03) |
 | Application | `Servicios/IValidadorCompletitudEnvio.cs` | `IValidadorCompletitudEnvio`, `IReglaCompletitudEnvio`, `EnvioIncompletoException`, `RecursoNoEncontradoException` (T-04) |
 | Application | `Servicios/IServicioConfiguracionHojaDeVida.cs` | Tipos y requisitos del admin (T-05) |
-| Application | `Servicios/IServicioExportacion.cs` | Excel y `.zip` (T-08) |
 | WebApi | `Endpoints/*.cs` | Un archivo por grupo, con su `MapXxx` |
 | WebApi | `Program.cs` | Seis líneas de registro y el 400 con faltantes de `POST /api/mis-datos/enviar` |
 | Contrato | `openapi/v1.json`, `src/Frontend/src/app/api-client/index.ts` | Regenerados |
@@ -23,12 +21,14 @@ Este documento es la guía para quien implementa T-01 a T-08: qué contrato qued
 
 ## Rutas, roles y tarea dueña
 
+> **Integración con `develop` (2026-10-22):** catálogos (#48) y exportación (#46) se fusionaron antes que este contrato con sus propias interfaces, DTO (`ModelosCatalogo.cs`, `DescargaArchivoDto`) y rutas. Este PR conserva lo de `develop` y retira sus esqueletos equivalentes. Para validar un catálogo desde T-02 se usa la clase `ValidadorCatalogos` de #48 (`ValidarAsync(id, tipo)`), no una interfaz nueva.
+
 Las secciones se expandieron en rutas explícitas (en vez de `{seccion}` genérico del plan) para que el OpenAPI tenga un cuerpo tipado por sección y el cliente generado tenga un método por operación.
 
 | Método y ruta | Rol | Operación (cliente) | Tarea |
 |---|---|---|---|
-| `GET /api/catalogos/{tipo}?padreId=` | cualquiera con sesión | `listarCatalogo` | T-01 |
-| `POST /api/catalogos/{tipo}/importar` (multipart `archivo`) | `superadmin` | `importarCatalogo` | T-01 |
+| `GET /api/catalogos/{tipo}?padreId=` | cualquiera con sesión | `consultarCatalogo` | **Implementado en #48** (T-01) |
+| `POST /api/catalogos/{tipo}/importar` (multipart `archivo`) | `superadmin` | `importarCatalogo` | **Implementado en #48** (T-01) |
 | `GET /api/mis-datos/hoja-de-vida` | `usuario` | `obtenerMiHojaDeVida` | T-02 |
 | `GET` / `PUT /api/mis-datos/hoja-de-vida/ficha` | `usuario` | `obtenerMiFichaPersonal` / `guardarMiFichaPersonal` | T-02 |
 | `POST /api/mis-datos/hoja-de-vida/titulos`, `PUT` y `DELETE .../titulos/{id}` | `usuario` | `agregarTituloAcademico`, `actualizar…`, `eliminar…` | T-02 |
@@ -41,7 +41,7 @@ Las secciones se expandieron en rutas explícitas (en vez de `{seccion}` genéri
 | `GET` / `POST /api/configuracion/tipos-funcionario`, `PUT .../{id}` | `admin` | `listarTiposFuncionario`, `crear…`, `actualizar…` | T-05 |
 | Igual para `tipos-documento` y `requisitos` | `admin` | `…TiposDocumento`, `…RequisitosDocumento` | T-05 |
 | `PUT /api/personas/{id}/tipo-funcionario` | `admin` | `asignarTipoFuncionario` | T-05 |
-| `GET /api/exportacion/excel`, `GET /api/exportacion/zip` | solo `admin` (PD-13 abierto para `superadmin`) | `exportarExcel`, `exportarZip` | T-08 |
+| `GET /api/exportaciones/excel`, `GET /api/exportaciones/zip` | `admin` (y `superadmin`) | `exportarExcel`, `exportarZip` | **Implementado en #46** (T-08, #13) |
 
 Cuenta bancaria (`/api/mis-datos/cuenta-bancaria`, `/api/revision/{documento}/cuenta-bancaria`) no está en T-00: la agrega T-10 (#45) con su propio archivo de endpoints y su propia línea en `Program.cs`.
 
@@ -105,22 +105,21 @@ Entorno: Windows 11, .NET SDK 10.0.402, Node 24.21.0, pnpm 12.4.1.
 | Comando | Resultado |
 |---|---|
 | `dotnet build src/Backend` | Compilación correcta, 0 errores, 0 advertencias |
-| `dotnet test src/Backend --filter "Categoria!=Integracion"` | Domain 84/84, Application 2/2, WebApi 128/128 |
+| `dotnet test src/Backend` (con integración en PostgreSQL 17, tras integrar `develop`) | Domain 84/84, Application 2/2, WebApi 155/155 |
 | `dotnet format src/Backend/Istpet.ActualizacionDatos.sln --verify-no-changes` | Sin cambios (con el árbol en LF, como en el CI) |
-| `pnpm --dir src/Frontend test:ci` | 14 archivos, 84/84 |
+| `pnpm --dir src/Frontend test:ci` | 14 archivos, 87/87 |
 | `pnpm --dir src/Frontend lint` | Sin errores |
 | `pnpm --dir src/Frontend build` | Correcto |
 
 Casos que cubre `ContratosHojaDeVidaTests` (del más simple al más estricto):
 
-1. Cada ruta del usuario con sesión responde 501 y el mensaje cita spec-0003 (23 rutas).
+1. Cada ruta del usuario con sesión responde 501 y el mensaje cita spec-0003 (22 rutas).
 2. Las mismas rutas sin sesión responden 401.
 3. Las rutas del admin rechazan a `usuario` y `supervisor` con 403 y responden 501 al `admin` (10 rutas).
 4. La revisión de hoja de vida: 403 al `usuario`, 501 al `supervisor` y al `admin`.
-5. La exportación: 403 a `usuario`, `supervisor` y `superadmin`; 501 al `admin` (RF-EXP-003).
-6. Catálogo desconocido o numérico (`noexiste`, `1`, `99`) → 400; nombre con cualquier combinación de mayúsculas → aceptado.
-7. Importar catálogo: 403 a `admin` y `usuario`; 501 al `superadmin` con un CSV ficticio en multipart.
-8. El documento OpenAPI publica las 37 operaciones nuevas.
+5. El documento OpenAPI publica las 33 operaciones nuevas de este contrato.
+
+Las pruebas de catálogos y exportación son las de #48 y #46 (`CatalogosTests`, `ExportacionesTests`).
 
 ## Riesgos y pendientes
 

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { type Mock, vi } from 'vitest';
@@ -14,6 +16,7 @@ import { AdminDashboardComponent } from './admin-dashboard.component';
 describe('AdminDashboardComponent', () => {
   let component: AdminDashboardComponent;
   let fixture: ComponentFixture<AdminDashboardComponent>;
+  let httpMock: HttpTestingController;
   let campanasClientMock: {
     obtenerCampanaActiva: Mock;
     listarCampanas: Mock;
@@ -88,15 +91,22 @@ describe('AdminDashboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AdminDashboardComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: CampanasClient, useValue: campanasClientMock },
         { provide: PersonasClient, useValue: personasClientMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
 
+    httpMock = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(AdminDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it('debe_crearse_y_cargar_campana_activa_y_personas_al_iniciar', () => {
@@ -159,5 +169,99 @@ describe('AdminDashboardComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[data-testid="tab-exportacion"]')).not.toBeNull();
     expect(compiled.querySelector('[data-testid="btn-exportar-admin"]')).not.toBeNull();
+    expect(compiled.querySelector('[data-testid="btn-exportar-excel"]')).not.toBeNull();
+  });
+
+  it('el_admin_puede_descargar_paquete_zip_exitosamente', () => {
+    component.cambiarTab('exportacion');
+    fixture.detectChanges();
+
+    // Mock createObjectURL y revokeObjectURL
+    const createObjectUrlSpy = vi
+      .spyOn(window.URL, 'createObjectURL')
+      .mockReturnValue('blob:test-zip');
+    const revokeObjectUrlSpy = vi
+      .spyOn(window.URL, 'revokeObjectURL')
+      .mockImplementation(() => undefined);
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    component.exportarZip();
+    expect(component.exportandoZip()).toBe(true);
+
+    const req = httpMock.expectOne('/api/exportaciones/zip');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+
+    const mockBlob = new Blob(['contenido-zip-ficticio'], { type: 'application/zip' });
+    req.flush(mockBlob, {
+      headers: { 'content-disposition': 'attachment; filename="institucion_20261022_datos.zip"' },
+    });
+
+    fixture.detectChanges();
+    expect(component.exportandoZip()).toBe(false);
+    expect(component.mensajeExito()).toContain('descargado exitosamente');
+    expect(createObjectUrlSpy).toHaveBeenCalledWith(mockBlob);
+
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
+    clickSpy.mockRestore();
+  });
+
+  it('el_admin_puede_descargar_reporte_excel_exitosamente', () => {
+    component.cambiarTab('exportacion');
+    fixture.detectChanges();
+
+    const createObjectUrlSpy = vi
+      .spyOn(window.URL, 'createObjectURL')
+      .mockReturnValue('blob:test-excel');
+    const revokeObjectUrlSpy = vi
+      .spyOn(window.URL, 'revokeObjectURL')
+      .mockImplementation(() => undefined);
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    component.exportarExcel();
+    expect(component.exportandoExcel()).toBe(true);
+
+    const req = httpMock.expectOne('/api/exportaciones/excel');
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+
+    const mockBlob = new Blob(['contenido-excel-ficticio'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    req.flush(mockBlob, {
+      headers: { 'content-disposition': 'attachment; filename="institucion_20261022_datos.xlsx"' },
+    });
+
+    fixture.detectChanges();
+    expect(component.exportandoExcel()).toBe(false);
+    expect(component.mensajeExito()).toContain('Reporte Excel descargado');
+
+    createObjectUrlSpy.mockRestore();
+    revokeObjectUrlSpy.mockRestore();
+    clickSpy.mockRestore();
+  });
+
+  it('muestra_error_cuando_falla_la_exportacion', async () => {
+    component.exportarZip();
+    expect(component.exportandoZip()).toBe(true);
+
+    const req = httpMock.expectOne('/api/exportaciones/zip');
+    const errorBlob = new Blob(
+      [JSON.stringify({ mensaje: 'No tiene permisos para exportar datos.' })],
+      { type: 'application/json' },
+    );
+    req.flush(errorBlob, { status: 403, statusText: 'Forbidden' });
+
+    // Esperar resolución de promesa interna de err.error.text()
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+
+    expect(component.exportandoZip()).toBe(false);
+    expect(component.error()).toContain('No tiene permisos para exportar datos.');
   });
 });

@@ -36,5 +36,11 @@ internal static class SemillaCatalogos
         new(45, TipoCatalogo.TipoCapacitacion, "CONGRESO_SIMPOSIO", "Congreso / simposio", codigoExterno: "5", orden: 5),
         new(46, TipoCatalogo.TipoCapacitacion, "CERTIFICACION", "Certificación", codigoExterno: "6", orden: 6),
         new(47, TipoCatalogo.TipoCapacitacion, "OTRO", "Otro", codigoExterno: "7", orden: 7),
+        // Spec-0003 v0.3, PD-HDV-06 y 09: nuevas opciones acordadas, sin inventar códigos del origen.
+        new(48, TipoCatalogo.TipoCapacitacion, "INSTRUCCION_PROFESIONAL", "Instrucción profesional", orden: 8),
+        new(51, TipoCatalogo.NivelAcademico, "PRIMARIA", "Primaria", orden: 1),
+        new(52, TipoCatalogo.NivelAcademico, "SECUNDARIA", "Secundaria", orden: 2),
+        new(61, TipoCatalogo.GradoAcademico, "PRIMARIA", "Primaria completa", padreId: 51, orden: 1),
+        new(62, TipoCatalogo.GradoAcademico, "BACHILLERATO", "Bachillerato", padreId: 52, orden: 2),
     ];
 }

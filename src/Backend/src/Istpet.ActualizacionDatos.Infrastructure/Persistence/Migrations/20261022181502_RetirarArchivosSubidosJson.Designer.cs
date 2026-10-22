@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AplicacionDbContext))]
-    [Migration("20261022173759_RetirarArchivosSubidosJson")]
+    [Migration("20261022181502_RetirarArchivosSubidosJson")]
     partial class RetirarArchivosSubidosJson
     {
         /// <inheritdoc />
@@ -586,6 +586,53 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                             Nombre = "Otro",
                             Orden = 7,
                             Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 48,
+                            Activo = true,
+                            Codigo = "INSTRUCCION_PROFESIONAL",
+                            Nombre = "Instrucción profesional",
+                            Orden = 8,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
+                            Id = 51,
+                            Activo = true,
+                            Codigo = "PRIMARIA",
+                            Nombre = "Primaria",
+                            Orden = 1,
+                            Tipo = "NivelAcademico"
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Activo = true,
+                            Codigo = "SECUNDARIA",
+                            Nombre = "Secundaria",
+                            Orden = 2,
+                            Tipo = "NivelAcademico"
+                        },
+                        new
+                        {
+                            Id = 61,
+                            Activo = true,
+                            Codigo = "PRIMARIA",
+                            Nombre = "Primaria completa",
+                            Orden = 1,
+                            PadreId = 51,
+                            Tipo = "GradoAcademico"
+                        },
+                        new
+                        {
+                            Id = 62,
+                            Activo = true,
+                            Codigo = "BACHILLERATO",
+                            Nombre = "Bachillerato",
+                            Orden = 2,
+                            PadreId = 52,
+                            Tipo = "GradoAcademico"
                         });
                 });
 

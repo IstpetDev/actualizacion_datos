@@ -1,0 +1,11 @@
+codigo,nombre,codigo_padre,codigo_externo
+01,Educación,,01
+02,Artes y Humanidades,,02
+03,"Ciencias sociales, periodismo, información y derecho",,03
+04,Administración,,04
+05,"Ciencias naturales, matemáticas y estadística",,05
+06,Tecnologías de la información y la comunicación (TIC),,06
+07,"Ingeniería, industria y construcción",,07
+08,"Agricultura, silvicultura, pesca y veterinaria",,08
+09,Salud y bienestar,,09
+10,Servicios,,10
