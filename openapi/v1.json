@@ -3729,6 +3729,30 @@
           }
         }
       },
+      "AdvertenciaCargaDto": {
+        "required": [
+          "fila",
+          "columna",
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "fila": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "columna": {
+            "type": "string"
+          },
+          "motivo": {
+            "type": "string"
+          }
+        }
+      },
       "ArchivoDto": {
         "required": [
           "id",
@@ -5888,7 +5912,91 @@
               "string"
             ]
           },
+          "cargoTrabajo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nacimiento": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estadoCivil": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nacionalidad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "direccion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sangre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "telefono2": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "edad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estudios": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ciudad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fecIngreso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tipoCuentaBanco": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "banco": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numCuentaBanco": {
             "type": [
               "null",
               "string"
@@ -5945,6 +6053,32 @@
           "fechaCreacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "RechazoCargaDto": {
+        "required": [
+          "fila",
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "fila": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "documentoAnonimizado": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6046,7 +6180,10 @@
         "required": [
           "totalRecibidos",
           "totalCargados",
+          "totalRechazados",
           "totalDuplicadosOmitidos",
+          "advertencias",
+          "rechazos",
           "documentosCargados"
         ],
         "type": "object",
@@ -6067,6 +6204,14 @@
             ],
             "format": "int32"
           },
+          "totalRechazados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "totalDuplicadosOmitidos": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -6074,6 +6219,18 @@
               "string"
             ],
             "format": "int32"
+          },
+          "advertencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvertenciaCargaDto"
+            }
+          },
+          "rechazos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RechazoCargaDto"
+            }
           },
           "documentosCargados": {
             "type": "array",

@@ -5352,6 +5352,14 @@ export interface AdminInicialRequest {
     [key: string]: any;
 }
 
+export interface AdvertenciaCargaDto {
+    fila: number;
+    columna: string;
+    motivo: string;
+
+    [key: string]: any;
+}
+
 export interface ArchivoDto {
     id: string;
     institucionId: string;
@@ -5870,7 +5878,21 @@ export interface ObservacionDto {
 export interface PersonaCargaItem {
     documento: string;
     nombre?: string | undefined;
+    cargoTrabajo?: string | undefined;
+    nacimiento?: string | undefined;
+    estadoCivil?: string | undefined;
+    nacionalidad?: string | undefined;
+    direccion?: string | undefined;
+    sangre?: string | undefined;
+    telefono2?: string | undefined;
     correo?: string | undefined;
+    edad?: string | undefined;
+    estudios?: string | undefined;
+    ciudad?: string | undefined;
+    fecIngreso?: string | undefined;
+    tipoCuentaBanco?: string | undefined;
+    banco?: string | undefined;
+    numCuentaBanco?: string | undefined;
 
     [key: string]: any;
 }
@@ -5885,6 +5907,14 @@ export interface PersonaDto {
     accesoHabilitado: boolean;
     estadoActualizacion: string;
     fechaCreacionUtc: Date;
+
+    [key: string]: any;
+}
+
+export interface RechazoCargaDto {
+    fila: number;
+    motivo: string;
+    documentoAnonimizado?: string | undefined;
 
     [key: string]: any;
 }
@@ -5921,7 +5951,10 @@ export interface RespuestaDeSalud {
 export interface ResultadoCargaPersonasDto {
     totalRecibidos: number;
     totalCargados: number;
+    totalRechazados: number;
     totalDuplicadosOmitidos: number;
+    advertencias: AdvertenciaCargaDto[];
+    rechazos: RechazoCargaDto[];
     documentosCargados: string[];
 
     [key: string]: any;

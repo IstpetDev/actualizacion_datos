@@ -59,7 +59,10 @@ describe('AdminDashboardComponent', () => {
   const resultadoCargaMock: ResultadoCargaPersonasDto = {
     totalRecibidos: 2,
     totalCargados: 2,
+    totalRechazados: 0,
     totalDuplicadosOmitidos: 0,
+    advertencias: [],
+    rechazos: [],
     documentosCargados: ['1700000002', '1700000003'],
   };
 
