@@ -281,22 +281,58 @@ public sealed class SegundaCampanaYArchivosTests : IDisposable
         var institucion = new InstitucionId(inst);
         var persona = await db.Personas.IgnoreQueryFilters().SingleAsync(p => p.InstitucionId == institucion && p.Documento == documento);
 
-        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 900))
+        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 903))
         {
-            db.ElementosCatalogo.Add(new ElementoCatalogo(900, TipoCatalogo.NivelAcademico, "TERCER_NIVEL", "Tercer nivel"));
-            db.ElementosCatalogo.Add(new ElementoCatalogo(901, TipoCatalogo.GradoAcademico, "LICENCIATURA", "Licenciatura", padreId: 900));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(903, TipoCatalogo.Pais, "EC", "Ecuador"));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(906, TipoCatalogo.Provincia, "PICHINCHA", "Pichincha", padreId: 903));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(907, TipoCatalogo.Canton, "QUITO", "Quito", padreId: 906));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(905, TipoCatalogo.Parroquia, "PARROQUIA1", "Parroquia 1", padreId: 907));
         }
 
         var titulo = new TituloAcademico(Guid.NewGuid(), institucion, persona.Id,
-            new DatosTituloAcademico("Licenciatura ficticia", 901, NombreInstitucionOtra: "Instituto ficticio"));
+            new DatosTituloAcademico("Primaria", 61, NombreInstitucionOtra: "Instituto ficticio"));
         titulo.AsociarArchivo(respaldoTitulo.Id);
         db.TitulosAcademicos.Add(titulo);
 
+        var ficha = await db.FichasPersonales.FirstOrDefaultAsync(f => f.PersonaId == persona.Id);
+        if (ficha == null)
+        {
+            ficha = new FichaPersonal(institucion, persona.Id);
+            db.FichasPersonales.Add(ficha);
+        }
+        ficha.Actualizar(new DatosFichaPersonal(
+            PrimerNombre: "Persona",
+            PrimerApellido: "Ficticia",
+            SegundoApellido: "Test",
+            SexoId: 1,
+            FechaNacimiento: new DateOnly(1990, 1, 1),
+            PaisNacimientoId: 903,
+            EstadoCivilId: 11,
+            PaisNacionalidadId: 903,
+            ParroquiaResidenciaId: 905,
+            CallePrincipal: "Av. Principal",
+            Celular: "0991234567",
+            CorreoInstitucional: persona.Correo));
+
         if (foto != null)
         {
-            var ficha = new FichaPersonal(institucion, persona.Id);
             ficha.AsociarFoto(foto.Id);
-            db.FichasPersonales.Add(ficha);
+        }
+
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), institucion, persona.Id,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Uno", "0991111111")));
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), institucion, persona.Id,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Dos", "0992222222")));
+
+        var cuenta = await db.CuentasBancarias.FirstOrDefaultAsync(c => c.PersonaId == persona.Id);
+        if (cuenta == null)
+        {
+            db.CuentasBancarias.Add(CuentaBancaria.RegistradaPorPersona(
+                Guid.NewGuid(),
+                institucion,
+                persona.Id,
+                new DatosCuentaBancaria(71, null, "Banco Pichincha", new NumeroCuentaProtegido("cifrado", "1234", "huella")),
+                DateTime.UtcNow));
         }
 
         if (documentoPersonal != null)

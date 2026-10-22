@@ -12,15 +12,18 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
     private readonly AplicacionDbContext _context;
     private readonly IServicioCampanas _servicioCampanas;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IValidadorCompletitudEnvio _validadorCompletitud;
 
     public ServicioDatosUsuario(
         AplicacionDbContext context,
         IServicioCampanas servicioCampanas,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IValidadorCompletitudEnvio validadorCompletitud)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
         _contextoInstitucion = contextoInstitucion;
+        _validadorCompletitud = validadorCompletitud;
     }
 
     public async Task<MisDatosDto> ObtenerMisDatosAsync(string documento, CancellationToken ct = default)
@@ -99,6 +102,31 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
             ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
 
         var ahoraUtc = DateTime.UtcNow;
+
+        // Precondiciones básicas de la persona antes de validar completitud de la hoja de vida
+        if (!persona.TratamientoDatosAceptado)
+        {
+            persona.EnviarARevision(ahoraUtc);
+        }
+
+        if (string.IsNullOrWhiteSpace(persona.Correo))
+        {
+            persona.EnviarARevision(ahoraUtc);
+        }
+
+        if (persona.EstadoActualizacion != EstadoActualizacion.Borrador &&
+            persona.EstadoActualizacion != EstadoActualizacion.Devuelto)
+        {
+            persona.EnviarARevision(ahoraUtc);
+        }
+
+        // RF-HDV-009, T-04: Validar completitud antes de enviar a revisión
+        var validacion = await _validadorCompletitud.ValidarAsync(persona.Id, ct);
+        if (!validacion.Completo)
+        {
+            throw new EnvioIncompletoException(validacion.Faltantes);
+        }
+
         persona.EnviarARevision(ahoraUtc);
 
         // RF-DAT-004, RF-DAT-005: Registrar en auditoría
