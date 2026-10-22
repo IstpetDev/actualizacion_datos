@@ -2,8 +2,8 @@
 
 **ID:** spec-0003  
 **Versión:** 0.3  
-**Estado:** Borrador para revisión funcional  
-**Revisor funcional:** Pendiente de asignar  
+**Estado:** Aprobado (v0.3, 2026-10-22)  
+**Revisor funcional:** @JosephBano  
 **Fecha:** 2026-10-22  
 **Áreas afectadas:** `src/Backend` (esta versión); `src/Frontend` en una versión posterior
 
@@ -127,7 +127,7 @@ Hecho en la rama `feature/28-esquema-referencias-y-perfil` (v0.2), también ante
 - Columna `fichas_personales.perfil` (RF-HDV-020). La foto ya existía como `fichas_personales.foto_archivo_id`.
 - Migración `AgregarReferenciasYPerfil` y pruebas de dominio y de modelo. Las reglas de mínimo de referencias, de formación académica y de carga de nómina (RF-HDV-018, 019, 021 a 023) **no** están implementadas: son capa de aplicación y esperan la aprobación.
 
-Pendiente (issues #28 a #35): decisiones funcionales, catálogos grandes, servicios de aplicación y endpoints, validación de tipo de catálogo y de completitud al enviar, exportación por secciones y frontend.
+Pendiente (issues #29 a #35 y las tareas de `tasks.md`): catálogos grandes, servicios de aplicación y endpoints, validación de tipo de catálogo y de completitud al enviar, exportación por secciones y frontend.
 
 ## Criterios de aceptación
 
@@ -154,9 +154,9 @@ Pendiente (issues #28 a #35): decisiones funcionales, catálogos grandes, servic
 | PD-HDV-07 | ¿Se piden cargas familiares (existe un PRD en el sistema de origen)? | Nueva sección | Revisor funcional |
 | PD-HDV-08 | Tipo de participación en capacitaciones: se usaron «asistente», «aprobado» y «facilitador». El origen solo muestra «Recibido» como valor por defecto. | Catálogo o enum | Revisor funcional |
 | PD-HDV-09 | Qué cuenta como formación académica obligatoria (RF-HDV-019): al menos un estudio de cualquier nivel, los tres niveles del formato (primaria, secundaria, superior) o solo el superior. Quien tiene solo bachillerato no debe quedar bloqueado. Primaria y secundaria necesitan un grado en el catálogo (PD-HDV-03). | RF-HDV-019 | Revisor funcional |
-| PD-HDV-10 | El formato dice que solo son obligatorios datos personales, formación y dos referencias, pero RF-HDV-007 permite marcar documentos obligatorios. | RF-HDV-009 | Propuesta del desarrollador: **sí obligan**. Para el docente son cinco: cédula, papeleta de votación, antecedentes penales, declaración juramentada notariada y mecanizado del IESS. Falta aprobación. |
+| PD-HDV-10 | El formato dice que solo son obligatorios datos personales, formación y dos referencias, pero RF-HDV-007 permite marcar documentos obligatorios. | RF-HDV-009 | Propuesta del desarrollador: **sí obligan**. Para el docente son cinco: cédula, papeleta de votación, antecedentes penales, declaración juramentada notariada y mecanizado del IESS. Validado con la versión 0.3. |
 | PD-HDV-11 | «Fecha y número de registro» aparece en los datos personales del formato. ¿Es el registro del título (SENESCYT, que el modelo guarda en el título) o un registro institucional? | Modelo de la ficha | Revisor funcional |
-| PD-HDV-12 | La declaración firmada del formato. | RF-HDV-007, alcance | Propuesta del desarrollador: es la **declaración juramentada notariada** que la persona sube escaneada como tipo de documento; no se genera. Falta aprobación. |
+| PD-HDV-12 | La declaración firmada del formato. | RF-HDV-007, alcance | Propuesta del desarrollador: es la **declaración juramentada notariada** que la persona sube escaneada como tipo de documento; no se genera. Validado con la versión 0.3. |
 | PD-HDV-13 | Referencias: ¿máximo por tipo, y se pide parentesco en las familiares? El formato trae dos de cada tipo y no pide parentesco. | RF-HDV-017 | Revisor funcional |
 | PD-HDV-14 | Datos bancarios: **sí se piden**, para comprobar que los pagos van a las cuentas correctas. Tratamiento (cifrado, quién ve el número, exportación, auditoría) en ADR-0013, Propuesto. | RF-HDV-025 a 027 | Quien desarrolla (cierra ADR-0013) |
 | PD-HDV-17 | ¿La cuenta bancaria es obligatoria para enviar? Propuesta: sí, porque sin ella no se cumple su finalidad. | RF-HDV-009, 025 | Revisor funcional |
@@ -164,9 +164,9 @@ Pendiente (issues #28 a #35): decisiones funcionales, catálogos grandes, servic
 | PD-HDV-15 | Fecha de ingreso y ciudad de la nómina: hoy no se guardan (ADR-0012). ¿Se necesitan? | ADR-0012 | Revisor funcional |
 | PD-HDV-16 | ¿La institución tiene personal sin cédula (pasaporte)? Cambia la validación del documento en la carga. | RF-HDV-021 | Equipo |
 
-### Respuestas propuestas (pendientes de validación)
+### Respuestas validadas con la versión 0.3
 
-Propuesta del equipo para cerrar PD-HDV-01 a 08. **Ninguna es una decisión** hasta que el revisor funcional las apruebe. Mientras tanto, cada una es la decisión por defecto con la que se puede avanzar.
+Respuestas a PD-HDV-01 a 08 propuestas por el equipo y **validadas por el revisor funcional con la aprobación de la versión 0.3** (ver «Revisión funcional»). Rigen el plan y las tareas.
 
 | ID | Propuesta | Razón |
 |---|---|---|
@@ -182,13 +182,20 @@ Propuesta del equipo para cerrar PD-HDV-01 a 08. **Ninguna es una decisión** ha
 ## Revisión funcional
 
 **Versión revisada:** 0.3  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Ninguno todavía
+**Decisión:** Aprobada, sin ajustes  
+**Aprobó:** @JosephBano, revisor funcional  
+**Fecha y evidencia de aprobación:** 2026-10-22. Confirmación escrita «validado v0.3» del revisor en la sesión de trabajo; la versión 0.3 está en `develop` por el PR #38.  
+**Ajustes solicitados:** Ninguno. La aprobación cubre la versión 0.3 tal como está escrita, incluidas las respuestas propuestas a PD-HDV-01 a 08 y las propuestas de PD-HDV-10, 12, 14, 17 y 18. Los ADR-0012 y ADR-0013 **siguen en Propuesto**: no los cierra esta aprobación.
+
+**Puntos que siguen abiertos tras la aprobación** (ninguno bloquea T-00 a T-08; se resuelven antes de la tarea indicada en `tasks.md`):
+
+- PD-HDV-09, formación académica obligatoria: rige RF-HDV-019 («al menos un estudio») mientras no se diga otra cosa. Antes de T-04.
+- PD-HDV-11 (qué es «fecha y número de registro») y PD-HDV-13 (máximo de referencias y parentesco). Antes de T-11.
+- PD-HDV-15 y 16 (fecha de ingreso, ciudad y pasaportes). Antes de T-09.
+- Cierre de ADR-0012 y ADR-0013, a cargo de quien desarrolla. T-09 y T-10 esperan.
 
 **Cambios de 0.2 a 0.3:** un solo tipo de funcionario («Docente»); cinco documentos obligatorios del docente (PD-HDV-10, 12); respaldo obligatorio por ítem (RF-HDV-024); cuenta bancaria (RF-HDV-025 a 027, ADR-0013); responsables de las fuentes de catálogos (PD-HDV-03); puntos PD-HDV-17 y 18.
 
 **Cambios de 0.1 a 0.2:** se agregan referencias personales y familiares, perfil, foto, formación académica por niveles y declaración firmada al alcance; los obligatorios del formato (RF-HDV-009, 018, 019); la carga de nómina con valores nulos y la división de nombres (RF-HDV-021 a 023, ADR-0012); el escenario 4; los puntos PD-HDV-09 a 16; y las respuestas propuestas para PD-HDV-01 a 08.
 
-Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
+Aprobación registrada: `plan.md`, `tasks.md` y `test-e2e.md` se crearon el 2026-10-22 a partir de esta versión. Cualquier cambio de alcance vuelve a revisión funcional antes de ejecutar tareas dependientes.
