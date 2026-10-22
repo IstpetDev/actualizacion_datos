@@ -156,9 +156,9 @@ No se introducen requisitos de rendimiento ni de «seguridad» general sin métr
 ## Revisión funcional
 
 **Versión revisada:** 0.1  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Ninguno todavía
+**Decisión:** Aprobado  
+**Aprobó:** @AlexanderMartinez0410 con @JorgeDoicela  
+**Fecha y evidencia de aprobación:** 2026-10-22 (Issue #14)  
+**Ajustes solicitados:** Ninguno. Todos los requisitos y escenarios han sido implementados y comprobados con éxito en test-e2e.md.
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
