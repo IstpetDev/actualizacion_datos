@@ -1,0 +1,212 @@
+namespace Istpet.ActualizacionDatos.Domain.Tests;
+
+using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
+
+public class HojaDeVidaTests
+{
+    private static readonly InstitucionId Institucion = InstitucionId.Nuevo();
+    private static readonly Guid PersonaId = Guid.NewGuid();
+
+    [Fact]
+    public void Elemento_de_catalogo_jerarquico_sin_padre_lanza_excepcion()
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new ElementoCatalogo(1000, TipoCatalogo.Provincia, "PROV_FICTICIA", "Provincia ficticia"));
+    }
+
+    [Fact]
+    public void Elemento_de_catalogo_normaliza_codigo_y_admite_universidad_sin_pais()
+    {
+        var universidad = new ElementoCatalogo(1001, TipoCatalogo.Universidad, " univ_ficticia ", "Universidad Ficticia");
+
+        Assert.Equal("UNIV_FICTICIA", universidad.Codigo);
+        Assert.Null(universidad.PadreId);
+        Assert.Equal(TipoCatalogo.Pais, ElementoCatalogo.TipoPadre(TipoCatalogo.Universidad));
+    }
+
+    [Fact]
+    public void Ficha_personal_sin_discapacidad_no_admite_porcentaje()
+    {
+        var ficha = new FichaPersonal(Institucion, PersonaId);
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            ficha.Actualizar(new DatosFichaPersonal(PorcentajeDiscapacidad: 40)));
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public void Ficha_personal_rechaza_porcentaje_fuera_de_rango(int porcentaje)
+    {
+        var ficha = new FichaPersonal(Institucion, PersonaId);
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            ficha.Actualizar(new DatosFichaPersonal(DiscapacidadId: 5, PorcentajeDiscapacidad: porcentaje)));
+    }
+
+    [Fact]
+    public void Ficha_personal_limpia_textos_vacios()
+    {
+        var ficha = new FichaPersonal(Institucion, PersonaId);
+
+        ficha.Actualizar(new DatosFichaPersonal(PrimerNombre: "  Nombre Ficticio ", SegundoNombre: "   ", Celular: "0990000000"));
+
+        Assert.Equal("Nombre Ficticio", ficha.PrimerNombre);
+        Assert.Null(ficha.SegundoNombre);
+        Assert.Equal("0990000000", ficha.Celular);
+    }
+
+    [Fact]
+    public void Titulo_sin_universidad_ni_institucion_lanza_excepcion()
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new TituloAcademico(Guid.NewGuid(), Institucion, PersonaId, new DatosTituloAcademico("Título ficticio", 1)));
+    }
+
+    [Fact]
+    public void Titulo_con_registro_anterior_a_obtencion_lanza_excepcion()
+    {
+        var datos = new DatosTituloAcademico(
+            "Título ficticio",
+            1,
+            UniversidadId: 1001,
+            FechaObtencion: new DateOnly(2020, 6, 1),
+            FechaRegistroSenescyt: new DateOnly(2020, 5, 1));
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new TituloAcademico(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Titulo_con_universidad_descarta_nombre_de_otra_institucion()
+    {
+        var titulo = new TituloAcademico(
+            Guid.NewGuid(),
+            Institucion,
+            PersonaId,
+            new DatosTituloAcademico("Título ficticio", 1, UniversidadId: 1001, NombreInstitucionOtra: "Otra ficticia"));
+
+        Assert.Equal(1001, titulo.UniversidadId);
+        Assert.Null(titulo.NombreInstitucionOtra);
+    }
+
+    [Fact]
+    public void Titulo_en_curso_sin_beca_no_guarda_datos_de_beca()
+    {
+        var titulo = new TituloEnCurso(
+            Guid.NewGuid(),
+            Institucion,
+            PersonaId,
+            new DatosTituloEnCurso("Programa ficticio", 1, NombreInstitucionOtra: "Universidad Ficticia", TieneBeca: false, PorcentajeBeca: 50, MontoBeca: 100m));
+
+        Assert.False(titulo.TieneBeca);
+        Assert.Null(titulo.PorcentajeBeca);
+        Assert.Null(titulo.MontoBeca);
+    }
+
+    [Fact]
+    public void Capacitacion_con_horas_cero_lanza_excepcion()
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new Capacitacion(Guid.NewGuid(), Institucion, PersonaId, new DatosCapacitacion("Curso ficticio", "Organizador ficticio", NumeroHoras: 0)));
+    }
+
+    [Fact]
+    public void Capacitacion_con_fin_anterior_a_inicio_lanza_excepcion()
+    {
+        var datos = new DatosCapacitacion(
+            "Curso ficticio",
+            "Organizador ficticio",
+            FechaInicio: new DateOnly(2024, 3, 10),
+            FechaFin: new DateOnly(2024, 3, 1));
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new Capacitacion(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Experiencia_actual_con_fecha_fin_lanza_excepcion()
+    {
+        var datos = new DatosExperienciaLaboral(
+            "Empresa Ficticia",
+            "Cargo ficticio",
+            new DateOnly(2020, 1, 1),
+            FechaFin: new DateOnly(2021, 1, 1),
+            TrabajaActualmente: true);
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new ExperienciaLaboral(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Experiencia_terminada_sin_fecha_fin_lanza_excepcion()
+    {
+        var datos = new DatosExperienciaLaboral("Empresa Ficticia", "Cargo ficticio", new DateOnly(2020, 1, 1));
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new ExperienciaLaboral(Guid.NewGuid(), Institucion, PersonaId, datos));
+    }
+
+    [Fact]
+    public void Experiencia_actual_valida_se_crea_y_asocia_archivo()
+    {
+        var experiencia = new ExperienciaLaboral(
+            Guid.NewGuid(),
+            Institucion,
+            PersonaId,
+            new DatosExperienciaLaboral("Empresa Ficticia", "Cargo ficticio", new DateOnly(2020, 1, 1), TrabajaActualmente: true));
+        var archivoId = Guid.NewGuid();
+
+        experiencia.AsociarArchivo(archivoId);
+
+        Assert.True(experiencia.TrabajaActualmente);
+        Assert.Equal(archivoId, experiencia.ArchivoId);
+        Assert.Equal(Institucion, experiencia.InstitucionId);
+    }
+
+    [Fact]
+    public void Documento_con_vencimiento_anterior_a_emision_lanza_excepcion()
+    {
+        var datos = new DatosDocumentoPersonal(
+            FechaEmision: new DateOnly(2024, 1, 1),
+            FechaVencimiento: new DateOnly(2023, 1, 1));
+
+        Assert.Throws<ReglaNegocioException>(() =>
+            new DocumentoPersonal(Guid.NewGuid(), Institucion, PersonaId, Guid.NewGuid(), datos));
+    }
+
+    [Fact]
+    public void Requisito_sin_tipo_de_funcionario_aplica_a_todos()
+    {
+        var instructor = Guid.NewGuid();
+        var universal = new RequisitoDocumento(Guid.NewGuid(), Institucion, Guid.NewGuid());
+        var soloInstructor = new RequisitoDocumento(Guid.NewGuid(), Institucion, Guid.NewGuid(), instructor);
+
+        Assert.True(universal.AplicaA(null));
+        Assert.True(universal.AplicaA(instructor));
+        Assert.True(soloInstructor.AplicaA(instructor));
+        Assert.False(soloInstructor.AplicaA(Guid.NewGuid()));
+        Assert.False(soloInstructor.AplicaA(null));
+    }
+
+    [Theory]
+    [InlineData(EstadoActualizacion.Borrador, true)]
+    [InlineData(EstadoActualizacion.Devuelto, true)]
+    [InlineData(EstadoActualizacion.Enviado, false)]
+    [InlineData(EstadoActualizacion.Aprobado, false)]
+    public void Persona_permite_editar_hoja_de_vida_solo_en_borrador_o_devuelto(EstadoActualizacion estado, bool permitido)
+    {
+        var persona = new Persona(Guid.NewGuid(), Institucion, "0000000000", estadoActualizacion: estado);
+
+        Assert.Equal(permitido, persona.PuedeEditarHojaDeVida);
+        if (permitido)
+        {
+            persona.AsegurarEdicionPermitida();
+        }
+        else
+        {
+            Assert.Throws<ReglaNegocioException>(persona.AsegurarEdicionPermitida);
+        }
+    }
+}
