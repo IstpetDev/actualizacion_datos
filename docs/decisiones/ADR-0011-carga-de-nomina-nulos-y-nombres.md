@@ -15,7 +15,7 @@ Hechos que condicionan la decisión:
 - Faltan en el archivo: correo, sexo y etnia. El correo es necesario para verificar el acceso (ADR-0007).
 - `Persona.Nombre` y `Persona.Correo` ya admiten nulo. `FichaPersonal` guarda todo como opcional y valida la obligatoriedad al enviar (ADR-0009, ADR-0010).
 - PD-09 de spec-0001 ya decidió que, dentro de una institución, el documento es único y las listas se deduplican en la ingesta.
-- Las columnas bancarias son datos financieros personales. No están en spec-0001 ni en spec-0003, y quien desarrolla decidió tratarlas **en una decisión aparte**.
+- Las columnas bancarias son datos financieros personales. Se necesitan para comprobar que los pagos van a las cuentas correctas; su tratamiento (cifrado, quién las ve, exportación) se decide en **ADR-0012**, no aquí.
 - Los datos de la nómina son lo que la institución afirma; la persona todavía no los ha confirmado.
 
 ## Opciones
@@ -40,7 +40,7 @@ Todo lo demás es opcional: si falta o no se puede interpretar, queda en nulo y 
 |---|---|---|
 | `DNI` | `Persona.Documento`, siempre como **texto** | Fila rechazada. Si tiene 9 dígitos, se completa con un cero a la izquierda (el cero lo pierde la hoja de cálculo) y se advierte. |
 | `Nombre` | `Persona.Nombre` con el texto original y, además, los cuatro campos de `FichaPersonal` (ver «División de nombres») | `Persona.Nombre` y los cuatro campos quedan nulos; advertencia. La fila se carga. |
-| `Cargo de Trabajo` | `Persona.TipoFuncionarioId`, buscando por nombre normalizado (sin tildes, sin mayúsculas ni espacios sobrantes) entre los tipos de funcionario de la institución | Sin tipo; advertencia. El informe lista los cargos sin coincidencia para que el admin cree los tipos y los asigne. El texto del cargo no se guarda. |
+| `Cargo de Trabajo` | `Persona.TipoFuncionarioId`, buscando por nombre normalizado (sin tildes, sin mayúsculas ni espacios sobrantes) entre los tipos de funcionario de la institución. Mientras exista un solo tipo («Docente»), los requisitos se definen para «todos» y no dependen de esta correspondencia | Sin tipo; advertencia. El informe lista los cargos sin coincidencia para que el admin cree los tipos y los asigne. El texto del cargo no se guarda. |
 | `Nacimiento` | `FichaPersonal.FechaNacimiento`; se aceptan `dd/MM/aaaa`, `aaaa-MM-dd` y fecha serial de Excel | Nulo; advertencia. Una fecha futura o anterior a 1900 se trata como no reconocida. |
 | `Edad` | **No se importa.** | Se calcula desde la fecha de nacimiento cuando haga falta; guardarla la dejaría desactualizada. |
 | `Estado Civil` | `FichaPersonal.EstadoCivilId`, por coincidencia con el nombre o el código del catálogo | Nulo; advertencia. |
@@ -51,7 +51,7 @@ Todo lo demás es opcional: si falta o no se puede interpretar, queda en nulo y 
 | `Ciudad` | **No se guarda.** La residencia del modelo es una parroquia del catálogo y la ciudad no la determina. | La persona elige su parroquia. Ver «Puntos abiertos». |
 | `Fec. Ingreso` | **No se importa** en esta versión. | El modelo no tiene fecha de ingreso (ADR-0010, decisión 7). Ver «Puntos abiertos». |
 | `Teléfono 2` | `FichaPersonal.Celular` si son 10 dígitos y empiezan con `09`; si no, `FichaPersonal.TelefonoConvencional` | Nulo; advertencia. |
-| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | **No se importan ni se guardan.** Se ignoran al leer el archivo y no se escriben en registros ni en el informe. | Su tratamiento se decide aparte. |
+| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | Cuenta **propuesta** de la persona, con la protección que fije ADR-0012. Hasta que ADR-0012 sea Vigente, la carga **las ignora** y no las guarda. | Sin cuenta propuesta; advertencia. En ningún caso se escriben en registros ni en el informe. |
 
 ### División de nombres
 
@@ -96,11 +96,11 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - La carga actual (`PersonaCargaItem`) debe ampliarse con estas columnas. Eso cambia la API: hay que regenerar `openapi/v1.json` y el cliente del frontend en el mismo cambio (`AGENTS.md`).
 - El archivo de nómina contiene datos personales reales: **no se guarda en el repositorio**, ni en las pruebas, ni en capturas. Las pruebas usan filas ficticias.
 - Los nombres divididos automáticamente se equivocan en los casos ambiguos (tres palabras, apellidos compuestos poco comunes). Por eso son una propuesta y la persona los confirma.
-- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso`, `Edad` y los datos bancarios. Los tres primeros pueden recuperarse si se decide guardarlos; los bancarios requieren su propia decisión.
+- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso` y `Edad`; pueden recuperarse si se decide guardarlos. Los datos bancarios se cargan solo cuando ADR-0012 sea Vigente.
 
 ## Puntos abiertos
 
-- **Datos bancarios.** Decisión aparte: si se necesitan, por qué, con qué base legal (Ley Orgánica de Protección de Datos Personales), con qué cifrado y quién los ve. Hasta entonces, no se importan.
+- **Datos bancarios.** Se necesitan (comprobar pagos). Falta cerrar ADR-0012: base legal, cifrado y quién los ve. Hasta entonces, la carga no los importa.
 - **Fecha de ingreso.** ¿Se guarda como dato de la persona? Hoy no tiene dónde.
 - **Ciudad.** ¿Basta con que la persona elija su parroquia, o se guarda también un texto de ciudad?
 - **Pasaportes.** ¿La institución tiene personal sin cédula? Si es así, la regla de «solo dígitos» del documento cambia.
@@ -113,3 +113,4 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - ADR-0007 — Autenticación con cédula, cambio obligatorio y correo.
 - ADR-0009 — Campos configurables por institución (Propuesto).
 - ADR-0010 — Hoja de vida estructurada y catálogos.
+- ADR-0012 — Datos bancarios (Propuesto).
