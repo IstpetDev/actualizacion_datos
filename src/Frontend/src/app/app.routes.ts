@@ -59,8 +59,8 @@ export const routes: Routes = [
         path: 'usuario',
         canActivate: [roleGuard('usuario')],
         loadComponent: () =>
-          import('./features/usuario/usuario-dashboard.component').then(
-            (m) => m.UsuarioDashboardComponent,
+          import('./features/usuario/hoja-de-vida/hoja-de-vida.component').then(
+            (m) => m.HojaDeVidaComponent,
           ),
       },
       {
