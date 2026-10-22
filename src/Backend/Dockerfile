@@ -33,6 +33,8 @@ ENV DOTNET_gcServer=0
 
 EXPOSE 8080
 
+RUN mkdir -p /app/almacen_archivos && chown -R $APP_UID:$APP_UID /app/almacen_archivos
+
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Istpet.ActualizacionDatos.WebApi.dll"]

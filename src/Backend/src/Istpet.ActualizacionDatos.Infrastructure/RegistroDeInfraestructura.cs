@@ -28,6 +28,10 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioAuditoria, ServicioAuditoria>();
         servicios.AddScoped<IAlmacenArchivos, AlmacenArchivosDisco>();
         servicios.AddScoped<IServicioArchivos, ServicioArchivos>();
+        servicios.AddScoped<IServicioCatalogos, ServicioCatalogos>();
+        servicios.AddScoped<ValidadorCatalogos>();
+        servicios.AddScoped<CargadorCatalogosDesarrollo>();
+        servicios.AddScoped<IServicioExportacion, ServicioExportacion>();
 
         var connectionString = configuracion.GetConnectionString("Default");
 
