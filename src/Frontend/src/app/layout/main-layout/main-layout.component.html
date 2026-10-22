@@ -31,6 +31,7 @@
         <button
           type="button"
           class="btn-logout"
+          [disabled]="cerrando()"
           (click)="cerrarSesion()"
           aria-label="Cerrar sesión"
         >
@@ -41,6 +42,9 @@
   </header>
 
   <main class="content-container" role="main">
+    @if (errorCierre()) {
+      <p role="alert">{{ errorCierre() }}</p>
+    }
     <router-outlet />
   </main>
 </div>

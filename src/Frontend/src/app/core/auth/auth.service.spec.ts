@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Rol, SesionUsuario } from './auth.models';
+import { AutenticacionClient } from '../../api-client';
 import { AuthService } from './auth.service';
 
 const CLAVE_STORAGE_SESION = 'istpet_actualizacion_datos_sesion';
@@ -16,6 +17,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     window.sessionStorage.clear();
+    TestBed.configureTestingModule({ providers: [{ provide: AutenticacionClient, useValue: {} }] });
   });
 
   afterEach(() => {

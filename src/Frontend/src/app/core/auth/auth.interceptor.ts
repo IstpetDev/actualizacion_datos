@@ -9,40 +9,30 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
-/**
- * Interceptor funcional que enriquece las peticiones salientes con el token de sesión
- * y gestiona de forma centralizada respuestas 401 (No autorizado) y 403 (Prohibido).
- */
+/** Gestiona la expiración de la cookie sin fabricar credenciales en el navegador. */
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
 ) => {
-  const authService = inject(AuthService);
+  const auth = inject(AuthService);
   const router = inject(Router);
-
-  const token = authService.sesion()?.token;
-  const esUrlExterna = req.url.startsWith('http://') || req.url.startsWith('https://');
-
-  let peticion = req;
-  if (token && !esUrlExterna && !req.headers.has('Authorization')) {
-    peticion = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
-
-  return next(peticion).pipe(
+  return next(req).pipe(
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse) {
         if (error.status === 401) {
-          authService.cerrarSesion();
-          router.navigate(['/login']);
+          auth.cerrarSesion();
+          if (!req.url.endsWith('/auth/login') && !req.url.endsWith('/auth/sesion')) {
+            void router.navigate(['/login']);
+          }
         } else if (error.status === 403) {
-          router.navigate(['/no-autorizado']);
+          if (auth.sesion()?.debeCambiarContrasena) {
+            void router.navigate(['/cambiar-clave']);
+          } else if (!(req.method !== 'GET' && /\/api\/(mis-datos|archivos)(\/|$)/.test(req.url))) {
+            void router.navigate(['/no-autorizado']);
+          }
+          // Los rechazos de campaña al guardar/subir se muestran sin destruir el borrador.
         }
       }
-
       return throwError(() => error);
     }),
   );
