@@ -46,3 +46,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | Spec | Título | Estado |
 |---|---|---|
 | [spec-0001](spec-0001/spec.md) | Fundación del producto | Borrador para revisión funcional |
+| [spec-0002](spec-0002/spec.md) | Pantallas del usuario, issue #11 | Aprobado (2026-10-22) |
