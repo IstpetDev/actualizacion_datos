@@ -27,7 +27,8 @@ public sealed record DatosFichaPersonal(
     string? CorreoInstitucional = null,
     int? DiscapacidadId = null,
     int? PorcentajeDiscapacidad = null,
-    string? NumeroCarnetDiscapacidad = null);
+    string? NumeroCarnetDiscapacidad = null,
+    string? Perfil = null);
 
 // ADR-0010, decisiones 1 y 2: datos personales de la hoja de vida, 1 a 1 con la persona.
 // Equivale a las columnas de datos personales de `profesores` en el sistema de origen.
@@ -66,6 +67,9 @@ public class FichaPersonal : EntidadInstitucional
     public int? DiscapacidadId { get; private set; }
     public int? PorcentajeDiscapacidad { get; private set; }
     public string? NumeroCarnetDiscapacidad { get; private set; }
+
+    // Texto libre del apartado «Perfil» del formato de hoja de vida; opcional.
+    public string? Perfil { get; private set; }
 
     public Guid? FotoArchivoId { get; private set; }
     public DateTime FechaActualizacionUtc { get; private set; }
@@ -130,6 +134,8 @@ public class FichaPersonal : EntidadInstitucional
         DiscapacidadId = datos.DiscapacidadId;
         PorcentajeDiscapacidad = datos.DiscapacidadId is null ? null : datos.PorcentajeDiscapacidad;
         NumeroCarnetDiscapacidad = datos.DiscapacidadId is null ? null : Limpiar(datos.NumeroCarnetDiscapacidad);
+
+        Perfil = Limpiar(datos.Perfil);
 
         FechaActualizacionUtc = fechaUtc ?? DateTime.UtcNow;
     }

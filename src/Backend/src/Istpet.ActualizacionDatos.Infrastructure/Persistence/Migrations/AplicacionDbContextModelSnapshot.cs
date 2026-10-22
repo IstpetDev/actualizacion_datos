@@ -754,6 +754,11 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("parroquia_residencia_id");
 
+                    b.Property<string>("Perfil")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("perfil");
+
                     b.Property<int?>("PorcentajeDiscapacidad")
                         .HasColumnType("integer")
                         .HasColumnName("porcentaje_discapacidad");
@@ -839,6 +844,77 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_fichas_personales_porcentaje_discapacidad", "porcentaje_discapacidad IS NULL OR porcentaje_discapacidad BETWEEN 0 AND 100");
                         });
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ReferenciaPersonal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("archivo_id");
+
+                    b.Property<string>("CargoActual")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("cargo_actual");
+
+                    b.Property<string>("Empresa")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("empresa");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("NombresApellidos")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombres_apellidos");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("telefono");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tipo");
+
+                    b.Property<string>("Titulo")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("titulo");
+
+                    b.HasKey("Id")
+                        .HasName("pk_referencias_personales");
+
+                    b.HasIndex("ArchivoId")
+                        .HasDatabaseName("ix_referencias_personales_archivo_id");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_referencias_personales_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_referencias_personales_persona_id");
+
+                    b.ToTable("referencias_personales", (string)null);
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.RequisitoDocumento", b =>
@@ -1601,6 +1677,29 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TipoSangreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_fichas_personales_elementos_catalogo_tipo_sangre_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.ReferenciaPersonal", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
+                        .WithMany()
+                        .HasForeignKey("ArchivoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_referencias_personales_archivos_adjuntos_archivo_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_referencias_personales_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_referencias_personales_personas_persona_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.RequisitoDocumento", b =>
