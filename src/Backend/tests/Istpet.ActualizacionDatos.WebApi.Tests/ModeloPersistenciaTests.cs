@@ -39,6 +39,7 @@ public class ModeloPersistenciaTests
     [InlineData(typeof(TituloEnCurso))]
     [InlineData(typeof(Capacitacion))]
     [InlineData(typeof(ExperienciaLaboral))]
+    [InlineData(typeof(ReferenciaPersonal))]
     [InlineData(typeof(DocumentoPersonal))]
     [InlineData(typeof(TipoDocumento))]
     [InlineData(typeof(TipoFuncionario))]

@@ -82,6 +82,25 @@ public class CapacitacionConfiguracion : IEntityTypeConfiguration<Capacitacion>
     }
 }
 
+public class ReferenciaPersonalConfiguracion : IEntityTypeConfiguration<ReferenciaPersonal>
+{
+    public void Configure(EntityTypeBuilder<ReferenciaPersonal> builder)
+    {
+        ConfigurarRegistro(builder, "referencias_personales");
+
+        builder.Property(r => r.Tipo)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasColumnName("tipo");
+        builder.Property(r => r.NombresApellidos).HasMaxLength(300).IsRequired().HasColumnName("nombres_apellidos");
+        builder.Property(r => r.Telefono).HasMaxLength(30).IsRequired().HasColumnName("telefono");
+        builder.Property(r => r.Titulo).HasMaxLength(200).HasColumnName("titulo");
+        builder.Property(r => r.CargoActual).HasMaxLength(200).HasColumnName("cargo_actual");
+        builder.Property(r => r.Empresa).HasMaxLength(300).HasColumnName("empresa");
+    }
+}
+
 public class ExperienciaLaboralConfiguracion : IEntityTypeConfiguration<ExperienciaLaboral>
 {
     public void Configure(EntityTypeBuilder<ExperienciaLaboral> builder)
