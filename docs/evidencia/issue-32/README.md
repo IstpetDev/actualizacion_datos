@@ -69,7 +69,7 @@ Entorno: Windows 11, .NET SDK 10.0.402, Docker 29.8.2 (PostgreSQL 17 por Testcon
 |---|---|
 | `dotnet build src/Backend` | 0 errores, 0 advertencias |
 | `dotnet test src/Backend --filter "Categoria!=Integracion"` | Domain 88/88, Application 2/2, WebApi 137/137 |
-| `dotnet test src/Backend --filter "Categoria=Integracion"` | 12/12 en PostgreSQL 17 (aplica las 7 migraciones, incluida la nueva) |
+| `dotnet test src/Backend --filter "Categoria=Integracion"` | 12/12 en PostgreSQL 17 (aplica las 8 migraciones, incluida la nueva) |
 | `dotnet format --verify-no-changes` | Sin cambios |
 | `pnpm --dir src/Frontend test:ci` | 87/87 |
 | `pnpm --dir src/Frontend lint` / `build` | Sin errores / correcto |
@@ -110,3 +110,16 @@ Entorno: Windows 11, .NET SDK 10.0.402, Docker 29.8.2 (PostgreSQL 17 por Testcon
 - La aceptación del tratamiento de datos no se reinicia al reabrir: sigue vigente la ya registrada (RF-DAT-001 no pide renovarla por campaña). Si la institución lo exige, es un cambio de spec.
 - Mientras T-02 y T-03 no publiquen sus endpoints, las pruebas de limpieza crean los ítems directo en la base.
 - `RF-FLU-005` de spec-0001 quedó anotado con el nuevo paso (spec-0001 sigue en borrador).
+
+## Hallazgo del recorrido con Docker (permisos de la carpeta de archivos)
+
+Al probar el flujo contra `docker compose`, toda subida respondía 500 (`Access to the path '/app/almacen_archivos' is denied`) y, desde este cambio, también la aprobación, porque ahora limpia archivos. La imagen corre con un usuario sin privilegios (`USER $APP_UID`) y nadie creaba la carpeta de almacenamiento:
+
+- en desarrollo, el backend usaba `/app/almacen_archivos`, que no es escribible;
+- en producción, el volumen `archivos-almacenados` se monta en `/datos/archivos`, que no existe en la imagen, así que Docker lo crea de `root`.
+
+Arreglo (commit `fix: dar permisos a la carpeta de archivos del contenedor`): el `Dockerfile` crea `/datos/archivos` con dueño `$APP_UID`, y el `docker-compose.yml` de desarrollo usa esa ruta con su propio volumen `archivos-dev`. Un volumen nombrado **nuevo** hereda el dueño de la imagen.
+
+> **Para quien administra el servidor:** si el volumen `archivos-almacenados` ya existe y es de `root`, la subida seguirá fallando hasta corregir su dueño una vez, por ejemplo con `docker compose -f docker-compose.prod.yml run --rm --user root backend chown -R 1654 /datos/archivos` (1654 es `APP_UID` en las imágenes de .NET 10).
+
+Recorrido E2E con la pila real (PostgreSQL 17 + backend): ver `docs/evidencia/issue-45/README.md`, que ejecuta también los pasos de este issue (envío, aprobación con limpieza, segunda campaña).
