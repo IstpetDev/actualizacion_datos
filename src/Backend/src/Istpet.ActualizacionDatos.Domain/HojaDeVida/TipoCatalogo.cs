@@ -23,5 +23,7 @@ public enum TipoCatalogo
     TipoBeca = 16,
     FinanciamientoBeca = 17,
     TipoCapacitacion = 18,
-    Sexo = 19
+    Sexo = 19,
+    TipoCuentaBancaria = 20, // ADR-0013 dec. 2
+    Banco = 21 // ADR-0013 dec. 2; fuente: Superintendencia de Bancos, se importa (T-01)
 }

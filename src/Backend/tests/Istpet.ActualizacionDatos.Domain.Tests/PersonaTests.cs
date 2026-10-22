@@ -175,9 +175,8 @@ public class PersonaTests
             persona.ActualizarBorrador("{\"nuevo\":\"dato\"}"));
         Assert.Contains("revisión", exEdicion.Message, StringComparison.OrdinalIgnoreCase);
 
-        var exArchivo = Assert.Throws<ReglaNegocioException>(() =>
-            persona.RegistrarArchivoSubido("documento.pdf"));
-        Assert.Contains("revisión", exArchivo.Message, StringComparison.OrdinalIgnoreCase);
+        var exHojaDeVida = Assert.Throws<ReglaNegocioException>(persona.AsegurarEdicionPermitida);
+        Assert.Contains("revisión", exHojaDeVida.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -212,11 +211,44 @@ public class PersonaTests
         persona.ActualizarBorrador("{\"corregido\":true}");
         Assert.Equal("{\"corregido\":true}", persona.DatosPersonalesJson);
 
-        persona.RegistrarArchivoSubido("nuevo_doc.pdf");
-        Assert.Equal("nuevo_doc.pdf", persona.ArchivosSubidosJson);
+        persona.AsegurarEdicionPermitida();
 
         // Y volver a enviar a revisión
         persona.EnviarARevision(ahora.AddHours(1));
         Assert.Equal(EstadoActualizacion.Enviado, persona.EstadoActualizacion);
+    }
+
+    // PD-HDV-04 (spec-0003), RF-FLU-005: segunda campaña.
+    [Fact]
+    public void Persona_aprobada_inicia_nueva_actualizacion_y_vuelve_a_borrador_editable()
+    {
+        var ahora = new DateTime(2026, 10, 22, 10, 0, 0, DateTimeKind.Utc);
+        var persona = new Persona(Guid.NewGuid(), InstitucionId.Nuevo(), "0000000013", correo: "usuario13@ejemplo.test");
+        persona.AceptarTratamientoDatos(ahora);
+        persona.EnviarARevision(ahora);
+        persona.AprobarActualizacion(ahora);
+        Assert.False(persona.PuedeEditarHojaDeVida);
+
+        persona.IniciarNuevaActualizacion();
+
+        Assert.Equal(EstadoActualizacion.Borrador, persona.EstadoActualizacion);
+        Assert.True(persona.PuedeEditarHojaDeVida);
+        persona.ActualizarBorrador("{\"telefono\":\"0990000000\"}");
+        persona.EnviarARevision(ahora.AddDays(30));
+        Assert.Equal(EstadoActualizacion.Enviado, persona.EstadoActualizacion);
+    }
+
+    [Theory]
+    [InlineData(EstadoActualizacion.Borrador)]
+    [InlineData(EstadoActualizacion.Enviado)]
+    [InlineData(EstadoActualizacion.Devuelto)]
+    public void Solo_desde_aprobado_se_inicia_una_nueva_actualizacion(EstadoActualizacion estado)
+    {
+        var persona = new Persona(Guid.NewGuid(), InstitucionId.Nuevo(), "0000000014", estadoActualizacion: estado);
+
+        var ex = Assert.Throws<ReglaNegocioException>(persona.IniciarNuevaActualizacion);
+
+        Assert.Contains("aprobada", ex.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(estado, persona.EstadoActualizacion);
     }
 }

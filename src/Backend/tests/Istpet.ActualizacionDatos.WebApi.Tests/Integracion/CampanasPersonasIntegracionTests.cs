@@ -288,11 +288,9 @@ public sealed class CampanasPersonasIntegracionTests : IAsyncLifetime
         Assert.True(estado.PuedeEditar);
 
         await servicio.ActualizarDatosUsuarioAsync("1700000050", new ActualizarDatosRequest("{\"ciudad\":\"Quito\"}"));
-        await servicio.SubirArchivoUsuarioAsync("1700000050", new SubirArchivoRequest("cedula.pdf", "application/pdf", 1024));
 
         var personaActualizada = await db.Personas.FirstAsync(p => p.Documento == "1700000050");
         Assert.Equal("{\"ciudad\":\"Quito\"}", personaActualizada.DatosPersonalesJson);
-        Assert.Equal("cedula.pdf", personaActualizada.ArchivosSubidosJson);
 
         // 2. RF-CAM-003: Fuera de campaña abierta se rechaza edición y subida de archivos
         // Desactivar la campaña para simular estar fuera de ventana
@@ -308,10 +306,7 @@ public sealed class CampanasPersonasIntegracionTests : IAsyncLifetime
         var errEdicion = await Assert.ThrowsAsync<ReglaNegocioException>(() =>
             servicio.ActualizarDatosUsuarioAsync("1700000050", new ActualizarDatosRequest("{\"ciudad\":\"Guayaquil\"}")));
         Assert.Contains("fuera del período", errEdicion.Message, StringComparison.OrdinalIgnoreCase);
-
-        var errArchivo = await Assert.ThrowsAsync<ReglaNegocioException>(() =>
-            servicio.SubirArchivoUsuarioAsync("1700000050", new SubirArchivoRequest("foto.png", "image/png", 2048)));
-        Assert.Contains("fuera del período", errArchivo.Message, StringComparison.OrdinalIgnoreCase);
+        // La subida fuera de campaña se prueba sobre la única vía de subida, en ArchivosTests.
     }
 
     [Fact]

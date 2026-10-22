@@ -11,11 +11,12 @@ import {
   RevisionClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
+import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
 
 @Component({
   selector: 'app-supervisor-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CuentaBancariaRevisionComponent],
   template: `
     <section class="dashboard-section" data-testid="supervisor-panel">
       <header class="section-header">
@@ -171,6 +172,9 @@ import { AuthService } from '../../core/auth';
                   }
                 </span>
               </div>
+              @if (expedienteSeleccionado(); as expediente) {
+                <app-cuenta-bancaria-revision [documento]="expediente.documento" />
+              }
 
               <h4 class="card-subtitle">Datos del Formulario</h4>
               <div class="json-datos" data-testid="datos-formulario">

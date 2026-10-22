@@ -8,9 +8,12 @@ public sealed class CargadorCatalogosDesarrollo(IServicioCatalogos servicio)
 {
     public async Task<List<ResultadoImportacionCatalogoDto>> CargarAsync(string directorio, CancellationToken ct = default)
     {
-        // El enum declara cada padre antes que sus hijos. Las listas cortas ya pertenecen a la migración.
+        // El enum declara cada padre antes que sus hijos. Las listas cortas ya pertenecen a la migración
+        // (también los tipos de cuenta bancaria, #45). Banco no tiene CSV hasta que se publique su fuente
+        // (Superintendencia de Bancos, PD-HDV-03); mientras tanto la persona escribe el nombre del banco.
         var tipos = Enum.GetValues<TipoCatalogo>()
-            .Where(t => t is not (TipoCatalogo.Sexo or TipoCatalogo.EstadoCivil or TipoCatalogo.TipoSangre or TipoCatalogo.TipoCapacitacion))
+            .Where(t => t is not (TipoCatalogo.Sexo or TipoCatalogo.EstadoCivil or TipoCatalogo.TipoSangre or TipoCatalogo.TipoCapacitacion
+                or TipoCatalogo.TipoCuentaBancaria or TipoCatalogo.Banco))
             .ToArray();
         foreach (var tipo in tipos)
         {

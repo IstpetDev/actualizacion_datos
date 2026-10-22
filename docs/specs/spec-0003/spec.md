@@ -1,8 +1,8 @@
 # Hoja de vida del personal — Spec
 
 **ID:** spec-0003  
-**Versión:** 0.4  
-**Estado:** Aprobado (v0.4, 2026-10-22)  
+**Versión:** 0.5 (propuesta)  
+**Estado:** En revisión (v0.5). Rige la v0.4, aprobada el 2026-10-22  
 **Revisor funcional:** @JosephBano  
 **Fecha:** 2026-10-22  
 **Áreas afectadas:** `src/Backend` (esta versión); `src/Frontend` en una versión posterior
@@ -26,6 +26,8 @@ Resultado esperado: durante una campaña abierta, la persona completa cada secci
 | ADR vigente | ADR-0010, Vigente, `docs/decisiones/ADR-0010-hoja-de-vida-estructurada.md` | Secciones fijas, catálogo compartido, tipos de documento y de funcionario por institución, edición en el lugar |
 | Formato institucional | Formato de hoja de vida de docentes (plantilla compartida por el equipo, sin datos) | Secciones: datos personales, formación académica (primaria, secundaria, superior), experiencia laboral, cursos y talleres, referencias personales y familiares, perfil, foto, declaración firmada y anexos. Obligatorios: datos personales, formación académica y dos referencias personales |
 | Archivo de carga | Columnas de la nómina que entrega la institución (sin datos) | `Nombre` (apellidos y nombres), `DNI`, `Cargo de Trabajo`, `Nacimiento`, `Edad`, `Estado Civil`, `Estudios`, `Nacionalidad`, `Dirección`, `Ciudad`, `Sangre`, `Fec. Ingreso`, `Teléfono 2` y tres columnas bancarias; con valores vacíos |
+| Formato institucional, archivo real (v0.5) | Hoja de vida de docentes en Word, revisada el 2026-10-22 (estructura, sin datos) | La «declaración firmada» es un **compromiso de terminar el año lectivo** con firma y cédula, no la declaración juramentada notariada. La experiencia laboral pide **jefe inmediato y teléfono**, y ordena desde el último empleo. Cursos: curso, dictado por, duración, lugar y fecha |
+| Nómina real (v0.5) | Archivo de personal de la institución, revisado el 2026-10-22 (solo encabezados, conteos y valores de catálogo; ningún dato personal copiado) | 109 filas y 13 columnas más un «N°»; título en la fila 1 y encabezados en la fila 2; **sin columnas bancarias**; 80 docentes y 29 de otros cargos; texto literal `NULL`; sangre con espacio (`O +`); «Union Libre»; nacionalidades con errores de tipeo; un teléfono de 9 dígitos; `Fec. Ingreso` completa en todas |
 | ADR vigente | ADR-0012, Vigente (cerrado 2026-10-22), `docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md` | Tratamiento de valores nulos de la nómina, división de nombres y columnas que no se importan |
 | ADR vigente | ADR-0013, Vigente (cerrado 2026-10-22), `docs/decisiones/ADR-0013-datos-bancarios.md` | Tratamiento de la cuenta bancaria: finalidad, cifrado, quién la ve y comparación con la nómina |
 | ADR propuesto | ADR-0009, Propuesto, `docs/decisiones/ADR-0009-campos-configurables.md` | Campos configurables: abierto. Sus restricciones se cumplen |
@@ -179,7 +181,37 @@ Respuestas a PD-HDV-01 a 08 propuestas por el equipo y **validadas por el reviso
 | PD-HDV-07 | No se piden cargas familiares. Las referencias familiares (RF-HDV-017) son contactos y no cuentan como cargas. | Ya estaba excluido; el formato solo trae referencias. |
 | PD-HDV-08 | Mantener asistente, aprobado y facilitador. Confirmar contra `CursosProfesores.cs`. Hoy es un `enum` (`TipoParticipacionCapacitacion`); pasarlo a catálogo sería un cambio posterior. | Evita una migración antes de confirmar los valores. |
 
+## Propuestas de la versión 0.5 (pendientes de aprobación)
+
+Surgen de revisar el **formato real** de hoja de vida y la **nómina real** que entrega la institución (fuentes «v0.5» de la tabla de fuentes). Ninguna rige hasta que el revisor funcional apruebe la 0.5; mientras tanto se aplica la 0.4. No se copió ningún dato personal: solo estructura, conteos y valores de catálogo.
+
+### Contradicciones y datos faltantes
+
+| ID | Hallazgo | Impacto | Propuesta del desarrollador | Quién decide |
+|---|---|---|---|---|
+| PD-HDV-19 | La «declaración firmada» del formato es un **compromiso de terminar el año lectivo** («me comprometo a terminar el año lectivo adjuntando los informes…») con firma y cédula. PD-HDV-12 la había tomado por la declaración juramentada notariada. | RF-HDV-007, escenario 3, los cinco documentos del docente | Nuevo tipo de documento `COMPROMISO_ANIO_LECTIVO`, obligatorio para el docente, que la persona sube firmado y escaneado (no se genera). Confirmar con la institución si además pide la declaración juramentada notariada; si no, se quita de los obligatorios. No cambia el modelo: es configuración (RF-HDV-012). | Revisor funcional, con la institución |
+| PD-HDV-20 | La nómina tiene **29 de 109 personas que no son docentes** (secretaría, inspección, psicología, conserjería, autoridades). La v0.3 fijó un solo tipo de funcionario, «Docente», y el formato se titula «DOCENTES». | Alcance, RF-HDV-007 y 013, carga de nómina | Todo el personal de la nómina actualiza su hoja de vida (el formato es el mismo). Se crean los tipos de funcionario que la institución confirme y los documentos se configuran por tipo. Mientras no se decida, los requisitos «para todos» se aplican también a quien no es docente; ver PD-HDV-21. | Revisor funcional, con la institución |
+| PD-HDV-21 | El compromiso de terminar el año lectivo (PD-HDV-19) solo tiene sentido para docentes. | Requisitos por tipo | Configurar `COMPROMISO_ANIO_LECTIVO` como requisito del tipo «Docente», no «para todos». Para eso la carga debe asignar el tipo (ADR-0012, columna `Cargo de Trabajo`). | Revisor funcional |
+| PD-HDV-22 | La experiencia laboral del formato pide **jefe inmediato** y **teléfono**; el modelo no los tiene. | Modelo de `ExperienciaLaboral` | Dos campos opcionales: `jefe_inmediato` y `telefono_contacto` (RF-HDV-028). Requiere migración. | Revisor funcional |
+| PD-HDV-23 | La nómina real **no trae columnas bancarias**. RF-HDV-026 y la comparación de ADR-0013 suponían que sí. | RF-HDV-026, 027 | Se agrega el estado `sin-nomina` (implementado en #45 a validar): la persona registra su cuenta y no hay con qué comparar. La comparación queda para cuando la institución entregue esas columnas. | Quien cerró ADR-0013 |
+| PD-HDV-24 | `Fec. Ingreso` viene **completa en las 109 filas**, y PD-HDV-15 decidió no guardarla. `Ciudad` es la misma para todas. | PD-HDV-15 | Mantener la decisión sobre la ciudad. Reconsiderar la fecha de ingreso: es un dato completo, útil y que la persona no conoce mejor que la institución. Si se guarda, es un campo de `Persona` cargado por el admin, no editable por el usuario. | Revisor funcional |
+| PD-HDV-25 | La nómina real difiere de lo que supone ADR-0012: título en la fila 1, texto `NULL`, sangre como `O +`, «Union Libre», ~10 variantes mal escritas de «Ecuatoriana», una fecha en la columna de nacionalidad y un celular de 9 dígitos. | RF-HDV-021, ADR-0012 | Ajustes de la carga en **ADR-0014 (Propuesto)**: ubicar la fila de encabezados; `NULL` = vacío; normalizar espacios en la sangre; alias de catálogo (`alias_elementos_catalogo`); un celular de 9 dígitos queda en nulo con advertencia; columnas bancarias ausentes sin advertencia por fila. | Quien desarrolla (cierra ADR-0014) |
+
+### Requisitos propuestos
+
+| ID | Condición y comportamiento observable | Fuente |
+|---|---|---|
+| RF-HDV-028 (propuesto) | Dada una experiencia laboral, cuando el `usuario` la registra, puede indicar jefe inmediato y su teléfono (ambos opcionales). La lista de experiencias se muestra desde la más reciente (las vigentes primero y luego por fecha de fin descendente). | Formato real, PD-HDV-22 |
+| RF-HDV-029 (propuesto) | Dado un docente, cuando abre sus documentos personales, el sistema le pide el compromiso de terminar el año lectivo firmado (tipo `COMPROMISO_ANIO_LECTIVO`, obligatorio para «Docente»). | Formato real, PD-HDV-19 y 21 |
+| RF-HDV-030 (propuesto) | Dada una nómina con título en la primera fila, valores `NULL`, variantes de escritura de catálogos o sin columnas bancarias, cuando el admin la carga, el sistema aplica las reglas de ADR-0014 y solo advierte lo que no pudo interpretar. | Nómina real, PD-HDV-25 |
+
+### Lo que no cambia
+
+Los datos personales, la formación por niveles, los cursos (curso → `NombreEvento`, dictado por → `InstitucionOrganizadora`, duración → `NumeroHoras`, lugar y fecha), las dos referencias personales y dos familiares, el perfil y la foto **coinciden** con el modelo actual. «Fecha y número de registro» ya se resolvió como registro SENESCYT del título (PD-HDV-11).
+
 ## Revisión funcional
+
+**Versión en revisión:** 0.5 — pendiente de aprobación (ver «Propuestas de la versión 0.5»). Hasta entonces rige la 0.4.
 
 **Versión revisada:** 0.4 (la 0.3 se aprobó el mismo día)  
 **Decisión:** Aprobada, sin ajustes  
@@ -188,6 +220,8 @@ Respuestas a PD-HDV-01 a 08 propuestas por el equipo y **validadas por el reviso
 **Ajustes solicitados:** Ninguno. La aprobación cubre la versión 0.4 tal como está escrita, incluidas las respuestas a PD-HDV-01 a 08 y las de PD-HDV-09 a 18. ADR-0012 y ADR-0013 están **Vigentes** (cerrados el 2026-10-22), por lo que T-09 y T-10 quedan libres.
 
 **Pendientes que no bloquean:** contrastar PD-HDV-01, 06 y 08 con `Profesores.cs` y `CursosProfesores.cs` del sistema de talento humano (@AnthonyPilatasig, antes de T-04); confirmar con la institución qué es «Teléfono 2»; base legal escrita y gestión de la clave de cifrado (ADR-0013), antes de producción.
+
+**Cambios de 0.4 a 0.5 (propuestos, sin aprobar):** fuentes «formato real» y «nómina real»; puntos PD-HDV-19 a 25; requisitos propuestos RF-HDV-028 a 030; ADR-0014 (Propuesto) para la carga de nómina real.
 
 **Cambios de 0.3 a 0.4:** se responden PD-HDV-09, 11, 13, 15 y 16; ADR-0012 y ADR-0013 pasan a Vigente; RF-HDV-017 admite hasta cinco referencias por tipo, sin parentesco; RF-HDV-019 exige al menos un estudio de cualquier nivel.
 

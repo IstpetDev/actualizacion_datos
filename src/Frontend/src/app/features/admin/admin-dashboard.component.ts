@@ -14,13 +14,14 @@ import {
   ResultadoCargaPersonasDto,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
+import { EstadoCuentasBancariasComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
 
 type TabAdmin = 'campanas' | 'personas' | 'exportacion';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EstadoCuentasBancariasComponent],
   template: `
     <section class="dashboard-section" data-testid="admin-panel">
       <header class="section-header">
@@ -405,6 +406,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
           </div>
         </div>
       }
+      <app-estado-cuentas-bancarias />
     </section>
   `,
   styles: `

@@ -29,6 +29,10 @@ services:
       Catalogos__CargarAlInicio: "true"
       Catalogos__Directorio: /catalogos
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      # ADR-0013: claves de la cuenta bancaria. Vacías en desarrollo: se usan claves temporales en memoria.
+      CuentaBancaria__ClaveCifrado: ${CUENTA_BANCARIA_CLAVE_CIFRADO:-}
+      CuentaBancaria__ClaveHuella: ${CUENTA_BANCARIA_CLAVE_HUELLA:-}
+      CuentaBancaria__PermitirClavesTemporales: "true"
     volumes:
       - ./data/catalogos:/catalogos:ro
       - backend-archivos:/app/almacen_archivos
