@@ -16,6 +16,7 @@ public class AplicacionDbContext : DbContext
     public DbSet<Auditoria> Auditorias => Set<Auditoria>();
     public DbSet<Observacion> Observaciones => Set<Observacion>();
     public DbSet<MarcaObservacion> MarcasObservacion => Set<MarcaObservacion>();
+    public DbSet<ArchivoAdjunto> ArchivosAdjuntos => Set<ArchivoAdjunto>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,

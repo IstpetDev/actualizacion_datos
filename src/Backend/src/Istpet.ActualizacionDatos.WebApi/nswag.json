@@ -29,6 +29,7 @@
       "exportTypes": true,
       "generateOptionalParameters": true,
       "operationGenerationMode": "MultipleClientsFromFirstTagAndOperationId",
+      "extensionCode": "extension.ts",
       "output": "../../../Frontend/src/app/api-client/index.ts"
     }
   }

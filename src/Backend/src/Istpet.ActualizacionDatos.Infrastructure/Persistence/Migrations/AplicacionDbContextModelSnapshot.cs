@@ -22,6 +22,70 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ClaveDestino")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("clave_destino");
+
+                    b.Property<DateTime>("FechaSubidaUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_subida_utc");
+
+                    b.Property<string>("HashSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("hash_sha256");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("NombreOriginal")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("nombre_original");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<string>("RutaRelativa")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("ruta_relativa");
+
+                    b.Property<long>("TamanoBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamano_bytes");
+
+                    b.Property<string>("TipoContenido")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tipo_contenido");
+
+                    b.HasKey("Id")
+                        .HasName("pk_archivos_adjuntos");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_archivos_adjuntos_institucion_id");
+
+                    b.HasIndex("PersonaId")
+                        .HasDatabaseName("ix_archivos_adjuntos_persona_id");
+
+                    b.ToTable("archivos_adjuntos", (string)null);
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Auditoria", b =>
                 {
                     b.Property<Guid>("Id")
@@ -315,6 +379,23 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_personas_institucion_id_documento");
 
                     b.ToTable("personas", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_archivos_adjuntos_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_archivos_adjuntos_personas_persona_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Campana", b =>

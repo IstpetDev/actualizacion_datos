@@ -764,6 +764,28 @@ revision.MapGet("/{documento}", async (string documento, HttpContext httpContext
 .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
 .Produces(StatusCodes.Status403Forbidden);
 
+revision.MapGet("/{documento}/archivos", async (string documento, HttpContext httpContext, IServicioArchivos servicio, IContextoInstitucion contexto, CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var lista = await servicio.ListarArchivosPersonaAsync(documento, ct);
+        return Results.Ok(lista);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ListarArchivosExpediente")
+.Produces<List<ArchivoDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status403Forbidden);
+
 revision.MapPost("/{documento}/aprobar", async (string documento, HttpContext httpContext, IServicioRevision servicio, IContextoInstitucion contexto, CancellationToken ct) =>
 {
     if (!EsRolSupervisorOAdmin(httpContext, contexto))
@@ -828,6 +850,232 @@ auditoriaGroup.MapGet("/", async (HttpContext httpContext, IServicioAuditoria se
 .WithName("ListarAuditorias")
 .Produces<List<AuditoriaDto>>()
 .Produces(StatusCodes.Status403Forbidden);
+
+// --- Endpoints Archivos (RF-DAT-002, RF-DAT-003, ADR-0006) ---
+var archivosGroup = app.MapGroup("/api/archivos").WithTags("Archivos");
+
+archivosGroup.MapPost("/subir", async (
+    IFormFile archivo,
+    string? claveDestino,
+    string? documento,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para subir archivos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    if (archivo == null || archivo.Length == 0)
+    {
+        return Results.BadRequest(new MensajeRespuesta("Debe proporcionar un archivo válido no vacío."));
+    }
+
+    try
+    {
+        await using var stream = archivo.OpenReadStream();
+        var resultado = await servicio.SubirArchivoAsync(
+            docEfectivo,
+            archivo.FileName,
+            archivo.ContentType,
+            stream,
+            claveDestino,
+            ct);
+
+        return Results.Ok(resultado);
+    }
+    catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("SubirArchivo")
+.DisableAntiforgery()
+.Produces<ArchivoDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+archivosGroup.MapGet("/{id:guid}/descargar", async (
+    Guid id,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    var actor = ObtenerDocumentoActual(httpContext, contexto);
+    if (string.IsNullOrWhiteSpace(actor))
+    {
+        return Results.Unauthorized();
+    }
+
+    var rol = contexto.RolActual;
+    if (rol == null)
+    {
+        var claimRol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+        if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
+        {
+            rol = r;
+        }
+        else
+        {
+            rol = RolUsuario.Usuario;
+        }
+    }
+
+    try
+    {
+        var descarga = await servicio.ObtenerArchivoParaDescargaAsync(id, actor, rol.Value, ct);
+        httpContext.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        return Results.File(descarga.Contenido, descarga.TipoContenido, descarga.NombreOriginal, enableRangeProcessing: false);
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex) when (ex.Message.Contains("no existe", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("DescargarArchivo")
+.Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status401Unauthorized);
+
+archivosGroup.MapGet("/mis-archivos", async (
+    string? documento,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para consultar archivos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var lista = await servicio.ListarArchivosPersonaAsync(docEfectivo, ct);
+        return Results.Ok(lista);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ListarMisArchivos")
+.Produces<List<ArchivoDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+archivosGroup.MapDelete("/{id:guid}", async (
+    Guid id,
+    string? documento,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para eliminar archivos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        await servicio.EliminarArchivoAsync(id, docEfectivo, ct);
+        return Results.Ok(new MensajeRespuesta("Archivo eliminado correctamente."));
+    }
+    catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("EliminarArchivo")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+misDatos.MapGet("/archivos", async (
+    string? documento,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    var docActual = ObtenerDocumentoActual(httpContext, contexto);
+    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
+
+    if (string.IsNullOrWhiteSpace(docEfectivo))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("No tiene permisos para consultar archivos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var lista = await servicio.ListarArchivosPersonaAsync(docEfectivo, ct);
+        return Results.Ok(lista);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ListarArchivosMisDatos")
+.Produces<List<ArchivoDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
 
 await app.RunAsync();
 
