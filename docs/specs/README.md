@@ -47,4 +47,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 |---|---|---|
 | [spec-0001](spec-0001/spec.md) | Fundación del producto | Borrador para revisión funcional |
 | [spec-0002](spec-0002/spec.md) | Pantallas del usuario, issue #11 | Aprobado (2026-10-22) |
-| [spec-0003](spec-0003/spec.md) | Hoja de vida del personal | Aprobado (v0.4, 2026-10-22) |
+| [spec-0003](spec-0003/spec.md) | Hoja de vida del personal | Aprobado (v0.4, 2026-10-22); v0.5 en revisión |
