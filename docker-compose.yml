@@ -27,6 +27,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Almacenamiento__RutaRaiz: /datos/archivos
+    volumes:
+      - archivos-dev:/datos/archivos
     ports:
       - "127.0.0.1:${BACKEND_PUERTO:-8080}:8080"
     healthcheck:
@@ -53,3 +56,4 @@ services:
 
 volumes:
   postgres-datos:
+  archivos-dev:

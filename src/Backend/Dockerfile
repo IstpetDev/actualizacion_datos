@@ -33,6 +33,10 @@ ENV DOTNET_gcServer=0
 
 EXPOSE 8080
 
+# Carpeta de archivos (ADR-0006) escribible por el usuario sin privilegios. Un volumen nombrado nuevo
+# montado aquí hereda este dueño; sin ella Docker la crea de root y la subida falla con «Permission denied».
+RUN mkdir -p /datos/archivos && chown "$APP_UID" /datos/archivos
+
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Istpet.ActualizacionDatos.WebApi.dll"]
