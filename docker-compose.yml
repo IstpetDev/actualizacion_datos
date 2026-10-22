@@ -31,6 +31,7 @@ services:
       ConnectionStrings__Default: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
     volumes:
       - ./data/catalogos:/catalogos:ro
+      - backend-archivos:/app/almacen_archivos
     ports:
       - "127.0.0.1:${BACKEND_PUERTO:-8080}:8080"
     healthcheck:
@@ -57,3 +58,4 @@ services:
 
 volumes:
   postgres-datos:
+  backend-archivos:

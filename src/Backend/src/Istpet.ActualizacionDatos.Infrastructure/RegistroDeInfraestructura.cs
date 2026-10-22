@@ -31,6 +31,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioCatalogos, ServicioCatalogos>();
         servicios.AddScoped<ValidadorCatalogos>();
         servicios.AddScoped<CargadorCatalogosDesarrollo>();
+        servicios.AddScoped<IServicioExportacion, ServicioExportacion>();
 
         var connectionString = configuracion.GetConnectionString("Default");
 
