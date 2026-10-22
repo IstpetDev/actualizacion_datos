@@ -31,4 +31,16 @@ public class SaludTests : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.Equal("{\"estado\":\"ok\"}", cuerpo);
     }
+
+    [Fact]
+    public async Task Salud_responde_correctamente_para_smoke_tests_de_despliegue()
+    {
+        using var cliente = _fabrica.CreateClient();
+
+        var respuesta = await cliente.GetAsync(new Uri("/health", UriKind.Relative));
+
+        Assert.True(respuesta.IsSuccessStatusCode);
+        var contenido = await respuesta.Content.ReadAsStringAsync();
+        Assert.Contains("ok", contenido, StringComparison.OrdinalIgnoreCase);
+    }
 }
