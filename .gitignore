@@ -21,6 +21,11 @@ appsettings.Local.json
 appsettings.*.Local.json
 # Cargado por ASP.NET Core en Development (WebApplication.CreateBuilder); nunca se versiona.
 appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+.envrc
+*.publishsettings
+environment.*.ts
 
 # Archivos subidos y comprimidos
 uploads/
