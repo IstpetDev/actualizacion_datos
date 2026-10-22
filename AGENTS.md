@@ -11,7 +11,7 @@ Aplicación para que personas de una institución educativa actualicen sus datos
 - Backend: .NET 10, Clean Architecture (`Domain`, `Application`, `Infrastructure`, `WebApi`), xUnit, en `src/Backend`.
 - Frontend: Angular 22, pnpm, cliente OpenAPI generado con NSwag, en `src/Frontend`.
 - Base de datos: PostgreSQL. Despliegue: Docker (aún no implementado).
-- Entorno: .NET SDK 10.0.100+ (`global.json`), Node `^22.22.3 || ^24.15.0 || >=26` (`src/Frontend/.nvmrc`, CI y Docker usan Node 24), pnpm &gt;=12.4 (12.4.1), Docker.
+- Entorno: .NET SDK 10.0.100+ (`global.json`), Node `^22.22.3 || ^24.15.0 || >=26` (`src/Frontend/.nvmrc`, CI y Docker usan Node 24), pnpm >=12.4 (12.4.1), Docker.
 
 ## Comandos
 
@@ -37,12 +37,12 @@ Ejecutar compilación y pruebas antes de dar una tarea por terminada, y reportar
 
 ## Flujo de trabajo
 
-Idea nueva o cambio: `brainstorming` -&gt; spec en `docs/specs/` -&gt; aprobación funcional -&gt; `writing-plans` -&gt; tareas. No programar sin spec aprobada.
+Idea nueva o cambio: `brainstorming` -> spec en `docs/specs/` -> aprobación funcional -> `writing-plans` -> tareas. No programar sin spec aprobada.
 
 ## Reglas
 
 - **No datos reales.** Ninguna cédula, nombre ni correo reales en código, ejemplos, pruebas, capturas ni documentos. Usar datos inventados evidentes.
-- **Decisiones nuevas -&gt; ADR.** Toda decisión de arquitectura se registra en `docs/decisiones/` antes de ejecutar las tareas que dependen de ella. No cerrar por cuenta propia los ADR en estado "Propuesto".
+- **Decisiones nuevas -> ADR.** Toda decisión de arquitectura se registra en `docs/decisiones/` antes de ejecutar las tareas que dependen de ella. No cerrar por cuenta propia los ADR en estado "Propuesto".
 - Sin lógica de negocio fuera de lo que pida la spec aprobada.
 - Si cambia la API, regenerar `openapi/v1.json` y el cliente del frontend en el mismo cambio.
 - Acciones de terceros en workflows fijadas por hash de commit.
