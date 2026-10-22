@@ -1,8 +1,8 @@
 # Hoja de vida del personal — Spec
 
 **ID:** spec-0003  
-**Versión:** 0.3  
-**Estado:** Aprobado (v0.3, 2026-10-22)  
+**Versión:** 0.4  
+**Estado:** Aprobado (v0.4, 2026-10-22)  
 **Revisor funcional:** @JosephBano  
 **Fecha:** 2026-10-22  
 **Áreas afectadas:** `src/Backend` (esta versión); `src/Frontend` en una versión posterior
@@ -26,8 +26,8 @@ Resultado esperado: durante una campaña abierta, la persona completa cada secci
 | ADR vigente | ADR-0010, Vigente, `docs/decisiones/ADR-0010-hoja-de-vida-estructurada.md` | Secciones fijas, catálogo compartido, tipos de documento y de funcionario por institución, edición en el lugar |
 | Formato institucional | Formato de hoja de vida de docentes (plantilla compartida por el equipo, sin datos) | Secciones: datos personales, formación académica (primaria, secundaria, superior), experiencia laboral, cursos y talleres, referencias personales y familiares, perfil, foto, declaración firmada y anexos. Obligatorios: datos personales, formación académica y dos referencias personales |
 | Archivo de carga | Columnas de la nómina que entrega la institución (sin datos) | `Nombre` (apellidos y nombres), `DNI`, `Cargo de Trabajo`, `Nacimiento`, `Edad`, `Estado Civil`, `Estudios`, `Nacionalidad`, `Dirección`, `Ciudad`, `Sangre`, `Fec. Ingreso`, `Teléfono 2` y tres columnas bancarias; con valores vacíos |
-| ADR propuesto | ADR-0012, Propuesto, `docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md` | Tratamiento de valores nulos de la nómina, división de nombres y columnas que no se importan |
-| ADR propuesto | ADR-0013, Propuesto, `docs/decisiones/ADR-0013-datos-bancarios.md` | Tratamiento de la cuenta bancaria: finalidad, cifrado, quién la ve y comparación con la nómina |
+| ADR vigente | ADR-0012, Vigente (cerrado 2026-10-22), `docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md` | Tratamiento de valores nulos de la nómina, división de nombres y columnas que no se importan |
+| ADR vigente | ADR-0013, Vigente (cerrado 2026-10-22), `docs/decisiones/ADR-0013-datos-bancarios.md` | Tratamiento de la cuenta bancaria: finalidad, cifrado, quién la ve y comparación con la nómina |
 | ADR propuesto | ADR-0009, Propuesto, `docs/decisiones/ADR-0009-campos-configurables.md` | Campos configurables: abierto. Sus restricciones se cumplen |
 | Comportamiento existente | `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/` y migración `AgregarHojaDeVida` | Entidades y tablas ya creadas (ver «Estado de implementación») |
 
@@ -60,9 +60,9 @@ Lo tomado del sistema de talento humano es **estructura**. No se copian registro
 | RF-HDV-014 | Dado cualquier rol, cuando consulta un catálogo, el sistema devuelve solo elementos activos, filtrables por tipo y por elemento padre (p. ej., cantones de una provincia). | Sin priorizar | ADR-0010 dec. 5 |
 | RF-HDV-015 | Dado un `usuario`, `supervisor` o `admin`, cuando consulta o modifica ítems de la hoja de vida, el sistema solo opera sobre los de su institución aunque conozca identificadores de otra. | Sin priorizar | ADR-0004, RF-MUL-003 |
 | RF-HDV-016 | Dado un `admin`, cuando exporta, el Excel y el `.zip` incluyen cada sección de la hoja de vida aprobada y sus respaldos ordenados por sección. | Sin priorizar | RF-EXP-001, RF-EXP-002 |
-| RF-HDV-017 | Dado el mismo `usuario`, cuando agrega, modifica o elimina una referencia (personal o familiar), el sistema la guarda como un ítem con identificador propio. Nombres y apellidos y teléfono son obligatorios; título, cargo actual y empresa son opcionales. El supervisor puede marcarla (RF-HDV-011). | Sin priorizar | Formato institucional, ADR-0010 dec. 1 |
+| RF-HDV-017 | Dado el mismo `usuario`, cuando agrega, modifica o elimina una referencia (personal o familiar), el sistema la guarda como un ítem con identificador propio. Nombres y apellidos y teléfono son obligatorios; título, cargo actual y empresa son opcionales. Se admiten hasta cinco referencias de cada tipo y no se pide parentesco (PD-HDV-13). El supervisor puede marcarla (RF-HDV-011). | Sin priorizar | Formato institucional, ADR-0010 dec. 1 |
 | RF-HDV-018 | Dado un `usuario` que envía a revisión, cuando tiene menos de dos referencias de tipo personal, el sistema impide el envío. Las referencias familiares no cuentan para el mínimo y no son obligatorias. | Sin priorizar | Formato institucional |
-| RF-HDV-019 | Dado un `usuario` que envía a revisión, cuando no tiene ningún estudio registrado en formación académica (PD-HDV-09), el sistema impide el envío. | Sin priorizar | Formato institucional |
+| RF-HDV-019 | Dado un `usuario` que envía a revisión, cuando no tiene al menos un estudio registrado, de cualquier nivel, en formación académica (PD-HDV-09), el sistema impide el envío. | Sin priorizar | Formato institucional |
 | RF-HDV-020 | Dado un `usuario`, cuando guarda su ficha, puede registrar un perfil (texto libre) y una foto; ambos son opcionales. La foto sigue las reglas de ADR-0006 y solo admite imagen. | Sin priorizar | Formato institucional, ADR-0006 |
 | RF-HDV-021 | Dado un `admin` que carga la nómina, cuando una fila tiene un documento válido, el sistema la carga aunque falten otras columnas: lo vacío o no reconocido queda en nulo y se informa como advertencia con el número de fila y la columna. Solo se rechaza la fila sin documento válido o repetida en el archivo. El informe no repite datos personales. Las columnas bancarias se cargan como cuenta propuesta (RF-HDV-026). | Sin priorizar | ADR-0012, PD-09 de spec-0001 |
 | RF-HDV-022 | Dada una fila de la nómina con el nombre en formato «apellidos y nombres», cuando se carga, el sistema conserva el texto original en `Persona.Nombre` y propone los cuatro campos (primer y segundo nombre, primer y segundo apellido) según la tabla de ADR-0012; la persona los confirma o corrige antes de enviar. | Sin priorizar | ADR-0012 |
@@ -153,16 +153,16 @@ Pendiente (issues #29 a #35 y las tareas de `tasks.md`): catálogos grandes, ser
 | PD-HDV-06 | Sección «instrucción profesional» de la plantilla del instructor de conducción: ¿son capacitaciones con otro tipo, o una sección aparte? | Modelo de capacitaciones | Revisor funcional |
 | PD-HDV-07 | ¿Se piden cargas familiares (existe un PRD en el sistema de origen)? | Nueva sección | Revisor funcional |
 | PD-HDV-08 | Tipo de participación en capacitaciones: se usaron «asistente», «aprobado» y «facilitador». El origen solo muestra «Recibido» como valor por defecto. | Catálogo o enum | Revisor funcional |
-| PD-HDV-09 | Qué cuenta como formación académica obligatoria (RF-HDV-019): al menos un estudio de cualquier nivel, los tres niveles del formato (primaria, secundaria, superior) o solo el superior. Quien tiene solo bachillerato no debe quedar bloqueado. Primaria y secundaria necesitan un grado en el catálogo (PD-HDV-03). | RF-HDV-019 | Revisor funcional |
+| PD-HDV-09 | Qué cuenta como formación académica obligatoria (RF-HDV-019). Primaria y secundaria necesitan un grado en el catálogo (PD-HDV-03). | RF-HDV-019 | Resuelto (v0.4, @JosephBano, 2026-10-22): basta un estudio de cualquier nivel. |
 | PD-HDV-10 | El formato dice que solo son obligatorios datos personales, formación y dos referencias, pero RF-HDV-007 permite marcar documentos obligatorios. | RF-HDV-009 | Propuesta del desarrollador: **sí obligan**. Para el docente son cinco: cédula, papeleta de votación, antecedentes penales, declaración juramentada notariada y mecanizado del IESS. Validado con la versión 0.3. |
-| PD-HDV-11 | «Fecha y número de registro» aparece en los datos personales del formato. ¿Es el registro del título (SENESCYT, que el modelo guarda en el título) o un registro institucional? | Modelo de la ficha | Revisor funcional |
+| PD-HDV-11 | «Fecha y número de registro» aparece en los datos personales del formato. | Modelo de la ficha | Resuelto (v0.4, @JosephBano, 2026-10-22): es el registro del título (SENESCYT); se guarda en el título y no se agrega campo a la ficha. |
 | PD-HDV-12 | La declaración firmada del formato. | RF-HDV-007, alcance | Propuesta del desarrollador: es la **declaración juramentada notariada** que la persona sube escaneada como tipo de documento; no se genera. Validado con la versión 0.3. |
-| PD-HDV-13 | Referencias: ¿máximo por tipo, y se pide parentesco en las familiares? El formato trae dos de cada tipo y no pide parentesco. | RF-HDV-017 | Revisor funcional |
-| PD-HDV-14 | Datos bancarios: **sí se piden**, para comprobar que los pagos van a las cuentas correctas. Tratamiento (cifrado, quién ve el número, exportación, auditoría) en ADR-0013, Propuesto. | RF-HDV-025 a 027 | Quien desarrolla (cierra ADR-0013) |
-| PD-HDV-17 | ¿La cuenta bancaria es obligatoria para enviar? Propuesta: sí, porque sin ella no se cumple su finalidad. | RF-HDV-009, 025 | Revisor funcional |
-| PD-HDV-18 | ¿Todo título, curso o experiencia registrado debe llevar su certificado (RF-HDV-024), o solo se pide a quien lo tiene? Propuesta: todo ítem registrado lleva certificado; quien no lo tenga no registra el ítem. | RF-HDV-024 | Revisor funcional |
-| PD-HDV-15 | Fecha de ingreso y ciudad de la nómina: hoy no se guardan (ADR-0012). ¿Se necesitan? | ADR-0012 | Revisor funcional |
-| PD-HDV-16 | ¿La institución tiene personal sin cédula (pasaporte)? Cambia la validación del documento en la carga. | RF-HDV-021 | Equipo |
+| PD-HDV-13 | Referencias: máximo por tipo y parentesco en las familiares. | RF-HDV-017 | Resuelto (v0.4, @JosephBano, 2026-10-22): máximo cinco por tipo; no se pide parentesco. |
+| PD-HDV-14 | Datos bancarios: sí se piden, para comprobar que los pagos van a las cuentas correctas. Tratamiento en ADR-0013. | RF-HDV-025 a 027 | Resuelto (v0.4, @JosephBano, 2026-10-22): ADR-0013 Vigente con la opción 2 (cifrado en la aplicación, máscara, auditoría y huella). |
+| PD-HDV-17 | ¿La cuenta bancaria es obligatoria para enviar? | RF-HDV-009, 025 | Resuelto (v0.4, @JosephBano, 2026-10-22): sí. |
+| PD-HDV-18 | ¿Todo título, curso o experiencia registrado debe llevar su certificado (RF-HDV-024)? | RF-HDV-024 | Resuelto (v0.4, @JosephBano, 2026-10-22): sí; quien no tenga el certificado no registra el ítem. |
+| PD-HDV-15 | Fecha de ingreso y ciudad de la nómina. | ADR-0012 | Resuelto (v0.4, @JosephBano, 2026-10-22): no se guardan en esta versión; la persona elige su parroquia. |
+| PD-HDV-16 | Personal sin cédula (pasaporte). | RF-HDV-021 | Resuelto (v0.4, @JosephBano, 2026-10-22): por ahora solo cédula de 10 dígitos, tras completar el cero inicial. |
 
 ### Respuestas validadas con la versión 0.3
 
@@ -181,21 +181,18 @@ Respuestas a PD-HDV-01 a 08 propuestas por el equipo y **validadas por el reviso
 
 ## Revisión funcional
 
-**Versión revisada:** 0.3  
+**Versión revisada:** 0.4 (la 0.3 se aprobó el mismo día)  
 **Decisión:** Aprobada, sin ajustes  
 **Aprobó:** @JosephBano, revisor funcional  
-**Fecha y evidencia de aprobación:** 2026-10-22. Confirmación escrita «validado v0.3» del revisor en la sesión de trabajo; la versión 0.3 está en `develop` por el PR #38.  
-**Ajustes solicitados:** Ninguno. La aprobación cubre la versión 0.3 tal como está escrita, incluidas las respuestas propuestas a PD-HDV-01 a 08 y las propuestas de PD-HDV-10, 12, 14, 17 y 18. Los ADR-0012 y ADR-0013 **siguen en Propuesto**: no los cierra esta aprobación.
+**Fecha y evidencia de aprobación:** 2026-10-22. Confirmación escrita «validado v0.3» del revisor en la sesión de trabajo (versión 0.3 en `develop` por el PR #38). La 0.4 se aprobó con la respuesta escrita del revisor en la misma sesión: aceptó las respuestas a PD-HDV-09, 11, 13, 15 y 16 y cerró ADR-0012 y ADR-0013.  
+**Ajustes solicitados:** Ninguno. La aprobación cubre la versión 0.4 tal como está escrita, incluidas las respuestas a PD-HDV-01 a 08 y las de PD-HDV-09 a 18. ADR-0012 y ADR-0013 están **Vigentes** (cerrados el 2026-10-22), por lo que T-09 y T-10 quedan libres.
 
-**Puntos que siguen abiertos tras la aprobación** (ninguno bloquea T-00 a T-08; se resuelven antes de la tarea indicada en `tasks.md`):
+**Pendientes que no bloquean:** contrastar PD-HDV-01, 06 y 08 con `Profesores.cs` y `CursosProfesores.cs` del sistema de talento humano (@AnthonyPilatasig, antes de T-04); confirmar con la institución qué es «Teléfono 2»; base legal escrita y gestión de la clave de cifrado (ADR-0013), antes de producción.
 
-- PD-HDV-09, formación académica obligatoria: rige RF-HDV-019 («al menos un estudio») mientras no se diga otra cosa. Antes de T-04.
-- PD-HDV-11 (qué es «fecha y número de registro») y PD-HDV-13 (máximo de referencias y parentesco). Antes de T-11.
-- PD-HDV-15 y 16 (fecha de ingreso, ciudad y pasaportes). Antes de T-09.
-- Cierre de ADR-0012 y ADR-0013, a cargo de quien desarrolla. T-09 y T-10 esperan.
+**Cambios de 0.3 a 0.4:** se responden PD-HDV-09, 11, 13, 15 y 16; ADR-0012 y ADR-0013 pasan a Vigente; RF-HDV-017 admite hasta cinco referencias por tipo, sin parentesco; RF-HDV-019 exige al menos un estudio de cualquier nivel.
 
 **Cambios de 0.2 a 0.3:** un solo tipo de funcionario («Docente»); cinco documentos obligatorios del docente (PD-HDV-10, 12); respaldo obligatorio por ítem (RF-HDV-024); cuenta bancaria (RF-HDV-025 a 027, ADR-0013); responsables de las fuentes de catálogos (PD-HDV-03); puntos PD-HDV-17 y 18.
 
 **Cambios de 0.1 a 0.2:** se agregan referencias personales y familiares, perfil, foto, formación académica por niveles y declaración firmada al alcance; los obligatorios del formato (RF-HDV-009, 018, 019); la carga de nómina con valores nulos y la división de nombres (RF-HDV-021 a 023, ADR-0012); el escenario 4; los puntos PD-HDV-09 a 16; y las respuestas propuestas para PD-HDV-01 a 08.
 
-Aprobación registrada: `plan.md`, `tasks.md` y `test-e2e.md` se crearon el 2026-10-22 a partir de esta versión. Cualquier cambio de alcance vuelve a revisión funcional antes de ejecutar tareas dependientes.
+Aprobación registrada: `plan.md`, `tasks.md` y `test-e2e.md` se crearon el 2026-10-22 a partir de la versión 0.3 y se ajustaron a la 0.4. Cualquier cambio de alcance vuelve a revisión funcional antes de ejecutar tareas dependientes.

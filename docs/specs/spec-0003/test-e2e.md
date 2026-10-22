@@ -1,7 +1,7 @@
 # Hoja de vida del personal — Pruebas de punta a punta
 
-**Spec aprobado:** `spec.md` versión 0.3  
-**Plan:** `plan.md` versión 1.0  
+**Spec aprobado:** `spec.md` versión 0.4  
+**Plan:** `plan.md` versión 1.1  
 **Responsable de ejecución:** @JosephBano  
 **Ambiente:** local con `docker compose` (API, frontend y PostgreSQL 17), sobre `develop` integrado tras T-01 a T-12
 
@@ -23,7 +23,7 @@ Solo datos ficticios evidentes. El SMTP institucional no se prueba aquí: el cor
 | Catálogos | Cargados por T-01 (provincias, cantones, parroquias, grados, universidades, campos UNESCO) | Con elementos de prueba de cada tipo |
 | Tipos y requisitos | Tipo «Docente»; documentos `CEDULA`, `PAPELETA_VOTACION`, `ANTECEDENTES_PENALES`, `DECLARACION_JURAMENTADA`, `MECANIZADO_IESS`, obligatorios para todos | Creados en el E2E-06 o por el admin antes |
 | Archivos | PDF, JPG y PNG ficticios de menos de 1 MB; un PDF de más de 10 MB; un `.exe` renombrado a `.pdf` | En una carpeta local fuera del repositorio |
-| Cuenta bancaria | Solo con ADR-0013 Vigente: número ficticio `0000000000` | Banco y tipo de cuenta de prueba en catálogo |
+| Cuenta bancaria | Tras T-10: número ficticio `0000000000` | Banco y tipo de cuenta de prueba en catálogo |
 
 ## Matriz de cobertura
 
@@ -32,11 +32,11 @@ Solo datos ficticios evidentes. El SMTP institucional no se prueba aquí: el cor
 | E2E-01 | RF-HDV-001, 002, 006, 007, 008, 009, 010, 017, 020, 024; Escenario 1 | T-02, T-03, T-04, T-11 | Éxito | Estado «Enviado»; ficha, ítems y documentos persistidos |
 | E2E-02 | RF-HDV-009, 018, 019, 024; Escenario 1 (variantes) | T-04, T-11 | Error | Envío rechazado con la lista exacta de faltantes |
 | E2E-03 | RF-HDV-010, 015 | T-02, T-03 | Permiso | Edición rechazada tras enviar; ítem de otra institución no encontrado |
-| E2E-04 | RF-HDV-001, 003, 004, 005, 006, 020 | T-02 | Entradas inválidas | Cada entrada inválida rechazada con su mensaje |
+| E2E-04 | RF-HDV-001, 003, 004, 005, 006, 017, 020 | T-02 | Entradas inválidas | Cada entrada inválida rechazada con su mensaje |
 | E2E-05 | RF-HDV-011; Escenario 2 | T-07, T-12 | Éxito | Marca visible sobre el ítem; reenvío posible |
 | E2E-06 | RF-HDV-007, 008, 012, 013; Escenario 3 | T-03, T-05, T-12 | Éxito y permiso | Cada persona ve solo sus documentos; código repetido rechazado |
-| E2E-07 | RF-HDV-021, 022, 023; Escenario 4 | T-09 | Éxito y error | Informe con advertencias; fila sin documento rechazada. **Bloqueado por ADR-0012** |
-| E2E-08 | RF-HDV-025, 026, 027 | T-10 | Éxito, permiso | Número enmascarado; estado coincide o difiere. **Bloqueado por ADR-0013** |
+| E2E-07 | RF-HDV-021, 022, 023; Escenario 4 | T-09 | Éxito y error | Informe con advertencias; fila sin documento rechazada. Tras T-09 |
+| E2E-08 | RF-HDV-025, 026, 027 | T-10 | Éxito, permiso | Número enmascarado; estado coincide o difiere. Tras T-10 |
 | E2E-09 | RF-HDV-014, 001 | T-01 | Éxito, permiso | Solo activos; filtro por padre; importar dos veces no duplica |
 | E2E-10 | PD-HDV-04, RF-HDV-008, RF-HDV-016 | T-06, T-08 | Éxito | Aprobada pasa a borrador al iniciar; la exportación excluye a quien está en nueva actualización |
 | E2E-11 | RF-HDV-016 | T-08 | Éxito | Excel y `.zip` con cada sección y los respaldos ordenados |
@@ -46,7 +46,7 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 ## E2E-01 — Docente completa y envía su hoja de vida
 
 **Precondición:** Docente A1 con sesión iniciada, campaña abierta, actualización en borrador, `TratamientoDatosAceptado` realizado.  
-**Datos:** nombres «Nombre Ficticio», apellidos «Apellido Ficticio»; título «Título Ficticio» con universidad del catálogo y PDF de respaldo; experiencia actual en «Empresa Ficticia» con certificado; dos referencias personales con teléfono `0000000000`; los cinco documentos como PDF; cuenta bancaria solo si ADR-0013 es Vigente.  
+**Datos:** nombres «Nombre Ficticio», apellidos «Apellido Ficticio»; título «Título Ficticio» con universidad del catálogo y PDF de respaldo; experiencia actual en «Empresa Ficticia» con certificado; dos referencias personales con teléfono `0000000000`; los cinco documentos como PDF; cuenta bancaria si T-10 está integrada.  
 **Pasos:**
 
 1. Completar la ficha con los campos obligatorios de PD-HDV-01 y un perfil breve.
@@ -97,9 +97,9 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 ## E2E-04 — Entradas inválidas
 
 **Precondición:** Docente A1 en borrador (restaurar el ambiente si hace falta).  
-**Datos:** un `*Id` de la ficha que apunta a un elemento de otro tipo o inactivo; un título sin universidad ni institución; una experiencia sin fecha de fin y sin «trabaja actualmente»; una actual con fecha de fin; un título en curso sin beca con porcentaje; foto PDF; respaldo `.exe` renombrado y PDF de más de 10 MB.  
+**Datos:** un `*Id` de la ficha que apunta a un elemento de otro tipo o inactivo; un título sin universidad ni institución; una experiencia sin fecha de fin y sin «trabaja actualmente»; una actual con fecha de fin; un título en curso sin beca con porcentaje; una sexta referencia del mismo tipo; foto PDF; respaldo `.exe` renombrado y PDF de más de 10 MB.  
 **Pasos:** enviar cada entrada por separado a su endpoint.  
-**Resultado esperado:** cada una se rechaza con su mensaje; el título en curso sin beca se guarda sin los datos de beca; nada inválido queda persistido.  
+**Resultado esperado:** cada una se rechaza con su mensaje (la sexta referencia por superar el máximo de cinco por tipo); el título en curso sin beca se guarda sin los datos de beca; nada inválido queda persistido.  
 **Resultado obtenido:** Pendiente de ejecución  
 **Evidencia:** respuesta de cada llamada y consulta posterior  
 **Fecha y ejecutor:** pendiente  
@@ -141,10 +141,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 **Fecha y ejecutor:** pendiente  
 **Incidencia:** pendiente
 
-## E2E-07 — Carga de nómina con datos incompletos (bloqueado por ADR-0012)
+## E2E-07 — Carga de nómina con datos incompletos (tras T-09)
 
-**Precondición:** admin A con sesión; ADR-0012 Vigente.  
-**Datos:** archivo ficticio con filas: una completa; una con documento `0000000001` y sin fecha de nacimiento; una con «DE LA TORRE RUIZ LUIS»; una sin documento; una con documento repetido; columnas bancarias presentes (solo se cargan si ADR-0013 es Vigente).  
+**Precondición:** admin A con sesión; T-09 integrada.  
+**Datos:** archivo ficticio con filas: una completa; una con documento `0000000001` y sin fecha de nacimiento; una con «DE LA TORRE RUIZ LUIS»; una sin documento; una con documento repetido; columnas bancarias presentes (se guardan como cuenta propuesta solo si T-10 está integrada; si no, se ignoran).  
 **Pasos:**
 
 1. Cargar el archivo.
@@ -157,9 +157,9 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 **Fecha y ejecutor:** pendiente  
 **Incidencia:** pendiente
 
-## E2E-08 — Cuenta bancaria (bloqueado por ADR-0013)
+## E2E-08 — Cuenta bancaria (tras T-10)
 
-**Precondición:** ADR-0013 Vigente; Docente A1 con una cuenta propuesta desde la nómina.  
+**Precondición:** T-10 integrada; Docente A1 con una cuenta propuesta desde la nómina.  
 **Datos:** cuenta ficticia `0000000000`.  
 **Pasos:**
 
@@ -230,8 +230,8 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 | E2E-04 | Pendiente | — | Ninguna |
 | E2E-05 | Pendiente | — | Ninguna |
 | E2E-06 | Pendiente | — | Ninguna |
-| E2E-07 | Bloqueado por ADR-0012 | — | Ninguna |
-| E2E-08 | Bloqueado por ADR-0013 | — | Ninguna |
+| E2E-07 | Pendiente (tras T-09) | — | Ninguna |
+| E2E-08 | Pendiente (tras T-10) | — | Ninguna |
 | E2E-09 | Pendiente | — | Ninguna |
 | E2E-10 | Pendiente | — | Ninguna |
 | E2E-11 | Pendiente | — | Ninguna |

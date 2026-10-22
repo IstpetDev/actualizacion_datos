@@ -1,7 +1,8 @@
 # ADR-0013 — Datos bancarios del personal
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-22
+- **Cerrado:** 2026-10-22, por @JosephBano (quien desarrolla).
 
 ## Contexto
 
@@ -23,7 +24,7 @@ Hechos que condicionan la decisión:
 
 ## Decisión
 
-Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la cierre.
+Se adopta la **opción 2**.
 
 | # | Punto | Propuesta |
 |---|---|---|
@@ -41,15 +42,18 @@ Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la ci
 - Se puede responder «¿a qué personas se les paga a una cuenta distinta de la que confirmaron?» sin exponer números.
 - Hay que gestionar una clave: dónde vive, quién la rota y qué pasa si se pierde (los números cifrados serían irrecuperables). Los respaldos de la base contienen los números cifrados; la clave debe respaldarse por separado.
 - Más tablas, dos catálogos nuevos y más endpoints; cada uno con prueba de aislamiento por institución.
-- Spec-0003 incluye la cuenta bancaria en RF-HDV-025 a 027. Hasta que este ADR sea Vigente, **no se implementa** la entidad, la migración ni la carga de las columnas bancarias.
+- Spec-0003 incluye la cuenta bancaria en RF-HDV-025 a 027; la implementa T-10: entidad, migración, endpoints y la carga de las columnas bancarias de la nómina.
 - Los antecedentes penales (documento personal) son también un dato delicado. Su acceso se limita al dueño, al supervisor y al admin de su institución; no requiere cifrado propio porque van como archivo bajo ADR-0006.
 
-## Puntos abiertos
+## Decisiones al cierre y pendientes
 
-- **¿Quién cierra el ADR y con qué base legal?** La finalidad (comprobar pagos) y la base del tratamiento deben quedar por escrito.
-- **¿Quién administra la clave** y dónde se guarda en producción? ADR-0011 fija dónde viven las credenciales (`.env` del servidor o secretos de GitHub); falta decidir quién rota esta clave y cómo se respalda por separado.
-- **¿La cuenta es obligatoria para enviar?** Propuesta en spec-0003 (PD-HDV-17): sí.
-- **¿Se necesitará un archivo con números completos para el pago?** Si sí, es otra spec y otro ADR.
+- **La cuenta es obligatoria para enviar** (PD-HDV-17 de spec-0003).
+- **Archivo con números completos para el pago:** fuera de alcance. Si se necesita, es otra spec y otro ADR.
+
+## Pendientes antes de producción
+
+- **Base legal por escrito.** La finalidad (comprobar pagos) y la base del tratamiento deben quedar documentadas. Responsable: quien desarrolla.
+- **Gestión de la clave.** ADR-0011 fija dónde viven las credenciales (`.env` del servidor o secretos de GitHub). Falta definir quién rota esta clave y cómo se respalda por separado. Responsable: quien administre el servidor.
 
 ## ADR relacionados
 
@@ -57,4 +61,4 @@ Se propone la **opción 2**. Queda en Propuesto hasta que quien desarrolla la ci
 - ADR-0006 — Almacenamiento de archivos.
 - ADR-0010 — Hoja de vida estructurada y catálogos.
 - ADR-0011 — Despliegue automático a producción.
-- ADR-0012 — Carga de nómina: columnas, valores nulos y división de nombres (Propuesto).
+- ADR-0012 — Carga de nómina: columnas, valores nulos y división de nombres (Vigente).
