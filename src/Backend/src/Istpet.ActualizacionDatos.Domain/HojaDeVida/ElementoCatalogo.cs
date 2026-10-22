@@ -48,6 +48,20 @@ public class ElementoCatalogo
         Activo = activo;
     }
 
+    public void Actualizar(string nombre, int? padreId, string? codigoExterno, int orden)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(nombre);
+        if (RequierePadre(Tipo) && padreId is null)
+        {
+            throw new ReglaNegocioException($"Un elemento de catálogo de tipo {Tipo} debe indicar su elemento padre.");
+        }
+
+        Nombre = nombre.Trim();
+        PadreId = padreId;
+        CodigoExterno = string.IsNullOrWhiteSpace(codigoExterno) ? null : codigoExterno.Trim();
+        Orden = orden;
+    }
+
     public void Desactivar()
     {
         Activo = false;

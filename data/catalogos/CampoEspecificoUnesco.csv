@@ -1,0 +1,27 @@
+codigo,nombre,codigo_padre,codigo_externo
+01.1,Educación,01,01.1
+02.1,Artes,02,02.1
+02.2,Humanidades,02,02.2
+02.3,Idiomas,02,02.3
+03.1,Ciencias sociales y del comportamiento,03,03.1
+03.2,Periodismo e información,03,03.2
+03.3,Derecho,03,03.3
+04.1,Educación comercial y administración,04,04.1
+05.1,Ciencias biológicas y afines,05,05.1
+05.2,Medio ambiente,05,05.2
+05.3,Ciencias físicas,05,05.3
+05.4,Matemáticas y estadística,05,05.4
+06.1,Tecnologías de la información y la comunicación (TIC),06,06.1
+07.1,Ingeniería y profesiones afines,07,07.1
+07.2,Industria y producción,07,07.2
+07.3,Arquitectura y construcción,07,07.3
+08.1,Agricultura,08,08.1
+08.2,Silvicultura,08,08.2
+08.3,Pesca,08,08.3
+08.4,Veterinaria,08,08.4
+09.1,Salud,09,09.1
+09.2,Bienestar,09,09.2
+10.1,Servicios personales,10,10.1
+10.2,Servicios de protección,10,10.2
+10.3,Servicios de seguridad,10,10.3
+10.4,Servicio de transporte,10,10.4

@@ -39,7 +39,6 @@ public sealed record ExpedienteRevisionDto(
     string? Correo,
     string EstadoActualizacion,
     string? DatosPersonalesJson,
-    string? ArchivosSubidosJson,
     bool TratamientoDatosAceptado,
     DateTime? FechaAceptacionTratamientoDatosUtc,
     List<ObservacionDto> Observaciones);
@@ -53,7 +52,6 @@ public sealed record MisDatosDto(
     bool CorreoVerificado,
     string EstadoActualizacion,
     string? DatosPersonalesJson,
-    string? ArchivosSubidosJson,
     bool TratamientoDatosAceptado,
     DateTime? FechaAceptacionTratamientoDatosUtc,
     bool PuedeEditar,

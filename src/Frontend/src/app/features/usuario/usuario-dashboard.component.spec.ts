@@ -8,8 +8,11 @@ import {
   ArchivoDto,
   ArchivosClient,
   AutenticacionClient,
+  CatalogosClient,
+  CuentaBancariaClient,
   MisDatosClient,
   MisDatosDto,
+  SwaggerException,
 } from '../../api-client';
 import { UsuarioDashboardComponent } from './usuario-dashboard.component';
 
@@ -22,7 +25,6 @@ const ficha: MisDatosDto = {
   correoVerificado: true,
   estadoActualizacion: 'Borrador',
   datosPersonalesJson: '{"telefono":"0000000000","adicional":{"conservar":true}}',
-  archivosSubidosJson: undefined,
   tratamientoDatosAceptado: false,
   fechaAceptacionTratamientoDatosUtc: undefined,
   puedeEditar: true,
@@ -48,6 +50,7 @@ describe('panel de usuario', () => {
     actualizarMisDatos: vi.fn(),
     aceptarTratamientoDatos: vi.fn(),
     enviarMisDatosARevision: vi.fn(),
+    iniciarNuevaActualizacion: vi.fn(),
   };
   const archivos = { listarMisArchivos: vi.fn(), subirArchivo: vi.fn(), eliminarArchivo: vi.fn() };
   const auth = { enviarCodigoCorreo: vi.fn(), verificarCodigoCorreo: vi.fn() };
@@ -69,6 +72,7 @@ describe('panel de usuario', () => {
       datos.actualizarMisDatos,
       datos.aceptarTratamientoDatos,
       datos.enviarMisDatosARevision,
+      datos.iniciarNuevaActualizacion,
       archivos.eliminarArchivo,
       auth.enviarCodigoCorreo,
       auth.verificarCodigoCorreo,
@@ -85,6 +89,14 @@ describe('panel de usuario', () => {
         { provide: MisDatosClient, useValue: datos },
         { provide: ArchivosClient, useValue: archivos },
         { provide: AutenticacionClient, useValue: auth },
+        {
+          provide: CuentaBancariaClient,
+          useValue: {
+            obtenerMiCuentaBancaria: () =>
+              throwError(() => new SwaggerException('No Content', 204, '', {}, null)),
+          },
+        },
+        { provide: CatalogosClient, useValue: { consultarCatalogo: () => of([]) } },
       ],
     });
   });
@@ -322,5 +334,61 @@ describe('panel de usuario', () => {
     peticion.flush(new Blob(['%PDF-ejemplo'], { type: 'application/pdf' }));
     expect(crear).toHaveBeenCalledWith(expect.any(Blob));
     expect(clic).toHaveBeenCalled();
+  });
+  describe('segunda_campana_PD_HDV_04', () => {
+    const aprobadoConCampana = {
+      puedeEditar: false,
+      puedeIniciarNuevaActualizacion: true,
+      mensaje: 'Su información ya ha sido aprobada.',
+      campanaActiva: {
+        nombre: 'Campaña de ejemplo',
+        fechaInicioUtc: new Date('2026-10-01'),
+        fechaFinUtc: new Date('2026-11-01'),
+      },
+    };
+    beforeEach(() => {
+      datos.obtenerMisDatos.mockReturnValue(
+        of({ ...ficha, estadoActualizacion: 'Aprobado', puedeEditar: false }),
+      );
+    });
+    it('oculta_el_boton_si_la_api_no_lo_permite', () => {
+      datos.obtenerEstadoEdicion.mockReturnValue(
+        of({ ...aprobadoConCampana, puedeIniciarNuevaActualizacion: false }),
+      );
+      const fixture = preparar();
+      expect(fixture.nativeElement.querySelector('[data-testid=iniciar-actualizacion]')).toBeNull();
+      fixture.componentInstance.iniciarNuevaActualizacion();
+      expect(datos.iniciarNuevaActualizacion).not.toHaveBeenCalled();
+    });
+    it('reabre_la_actualizacion_y_habilita_la_edicion', () => {
+      datos.obtenerEstadoEdicion.mockReturnValue(of(aprobadoConCampana));
+      const fixture = preparar();
+      const componente = fixture.componentInstance;
+      expect(componente.puedeEditar()).toBe(false);
+      const boton = fixture.nativeElement.querySelector('[data-testid=iniciar-actualizacion]');
+      expect(boton.textContent).toContain('Actualizar mis datos');
+      boton.click();
+      fixture.detectChanges();
+      expect(datos.iniciarNuevaActualizacion).toHaveBeenCalledWith();
+      expect(componente.puedeEditar()).toBe(true);
+      expect(fixture.nativeElement.querySelector('[data-testid=estado]').textContent).toBe(
+        'Borrador',
+      );
+      expect(fixture.nativeElement.querySelector('[data-testid=iniciar-actualizacion]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('#telefono').matches(':disabled')).toBe(false);
+    });
+    it('si_la_api_rechaza_conserva_el_estado_aprobado_y_muestra_el_motivo', () => {
+      datos.obtenerEstadoEdicion.mockReturnValue(of(aprobadoConCampana));
+      datos.iniciarNuevaActualizacion.mockReturnValue(
+        throwError(() => ({
+          mensaje: 'No se permite iniciar una nueva actualización fuera del período.',
+        })),
+      );
+      const componente = preparar().componentInstance;
+      componente.iniciarNuevaActualizacion();
+      expect(componente.error()).toContain('fuera del período');
+      expect(componente.puedeEditar()).toBe(false);
+      expect(componente.datos()?.estadoActualizacion).toBe('Aprobado');
+    });
   });
 });

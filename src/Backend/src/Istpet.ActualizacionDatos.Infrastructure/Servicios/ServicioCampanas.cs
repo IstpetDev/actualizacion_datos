@@ -130,11 +130,13 @@ public class ServicioCampanas : IServicioCampanas
 
             if (persona.EstadoActualizacion == EstadoActualizacion.Aprobado)
             {
+                // PD-HDV-04: con campaña abierta, la persona aprobada puede iniciar otra actualización.
                 return new EstadoEdicionDto(
                     PuedeEditar: false,
-                    Mensaje: "Su información ya ha sido aprobada.",
+                    Mensaje: "Su información ya ha sido aprobada. Si necesita actualizarla en esta campaña, use «Actualizar mis datos».",
                     CampanaActiva: campanaActiva,
-                    EstadoActualizacion: persona.EstadoActualizacion.ToString());
+                    EstadoActualizacion: persona.EstadoActualizacion.ToString(),
+                    PuedeIniciarNuevaActualizacion: true);
             }
 
             if (persona.EstadoActualizacion == EstadoActualizacion.Devuelto)
@@ -172,25 +174,6 @@ public class ServicioCampanas : IServicioCampanas
 
         // RF-FLU-001: Bloquea edición si el estado es Enviado o Aprobado
         persona.ActualizarBorrador(request.DatosJson);
-        await _context.SaveChangesAsync(ct);
-    }
-
-    public async Task SubirArchivoUsuarioAsync(string documento, SubirArchivoRequest request, CancellationToken ct = default)
-    {
-        var campanaActiva = await ObtenerCampanaActivaAsync(ct);
-
-        // RF-CAM-003: Rechaza subida de archivos si no hay campaña abierta
-        if (campanaActiva == null)
-        {
-            throw new ReglaNegocioException("No se permite subir archivos fuera del período de una campaña abierta.");
-        }
-
-        var persona = await _context.Personas
-            .FirstOrDefaultAsync(p => p.Documento == documento, ct)
-            ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
-
-        // RF-FLU-001: Bloquea subida si el estado es Enviado o Aprobado
-        persona.RegistrarArchivoSubido(request.NombreArchivo);
         await _context.SaveChangesAsync(ct);
     }
 }

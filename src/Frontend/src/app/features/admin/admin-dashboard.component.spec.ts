@@ -8,6 +8,7 @@ import {
   CampanasClient,
   PersonaDto,
   PersonasClient,
+  RevisionClient,
   ResultadoCargaPersonasDto,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
@@ -98,6 +99,7 @@ describe('AdminDashboardComponent', () => {
         provideHttpClientTesting(),
         { provide: CampanasClient, useValue: campanasClientMock },
         { provide: PersonasClient, useValue: personasClientMock },
+        { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();

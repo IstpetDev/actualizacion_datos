@@ -52,9 +52,6 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
         builder.Property(p => p.DatosPersonalesJson)
             .HasColumnName("datos_personales_json");
 
-        builder.Property(p => p.ArchivosSubidosJson)
-            .HasColumnName("archivos_subidos_json");
-
         builder.Property(p => p.FechaCreacionUtc)
             .IsRequired()
             .HasColumnName("fecha_creacion_utc");
