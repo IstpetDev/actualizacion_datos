@@ -1,7 +1,7 @@
 # Hoja de vida del personal — Plan de implementación
 
-**Spec aprobado:** `spec.md` versión 0.3, aprobación explícita del revisor funcional (@JosephBano) en la sesión de trabajo del 2026-10-22; la versión está en `develop` por el PR #38.  
-**Plan:** versión 1.0  
+**Spec aprobado:** `spec.md` versión 0.4, aprobación explícita del revisor funcional (@JosephBano) en la sesión de trabajo del 2026-10-22; la 0.3 está en `develop` por el PR #38.  
+**Plan:** versión 1.1  
 **Objetivo:** que un docente complete su hoja de vida con valores de catálogo, certificados y cuenta bancaria; que el supervisor la revise por ítem; que el admin configure requisitos, cargue la nómina y exporte lo aprobado.  
 **Áreas:** `src/Backend` y `src/Frontend`  
 **Tecnologías:** .NET 10, EF Core con PostgreSQL 17, minimal API en `WebApi`, xUnit; Angular 22, pnpm, cliente OpenAPI generado con NSwag.
@@ -26,8 +26,8 @@ Rutas desde la raíz del repositorio. `B` = `src/Backend/src/Istpet.Actualizacio
 | RF-HDV-014 | `GET /api/catalogos/{tipo}?padreId=` solo activos, por `orden`; importación CSV para `superadmin` | `B.WebApi/Endpoints/CatalogosEndpoints.cs`, `B.Infrastructure/Servicios/ServicioCatalogos.cs` | T-01 | Pruebas de filtro, idempotencia y padre de otro tipo |
 | RF-HDV-015 | Todo acceso pasa por el filtro global por institución; cada servicio nuevo tiene una prueba de aislamiento | `B.Infrastructure/Persistence/AplicacionDbContext.cs` (existente) | T-02, T-03, T-05, T-07, T-10 | Prueba de integración con dos instituciones |
 | RF-HDV-016 | La exportación recorre las secciones; solo personas en «aprobado», con hoja «pendientes» (PD-HDV-02); columna `codigo_externo` opcional | `B.Infrastructure/Servicios/ServicioExportacion.cs` (nuevo) | T-08 | Prueba de Excel y `.zip` con una persona aprobada y una en actualización |
-| RF-HDV-017 | CRUD de referencias personales y familiares sobre `ReferenciaPersonal` | `B.WebApi/Endpoints/HojaDeVidaEndpoints.cs` | T-02 | Pruebas de servicio y de endpoint |
-| RF-HDV-018, 019 | Reglas del validador: al menos dos referencias personales y al menos un estudio (PD-HDV-09) | `B.Infrastructure/Servicios/ValidadorCompletitudEnvio.cs` | T-04 | Pruebas con una referencia, con familiares y sin estudio |
+| RF-HDV-017 | CRUD de referencias personales y familiares sobre `ReferenciaPersonal`, con tope de cinco por tipo en el servicio | `B.WebApi/Endpoints/HojaDeVidaEndpoints.cs` | T-02 | Pruebas de servicio y de endpoint, incluida la sexta referencia del mismo tipo (rechazada) |
+| RF-HDV-018, 019 | Reglas del validador: al menos dos referencias personales y al menos un estudio de cualquier nivel (PD-HDV-09) | `B.Infrastructure/Servicios/ValidadorCompletitudEnvio.cs` | T-04 | Pruebas con una referencia, con familiares y sin estudio |
 | RF-HDV-020 | Perfil en la ficha; foto como `FotoArchivoId` con validación de imagen | `B.Infrastructure/Servicios/ServicioHojaDeVida.cs` | T-02 | Prueba con PDF como foto (rechazada) |
 | RF-HDV-021 | Carga con política de nulos y tabla de advertencias | `B.Infrastructure/Servicios/ServicioPersonas.cs`, `B.Application/Modelos/ModelosPersona.cs` | T-09 | Pruebas por columna vacía o inválida |
 | RF-HDV-022 | `DivisorNombres` puro en `Application`, con los casos de ADR-0012 | `B.Application/Servicios/DivisorNombres.cs` | T-09 | Pruebas con los cinco casos del ADR |
@@ -42,7 +42,7 @@ Rutas desde la raíz del repositorio. `B` = `src/Backend/src/Istpet.Actualizacio
 | Escenario 4 | Carga de nómina con informe de advertencias | `F/features/admin/nomina/` (existente), `B.WebApi/Endpoints/` | T-09 | E2E-07 |
 | PD-HDV-04 (decisión) | `Persona.IniciarNuevaActualizacion` pasa de «aprobado» a «borrador» con campaña abierta; endpoint explícito | `B.Domain/Persona.cs`, `B.WebApi/Endpoints/MisDatosEndpoints.cs` | T-06 | Pruebas de transición y de estados no permitidos |
 
-Cada requisito está cubierto. No hay excepciones: RF-HDV-025 a 027 y RF-HDV-021 (parte bancaria) dependen de ADR-0013, y T-10 queda bloqueada hasta que sea Vigente.
+Cada requisito está cubierto. No hay excepciones. ADR-0012 y ADR-0013 están Vigentes, así que T-09 y T-10 no están bloqueadas.
 
 ## Diseño y contratos
 
@@ -75,11 +75,11 @@ Cada requisito está cubierto. No hay excepciones: RF-HDV-025 a 027 y RF-HDV-021
 | Marcas por campo o archivo | `docs/decisiones/ADR-0008-granularidad-del-rechazo.md` | Vigente | T-07 |
 | Hoja de vida estructurada | `docs/decisiones/ADR-0010-hoja-de-vida-estructurada.md` | Vigente | Todas |
 | Despliegue y secretos | `docs/decisiones/ADR-0011-despliegue-a-produccion.md` | Vigente | T-10 (ubicación de la clave) |
-| Carga de nómina, nulos y nombres | `docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md` | **Propuesto** | T-09: **Bloqueada por ADR** |
-| Datos bancarios | `docs/decisiones/ADR-0013-datos-bancarios.md` | **Propuesto** | T-10: **Bloqueada por ADR**; la parte bancaria de T-09 |
+| Carga de nómina, nulos y nombres | `docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md` | Vigente (2026-10-22) | T-09 |
+| Datos bancarios | `docs/decisiones/ADR-0013-datos-bancarios.md` | Vigente (2026-10-22) | T-10; la parte bancaria de T-09 |
 | Campos configurables | `docs/decisiones/ADR-0009-campos-configurables.md` | Propuesto | Ninguna: se respetan sus restricciones, no se cierra |
 
-Los ADR-0012 y 0013 los cierra quien desarrolla (@JosephBano); un agente de IA no los cierra por su cuenta. T-09 y T-10 no empiezan hasta que ese cierre esté registrado en `docs/decisiones/` y su estado sea Vigente. Cerrar ADR-0012 con la opción propuesta habilita T-09 salvo la carga de las columnas bancarias, que espera además a ADR-0013.
+ADR-0012 y ADR-0013 los cerró quien desarrolla (@JosephBano) el 2026-10-22. La carga de las columnas bancarias (parte de T-09) se hace cuando T-10 entregue la entidad `CuentaBancaria`.
 
 ## Mapa de archivos
 
@@ -94,8 +94,8 @@ Los ADR-0012 y 0013 los cierra quien desarrolla (@JosephBano); un agente de IA n
 | Backend | `B.Infrastructure/Servicios/ServicioExportacion.cs` | Excel y `.zip` por secciones | Ficha, ítems |
 | Backend | `B.WebApi/Endpoints/*.cs` y una línea por grupo en `B.WebApi/Program.cs` | Rutas | Servicios |
 | Backend | `B.Domain/Persona.cs`, `B.Domain/TipoDestinoMarca.cs` | Transición de estado y destino `Item` | Ninguno |
-| Backend | `B.Application/Servicios/DivisorNombres.cs`, `ServicioPersonas.cs`, `ModelosPersona.cs` | Carga de nómina | ADR-0012 Vigente |
-| Backend | `B.Domain/HojaDeVida/CuentaBancaria.cs`, `ServicioCuentaBancaria.cs` | Cuenta bancaria | ADR-0013 Vigente |
+| Backend | `B.Application/Servicios/DivisorNombres.cs`, `ServicioPersonas.cs`, `ModelosPersona.cs` | Carga de nómina | T-04 |
+| Backend | `B.Domain/HojaDeVida/CuentaBancaria.cs`, `ServicioCuentaBancaria.cs` | Cuenta bancaria | T-04 |
 | Backend | `src/Backend/tests/*` | Pruebas de dominio, servicio e integración | Su tarea |
 | Contrato | `openapi/v1.json` | Se regenera con `pnpm --dir src/Frontend generar:api` | Cada tarea que cambia la API |
 | Frontend | `F/api-client/` | Cliente NSwag regenerado | `openapi/v1.json` |
@@ -105,7 +105,7 @@ Los ADR-0012 y 0013 los cierra quien desarrolla (@JosephBano); un agente de IA n
 ## Datos y migración
 
 - **Migración de T-01:** siembra los grados de primaria y secundaria y el tipo de capacitación «instrucción profesional» (PD-HDV-06) en `elementos_catalogo`, con ids menores de 1000 como el resto de la semilla.
-- **Migración de T-10 (tras ADR-0013):** tabla `cuentas_bancarias` con `institucion_id` y `persona_id`, y los catálogos `TipoCuenta` y `Banco`.
+- **Migración de T-10:** tabla `cuentas_bancarias` con `institucion_id` y `persona_id`, y los catálogos `TipoCuenta` y `Banco`.
 - **Sin migración:** T-02 a T-09, T-11 y T-12. El esquema de la hoja de vida ya existe (`AgregarHojaDeVida`, `AgregarReferenciasYPerfil`).
 - **Una sola tarea por migración y en serie:** T-01 y T-10 no corren en paralelo entre sí ni con otra que toque el `ModelSnapshot`.
 - **Compatibilidad:** `personas.datos_personales_json` se mantiene (ADR-0010 dec. 14) hasta que las pantallas nuevas reemplacen las de spec-0002.
@@ -121,7 +121,7 @@ Los ADR-0012 y 0013 los cierra quien desarrolla (@JosephBano); un agente de IA n
 3. **Hoja de vida (después de T-01 para validar catálogos):** T-02 y T-03 en paralelo; luego T-04 y T-07.
 4. **Exportación (T-08)** después de T-02.
 5. **Frontend:** T-11 después de T-02, T-03 y T-04; T-12 después de T-05 y T-07.
-6. **Con ADR vigentes:** T-09 tras ADR-0012; T-10 tras ADR-0013; cada una en su propio PR.
+6. **Después de T-04:** T-09 y T-10 pueden ir en paralelo, cada una en su propio PR. T-10 es la única que toca el `ModelSnapshot` en este tramo.
 7. **Cierre:** T-13 ejecuta `test-e2e.md` completo.
 
 Archivos exclusivos por tarea: cada servicio y cada archivo de `Endpoints/` pertenece a una sola tarea. `Program.cs`, `openapi/v1.json`, el cliente generado y el `ModelSnapshot` son de integración: los toca el coordinador al unir, o las tareas en serie.
@@ -130,12 +130,11 @@ Archivos exclusivos por tarea: cada servicio y cada archivo de `Endpoints/` pert
 
 | Riesgo o punto abierto | Efecto | Acción y responsable |
 |---|---|---|
-| ADR-0012 y ADR-0013 en Propuesto | T-09 y T-10 no pueden empezar; sin T-10 no hay cuenta bancaria en el flujo | Cerrarlos, @JosephBano |
+| Base legal escrita y gestión de la clave de cifrado de ADR-0013 | Sin ellas, la cuenta bancaria no debe ir a producción | @JosephBano (base legal); quien administre el servidor (clave) |
 | Carga de trabajo concentrada en @AlexanderMartinez0410 (T-02, T-03, T-04, T-07, T-12) | Retraso de toda la hoja de vida | Repartir T-03 y T-07; el coordinador lo propone en `tasks.md` |
-| PD-HDV-01, 08 y 06 pendientes de contrastar con el sistema de talento humano | Lista de obligatorios o valores de participación pueden cambiar | @AnthonyPilatasig contrasta con `Profesores.cs` y `CursosProfesores.cs` antes de T-04 |
+| PD-HDV-01, 06 y 08 por contrastar con el sistema de talento humano | Lista de obligatorios o valores de participación pueden cambiar | @AnthonyPilatasig contrasta con `Profesores.cs` y `CursosProfesores.cs` antes de T-04 |
 | Catálogos grandes sin fuente cargada | Selectores vacíos en las pantallas | Responsables de PD-HDV-03; T-01 los importa |
-| PD-HDV-11 (registro) y PD-HDV-13 (máximo de referencias, parentesco) sin respuesta | Pueden cambiar la ficha o RF-HDV-017 | Decide el revisor funcional antes de T-11 |
-| PD-HDV-15 y 16 (fecha de ingreso, ciudad y pasaportes) | Cambian la carga | Preguntar a la institución antes de T-09 |
+| «Teléfono 2» sin aclarar | La regla por patrón de ADR-0012 puede equivocarse | Preguntar a la institución antes de T-09; @JosephBano |
 | Cambio a `Persona` por PD-HDV-04 | Toca la entidad de seguridad | Una sola tarea (T-06) con pruebas de todos los estados; anotar en spec-0001 |
 | Una sola persona con acceso al sistema de talento humano para estructura | Falta de contraste | @AnthonyPilatasig |
 | `Program.cs` crece | Conflictos de merge | Un archivo por grupo en `Endpoints/` y una línea de registro |
@@ -143,7 +142,7 @@ Archivos exclusivos por tarea: cada servicio y cada archivo de `Endpoints/` pert
 ## Comprobación del plan
 
 - [x] Las rutas y tecnologías coinciden con el código actual de `src/Backend` y `src/Frontend` (servicios en `Application/Servicios` e `Infrastructure/Servicios`, endpoints en `WebApi`, pantallas en `features/*`).
-- [x] Los ADR vigentes se respetan y los nuevos (0012 y 0013) tienen quién los cierre y tareas condicionadas.
+- [x] Los ADR vigentes se respetan; ADR-0012 y ADR-0013 están cerrados y sus tareas libres.
 - [x] Cada requisito del spec está cubierto, sin excepciones.
 - [x] Las tareas tienen dependencias y límites de edición claros (ver `tasks.md`).
 - [x] Las pruebas de unidad, integración y E2E verifican comportamientos distintos (ver `test-e2e.md`).

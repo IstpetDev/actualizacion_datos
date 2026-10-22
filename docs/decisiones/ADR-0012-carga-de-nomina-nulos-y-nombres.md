@@ -1,7 +1,8 @@
 # ADR-0012 — Carga de nómina: columnas, valores nulos y división de nombres
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-22
+- **Cerrado:** 2026-10-22, por @JosephBano (quien desarrolla).
 
 ## Contexto
 
@@ -26,11 +27,11 @@ Hechos que condicionan la decisión:
 
 ## Decisión
 
-Se propone la **opción 2**. Reglas:
+Se adopta la **opción 2**. Reglas:
 
 ### Qué hace fallar una fila
 
-Solo el documento. Una fila se **rechaza** si el documento está vacío, tiene caracteres que no son dígitos (salvo que la institución use pasaporte; ver «Puntos abiertos») o está repetido dentro del archivo (se conserva la primera aparición). Una persona que ya existe en la institución se **omite** y se cuenta como duplicada (PD-09); la carga no sobrescribe lo que la persona ya editó.
+Solo el documento. Una fila se **rechaza** si el documento está vacío, no tiene exactamente 10 dígitos una vez completado el cero inicial (por ahora solo cédula; PD-HDV-16 de spec-0003) o está repetido dentro del archivo (se conserva la primera aparición). Una persona que ya existe en la institución se **omite** y se cuenta como duplicada (PD-09); la carga no sobrescribe lo que la persona ya editó.
 
 Todo lo demás es opcional: si falta o no se puede interpretar, queda en nulo y se registra una **advertencia** con el número de fila y la columna.
 
@@ -48,10 +49,10 @@ Todo lo demás es opcional: si falta o no se puede interpretar, queda en nulo y 
 | `Nacionalidad` | `FichaPersonal.PaisNacionalidadId`, por coincidencia con el nombre o el gentilicio del país en el catálogo | Nulo; advertencia. |
 | `Estudios` | **No se importa.** | Un título necesita grado, institución y registro; un solo valor no alcanza. La persona registra su formación en la hoja de vida. |
 | `Dirección` | `FichaPersonal.CallePrincipal`, tal cual | Nulo; si excede el largo permitido, se rechaza el valor, no la fila, y se advierte. |
-| `Ciudad` | **No se guarda.** La residencia del modelo es una parroquia del catálogo y la ciudad no la determina. | La persona elige su parroquia. Ver «Puntos abiertos». |
-| `Fec. Ingreso` | **No se importa** en esta versión. | El modelo no tiene fecha de ingreso (ADR-0010, decisión 7). Ver «Puntos abiertos». |
+| `Ciudad` | **No se guarda.** La residencia del modelo es una parroquia del catálogo y la ciudad no la determina. | La persona elige su parroquia (decidido al cierre). |
+| `Fec. Ingreso` | **No se importa** en esta versión. | El modelo no tiene fecha de ingreso (ADR-0010, decisión 7); decidido al cierre: no se guarda. |
 | `Teléfono 2` | `FichaPersonal.Celular` si son 10 dígitos y empiezan con `09`; si no, `FichaPersonal.TelefonoConvencional` | Nulo; advertencia. |
-| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | Cuenta **propuesta** de la persona, con la protección que fije ADR-0013. Hasta que ADR-0013 sea Vigente, la carga **las ignora** y no las guarda. | Sin cuenta propuesta; advertencia. En ningún caso se escriben en registros ni en el informe. |
+| `tipo_cuenta_banco`, `banco`, `num_cuenta_banco` | Cuenta **propuesta** de la persona, con la protección que fije ADR-0013. ADR-0013 es Vigente: la carga las guarda como propuesta cuando T-10 entregue la entidad `CuentaBancaria`; hasta entonces **las ignora** y no las guarda. | Sin cuenta propuesta; advertencia. En ningún caso se escriben en registros ni en el informe. |
 
 ### División de nombres
 
@@ -96,16 +97,19 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - La carga actual (`PersonaCargaItem`) debe ampliarse con estas columnas. Eso cambia la API: hay que regenerar `openapi/v1.json` y el cliente del frontend en el mismo cambio (`AGENTS.md`).
 - El archivo de nómina contiene datos personales reales: **no se guarda en el repositorio**, ni en las pruebas, ni en capturas. Las pruebas usan filas ficticias.
 - Los nombres divididos automáticamente se equivocan en los casos ambiguos (tres palabras, apellidos compuestos poco comunes). Por eso son una propuesta y la persona los confirma.
-- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso` y `Edad`; pueden recuperarse si se decide guardarlos. Los datos bancarios se cargan solo cuando ADR-0013 sea Vigente.
+- Se pierden `Estudios`, `Ciudad`, `Fec. Ingreso` y `Edad`; pueden recuperarse si se decide guardarlos. Los datos bancarios se cargan cuando T-10 entregue la entidad de ADR-0013.
 
-## Puntos abiertos
+## Decisiones al cierre
 
-- **Datos bancarios.** Se necesitan (comprobar pagos). Falta cerrar ADR-0013: base legal, cifrado y quién los ve. Hasta entonces, la carga no los importa.
-- **Fecha de ingreso.** ¿Se guarda como dato de la persona? Hoy no tiene dónde.
-- **Ciudad.** ¿Basta con que la persona elija su parroquia, o se guarda también un texto de ciudad?
-- **Pasaportes.** ¿La institución tiene personal sin cédula? Si es así, la regla de «solo dígitos» del documento cambia.
-- **Teléfono 2.** El archivo no trae un «Teléfono 1». Confirmar con la institución qué significa y si el teléfono 1 se omitió.
-- **Cargo sin tipo de funcionario.** ¿Basta con que el admin cree los tipos y los asigne después, o la carga debe poder crearlos?
+- **Datos bancarios:** se cargan como cuenta propuesta con la protección de ADR-0013 (Vigente); la carga las guarda cuando T-10 entregue la entidad.
+- **Fecha de ingreso:** no se guarda en esta versión (PD-HDV-15).
+- **Ciudad:** no se guarda; la persona elige su parroquia (PD-HDV-15).
+- **Pasaportes:** por ahora solo cédula de 10 dígitos (PD-HDV-16). Si la institución tiene personal sin cédula, es un cambio nuevo.
+- **Cargo sin tipo de funcionario:** la carga no crea tipos; los crea el admin y los asigna después.
+
+## Pendiente de la institución
+
+- **Teléfono 2.** El archivo no trae un «Teléfono 1». La regla por patrón de la tabla rige mientras la institución no aclare qué significa.
 
 ## ADR relacionados
 
@@ -113,4 +117,4 @@ Lo cargado se muestra a la persona como valor inicial. No cuenta como verificado
 - ADR-0007 — Autenticación con cédula, cambio obligatorio y correo.
 - ADR-0009 — Campos configurables por institución (Propuesto).
 - ADR-0010 — Hoja de vida estructurada y catálogos.
-- ADR-0013 — Datos bancarios (Propuesto).
+- ADR-0013 — Datos bancarios (Vigente).

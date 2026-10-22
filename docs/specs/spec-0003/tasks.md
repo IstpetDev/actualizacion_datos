@@ -1,8 +1,8 @@
 # Hoja de vida del personal — Tareas
 
-**Spec aprobado:** `spec.md` versión 0.3  
-**Plan:** `plan.md` versión 1.0  
-**Estado:** Preparado para implementación (T-09 y T-10 bloqueadas por ADR)
+**Spec aprobado:** `spec.md` versión 0.4  
+**Plan:** `plan.md` versión 1.1  
+**Estado:** Preparado para implementación
 
 Rutas abreviadas como en `plan.md`: `B` = `src/Backend/src/Istpet.ActualizacionDatos`, `F` = `src/Frontend/src/app`. Los responsables siguen el dueño de cada issue; los marcados «propuesta» se reparten para aliviar la carga y los confirma cada persona.
 
@@ -10,22 +10,22 @@ Rutas abreviadas como en `plan.md`: `B` = `src/Backend/src/Istpet.ActualizacionD
 
 | Tarea | Issue | Requisitos | Depende de | Puede ir en paralelo con | Dueño |
 |---|---|---|---|---|---|
-| T-00 | por crear | Contratos de todos | Ninguna | Ninguna | Coordinador (propuesta: @AnthonyPilatasig) |
+| T-00 | #42 | Contratos de todos | Ninguna | Ninguna | @AnthonyPilatasig (propuesta; coordina) |
 | T-01 | #29 | RF-HDV-014, 001 (validación de tipo) | T-00 | T-05, T-06 | @bryancito1090 |
 | T-02 | #30 | RF-HDV-001 a 006, 010, 015, 017, 020 | T-00, T-01 | T-03 | @AlexanderMartinez0410 |
 | T-03 | #30 | RF-HDV-007, 008, 010, 015 | T-00 | T-02 | @AnthonyPilatasig (propuesta) |
 | T-04 | #30 | RF-HDV-009, 018, 019, 023, 024 | T-02, T-03 | T-07 | @AlexanderMartinez0410 |
 | T-05 | #31 | RF-HDV-012, 013, 015 | T-00 | T-01, T-06 | @bryancito1090 |
 | T-06 | #32 | RF-HDV-008; RF-FLU-005; PD-HDV-04 | T-00 | T-01, T-05 | @AnthonyPilatasig |
-| T-07 | por crear | RF-HDV-011, 015 | T-00, T-02 | T-04 | @bryancito1090 (propuesta) |
+| T-07 | #43 | RF-HDV-011, 015 | T-00, T-02 | T-04 | @bryancito1090 (propuesta) |
 | T-08 | #13 | RF-HDV-016 | T-02 | T-11, T-12 | @JorgeDoicela |
-| T-09 | por crear | RF-HDV-021, 022, 023 | T-04; **ADR-0012 Vigente** | T-08 | por asignar |
-| T-10 | por crear | RF-HDV-025, 026, 027; cuenta bancaria obligatoria en RF-HDV-009 | T-04; **ADR-0013 Vigente** | T-08 | por asignar |
+| T-09 | #44 | RF-HDV-021, 022, 023 | T-04 | T-08, T-10 | @JorgeDoicela (propuesta) |
+| T-10 | #45 | RF-HDV-025, 026, 027; cuenta bancaria obligatoria en RF-HDV-009 | T-04 | T-08, T-09 | @AnthonyPilatasig (propuesta) |
 | T-11 | #33 | Escenario 1; RF-HDV-001 a 009, 017 a 020, 024 | T-02, T-03, T-04 | T-12 | @JorgeDoicela |
 | T-12 | #34 | Escenarios 2 y 3; RF-HDV-011, 012, 013, 027 | T-05, T-07 | T-11 | @AlexanderMartinez0410 |
 | T-13 | #35 | Todos | T-01 a T-12 | Ninguna | @JosephBano |
 
-Una tarea paralela tiene contrato fijado en T-00 y archivos de edición separados. Si dos tareas modifican el mismo archivo, se ordenan o la integración la hace el coordinador. **T-09 y T-10 están «Bloqueadas por ADR»** hasta que ADR-0012 y ADR-0013 estén Vigentes en `docs/decisiones/`.
+Una tarea paralela tiene contrato fijado en T-00 y archivos de edición separados. Si dos tareas modifican el mismo archivo, se ordenan o la integración la hace el coordinador. ADR-0012 y ADR-0013 están Vigentes desde el 2026-10-22, así que T-09 y T-10 no están bloqueadas.
 
 Regla común a toda tarea de backend: una prueba que falle por el comportamiento ausente antes de implementarlo; una prueba de aislamiento entre dos instituciones si la tarea lee o escribe datos de la hoja de vida; y, si cambia la API, `openapi/v1.json` y el cliente regenerados en el mismo PR con `pnpm --dir src/Frontend generar:api`.
 
@@ -80,7 +80,7 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0004, ADR-0006, ADR-0010  
 **Responsable:** @AlexanderMartinez0410
 
-- [ ] Pruebas: elemento de otro tipo rechazado; edición rechazada en enviado y aprobado, por sección; archivo ajeno rechazado; foto que no es imagen rechazada; ítem de otra institución no encontrado.
+- [ ] Pruebas: elemento de otro tipo rechazado; edición rechazada en enviado y aprobado, por sección; archivo ajeno rechazado; foto que no es imagen rechazada; ítem de otra institución no encontrado; sexta referencia del mismo tipo rechazada.
 - [ ] Implementar el servicio y los endpoints.
 - [ ] Ejecutar `dotnet test src/Backend`: todas en verde.
 - [ ] Verificar RF-HDV-001 a 006, 010, 015, 017, 020.
@@ -120,14 +120,14 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0009 (validación en un solo lugar), ADR-0010  
 **Responsable:** @AlexanderMartinez0410
 
-- [ ] Pruebas: una por cada causa de faltante; una referencia familiar no cuenta; sin estudio; ítem sin archivo; documento obligatorio ausente; ficha precargada incompleta.
+- [ ] Pruebas: una por cada causa de faltante; una referencia familiar no cuenta; sin estudio de ningún nivel; ítem sin archivo; documento obligatorio ausente; ficha precargada incompleta.
 - [ ] Implementar el validador y conectarlo a `EnviarARevision`.
 - [ ] Ejecutar `dotnet test src/Backend`: todas en verde.
 - [ ] Verificar RF-HDV-009, 018, 019, 023, 024.
 - [ ] Entregar diff, pruebas y riesgos.
 
 **Resultado registrado:** pendiente  
-**Bloqueos:** contrastar PD-HDV-01 con `Profesores.cs` (@AnthonyPilatasig)
+**Bloqueos:** contrastar PD-HDV-01 con `Profesores.cs` (@AnthonyPilatasig); no impide empezar
 
 ## T-05 — Configuración del admin
 
@@ -216,9 +216,9 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **Archivos exclusivos:** `B.Application/Servicios/DivisorNombres.cs`; `B.Application/Modelos/ModelosPersona.cs`; `B.Infrastructure/Servicios/ServicioPersonas.cs` (carga); `F/features/admin/nomina/` (informe)  
 **Entrada/contrato:** tabla de columnas y casos de prueba de ADR-0012  
 **Salida para integración:** `POST /api/personas/cargar` con el nuevo contrato e informe sin datos personales  
-**Dependencias:** T-04; **ADR-0012 Vigente**  
-**ADR aplicable:** ADR-0012 (`docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md`)  
-**Responsable:** por asignar
+**Dependencias:** T-04  
+**ADR aplicable:** ADR-0012 (`docs/decisiones/ADR-0012-carga-de-nomina-nulos-y-nombres.md`, Vigente)  
+**Responsable:** @JorgeDoicela (propuesta)
 
 - [ ] Pruebas del divisor con los cinco casos del ADR (nombres ficticios); una prueba por columna vacía o inválida; fila sin documento rechazada; documento repetido omitido.
 - [ ] Implementar la carga y el informe.
@@ -227,7 +227,7 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 - [ ] Entregar diff, pruebas y riesgos; confirmar que el archivo real de nómina no está en el repositorio.
 
 **Resultado registrado:** pendiente  
-**Bloqueos:** **Bloqueada por ADR-0012**; las columnas bancarias además esperan ADR-0013
+**Bloqueos:** Ninguno; las columnas bancarias se cargan cuando T-10 entregue la entidad
 
 ## T-10 — Cuenta bancaria
 
@@ -236,9 +236,9 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **Archivos exclusivos:** `B.Domain/HojaDeVida/CuentaBancaria.cs`; `B.Infrastructure/Servicios/ServicioCuentaBancaria.cs`; `B.WebApi/Endpoints/CuentaBancariaEndpoints.cs`; migración; reglas en `ValidadorCompletitudEnvio.cs`  
 **Entrada/contrato:** decisiones 1 a 8 de ADR-0013  
 **Salida para integración:** `/api/mis-datos/cuenta-bancaria` y `/api/revision/{documento}/cuenta-bancaria`  
-**Dependencias:** T-04; **ADR-0013 Vigente**  
-**ADR aplicable:** ADR-0013 (`docs/decisiones/ADR-0013-datos-bancarios.md`), ADR-0011  
-**Responsable:** por asignar
+**Dependencias:** T-04  
+**ADR aplicable:** ADR-0013 (`docs/decisiones/ADR-0013-datos-bancarios.md`, Vigente), ADR-0011  
+**Responsable:** @AnthonyPilatasig (propuesta)
 
 - [ ] Pruebas: el número no queda en claro en la base; máscara con cuatro dígitos; confirmación igual y distinta; auditoría de cada lectura del número completo; aislamiento; cuenta obligatoria impide el envío (PD-HDV-17).
 - [ ] Implementar entidad, servicio, endpoints y migración.
@@ -247,7 +247,7 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 - [ ] Entregar diff, pruebas y riesgos.
 
 **Resultado registrado:** pendiente  
-**Bloqueos:** **Bloqueada por ADR-0013**
+**Bloqueos:** Ninguno; antes de producción, base legal escrita y gestión de la clave (ADR-0013)
 
 ## T-11 — Pantallas de hoja de vida del usuario
 
@@ -267,7 +267,7 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 - [ ] Entregar diff, pruebas y riesgos.
 
 **Resultado registrado:** pendiente  
-**Bloqueos:** PD-HDV-11 y PD-HDV-13
+**Bloqueos:** Ninguno
 
 ## T-12 — Revisión por secciones y configuración (supervisor y admin)
 
