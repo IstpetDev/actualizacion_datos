@@ -1,20 +1,153 @@
-import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import {
+  AdminInicialRequest,
+  CrearInstitucionRequest,
+  InstitucionDto,
+  InstitucionesClient,
+} from '../../api-client';
 import { AuthService } from '../../core/auth';
 
 @Component({
   selector: 'app-superadmin-dashboard',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   template: `
-    <section class="dashboard-section">
+    <section class="dashboard-section" data-testid="superadmin-panel">
       <header class="section-header">
-        <h1 class="section-title">Módulo de Plataforma Global (Superadmin)</h1>
-        <p class="section-subtitle">
-          Sesión de {{ authService.sesion()?.nombre }}. Gestión multitenant de instituciones y
-          delegación de administradores.
-        </p>
+        <div class="header-titles">
+          <h1 class="section-title">Panel Global de Plataforma (Superadmin)</h1>
+          <p class="section-subtitle">
+            Gestión multitenant de instituciones educativas y provisión de administradores
+            iniciales.
+          </p>
+        </div>
       </header>
-      <div class="card-info">
-        <p><strong>Rol activo:</strong> {{ authService.sesion()?.rol }}</p>
-        <p><strong>Cobertura:</strong> Operación entre instituciones educativas (Superadmin)</p>
+
+      @if (mensajeExito()) {
+        <div class="alert alert-success" role="alert" data-testid="mensaje-exito">
+          {{ mensajeExito() }}
+        </div>
+      }
+
+      @if (error()) {
+        <div class="alert alert-danger" role="alert" data-testid="mensaje-error">
+          {{ error() }}
+        </div>
+      }
+
+      <div class="grid-dos-columnas">
+        <!-- Formulario Crear Institución (RF-MUL-001) -->
+        <div class="card">
+          <h2 class="card-title">Registrar Nueva Institución</h2>
+          <form (ngSubmit)="crearInstitucion()" data-testid="form-crear-institucion">
+            <div class="form-group">
+              <label for="nombreInst">Nombre de la Institución:</label>
+              <input
+                id="nombreInst"
+                type="text"
+                class="form-control"
+                [(ngModel)]="nombreInstitucion"
+                name="nombreInst"
+                required
+                placeholder="Ej: Instituto Superior Tecnológico Ejemplo"
+                data-testid="input-nombre-institucion"
+              />
+            </div>
+
+            <h3 class="card-subtitle">Administrador Inicial de la Institución</h3>
+            <div class="form-row">
+              <div class="form-group col">
+                <label for="adminDoc">Cédula / Documento:</label>
+                <input
+                  id="adminDoc"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="adminDoc"
+                  name="adminDoc"
+                  required
+                  placeholder="1700000000"
+                  data-testid="input-admin-doc"
+                />
+              </div>
+              <div class="form-group col">
+                <label for="adminNom">Nombre:</label>
+                <input
+                  id="adminNom"
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="adminNom"
+                  name="adminNom"
+                  placeholder="Nombre y Apellido"
+                  data-testid="input-admin-nom"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="adminCor">Correo Electrónico:</label>
+              <input
+                id="adminCor"
+                type="email"
+                class="form-control"
+                [(ngModel)]="adminCor"
+                name="adminCor"
+                placeholder="admin@ejemplo.test"
+                data-testid="input-admin-cor"
+              />
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="guardando() || !formularioValido()"
+              data-testid="btn-guardar-institucion"
+            >
+              {{ guardando() ? 'Registrando...' : 'Registrar Institución' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Listado de Instituciones (RF-MUL-002) -->
+        <div class="card">
+          <h2 class="card-title">Instituciones Registradas</h2>
+          <div class="table-container">
+            <table class="data-table" data-testid="tabla-instituciones">
+              <thead>
+                <tr>
+                  <th>Nombre Institucional</th>
+                  <th>ID Identificador</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inst of instituciones(); track inst.id) {
+                  <tr [attr.data-testid]="'fila-inst-' + inst.id">
+                    <td>
+                      <strong>{{ inst.nombre }}</strong>
+                    </td>
+                    <td>
+                      <small class="text-muted">{{ inst.id }}</small>
+                    </td>
+                    <td>
+                      @if (inst.activa) {
+                        <span class="badge badge-success">Activa</span>
+                      } @else {
+                        <span class="badge badge-secondary">Inactiva</span>
+                      }
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="text-center empty-state">
+                      No hay instituciones registradas en el sistema.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
   `,
@@ -41,13 +174,204 @@ import { AuthService } from '../../core/auth';
       color: #64748b;
       margin: 0;
     }
-    .card-info {
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1rem;
       font-size: 0.875rem;
+    }
+    .alert-success {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .alert-danger {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+    .grid-dos-columnas {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 1.25rem;
+    }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0 0 1rem 0;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.5rem;
+    }
+    .card-subtitle {
+      font-size: 0.875rem;
+      font-weight: 600;
       color: #334155;
-      line-height: 1.6;
+      margin: 1rem 0 0.5rem 0;
+    }
+    .form-group {
+      margin-bottom: 0.875rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.25rem;
+    }
+    .form-control {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+    }
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .col {
+      flex: 1;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+    .data-table th,
+    .data-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    .data-table th {
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .badge-secondary {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 0.375rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .text-muted {
+      color: #64748b;
+    }
+    .text-center {
+      text-align: center;
+    }
+    .empty-state {
+      padding: 1.5rem;
+      color: #64748b;
+    }
+    @media (max-width: 768px) {
+      .grid-dos-columnas {
+        grid-template-columns: 1fr;
+      }
     }
   `,
 })
-export class SuperadminDashboardComponent {
+export class SuperadminDashboardComponent implements OnInit {
   protected readonly authService = inject(AuthService);
+  private readonly institucionesClient = inject(InstitucionesClient);
+
+  readonly instituciones = signal<InstitucionDto[]>([]);
+  readonly guardando = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+  readonly mensajeExito = signal<string | null>(null);
+
+  nombreInstitucion = '';
+  adminDoc = '';
+  adminNom = '';
+  adminCor = '';
+
+  ngOnInit(): void {
+    this.cargarInstituciones();
+  }
+
+  cargarInstituciones(): void {
+    this.institucionesClient.listarInstituciones().subscribe({
+      next: (lista) => this.instituciones.set(lista),
+      error: (err) => this.error.set(err?.message || 'Error al listar instituciones.'),
+    });
+  }
+
+  formularioValido(): boolean {
+    return !!this.nombreInstitucion.trim() && !!this.adminDoc.trim();
+  }
+
+  crearInstitucion(): void {
+    if (!this.formularioValido()) return;
+
+    this.guardando.set(true);
+    this.error.set(null);
+
+    const admins: AdminInicialRequest[] = [
+      {
+        documento: this.adminDoc.trim(),
+        nombre: this.adminNom.trim() || undefined,
+        correo: this.adminCor.trim() || undefined,
+      },
+    ];
+
+    const body: CrearInstitucionRequest = {
+      nombre: this.nombreInstitucion.trim(),
+      admins,
+    };
+
+    this.institucionesClient.crearInstitucion(body).subscribe({
+      next: (res) => {
+        this.mensajeExito.set(`Institución "${res.nombre}" registrada exitosamente.`);
+        this.nombreInstitucion = '';
+        this.adminDoc = '';
+        this.adminNom = '';
+        this.adminCor = '';
+        this.guardando.set(false);
+        this.cargarInstituciones();
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Error al registrar la institución.');
+        this.guardando.set(false);
+      },
+    });
+  }
 }
