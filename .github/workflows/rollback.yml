@@ -1,0 +1,70 @@
+# Reversión manual a una versión previa en producción (ADR-0011).
+name: Reversión en producción
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "SHA del commit de la imagen a desplegar (ej. a1b2c3d)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    name: Revertir versión en producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: produccion
+
+    steps:
+      - name: Conectar a Tailscale
+        uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Configurar cliente SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Comprobar existencia de imágenes
+        env:
+          TAG: ${{ inputs.tag }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "Comprobando existencia de las imágenes con etiqueta ${TAG} en el servidor..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "docker image inspect actualizacion-datos-backend:${TAG} >nul && docker image inspect actualizacion-datos-frontend:${TAG} >nul"
+
+      - name: Aplicar reversión y recrear contenedores
+        env:
+          TAG: ${{ inputs.tag }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
+        run: |
+          echo "Reescribiendo contenedores con la versión ${TAG}..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "cd /d ${DIR} && set TAG=${TAG} && docker compose -f docker-compose.prod.yml up -d --remove-orphans"
+
+      - name: Verificación de salud (Smoke Tests)
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "Esperando 10 segundos..."
+          sleep 10
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "powershell -Command \"\$resp = Invoke-RestMethod -Uri 'http://127.0.0.1:8088/health' -TimeoutSec 10; if (\$resp.estado -ne 'ok') { throw 'Health check tras rollback falló' } else { Write-Host 'Rollback exitoso: ' \$resp.estado }\""
