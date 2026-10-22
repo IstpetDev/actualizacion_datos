@@ -13,6 +13,9 @@ public class Persona : EntidadInstitucional
     public string? ArchivosSubidosJson { get; private set; }
     public DateTime FechaCreacionUtc { get; private set; }
 
+    // ADR-0010: el tipo de funcionario define qué documentos personales se piden
+    public Guid? TipoFuncionarioId { get; private set; }
+
     // Autenticación según ADR-0007
     public string? PasswordHash { get; private set; }
     public bool DebeCambiarContrasena { get; private set; } = true;
@@ -78,21 +81,34 @@ public class Persona : EntidadInstitucional
         AccesoHabilitado = false;
     }
 
-    public void ActualizarBorrador(string datosJson)
+    public bool PuedeEditarHojaDeVida =>
+        EstadoActualizacion == EstadoActualizacion.Borrador ||
+        EstadoActualizacion == EstadoActualizacion.Devuelto;
+
+    // ADR-0010, decisión 11: las secciones de la hoja de vida se editan en el lugar,
+    // por eso todo cambio en ellas pasa por esta comprobación.
+    public void AsegurarEdicionPermitida()
     {
-        if (EstadoActualizacion == EstadoActualizacion.Enviado ||
-            EstadoActualizacion == EstadoActualizacion.Aprobado)
+        if (!PuedeEditarHojaDeVida)
         {
             throw new ReglaNegocioException("No se puede modificar la información mientras está en revisión o ya ha sido aprobada.");
         }
+    }
 
+    public void AsignarTipoFuncionario(Guid? tipoFuncionarioId)
+    {
+        TipoFuncionarioId = tipoFuncionarioId;
+    }
+
+    public void ActualizarBorrador(string datosJson)
+    {
+        AsegurarEdicionPermitida();
         DatosPersonalesJson = datosJson;
     }
 
     public void RegistrarArchivoSubido(string archivoInfo)
     {
-        if (EstadoActualizacion == EstadoActualizacion.Enviado ||
-            EstadoActualizacion == EstadoActualizacion.Aprobado)
+        if (!PuedeEditarHojaDeVida)
         {
             throw new ReglaNegocioException("No se puede subir archivos mientras la solicitud está en revisión o ya ha sido aprobada.");
         }
