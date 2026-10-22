@@ -10,17 +10,17 @@ Rutas abreviadas como en `plan.md`: `B` = `src/Backend/src/Istpet.ActualizacionD
 
 | Tarea | Issue | Requisitos | Depende de | Puede ir en paralelo con | Dueño |
 |---|---|---|---|---|---|
-| T-00 | por crear | Contratos de todos | Ninguna | Ninguna | @AnthonyPilatasig (propuesta; coordina) |
+| T-00 | #42 | Contratos de todos | Ninguna | Ninguna | @AnthonyPilatasig (propuesta; coordina) |
 | T-01 | #29 | RF-HDV-014, 001 (validación de tipo) | T-00 | T-05, T-06 | @bryancito1090 |
 | T-02 | #30 | RF-HDV-001 a 006, 010, 015, 017, 020 | T-00, T-01 | T-03 | @AlexanderMartinez0410 |
 | T-03 | #30 | RF-HDV-007, 008, 010, 015 | T-00 | T-02 | @AnthonyPilatasig (propuesta) |
 | T-04 | #30 | RF-HDV-009, 018, 019, 023, 024 | T-02, T-03 | T-07 | @AlexanderMartinez0410 |
 | T-05 | #31 | RF-HDV-012, 013, 015 | T-00 | T-01, T-06 | @bryancito1090 |
 | T-06 | #32 | RF-HDV-008; RF-FLU-005; PD-HDV-04 | T-00 | T-01, T-05 | @AnthonyPilatasig |
-| T-07 | por crear | RF-HDV-011, 015 | T-00, T-02 | T-04 | @bryancito1090 (propuesta) |
+| T-07 | #43 | RF-HDV-011, 015 | T-00, T-02 | T-04 | @bryancito1090 (propuesta) |
 | T-08 | #13 | RF-HDV-016 | T-02 | T-11, T-12 | @JorgeDoicela |
-| T-09 | por crear | RF-HDV-021, 022, 023 | T-04 | T-08, T-10 | @JorgeDoicela (propuesta) |
-| T-10 | por crear | RF-HDV-025, 026, 027; cuenta bancaria obligatoria en RF-HDV-009 | T-04 | T-08, T-09 | @AnthonyPilatasig (propuesta) |
+| T-09 | #44 | RF-HDV-021, 022, 023 | T-04 | T-08, T-10 | @JorgeDoicela (propuesta) |
+| T-10 | #45 | RF-HDV-025, 026, 027; cuenta bancaria obligatoria en RF-HDV-009 | T-04 | T-08, T-09 | @AnthonyPilatasig (propuesta) |
 | T-11 | #33 | Escenario 1; RF-HDV-001 a 009, 017 a 020, 024 | T-02, T-03, T-04 | T-12 | @JorgeDoicela |
 | T-12 | #34 | Escenarios 2 y 3; RF-HDV-011, 012, 013, 027 | T-05, T-07 | T-11 | @AlexanderMartinez0410 |
 | T-13 | #35 | Todos | T-01 a T-12 | Ninguna | @JosephBano |
