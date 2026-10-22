@@ -6,7 +6,7 @@ using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 // ADR-0013 y RF-HDV-025, 026. El dominio recibe el número ya protegido; aquí la «huella» es un texto ficticio.
 public class CuentaBancariaTests
 {
-    private const int Ahorros = 51;
+    private const int Ahorros = 71;
     private static readonly DateTime Ahora = new(2026, 10, 22, 12, 0, 0, DateTimeKind.Utc);
     private static readonly InstitucionId Institucion = InstitucionId.Nuevo();
 

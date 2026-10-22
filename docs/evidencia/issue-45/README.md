@@ -12,7 +12,7 @@
 | Aplicación | `IServicioCuentaBancaria`, `IProtectorCuentaBancaria`, `NumeroCuentaBancaria`, `ModelosCuentaBancaria.cs` | Contrato, normalización del número y DTO |
 | Infraestructura | `ProtectorCuentaBancariaAesGcm` | AES-256-GCM para el número y HMAC-SHA256 para la huella |
 | Infraestructura | `ServicioCuentaBancaria`, `ReglaCuentaBancariaObligatoria` | Reglas, auditoría y regla de completitud para T-04 |
-| Persistencia | `CuentaBancariaConfiguracion`, migración `AgregarCuentaBancaria` | Tabla `cuentas_bancarias`, siembra de «Ahorros» (51) y «Corriente» (52) |
+| Persistencia | `CuentaBancariaConfiguracion`, migración `AgregarCuentaBancaria` | Tabla `cuentas_bancarias`, siembra de «Ahorros» (71) y «Corriente» (72) |
 | API | `Endpoints/CuentaBancariaEndpoints.cs` | Seis rutas (abajo) |
 | Frontend | `features/cuenta-bancaria/` | Cuenta del usuario, cuenta en el expediente del supervisor y estado de cuentas en el panel del admin |
 | Despliegue | `docker-compose*.yml`, `.env*.example` | Variables de las claves (vacías); en desarrollo, claves temporales |
@@ -74,7 +74,7 @@ GET /api/mis-datos/cuenta-bancaria/numero   (solo el dueño, documento de la ses
 
 - **T-04 (validador de completitud, #30):** la regla `ReglaCuentaBancariaObligatoria` ya está registrada como `IReglaCompletitudEnvio`. El validador debe resolver `IEnumerable<IReglaCompletitudEnvio>` y juntar sus faltantes; produce `cuenta-bancaria.sin-registrar` o `cuenta-bancaria.sin-confirmar`. **Hasta que T-04 conecte el validador a `EnviarARevision`, la cuenta no bloquea el envío.**
 - **T-09 (carga de nómina, #44):** traducir `tipo_cuenta_banco` y `banco` a ids de catálogo y llamar `RegistrarPropuestaNominaAsync(personaId, propuesta)` dentro de la misma unidad de trabajo; el método no hace `SaveChanges`. No sobrescribe una cuenta existente (devuelve `false`). **La nómina real no trae columnas bancarias:** la carga debe aceptar que falten las tres columnas sin advertir por cada fila.
-- **T-01 (catálogos, #29):** los bancos (`TipoCatalogo.Banco`) se importan; mientras no haya bancos, la pantalla ofrece escribir el nombre. Los tipos de cuenta 51 y 52 ya están sembrados.
+- **T-01 (catálogos, #29):** los bancos (`TipoCatalogo.Banco`) se importan; mientras no haya bancos, la pantalla ofrece escribir el nombre. Los tipos de cuenta 71 y 72 ya están sembrados (51 y 52 los usa #48 para los niveles primaria y secundaria).
 - **T-08 (exportación, #13):** exportar solo `numeroEnmascarado` y `estado` (ADR-0013 dec. 5); no llamar al descifrado.
 - **T-12 (pantallas de revisión, #34):** `app-cuenta-bancaria-revision` y `app-estado-cuentas-bancarias` se pueden mover a las pantallas nuevas sin cambios.
 
@@ -85,9 +85,9 @@ Entorno: Windows 11, .NET SDK 10.0.402, Docker 29.8.2, PostgreSQL 17 (Testcontai
 | Comando | Resultado |
 |---|---|
 | `dotnet build src/Backend` | 0 errores, 0 advertencias |
-| `dotnet test src/Backend` (todas, con integración) | Domain 102/102, Application 2/2, WebApi 194/194 |
+| `dotnet test src/Backend` (todas, con integración, tras integrar `develop` con #46 y #48) | Domain 102/102, Application 2/2, WebApi 209/209 |
 | `dotnet format --verify-no-changes` | Sin cambios |
-| `pnpm --dir src/Frontend test:ci` | 16 archivos, 99/99 |
+| `pnpm --dir src/Frontend test:ci` | 16 archivos, 102/102 |
 | `pnpm --dir src/Frontend lint` / `format:check` / `build` | Sin errores / correcto / correcto (el aviso de presupuesto de estilos del panel del supervisor ya existía en `develop`) |
 | `node docs/evidencia/issue-45/flujo-e2e.mjs` contra `docker compose` | 30/30 (ver `resultado-e2e.txt`) |
 
@@ -110,7 +110,7 @@ Entorno: Windows 11, .NET SDK 10.0.402, Docker 29.8.2, PostgreSQL 17 (Testcontai
 | Bloque | Pasos verificados |
 |---|---|
 | 1. Admin | Crear institución; cargar dos personas ficticias; abrir campaña |
-| 2. Contratos (#42) | Hoja de vida → 501; catálogo desconocido → 400; exportar como supervisor → 403 y como admin → 501; ruta retirada de #32 → 405 |
+| 2. Contratos y `develop` | Hoja de vida (#42) → 501; catálogos (#48) sin cookie → 401; exportación (#46) como supervisor → 403 y como admin → 200; ruta retirada de #32 → 405 |
 | 3. Cuenta del usuario | Sin cuenta → 204; letras → 400; registrar → `sin-nomina` y `******1234`; la respuesta no trae el número; el dueño lo lee; sin caché; otra persona no lo lee |
 | 4. Archivos y envío (#32) | Subir sin clave y con clave; enviar; con la actualización enviada la cuenta no se modifica |
 | 5. Supervisor | Lista y detalle sin números; el usuario no entra; otra institución → 404; aprobar; se borró el archivo sin uso y quedó el de clave |
@@ -120,15 +120,22 @@ Comprobaciones directas en la base y el disco del contenedor después del recorr
 
 | Comprobación | Resultado |
 |---|---|
-| Migraciones aplicadas | 9 (incluidas `RetirarArchivosSubidosJson` y `AgregarCuentaBancaria`) |
+| Migraciones aplicadas | 10, en orden: … `AgregarSemillasAcademicasYCapacitacion` (#48), `RetirarArchivosSubidosJson` (#32), `AgregarCuentaBancaria` |
+| Elementos de catálogo tras la carga de desarrollo | 2106 (29 semillas, incluidas las cuentas 71 y 72) |
 | Columna `personas.archivos_subidos_json` | No existe |
 | Filas de `cuentas_bancarias` con un número ficticio en claro | 0 (prefijo `v1.`, huella de 64 caracteres) |
 | Filas de `auditorias` con un número ficticio | 0 |
 | Auditoría | `GuardarCuentaBancaria` 2, `LeerNumeroCuentaBancaria` 1, `AprobarRevision` 1, `EliminarArchivosSustituidos` 1, `IniciarNuevaActualizacion` 1 |
 | Archivos en la base y en el disco | 1 y 1 (el sin uso se borró de ambos) |
-| Dueño de `/datos/archivos` | `app` (uid 1654) |
+| Dueño de `/app/almacen_archivos` (desarrollo) y `/datos/archivos` (producción) | `app` (uid 1654) en ambas |
 
 El recorrido descubrió que **toda subida fallaba en Docker por permisos** de la carpeta de archivos (también en producción). Se corrigió en #32; detalle en `docs/evidencia/issue-32/README.md`.
+
+## Integración con `develop` (#46 y #48)
+
+- Los tipos de cuenta se sembraron primero con ids 51 y 52, que #48 ya usaba para los niveles primaria y secundaria. Se movieron a **71 y 72** (migración regenerada; ningún entorno tenía la anterior).
+- El cargador de catálogos de desarrollo (#48) exigía un CSV por tipo: se excluyen `TipoCuentaBancaria` (lo siembra la migración) y `Banco` (sin fuente aún). La prueba `CatalogosIntegracionTests` se ajustó a 2106 elementos y 29 semillas, y excluye `Banco` de «todos los tipos tienen elementos», con el motivo escrito en la prueba.
+- El frontend usa `CatalogosClient.consultarCatalogo` de #48; el tipo llega como número (`TipoCuentaBancaria` = 20, `Banco` = 21).
 
 ## Riesgos y pendientes
 

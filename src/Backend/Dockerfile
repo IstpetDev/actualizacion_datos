@@ -33,9 +33,11 @@ ENV DOTNET_gcServer=0
 
 EXPOSE 8080
 
-# Carpeta de archivos (ADR-0006) escribible por el usuario sin privilegios. Un volumen nombrado nuevo
-# montado aquí hereda este dueño; sin ella Docker la crea de root y la subida falla con «Permission denied».
-RUN mkdir -p /datos/archivos && chown "$APP_UID" /datos/archivos
+# Carpetas de archivos (ADR-0006) escribibles por el usuario sin privilegios: /app/almacen_archivos en
+# desarrollo (#46) y /datos/archivos en producción (Almacenamiento__RutaRaiz de docker-compose.prod.yml).
+# Un volumen nombrado nuevo hereda este dueño; sin ellas Docker las crea de root y la subida falla.
+RUN mkdir -p /app/almacen_archivos && chown -R $APP_UID:$APP_UID /app/almacen_archivos
+RUN mkdir -p /datos/archivos && chown -R $APP_UID:$APP_UID /datos/archivos
 
 USER $APP_UID
 

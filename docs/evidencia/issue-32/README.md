@@ -69,7 +69,8 @@ Entorno: Windows 11, .NET SDK 10.0.402, Docker 29.8.2 (PostgreSQL 17 por Testcon
 |---|---|
 | `dotnet build src/Backend` | 0 errores, 0 advertencias |
 | `dotnet test src/Backend --filter "Categoria!=Integracion"` | Domain 88/88, Application 2/2, WebApi 137/137 |
-| `dotnet test src/Backend --filter "Categoria=Integracion"` | 12/12 en PostgreSQL 17 (aplica las 8 migraciones, incluida la nueva) |
+| `dotnet test src/Backend --filter "Categoria=Integracion"` | 12/12 en PostgreSQL 17 (aplica las 9 migraciones tras integrar `develop`, incluida la nueva) |
+| `dotnet test src/Backend` (todas, con integración, tras integrar `develop` con #46 y #48) | Domain 88/88, Application 2/2, WebApi 164/164 |
 | `dotnet format --verify-no-changes` | Sin cambios |
 | `pnpm --dir src/Frontend test:ci` | 87/87 |
 | `pnpm --dir src/Frontend lint` / `build` | Sin errores / correcto |
@@ -118,7 +119,7 @@ Al probar el flujo contra `docker compose`, toda subida respondía 500 (`Access 
 - en desarrollo, el backend usaba `/app/almacen_archivos`, que no es escribible;
 - en producción, el volumen `archivos-almacenados` se monta en `/datos/archivos`, que no existe en la imagen, así que Docker lo crea de `root`.
 
-Arreglo (commit `fix: dar permisos a la carpeta de archivos del contenedor`): el `Dockerfile` crea `/datos/archivos` con dueño `$APP_UID`, y el `docker-compose.yml` de desarrollo usa esa ruta con su propio volumen `archivos-dev`. Un volumen nombrado **nuevo** hereda el dueño de la imagen.
+Arreglo: en paralelo, #46 (exportación) corrigió el caso de desarrollo creando `/app/almacen_archivos` con dueño `$APP_UID` y un volumen `backend-archivos`; al integrar `develop` se conservó eso. Este PR agrega lo que faltaba para **producción**: el `Dockerfile` crea también `/datos/archivos` (la ruta de `Almacenamiento__RutaRaiz` en `docker-compose.prod.yml`) con el mismo dueño. Un volumen nombrado **nuevo** hereda el dueño de la imagen.
 
 > **Para quien administra el servidor:** si el volumen `archivos-almacenados` ya existe y es de `root`, la subida seguirá fallando hasta corregir su dueño una vez, por ejemplo con `docker compose -f docker-compose.prod.yml run --rm --user root backend chown -R 1654 /datos/archivos` (1654 es `APP_UID` en las imágenes de .NET 10).
 

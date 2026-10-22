@@ -25,14 +25,18 @@ export function nuloSiNoHayContenido<T>(fuente: Observable<T>): Observable<T | n
   );
 }
 
+/** Valores de TipoCatalogo en el backend (la API los envía como número). */
+export const TIPO_CATALOGO_CUENTA_BANCARIA = 20;
+export const TIPO_CATALOGO_BANCO = 21;
+
 /**
  * Tipos de cuenta sembrados por la migración AgregarCuentaBancaria (ids estables). Se usan si el catálogo
- * aún no responde (la consulta de catálogos la implementa T-01, #29).
+ * no responde (por ejemplo, sin red); el catálogo real lo publica #48.
  */
 export const TIPOS_CUENTA_SEMBRADOS: ElementoCatalogoDto[] = [
   {
-    id: 51,
-    tipo: 'TipoCuentaBancaria',
+    id: 71,
+    tipo: TIPO_CATALOGO_CUENTA_BANCARIA,
     codigo: 'AHORROS',
     nombre: 'Ahorros',
     padreId: undefined,
@@ -40,8 +44,8 @@ export const TIPOS_CUENTA_SEMBRADOS: ElementoCatalogoDto[] = [
     orden: 1,
   },
   {
-    id: 52,
-    tipo: 'TipoCuentaBancaria',
+    id: 72,
+    tipo: TIPO_CATALOGO_CUENTA_BANCARIA,
     codigo: 'CORRIENTE',
     nombre: 'Corriente',
     padreId: undefined,

@@ -3,28 +3,7 @@ namespace Istpet.ActualizacionDatos.Application.Modelos;
 // Contratos de la hoja de vida (spec-0003, T-00). Los valores de enumeraciones viajan como texto
 // en minúsculas, igual que EstadoActualizacion y TipoDestino en el resto de la API.
 
-// --- Catálogos (RF-HDV-014, T-01) ---
-
-public sealed record ElementoCatalogoDto(
-    int Id,
-    string Tipo,
-    string Codigo,
-    string Nombre,
-    int? PadreId,
-    string? CodigoExterno,
-    int Orden);
-
-public sealed record ResultadoImportacionCatalogoDto(
-    string Tipo,
-    int FilasRecibidas,
-    int Creados,
-    int Actualizados,
-    List<ErrorFilaDto> Errores);
-
-public sealed record ErrorFilaDto(
-    int Fila,
-    string Columna,
-    string Motivo);
+// Catálogos (RF-HDV-014): ElementoCatalogoDto y ResultadoImportacionCatalogoDto están en ModelosCatalogo.cs (#48).
 
 // --- Ficha personal (RF-HDV-001, RF-HDV-020, T-02) ---
 
@@ -334,10 +313,3 @@ public sealed record RequisitoDocumentoDto(
 
 public sealed record AsignarTipoFuncionarioRequest(
     Guid? TipoFuncionarioId);
-
-// --- Exportación (RF-HDV-016, RF-EXP-001 y 002, T-08) ---
-
-public sealed record ArchivoExportadoDto(
-    byte[] Contenido,
-    string TipoContenido,
-    string NombreArchivo);

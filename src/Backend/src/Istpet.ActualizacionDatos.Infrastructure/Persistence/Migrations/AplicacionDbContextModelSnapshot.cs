@@ -672,7 +672,54 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
+                            Id = 48,
+                            Activo = true,
+                            Codigo = "INSTRUCCION_PROFESIONAL",
+                            Nombre = "Instrucción profesional",
+                            Orden = 8,
+                            Tipo = "TipoCapacitacion"
+                        },
+                        new
+                        {
                             Id = 51,
+                            Activo = true,
+                            Codigo = "PRIMARIA",
+                            Nombre = "Primaria",
+                            Orden = 1,
+                            Tipo = "NivelAcademico"
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Activo = true,
+                            Codigo = "SECUNDARIA",
+                            Nombre = "Secundaria",
+                            Orden = 2,
+                            Tipo = "NivelAcademico"
+                        },
+                        new
+                        {
+                            Id = 61,
+                            Activo = true,
+                            Codigo = "PRIMARIA",
+                            Nombre = "Primaria completa",
+                            Orden = 1,
+                            PadreId = 51,
+                            Tipo = "GradoAcademico"
+                        },
+                        new
+                        {
+                            Id = 62,
+                            Activo = true,
+                            Codigo = "BACHILLERATO",
+                            Nombre = "Bachillerato",
+                            Orden = 2,
+                            PadreId = 52,
+                            Tipo = "GradoAcademico"
+                        },
+                        new
+                        {
+                            Id = 71,
                             Activo = true,
                             Codigo = "AHORROS",
                             Nombre = "Ahorros",
@@ -681,7 +728,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         },
                         new
                         {
-                            Id = 52,
+                            Id = 72,
                             Activo = true,
                             Codigo = "CORRIENTE",
                             Nombre = "Corriente",

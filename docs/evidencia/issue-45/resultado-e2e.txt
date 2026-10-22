@@ -2,13 +2,13 @@ OK   1.1 crear institución — HTTP 201
 OK   1.2 cargar dos personas ficticias — {"totalRecibidos":2,"totalCargados":2,"totalDuplicadosOmitidos":0,"documentosCargados":["0000000050","0000000051"]}
 OK   1.3 abrir campaña — HTTP 201
 OK   2.1 hoja de vida (T-02) responde 501
-OK   2.2 catálogo desconocido responde 400
-OK   2.3 exportar como supervisor responde 403
-OK   2.4 exportar como admin responde 501 (T-08)
+OK   2.2 catálogos (#48) exigen cookie de sesión: con solo cabeceras, 401
+OK   2.3 exportar (#46) como supervisor responde 403
+OK   2.4 exportar (#46) como admin responde 200 — HTTP 200
 OK   2.5 ruta de metadatos retirada (#32) responde 405
 OK   3.1 sin cuenta responde 204
 OK   3.2 número con letras responde 400 — El número de cuenta debe tener entre 6 y 20 dígitos.
-OK   3.3 registrar cuenta — {"tipoCuentaId":51,"tipoCuenta":"Ahorros","bancoId":null,"banco":"Banco Ficticio","numeroEnmascarado":"******1234","ultimosDigitos":"1234","estado":"sin-nomina","fechaActualizacionUtc":"…"}
+OK   3.3 registrar cuenta — {"tipoCuentaId":71,"tipoCuenta":"Ahorros","bancoId":null,"banco":"Banco Ficticio","numeroEnmascarado":"******1234","ultimosDigitos":"1234","estado":"sin-nomina","fechaActualizacionUtc":"…"}
 OK   3.4 la respuesta no trae el número completo
 OK   3.5 el dueño lee su número
 OK   3.6 lectura sin caché — no-store
@@ -23,7 +23,7 @@ OK   5.3 detalle enmascarado
 OK   5.4 el usuario no entra a la revisión de cuentas
 OK   5.5 supervisor de otra institución no la ve (404)
 OK   5.6 aprobar — Actualización aprobada con éxito.
-OK   5.7 al aprobar se borró el archivo sin uso y quedó el de clave — ["8f3bfb53-477f-4720-8e0b-dc183f76b4af"]
+OK   5.7 al aprobar se borró el archivo sin uso y quedó el de clave — ["36ef7a1b-a64f-4e64-8ad3-d25996c0794e"]
 OK   6.1 aprobado con campaña: se ofrece reabrir
 OK   6.2 iniciar nueva actualización — Nueva actualización iniciada. Puede editar su información.
 OK   6.3 reabrir de nuevo desde borrador responde 400 — Solo se puede iniciar una nueva actualización cuando la anterior ya fue aprobada.

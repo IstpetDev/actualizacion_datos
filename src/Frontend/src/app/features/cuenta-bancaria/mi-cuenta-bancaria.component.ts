@@ -158,10 +158,10 @@ export class MiCuentaBancariaComponent implements OnInit {
     forkJoin({
       cuenta: nuloSiNoHayContenido(this.cliente.obtenerMiCuentaBancaria()),
       tipos: catalogoOAlternativa(
-        this.catalogos.listarCatalogo('TipoCuentaBancaria'),
+        this.catalogos.consultarCatalogo('TipoCuentaBancaria'),
         TIPOS_CUENTA_SEMBRADOS,
       ),
-      bancos: catalogoOAlternativa(this.catalogos.listarCatalogo('Banco'), []),
+      bancos: catalogoOAlternativa(this.catalogos.consultarCatalogo('Banco'), []),
     })
       .pipe(finalize(() => this.cargando.set(false)))
       .subscribe({

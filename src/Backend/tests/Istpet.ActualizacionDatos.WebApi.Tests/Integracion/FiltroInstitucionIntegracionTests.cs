@@ -254,7 +254,7 @@ public sealed class FiltroInstitucionIntegracionTests : IAsyncLifetime
         var idB = InstitucionId.Nuevo();
         var personaA = new Persona(Guid.NewGuid(), idA, "0000000040");
         var numero = new NumeroCuentaProtegido("v1.cifrado-ficticio", "1234", new string('a', 64));
-        var datos = new DatosCuentaBancaria(51, null, "Banco ficticio", numero);
+        var datos = new DatosCuentaBancaria(71, null, "Banco ficticio", numero);
 
         await using (var semilla = new AplicacionDbContext(opciones, new ContextoInstitucion(null, esSuperadmin: true)))
         {

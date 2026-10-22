@@ -96,7 +96,7 @@ describe('panel de usuario', () => {
               throwError(() => new SwaggerException('No Content', 204, '', {}, null)),
           },
         },
-        { provide: CatalogosClient, useValue: { listarCatalogo: () => of([]) } },
+        { provide: CatalogosClient, useValue: { consultarCatalogo: () => of([]) } },
       ],
     });
   });

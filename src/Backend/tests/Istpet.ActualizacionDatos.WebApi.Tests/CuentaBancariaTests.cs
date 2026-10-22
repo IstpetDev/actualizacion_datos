@@ -22,8 +22,8 @@ public sealed class CuentaBancariaTests : IDisposable
     private const string Supervisor = "0000000039";
     private const string NumeroNomina = "0000001234";
     private const string NumeroOtro = "0000005678";
-    private const int Ahorros = 51;
-    private const int Corriente = 52;
+    private const int Ahorros = 71;
+    private const int Corriente = 72;
     private const int EstadoCivilSoltero = 11;
 
     private readonly SqliteConnection _conexion;

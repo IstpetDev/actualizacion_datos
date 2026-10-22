@@ -1,12 +1,20 @@
-namespace Istpet.ActualizacionDatos.Application.Servicios;
-
 using Istpet.ActualizacionDatos.Application.Modelos;
 
-// RF-EXP-001 a 004 y RF-HDV-016. Implementa T-08 (#13). Solo admin.
-// Solo personas en «aprobado»; las que están en otra actualización van a la hoja «pendientes» (PD-HDV-02).
-// La cuenta bancaria va enmascarada (ADR-0013 dec. 5). Cada exportación queda en la auditoría.
+namespace Istpet.ActualizacionDatos.Application.Servicios;
+
+/// <summary>
+/// Contrato del servicio de exportación de datos y expedientes de la institución.
+/// </summary>
 public interface IServicioExportacion
 {
-    Task<ArchivoExportadoDto> ExportarExcelAsync(CancellationToken ct = default);
-    Task<ArchivoExportadoDto> ExportarZipAsync(CancellationToken ct = default);
+    /// <summary>
+    /// Genera un archivo .zip estructurado con la carpeta raíz &lt;institucion&gt;_&lt;fecha&gt;_datos/,
+    /// el índice index.md y los documentos adjuntos de las personas con datos aprobados.
+    /// </summary>
+    Task<DescargaArchivoDto> ExportarZipAsync(Guid? institucionId = null, CancellationToken ct = default);
+
+    /// <summary>
+    /// Genera un reporte en hoja de cálculo Excel (.xlsx) con los datos aprobados de las personas de la institución.
+    /// </summary>
+    Task<DescargaArchivoDto> ExportarExcelAsync(Guid? institucionId = null, CancellationToken ct = default);
 }

@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  API_BASE_URL,
   CampanaDto,
   CampanasClient,
   CargarPersonasRequest,
@@ -381,14 +383,24 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
                 <span>Hoja de cálculo Excel (.xlsx) con datos de contacto y estado</span>
               </div>
             </div>
-            <div class="mt-4">
+            <div class="acciones-exportacion mt-4">
               <button
                 type="button"
                 class="btn btn-success"
-                (click)="iniciarExportacion()"
+                (click)="exportarZip()"
+                [disabled]="exportandoZip() || exportandoExcel()"
                 data-testid="btn-exportar-admin"
               >
-                📥 Descargar Paquete de Exportación (.zip)
+                {{ exportandoZip() ? 'Descargando ZIP...' : 'Descargar Paquete ZIP (.zip)' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="exportarExcel()"
+                [disabled]="exportandoZip() || exportandoExcel()"
+                data-testid="btn-exportar-excel"
+              >
+                {{ exportandoExcel() ? 'Descargando Excel...' : 'Descargar Reporte Excel (.xlsx)' }}
               </button>
             </div>
           </div>
@@ -398,6 +410,11 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
     </section>
   `,
   styles: `
+    .acciones-exportacion {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
     .dashboard-section {
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -690,10 +707,16 @@ export class AdminDashboardComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly campanasClient = inject(CampanasClient);
   private readonly personasClient = inject(PersonasClient);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
 
   readonly tabActiva = signal<TabAdmin>('campanas');
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
+
+  // Exportación
+  readonly exportandoZip = signal<boolean>(false);
+  readonly exportandoExcel = signal<boolean>(false);
 
   // Campañas
   readonly campanaActiva = signal<CampanaDto | null>(null);
@@ -820,8 +843,117 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   iniciarExportacion(): void {
-    this.mensajeExito.set(
-      'Exportación institucional solicitada. (Funcionalidad vinculada con el módulo de exportación #13).',
-    );
+    this.exportarZip();
+  }
+
+  exportarZip(): void {
+    if (this.exportandoZip() || this.exportandoExcel()) return;
+
+    this.exportandoZip.set(true);
+    this.error.set(null);
+    this.mensajeExito.set(null);
+
+    const url = `${this.baseUrl}/api/exportaciones/zip`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) {
+            this.error.set('No se recibió el contenido del archivo.');
+            this.exportandoZip.set(false);
+            return;
+          }
+          const nombreArchivo =
+            this.extraerNombreArchivo(res.headers.get('content-disposition')) ||
+            'exportacion_datos.zip';
+          this.descargarBlob(blob, nombreArchivo);
+          this.mensajeExito.set('Paquete de exportación ZIP descargado exitosamente.');
+          this.exportandoZip.set(false);
+        },
+        error: async (err) => {
+          let msg = err?.message || 'Error al generar la exportación ZIP.';
+          if (err?.error instanceof Blob) {
+            try {
+              const texto = await err.error.text();
+              const json = JSON.parse(texto);
+              if (json?.mensaje) msg = json.mensaje;
+            } catch {
+              // fallback a msg
+            }
+          } else if (err?.error?.mensaje) {
+            msg = err.error.mensaje;
+          }
+          this.error.set(msg);
+          this.exportandoZip.set(false);
+        },
+      });
+  }
+
+  exportarExcel(): void {
+    if (this.exportandoZip() || this.exportandoExcel()) return;
+
+    this.exportandoExcel.set(true);
+    this.error.set(null);
+    this.mensajeExito.set(null);
+
+    const url = `${this.baseUrl}/api/exportaciones/excel`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) {
+            this.error.set('No se recibió el contenido del archivo.');
+            this.exportandoExcel.set(false);
+            return;
+          }
+          const nombreArchivo =
+            this.extraerNombreArchivo(res.headers.get('content-disposition')) ||
+            'exportacion_datos.xlsx';
+          this.descargarBlob(blob, nombreArchivo);
+          this.mensajeExito.set('Reporte Excel descargado exitosamente.');
+          this.exportandoExcel.set(false);
+        },
+        error: async (err) => {
+          let msg = err?.message || 'Error al generar la exportación Excel.';
+          if (err?.error instanceof Blob) {
+            try {
+              const texto = await err.error.text();
+              const json = JSON.parse(texto);
+              if (json?.mensaje) msg = json.mensaje;
+            } catch {
+              // fallback a msg
+            }
+          } else if (err?.error?.mensaje) {
+            msg = err.error.mensaje;
+          }
+          this.error.set(msg);
+          this.exportandoExcel.set(false);
+        },
+      });
+  }
+
+  private descargarBlob(blob: Blob, nombreArchivo: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
+  private extraerNombreArchivo(contentDisposition: string | null): string | null {
+    if (!contentDisposition) return null;
+    const match = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?/i.exec(contentDisposition);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 }

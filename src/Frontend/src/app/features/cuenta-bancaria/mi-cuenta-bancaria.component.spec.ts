@@ -7,12 +7,13 @@ import {
   CuentaBancariaDto,
   SwaggerException,
 } from '../../api-client';
+import { TIPO_CATALOGO_BANCO, TIPO_CATALOGO_CUENTA_BANCARIA } from './cuenta-bancaria';
 import { MiCuentaBancariaComponent } from './mi-cuenta-bancaria.component';
 
 // Solo cuentas ficticias evidentes (ADR-0013 dec. 8).
 const propuesta: CuentaBancariaDto = {
   id: 'cuenta-ficticia',
-  tipoCuentaId: 51,
+  tipoCuentaId: 71,
   tipoCuenta: 'Ahorros',
   bancoId: undefined,
   banco: 'Banco ficticio',
@@ -30,13 +31,13 @@ describe('mi cuenta bancaria', () => {
     confirmarMiCuentaBancaria: vi.fn(),
     leerMiNumeroCuentaBancaria: vi.fn(),
   };
-  const catalogos = { listarCatalogo: vi.fn() };
+  const catalogos = { consultarCatalogo: vi.fn() };
 
   beforeEach(() => {
     vi.clearAllMocks();
     cuentas.obtenerMiCuentaBancaria.mockReturnValue(sinContenido());
-    // Mientras T-01 no implemente los catálogos, la API responde 501.
-    catalogos.listarCatalogo.mockReturnValue(
+    // Si el catálogo no responde (p. ej. error de red), se usan los tipos sembrados.
+    catalogos.consultarCatalogo.mockReturnValue(
       throwError(() => new SwaggerException('Not Implemented', 501, '', {}, null)),
     );
     TestBed.configureTestingModule({
@@ -118,13 +119,13 @@ describe('mi cuenta bancaria', () => {
     );
     const fixture = preparar(true);
     const componente = fixture.componentInstance;
-    componente.tipoCuentaId = 52;
+    componente.tipoCuentaId = 72;
     componente.nombreBancoOtro = 'Banco ficticio';
     componente.numero = '0000-005 678';
     componente.guardar();
     fixture.detectChanges();
     expect(cuentas.guardarMiCuentaBancaria).toHaveBeenCalledWith({
-      tipoCuentaId: 52,
+      tipoCuentaId: 72,
       numero: '0000-005 678',
       bancoId: undefined,
       nombreBancoOtro: 'Banco ficticio',
@@ -135,13 +136,13 @@ describe('mi cuenta bancaria', () => {
   });
 
   it('con_bancos_del_catalogo_envia_el_banco_elegido_sin_nombre_escrito', () => {
-    catalogos.listarCatalogo.mockImplementation((tipo: string) =>
+    catalogos.consultarCatalogo.mockImplementation((tipo: string) =>
       of(
         tipo === 'Banco'
           ? [
               {
                 id: 1500,
-                tipo: 'Banco',
+                tipo: TIPO_CATALOGO_BANCO,
                 codigo: 'BANCO_FICTICIO',
                 nombre: 'Banco Ficticio S.A.',
                 orden: 1,
@@ -149,8 +150,8 @@ describe('mi cuenta bancaria', () => {
             ]
           : [
               {
-                id: 51,
-                tipo: 'TipoCuentaBancaria',
+                id: 71,
+                tipo: TIPO_CATALOGO_CUENTA_BANCARIA,
                 codigo: 'AHORROS',
                 nombre: 'Ahorros',
                 orden: 1,
@@ -166,7 +167,7 @@ describe('mi cuenta bancaria', () => {
     componente.numero = '0000001234';
     componente.guardar();
     expect(cuentas.guardarMiCuentaBancaria).toHaveBeenCalledWith({
-      tipoCuentaId: 51,
+      tipoCuentaId: 71,
       numero: '0000001234',
       bancoId: 1500,
       nombreBancoOtro: undefined,

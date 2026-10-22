@@ -67,8 +67,8 @@ public partial class AgregarCuentaBancaria : Migration
             columns: new[] { "id", "activo", "codigo", "codigo_externo", "nombre", "orden", "padre_id", "tipo" },
             values: new object[,]
             {
-                { 51, true, "AHORROS", null, "Ahorros", 1, null, "TipoCuentaBancaria" },
-                { 52, true, "CORRIENTE", null, "Corriente", 2, null, "TipoCuentaBancaria" }
+                { 71, true, "AHORROS", null, "Ahorros", 1, null, "TipoCuentaBancaria" },
+                { 72, true, "CORRIENTE", null, "Corriente", 2, null, "TipoCuentaBancaria" }
             });
 
         migrationBuilder.CreateIndex(
@@ -102,11 +102,11 @@ public partial class AgregarCuentaBancaria : Migration
         migrationBuilder.DeleteData(
             table: "elementos_catalogo",
             keyColumn: "id",
-            keyValue: 51);
+            keyValue: 71);
 
         migrationBuilder.DeleteData(
             table: "elementos_catalogo",
             keyColumn: "id",
-            keyValue: 52);
+            keyValue: 72);
     }
 }

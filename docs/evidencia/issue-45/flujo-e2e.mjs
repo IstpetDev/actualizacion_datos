@@ -84,18 +84,19 @@ verificar('1.3 abrir campaña', camp.status === 201, `HTTP ${camp.status}`);
 const U = { inst: I, actor: DOC, rol: 'Usuario' };
 const S = { inst: I, actor: SUP, rol: 'Supervisor' };
 
-// 2. Contratos de #42: rutas existentes que responden 501 hasta su tarea.
+// 2. Contratos de #42 (501 hasta su tarea) y lo que ya llegó a develop: catálogos (#48) y exportación (#46).
 verificar('2.1 hoja de vida (T-02) responde 501', (await llamar('GET', '/api/mis-datos/hoja-de-vida', U)).status === 501);
-verificar('2.2 catálogo desconocido responde 400', (await llamar('GET', '/api/catalogos/noexiste', U)).status === 400);
-verificar('2.3 exportar como supervisor responde 403', (await llamar('GET', '/api/exportacion/excel', S)).status === 403);
-verificar('2.4 exportar como admin responde 501 (T-08)', (await llamar('GET', '/api/exportacion/excel', { inst: I, actor: '0000000099', rol: 'Admin' })).status === 501);
+verificar('2.2 catálogos (#48) exigen cookie de sesión: con solo cabeceras, 401', (await llamar('GET', '/api/catalogos/TipoCuentaBancaria', U)).status === 401);
+verificar('2.3 exportar (#46) como supervisor responde 403', (await llamar('GET', '/api/exportaciones/excel', S)).status === 403);
+const excel = await llamar('GET', '/api/exportaciones/excel', { inst: I, actor: '0000000099', rol: 'Admin' });
+verificar('2.4 exportar (#46) como admin responde 200', excel.status === 200, `HTTP ${excel.status}`);
 verificar('2.5 ruta de metadatos retirada (#32) responde 405', (await llamar('POST', '/api/mis-datos/archivos', { ...U, json: { nombreArchivo: 'x.pdf' } })).status === 405);
 
 // 3. Cuenta bancaria del usuario (#45).
 verificar('3.1 sin cuenta responde 204', (await llamar('GET', '/api/mis-datos/cuenta-bancaria', U)).status === 204);
-const invalida = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 51, numero: '12AB', nombreBancoOtro: 'Banco Ficticio' } });
+const invalida = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 71, numero: '12AB', nombreBancoOtro: 'Banco Ficticio' } });
 verificar('3.2 número con letras responde 400', invalida.status === 400, invalida.datos?.mensaje);
-const guardada = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 51, numero: '0000-001 234', nombreBancoOtro: 'Banco Ficticio' } });
+const guardada = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 71, numero: '0000-001 234', nombreBancoOtro: 'Banco Ficticio' } });
 verificar('3.3 registrar cuenta', guardada.status === 200 && guardada.datos.estado === 'sin-nomina' && guardada.datos.numeroEnmascarado === '******1234', JSON.stringify(guardada.datos));
 verificar('3.4 la respuesta no trae el número completo', !guardada.texto.includes(CUENTA));
 const numero = await llamar('GET', '/api/mis-datos/cuenta-bancaria/numero', U);
@@ -113,7 +114,7 @@ await llamar('PUT', '/api/mis-datos', { ...U, json: { datosJson: '{"telefono":"0
 await llamar('POST', '/api/mis-datos/aceptar-tratamiento', U);
 const envio = await llamar('POST', '/api/mis-datos/enviar', U);
 verificar('4.3 enviar a revisión', envio.status === 200, envio.datos?.mensaje);
-const bloqueada = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 51, numero: '0000009999', nombreBancoOtro: 'Banco Ficticio' } });
+const bloqueada = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 71, numero: '0000009999', nombreBancoOtro: 'Banco Ficticio' } });
 verificar('4.4 con la actualización enviada la cuenta no se modifica', bloqueada.status === 400, bloqueada.datos?.mensaje);
 
 // 5. Supervisor: revisión de cuentas y aprobación con limpieza.
@@ -139,7 +140,7 @@ const reabrir = await llamar('POST', '/api/mis-datos/iniciar-actualizacion', U);
 verificar('6.2 iniciar nueva actualización', reabrir.status === 200, reabrir.datos?.mensaje);
 const reabrir2 = await llamar('POST', '/api/mis-datos/iniciar-actualizacion', U);
 verificar('6.3 reabrir de nuevo desde borrador responde 400', reabrir2.status === 400, reabrir2.datos?.mensaje);
-const corregida = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 52, numero: '0000005678', nombreBancoOtro: 'Banco Ficticio' } });
+const corregida = await llamar('PUT', '/api/mis-datos/cuenta-bancaria', { ...U, json: { tipoCuentaId: 72, numero: '0000005678', nombreBancoOtro: 'Banco Ficticio' } });
 verificar('6.4 en la nueva actualización la cuenta se puede corregir', corregida.status === 200 && corregida.datos.ultimosDigitos === '5678' && corregida.datos.tipoCuenta === 'Corriente');
 
 console.log(JSON.stringify({ institucion: I, institucionB: IB, total: resultados.length, fallos }));

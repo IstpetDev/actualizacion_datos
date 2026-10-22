@@ -83,7 +83,7 @@ describe('revisión de cuentas bancarias', () => {
     revision.obtenerCuentaBancariaParaRevision.mockReturnValueOnce(
       of({
         id: 'x',
-        tipoCuentaId: 51,
+        tipoCuentaId: 71,
         tipoCuenta: 'Ahorros',
         banco: 'Banco ficticio',
         numeroEnmascarado: '******1234',
