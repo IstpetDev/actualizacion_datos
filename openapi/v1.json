@@ -25,6 +25,170 @@
         }
       }
     },
+    "/api/revision/{documento}/hoja-de-vida": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ObtenerHojaDeVidaParaRevision",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaDeVidaDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/iniciar-actualizacion": {
+      "post": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "IniciarNuevaActualizacion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/personas/{id}/tipo-funcionario": {
+      "put": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "AsignarTipoFuncionario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarTipoFuncionarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -939,7 +1103,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
+                  "$ref": "#/components/schemas/EnvioIncompletoRespuesta"
                 }
               }
             }
@@ -1725,6 +1889,1579 @@
           }
         }
       }
+    },
+    "/api/mis-datos/hoja-de-vida": {
+      "get": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ObtenerMiHojaDeVida",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HojaDeVidaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/ficha": {
+      "get": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ObtenerMiFichaPersonal",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaPersonalDto"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "GuardarMiFichaPersonal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarFichaPersonalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaPersonalDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/titulos": {
+      "post": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "AgregarTituloAcademico",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTituloAcademicoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TituloAcademicoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/titulos/{id}": {
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ActualizarTituloAcademico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTituloAcademicoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TituloAcademicoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "EliminarTituloAcademico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/titulos-en-curso": {
+      "post": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "AgregarTituloEnCurso",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTituloEnCursoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TituloEnCursoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/titulos-en-curso/{id}": {
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ActualizarTituloEnCurso",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTituloEnCursoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TituloEnCursoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "EliminarTituloEnCurso",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/capacitaciones": {
+      "post": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "AgregarCapacitacion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarCapacitacionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacitacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/capacitaciones/{id}": {
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ActualizarCapacitacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarCapacitacionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacitacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "EliminarCapacitacion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/experiencias": {
+      "post": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "AgregarExperienciaLaboral",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarExperienciaLaboralRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperienciaLaboralDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/experiencias/{id}": {
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ActualizarExperienciaLaboral",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarExperienciaLaboralRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperienciaLaboralDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "EliminarExperienciaLaboral",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/referencias": {
+      "post": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "AgregarReferencia",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarReferenciaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenciaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/referencias/{id}": {
+      "put": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ActualizarReferencia",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarReferenciaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenciaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "EliminarReferencia",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/hoja-de-vida/faltantes": {
+      "get": {
+        "tags": [
+          "HojaDeVida"
+        ],
+        "operationId": "ObtenerFaltantesEnvio",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoValidacionEnvioDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/documentos": {
+      "get": {
+        "tags": [
+          "DocumentosPersonales"
+        ],
+        "operationId": "ListarMisDocumentosPersonales",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentoRequeridoDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/documentos/{tipoDocumentoId}": {
+      "put": {
+        "tags": [
+          "DocumentosPersonales"
+        ],
+        "operationId": "GuardarMiDocumentoPersonal",
+        "parameters": [
+          {
+            "name": "tipoDocumentoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarDocumentoPersonalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentoPersonalDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/tipos-funcionario": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ListarTiposFuncionario",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TipoFuncionarioDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "CrearTipoFuncionario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTipoFuncionarioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoFuncionarioDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/tipos-funcionario/{id}": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ActualizarTipoFuncionario",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTipoFuncionarioRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoFuncionarioDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/tipos-documento": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ListarTiposDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TipoDocumentoDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "CrearTipoDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTipoDocumentoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/tipos-documento/{id}": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ActualizarTipoDocumento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarTipoDocumentoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TipoDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/requisitos": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ListarRequisitosDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequisitoDocumentoDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "CrearRequisitoDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarRequisitoDocumentoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitoDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/requisitos/{id}": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ActualizarRequisitoDocumento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarRequisitoDocumentoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequisitoDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1832,6 +3569,21 @@
           }
         }
       },
+      "AsignarTipoFuncionarioRequest": {
+        "required": [
+          "tipoFuncionarioId"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "AuditoriaDto": {
         "required": [
           "id",
@@ -1929,6 +3681,90 @@
           }
         }
       },
+      "CapacitacionDto": {
+        "required": [
+          "id",
+          "nombreEvento",
+          "institucionOrganizadora",
+          "tipoCapacitacionId",
+          "tipoParticipacion",
+          "fechaInicio",
+          "fechaFin",
+          "numeroHoras",
+          "lugar",
+          "financiadaPorInstitucion",
+          "archivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombreEvento": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": "string"
+          },
+          "tipoCapacitacionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tipoParticipacion": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "numeroHoras": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lugar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "financiadaPorInstitucion": {
+            "type": "boolean"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CargarPersonasRequest": {
         "required": [
           "personas"
@@ -2004,6 +3840,129 @@
           }
         }
       },
+      "DocumentoPersonalDto": {
+        "required": [
+          "id",
+          "tipoDocumentoId",
+          "numeroDocumento",
+          "entidadEmisora",
+          "fechaEmision",
+          "fechaVencimiento",
+          "categoriaLicencia",
+          "puntosLicencia",
+          "archivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoDocumentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroDocumento": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entidadEmisora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaEmision": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaVencimiento": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "categoriaLicencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "puntosLicencia": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DocumentoRequeridoDto": {
+        "required": [
+          "tipoDocumentoId",
+          "codigo",
+          "nombre",
+          "descripcion",
+          "tieneVencimiento",
+          "esObligatorio",
+          "registrado"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoDocumentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tieneVencimiento": {
+            "type": "boolean"
+          },
+          "esObligatorio": {
+            "type": "boolean"
+          },
+          "registrado": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DocumentoPersonalDto"
+              }
+            ]
+          }
+        }
+      },
       "ElementoCatalogoDto": {
         "required": [
           "id",
@@ -2066,6 +4025,24 @@
         "properties": {
           "correo": {
             "type": "string"
+          }
+        }
+      },
+      "EnvioIncompletoRespuesta": {
+        "required": [
+          "mensaje",
+          "faltantes"
+        ],
+        "type": "object",
+        "properties": {
+          "mensaje": {
+            "type": "string"
+          },
+          "faltantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FaltanteEnvioDto"
+            }
           }
         }
       },
@@ -2172,6 +4149,1030 @@
           }
         }
       },
+      "ExperienciaLaboralDto": {
+        "required": [
+          "id",
+          "empleador",
+          "cargo",
+          "fechaInicio",
+          "fechaFin",
+          "trabajaActualmente",
+          "ciudad",
+          "paisId",
+          "funciones",
+          "archivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "empleador": {
+            "type": "string"
+          },
+          "cargo": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "trabajaActualmente": {
+            "type": "boolean"
+          },
+          "ciudad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paisId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "funciones": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FaltanteEnvioDto": {
+        "required": [
+          "seccion",
+          "codigo",
+          "mensaje"
+        ],
+        "type": "object",
+        "properties": {
+          "seccion": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "mensaje": {
+            "type": "string"
+          },
+          "itemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "FichaPersonalDto": {
+        "required": [
+          "personaId",
+          "primerNombre",
+          "segundoNombre",
+          "primerApellido",
+          "segundoApellido",
+          "sexoId",
+          "fechaNacimiento",
+          "estadoCivilId",
+          "tipoSangreId",
+          "etniaId",
+          "nacionalidadIndigenaId",
+          "paisNacionalidadId",
+          "paisNacimientoId",
+          "parroquiaNacimientoId",
+          "parroquiaResidenciaId",
+          "callePrincipal",
+          "calleSecundaria",
+          "numeroCasa",
+          "referenciaDomicilio",
+          "codigoPostal",
+          "telefonoConvencional",
+          "celular",
+          "correoInstitucional",
+          "discapacidadId",
+          "porcentajeDiscapacidad",
+          "numeroCarnetDiscapacidad",
+          "perfil",
+          "fotoArchivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "personaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "primerNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segundoNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primerApellido": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segundoApellido": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sexoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaNacimiento": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "estadoCivilId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tipoSangreId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "etniaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nacionalidadIndigenaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paisNacionalidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paisNacimientoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parroquiaNacimientoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parroquiaResidenciaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "callePrincipal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "calleSecundaria": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numeroCasa": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenciaDomicilio": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "codigoPostal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "telefonoConvencional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "celular": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correoInstitucional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discapacidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "porcentajeDiscapacidad": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "numeroCarnetDiscapacidad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "perfil": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fotoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GuardarCapacitacionRequest": {
+        "required": [
+          "nombreEvento",
+          "institucionOrganizadora"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreEvento": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": "string"
+          },
+          "tipoCapacitacionId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tipoParticipacion": {
+            "type": "string",
+            "default": "asistente"
+          },
+          "fechaInicio": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "numeroHoras": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lugar": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "financiadaPorInstitucion": {
+            "type": "boolean",
+            "default": false
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "GuardarDocumentoPersonalRequest": {
+        "required": [
+          "archivoId"
+        ],
+        "type": "object",
+        "properties": {
+          "archivoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroDocumento": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entidadEmisora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaEmision": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaVencimiento": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "categoriaLicencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "puntosLicencia": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "GuardarExperienciaLaboralRequest": {
+        "required": [
+          "empleador",
+          "cargo",
+          "fechaInicio"
+        ],
+        "type": "object",
+        "properties": {
+          "empleador": {
+            "type": "string"
+          },
+          "cargo": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaFin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "trabajaActualmente": {
+            "type": "boolean",
+            "default": false
+          },
+          "ciudad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "paisId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "funciones": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "GuardarFichaPersonalRequest": {
+        "type": "object",
+        "properties": {
+          "primerNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segundoNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primerApellido": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segundoApellido": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sexoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaNacimiento": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "estadoCivilId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tipoSangreId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "etniaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nacionalidadIndigenaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paisNacionalidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paisNacimientoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parroquiaNacimientoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parroquiaResidenciaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "callePrincipal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "calleSecundaria": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numeroCasa": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenciaDomicilio": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "codigoPostal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "telefonoConvencional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "celular": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correoInstitucional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discapacidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "porcentajeDiscapacidad": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "numeroCarnetDiscapacidad": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "perfil": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fotoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "GuardarReferenciaRequest": {
+        "required": [
+          "tipo",
+          "nombresApellidos",
+          "telefono"
+        ],
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string"
+          },
+          "nombresApellidos": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cargoActual": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "empresa": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "GuardarRequisitoDocumentoRequest": {
+        "required": [
+          "tipoDocumentoId"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoDocumentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "esObligatorio": {
+            "type": "boolean",
+            "default": true
+          },
+          "activo": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "GuardarTipoDocumentoRequest": {
+        "required": [
+          "codigo",
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tieneVencimiento": {
+            "type": "boolean",
+            "default": false
+          },
+          "orden": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          },
+          "activo": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "GuardarTipoFuncionarioRequest": {
+        "required": [
+          "codigo",
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "esDocente": {
+            "type": "boolean",
+            "default": false
+          },
+          "activo": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "GuardarTituloAcademicoRequest": {
+        "required": [
+          "nombreTitulo",
+          "gradoAcademicoId"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreTitulo": {
+            "type": "string"
+          },
+          "gradoAcademicoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "universidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreInstitucionOtra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campoDetalladoUnescoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "numeroRegistroSenescyt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaObtencion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaRegistroSenescyt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "GuardarTituloEnCursoRequest": {
+        "required": [
+          "nombrePrograma",
+          "gradoAcademicoId"
+        ],
+        "type": "object",
+        "properties": {
+          "nombrePrograma": {
+            "type": "string"
+          },
+          "gradoAcademicoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "universidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreInstitucionOtra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campoDetalladoUnescoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaInicio": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaFinEstimada": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tieneBeca": {
+            "type": "boolean",
+            "default": false
+          },
+          "tipoBecaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "financiamientoBecaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "porcentajeBeca": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "montoBeca": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "HabilitarPersonasRequest": {
         "type": "object",
         "properties": {
@@ -2197,6 +5198,76 @@
           "habilitarTodos": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "HojaDeVidaDto": {
+        "required": [
+          "personaId",
+          "documento",
+          "estadoActualizacion",
+          "puedeEditar",
+          "ficha",
+          "titulos",
+          "titulosEnCurso",
+          "capacitaciones",
+          "experiencias",
+          "referencias"
+        ],
+        "type": "object",
+        "properties": {
+          "personaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "estadoActualizacion": {
+            "type": "string"
+          },
+          "puedeEditar": {
+            "type": "boolean"
+          },
+          "ficha": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FichaPersonalDto"
+              }
+            ]
+          },
+          "titulos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TituloAcademicoDto"
+            }
+          },
+          "titulosEnCurso": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TituloEnCursoDto"
+            }
+          },
+          "capacitaciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CapacitacionDto"
+            }
+          },
+          "experiencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperienciaLaboralDto"
+            }
+          },
+          "referencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReferenciaDto"
+            }
           }
         }
       },
@@ -2505,6 +5576,89 @@
           }
         }
       },
+      "ReferenciaDto": {
+        "required": [
+          "id",
+          "tipo",
+          "nombresApellidos",
+          "telefono",
+          "titulo",
+          "cargoActual",
+          "empresa",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "nombresApellidos": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cargoActual": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "empresa": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RequisitoDocumentoDto": {
+        "required": [
+          "id",
+          "tipoDocumentoId",
+          "tipoFuncionarioId",
+          "esObligatorio",
+          "activo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoDocumentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "esObligatorio": {
+            "type": "boolean"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
       "RespuestaDeSalud": {
         "required": [
           "estado"
@@ -2642,6 +5796,24 @@
           }
         }
       },
+      "ResultadoValidacionEnvioDto": {
+        "required": [
+          "completo",
+          "faltantes"
+        ],
+        "type": "object",
+        "properties": {
+          "completo": {
+            "type": "boolean"
+          },
+          "faltantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FaltanteEnvioDto"
+            }
+          }
+        }
+      },
       "ResumenRevisionPendienteDto": {
         "required": [
           "id",
@@ -2755,6 +5927,291 @@
       "TipoCatalogo": {
         "type": "integer"
       },
+      "TipoDocumentoDto": {
+        "required": [
+          "id",
+          "codigo",
+          "nombre",
+          "descripcion",
+          "tieneVencimiento",
+          "orden",
+          "activo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tieneVencimiento": {
+            "type": "boolean"
+          },
+          "orden": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TipoFuncionarioDto": {
+        "required": [
+          "id",
+          "codigo",
+          "nombre",
+          "esDocente",
+          "activo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "esDocente": {
+            "type": "boolean"
+          },
+          "activo": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TituloAcademicoDto": {
+        "required": [
+          "id",
+          "nombreTitulo",
+          "gradoAcademicoId",
+          "universidadId",
+          "nombreInstitucionOtra",
+          "campoDetalladoUnescoId",
+          "numeroRegistroSenescyt",
+          "fechaObtencion",
+          "fechaRegistroSenescyt",
+          "archivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombreTitulo": {
+            "type": "string"
+          },
+          "gradoAcademicoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "universidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreInstitucionOtra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campoDetalladoUnescoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "numeroRegistroSenescyt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaObtencion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaRegistroSenescyt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TituloEnCursoDto": {
+        "required": [
+          "id",
+          "nombrePrograma",
+          "gradoAcademicoId",
+          "universidadId",
+          "nombreInstitucionOtra",
+          "campoDetalladoUnescoId",
+          "fechaInicio",
+          "fechaFinEstimada",
+          "tieneBeca",
+          "tipoBecaId",
+          "financiamientoBecaId",
+          "porcentajeBeca",
+          "montoBeca",
+          "archivoId",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombrePrograma": {
+            "type": "string"
+          },
+          "gradoAcademicoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "universidadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreInstitucionOtra": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "campoDetalladoUnescoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaInicio": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "fechaFinEstimada": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tieneBeca": {
+            "type": "boolean"
+          },
+          "tipoBecaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "financiamientoBecaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "porcentajeBeca": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "montoBeca": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "VerificarCodigoCorreoRequest": {
         "required": [
           "codigo"
@@ -2773,22 +6230,22 @@
       "name": "Salud"
     },
     {
+      "name": "Revision"
+    },
+    {
+      "name": "MisDatos"
+    },
+    {
+      "name": "Personas"
+    },
+    {
       "name": "Autenticacion"
     },
     {
       "name": "Instituciones"
     },
     {
-      "name": "Personas"
-    },
-    {
       "name": "Campanas"
-    },
-    {
-      "name": "MisDatos"
-    },
-    {
-      "name": "Revision"
     },
     {
       "name": "Auditoria"
@@ -2801,6 +6258,15 @@
     },
     {
       "name": "Catalogos"
+    },
+    {
+      "name": "HojaDeVida"
+    },
+    {
+      "name": "DocumentosPersonales"
+    },
+    {
+      "name": "Configuracion"
     }
   ]
 }
