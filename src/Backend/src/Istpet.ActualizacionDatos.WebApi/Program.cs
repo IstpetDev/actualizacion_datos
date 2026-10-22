@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -678,6 +679,11 @@ misDatos.MapPost("/enviar", async (string? documento, HttpContext httpContext, I
         await servicio.EnviarARevisionAsync(docEfectivo, ct);
         return Results.Ok(new MensajeRespuesta("Actualización enviada a revisión exitosamente. La edición ha sido bloqueada."));
     }
+    catch (EnvioIncompletoException ex)
+    {
+        // RF-HDV-009: la respuesta dice qué falta, por sección e ítem (T-04 la produce).
+        return Results.BadRequest(new EnvioIncompletoRespuesta(ex.Message, [.. ex.Faltantes]));
+    }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
     {
         return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
@@ -689,7 +695,7 @@ misDatos.MapPost("/enviar", async (string? documento, HttpContext httpContext, I
 })
 .WithName("EnviarMisDatosARevision")
 .Produces<MensajeRespuesta>()
-.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<EnvioIncompletoRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
@@ -1081,6 +1087,14 @@ misDatos.MapGet("/archivos", async (
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
+
+// --- Hoja de vida (spec-0003). Un archivo por grupo en Endpoints/ y una línea aquí (plan.md, T-00) ---
+app.MapCatalogos();
+app.MapHojaDeVida();
+app.MapDocumentosPersonales();
+app.MapFlujoActualizacion();
+app.MapConfiguracionHojaDeVida();
+app.MapExportacion();
 
 
 await app.RunAsync();
