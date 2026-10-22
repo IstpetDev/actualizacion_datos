@@ -17,7 +17,8 @@ public sealed record CampanaDto(
 public sealed record EstadoEdicionDto(
     bool PuedeEditar,
     string Mensaje,
-    CampanaDto? CampanaActiva = null);
+    CampanaDto? CampanaActiva = null,
+    string? EstadoActualizacion = null);
 
 public sealed record ActualizarDatosRequest(
     string DatosJson);

@@ -25,6 +25,10 @@ public class Persona : EntidadInstitucional
     public DateTime? CodigoVerificacionExpiracionUtc { get; private set; }
     public int IntentosCodigoVerificacion { get; private set; }
 
+    // Tratamiento de datos según RF-DAT-001
+    public bool TratamientoDatosAceptado { get; private set; }
+    public DateTime? FechaAceptacionTratamientoDatosUtc { get; private set; }
+
     private Persona()
     {
         Documento = null!;
@@ -42,7 +46,9 @@ public class Persona : EntidadInstitucional
         DateTime? fechaCreacionUtc = null,
         string? passwordHash = null,
         bool debeCambiarContrasena = true,
-        bool correoVerificado = false)
+        bool correoVerificado = false,
+        bool tratamientoDatosAceptado = false,
+        DateTime? fechaAceptacionTratamientoDatosUtc = null)
         : base(institucionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(documento);
@@ -58,6 +64,8 @@ public class Persona : EntidadInstitucional
         PasswordHash = passwordHash;
         DebeCambiarContrasena = debeCambiarContrasena;
         CorreoVerificado = correoVerificado;
+        TratamientoDatosAceptado = tratamientoDatosAceptado;
+        FechaAceptacionTratamientoDatosUtc = fechaAceptacionTratamientoDatosUtc;
     }
 
     public void HabilitarAcceso()
@@ -72,12 +80,71 @@ public class Persona : EntidadInstitucional
 
     public void ActualizarBorrador(string datosJson)
     {
+        if (EstadoActualizacion == EstadoActualizacion.Enviado ||
+            EstadoActualizacion == EstadoActualizacion.Aprobado)
+        {
+            throw new ReglaNegocioException("No se puede modificar la información mientras está en revisión o ya ha sido aprobada.");
+        }
+
         DatosPersonalesJson = datosJson;
     }
 
     public void RegistrarArchivoSubido(string archivoInfo)
     {
+        if (EstadoActualizacion == EstadoActualizacion.Enviado ||
+            EstadoActualizacion == EstadoActualizacion.Aprobado)
+        {
+            throw new ReglaNegocioException("No se puede subir archivos mientras la solicitud está en revisión o ya ha sido aprobada.");
+        }
+
         ArchivosSubidosJson = archivoInfo;
+    }
+
+    public void AceptarTratamientoDatos(DateTime fechaUtc)
+    {
+        TratamientoDatosAceptado = true;
+        FechaAceptacionTratamientoDatosUtc = fechaUtc;
+    }
+
+    public void EnviarARevision(DateTime ahoraUtc)
+    {
+        if (!TratamientoDatosAceptado)
+        {
+            throw new ReglaNegocioException("Debe aceptar el tratamiento de datos personales antes de enviar la solicitud a revisión.");
+        }
+
+        if (string.IsNullOrWhiteSpace(Correo))
+        {
+            throw new ReglaNegocioException("Debe ingresar y registrar su correo electrónico antes de enviar la actualización a revisión.");
+        }
+
+        if (EstadoActualizacion != EstadoActualizacion.Borrador &&
+            EstadoActualizacion != EstadoActualizacion.Devuelto)
+        {
+            throw new ReglaNegocioException($"No se puede enviar a revisión una solicitud en estado {EstadoActualizacion}.");
+        }
+
+        EstadoActualizacion = EstadoActualizacion.Enviado;
+    }
+
+    public void AprobarActualizacion(DateTime ahoraUtc)
+    {
+        if (EstadoActualizacion != EstadoActualizacion.Enviado)
+        {
+            throw new ReglaNegocioException("Solo se pueden aprobar solicitudes en estado Enviado.");
+        }
+
+        EstadoActualizacion = EstadoActualizacion.Aprobado;
+    }
+
+    public void DevolverActualizacion(DateTime ahoraUtc)
+    {
+        if (EstadoActualizacion != EstadoActualizacion.Enviado)
+        {
+            throw new ReglaNegocioException("Solo se pueden devolver solicitudes en estado Enviado.");
+        }
+
+        EstadoActualizacion = EstadoActualizacion.Devuelto;
     }
 
     public void EstablecerPasswordHash(string passwordHash, bool debeCambiarContrasena = true)
