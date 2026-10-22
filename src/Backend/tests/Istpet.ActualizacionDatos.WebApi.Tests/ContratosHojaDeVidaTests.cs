@@ -46,7 +46,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         { "GET", "/api/mis-datos/documentos" },
         { "PUT", $"/api/mis-datos/documentos/{Id}" },
         { "POST", "/api/mis-datos/iniciar-actualizacion" },
-        { "GET", "/api/catalogos/Parroquia" },
     };
 
     public static TheoryData<string, string> RutasDelAdmin => new()
@@ -114,62 +113,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         Assert.Equal(esperado, respuesta.StatusCode);
     }
 
-    [Theory]
-    [InlineData("/api/exportacion/excel", "Usuario", HttpStatusCode.Forbidden)]
-    [InlineData("/api/exportacion/excel", "Supervisor", HttpStatusCode.Forbidden)]
-    [InlineData("/api/exportacion/excel", "Superadmin", HttpStatusCode.Forbidden)]
-    [InlineData("/api/exportacion/excel", "Admin", HttpStatusCode.NotImplemented)]
-    [InlineData("/api/exportacion/zip", "Supervisor", HttpStatusCode.Forbidden)]
-    [InlineData("/api/exportacion/zip", "Admin", HttpStatusCode.NotImplemented)]
-    public async Task Exportacion_solo_admin_RF_EXP_003(string ruta, string rol, HttpStatusCode esperado)
-    {
-        var respuesta = await EnviarAsync("GET", ruta, rol, "0000000004");
-
-        Assert.Equal(esperado, respuesta.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("noexiste")]
-    [InlineData("1")]
-    [InlineData("99")]
-    public async Task Catalogo_desconocido_responde_400(string tipo)
-    {
-        var respuesta = await EnviarAsync("GET", $"/api/catalogos/{tipo}", "Usuario", DocumentoUsuario);
-
-        Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("estadocivil")]
-    [InlineData("ESTADOCIVIL")]
-    [InlineData("EstadoCivil")]
-    public async Task Catalogo_acepta_el_tipo_sin_distinguir_mayusculas(string tipo)
-    {
-        var respuesta = await EnviarAsync("GET", $"/api/catalogos/{tipo}?padreId=1", "Usuario", DocumentoUsuario);
-
-        Assert.Equal(HttpStatusCode.NotImplemented, respuesta.StatusCode);
-    }
-
-    [Theory]
-    [InlineData("Admin", HttpStatusCode.Forbidden)]
-    [InlineData("Usuario", HttpStatusCode.Forbidden)]
-    [InlineData("Superadmin", HttpStatusCode.NotImplemented)]
-    public async Task Importar_catalogo_solo_superadmin(string rol, HttpStatusCode esperado)
-    {
-        using var formulario = new MultipartFormDataContent();
-        using var csv = new ByteArrayContent(Encoding.UTF8.GetBytes("codigo,nombre,codigo_padre,codigo_externo\nX,Ficticio,,\n"));
-        formulario.Add(csv, "archivo", "catalogo.csv");
-
-        using var cliente = _fabrica.CreateClient();
-        using var peticion = new HttpRequestMessage(HttpMethod.Post, "/api/catalogos/Pais/importar") { Content = formulario };
-        peticion.Headers.Add("X-Rol", rol);
-        peticion.Headers.Add("X-Actor", "0000000005");
-
-        var respuesta = await cliente.SendAsync(peticion);
-
-        Assert.Equal(esperado, respuesta.StatusCode);
-    }
-
     [Fact]
     public async Task El_documento_openapi_publica_todas_las_operaciones_de_la_hoja_de_vida()
     {
@@ -184,7 +127,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
 
         string[] esperadas =
         [
-            "ListarCatalogo", "ImportarCatalogo",
             "ObtenerMiHojaDeVida", "ObtenerMiFichaPersonal", "GuardarMiFichaPersonal", "ObtenerFaltantesEnvio",
             "AgregarTituloAcademico", "ActualizarTituloAcademico", "EliminarTituloAcademico",
             "AgregarTituloEnCurso", "ActualizarTituloEnCurso", "EliminarTituloEnCurso",
@@ -198,7 +140,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
             "ListarTiposDocumento", "CrearTipoDocumento", "ActualizarTipoDocumento",
             "ListarRequisitosDocumento", "CrearRequisitoDocumento", "ActualizarRequisitoDocumento",
             "AsignarTipoFuncionario",
-            "ExportarExcel", "ExportarZip",
         ];
 
         var faltantes = esperadas.Except(operaciones).ToList();

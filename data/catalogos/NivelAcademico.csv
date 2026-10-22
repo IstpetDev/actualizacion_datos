@@ -1,0 +1,10 @@
+codigo,nombre,codigo_padre,codigo_externo
+PRIMARIA,Primaria,,
+SECUNDARIA,Secundaria,,
+1,Tercer Nivel Técnico,,1
+2,Tercer Nivel Tecnológico,,2
+3,Tercer Nivel de Grado,,3
+4,Especialidad,,4
+5,Especialidad médica u odontológica,,5
+6,Maestría,,6
+7,PhD,,7
