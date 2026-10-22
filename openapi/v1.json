@@ -2029,7 +2029,8 @@
                 "$ref": "#/components/schemas/GuardarTituloAcademicoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2092,7 +2093,8 @@
                 "$ref": "#/components/schemas/GuardarTituloAcademicoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2209,7 +2211,8 @@
                 "$ref": "#/components/schemas/GuardarTituloEnCursoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2272,7 +2275,8 @@
                 "$ref": "#/components/schemas/GuardarTituloEnCursoRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2389,7 +2393,8 @@
                 "$ref": "#/components/schemas/GuardarCapacitacionRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2452,7 +2457,8 @@
                 "$ref": "#/components/schemas/GuardarCapacitacionRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2569,7 +2575,8 @@
                 "$ref": "#/components/schemas/GuardarExperienciaLaboralRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2632,7 +2639,8 @@
                 "$ref": "#/components/schemas/GuardarExperienciaLaboralRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -2749,7 +2757,8 @@
                 "$ref": "#/components/schemas/GuardarReferenciaRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -2812,7 +2821,8 @@
                 "$ref": "#/components/schemas/GuardarReferenciaRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {

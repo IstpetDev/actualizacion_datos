@@ -32,6 +32,14 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<ValidadorCatalogos>();
         servicios.AddScoped<CargadorCatalogosDesarrollo>();
         servicios.AddScoped<IServicioExportacion, ServicioExportacion>();
+        servicios.AddScoped<IServicioHojaDeVida, ServicioHojaDeVida>();
+        servicios.AddScoped<IServicioDocumentosPersonales, ServicioDocumentosPersonales>();
+        servicios.AddScoped<IValidadorCompletitudEnvio, ValidadorCompletitudEnvio>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaFichaPersonalObligatoria>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaFormacionAcademicaObligatoria>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaReferenciasPersonalesObligatorias>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaRespaldosItemsObligatorios>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaDocumentosPersonalesObligatorios>();
 
         // ADR-0013: el protector guarda las claves en memoria durante toda la vida del proceso.
         servicios.AddSingleton<IProtectorCuentaBancaria, ProtectorCuentaBancariaAesGcm>();
