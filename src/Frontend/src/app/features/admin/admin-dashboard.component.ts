@@ -14,13 +14,14 @@ import {
   ResultadoCargaPersonasDto,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
+import { InformeNominaComponent } from './nomina/informe-nomina.component';
 
 type TabAdmin = 'campanas' | 'personas' | 'exportacion';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InformeNominaComponent],
   template: `
     <section class="dashboard-section" data-testid="admin-panel">
       <header class="section-header">
@@ -304,17 +305,10 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
                 </div>
               }
 
-              <!-- Resultado de la última carga -->
-              @if (resultadoCarga(); as res) {
+              <!-- Resultado de la última carga (Informe ADR-0012) -->
+              @if (resultadoCarga()) {
                 <div class="resultado-carga-box" data-testid="resultado-carga">
-                  <h4>Resumen del Proceso:</h4>
-                  <p><strong>Total Recibidos:</strong> {{ res.totalRecibidos }}</p>
-                  <p class="text-success">
-                    <strong>Nuevos Registrados / Habilitados:</strong> {{ res.totalCargados }}
-                  </p>
-                  <p class="text-muted">
-                    <strong>Duplicados Omitidos:</strong> {{ res.totalDuplicadosOmitidos }}
-                  </p>
+                  <app-informe-nomina [resultado]="resultadoCarga()"></app-informe-nomina>
                 </div>
               }
             </div>
