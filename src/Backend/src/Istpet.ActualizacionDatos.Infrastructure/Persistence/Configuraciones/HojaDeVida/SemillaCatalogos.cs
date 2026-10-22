@@ -42,5 +42,10 @@ internal static class SemillaCatalogos
         new(52, TipoCatalogo.NivelAcademico, "SECUNDARIA", "Secundaria", orden: 2),
         new(61, TipoCatalogo.GradoAcademico, "PRIMARIA", "Primaria completa", padreId: 51, orden: 1),
         new(62, TipoCatalogo.GradoAcademico, "BACHILLERATO", "Bachillerato", padreId: 52, orden: 2),
+
+        // ADR-0013 dec. 2. Los bancos no se siembran: se importan de la Superintendencia de Bancos (T-01);
+        // mientras tanto la persona escribe el nombre del banco.
+        new(71, TipoCatalogo.TipoCuentaBancaria, "AHORROS", "Ahorros", orden: 1),
+        new(72, TipoCatalogo.TipoCuentaBancaria, "CORRIENTE", "Corriente", orden: 2),
     ];
 }

@@ -189,6 +189,92 @@
         }
       }
     },
+    "/api/revision/cuentas-bancarias": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ListarEstadosCuentasBancarias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstadoCuentaPersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/revision/{documento}/cuenta-bancaria": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ObtenerCuentaBancariaParaRevision",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaBancariaDto"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -905,121 +991,6 @@
         }
       }
     },
-    "/api/mis-datos/archivos": {
-      "post": {
-        "tags": [
-          "MisDatos"
-        ],
-        "operationId": "SubirArchivoMisDatos",
-        "parameters": [
-          {
-            "name": "documento",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubirArchivoRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "MisDatos"
-        ],
-        "operationId": "ListarArchivosMisDatos",
-        "parameters": [
-          {
-            "name": "documento",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ArchivoDto"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
     "/api/mis-datos/aceptar-tratamiento": {
       "post": {
         "tags": [
@@ -1148,6 +1119,61 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ObservacionDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/archivos": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "ListarArchivosMisDatos",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchivoDto"
                   }
                 }
               }
@@ -3462,6 +3488,209 @@
           }
         }
       }
+    },
+    "/api/mis-datos/cuenta-bancaria": {
+      "get": {
+        "tags": [
+          "CuentaBancaria"
+        ],
+        "operationId": "ObtenerMiCuentaBancaria",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaBancariaDto"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CuentaBancaria"
+        ],
+        "operationId": "GuardarMiCuentaBancaria",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarCuentaBancariaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaBancariaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/cuenta-bancaria/confirmar": {
+      "post": {
+        "tags": [
+          "CuentaBancaria"
+        ],
+        "operationId": "ConfirmarMiCuentaBancaria",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CuentaBancariaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/cuenta-bancaria/numero": {
+      "get": {
+        "tags": [
+          "CuentaBancaria"
+        ],
+        "operationId": "LeerMiNumeroCuentaBancaria",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumeroCuentaCompletoDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3820,6 +4049,65 @@
           }
         }
       },
+      "CuentaBancariaDto": {
+        "required": [
+          "id",
+          "tipoCuentaId",
+          "tipoCuenta",
+          "bancoId",
+          "banco",
+          "numeroEnmascarado",
+          "ultimosDigitos",
+          "estado",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoCuentaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tipoCuenta": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bancoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "banco": {
+            "type": "string"
+          },
+          "numeroEnmascarado": {
+            "type": "string"
+          },
+          "ultimosDigitos": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "DevolverActualizacionRequest": {
         "required": [
           "observacionGeneral"
@@ -4046,6 +4334,54 @@
           }
         }
       },
+      "EstadoCuentaPersonaDto": {
+        "required": [
+          "personaId",
+          "documento",
+          "nombre",
+          "estado",
+          "banco",
+          "tipoCuenta",
+          "ultimosDigitos"
+        ],
+        "type": "object",
+        "properties": {
+          "personaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "estado": {
+            "type": "string"
+          },
+          "banco": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tipoCuenta": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ultimosDigitos": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "EstadoEdicionDto": {
         "required": [
           "puedeEditar",
@@ -4074,6 +4410,10 @@
               "null",
               "string"
             ]
+          },
+          "puedeIniciarNuevaActualizacion": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4086,7 +4426,6 @@
           "correo",
           "estadoActualizacion",
           "datosPersonalesJson",
-          "archivosSubidosJson",
           "tratamientoDatosAceptado",
           "fechaAceptacionTratamientoDatosUtc",
           "observaciones"
@@ -4120,12 +4459,6 @@
             "type": "string"
           },
           "datosPersonalesJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "archivosSubidosJson": {
             "type": [
               "null",
               "string"
@@ -4555,6 +4888,41 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "GuardarCuentaBancariaRequest": {
+        "required": [
+          "tipoCuentaId",
+          "numero"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoCuentaId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "bancoId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreBancoOtro": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5386,7 +5754,6 @@
           "correoVerificado",
           "estadoActualizacion",
           "datosPersonalesJson",
-          "archivosSubidosJson",
           "tratamientoDatosAceptado",
           "fechaAceptacionTratamientoDatosUtc",
           "puedeEditar",
@@ -5430,12 +5797,6 @@
               "string"
             ]
           },
-          "archivosSubidosJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "tratamientoDatosAceptado": {
             "type": "boolean"
           },
@@ -5457,6 +5818,17 @@
             "items": {
               "$ref": "#/components/schemas/ObservacionDto"
             }
+          }
+        }
+      },
+      "NumeroCuentaCompletoDto": {
+        "required": [
+          "numero"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
           }
         }
       },
@@ -5900,30 +6272,6 @@
           }
         }
       },
-      "SubirArchivoRequest": {
-        "required": [
-          "nombreArchivo",
-          "tipoContenido",
-          "tamanoBytes"
-        ],
-        "type": "object",
-        "properties": {
-          "nombreArchivo": {
-            "type": "string"
-          },
-          "tipoContenido": {
-            "type": "string"
-          },
-          "tamanoBytes": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "integer",
-              "string"
-            ],
-            "format": "int64"
-          }
-        }
-      },
       "TipoCatalogo": {
         "type": "integer"
       },
@@ -6267,6 +6615,9 @@
     },
     {
       "name": "Configuracion"
+    },
+    {
+      "name": "CuentaBancaria"
     }
   ]
 }

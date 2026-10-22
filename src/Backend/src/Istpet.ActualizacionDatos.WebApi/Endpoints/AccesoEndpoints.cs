@@ -59,6 +59,10 @@ internal static class AccesoEndpoints
         {
             return Results.NotFound(new MensajeRespuesta(ex.Message));
         }
+        catch (CuentaBancariaNoDisponibleException ex)
+        {
+            return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
         catch (EnvioIncompletoException ex)
         {
             return Results.BadRequest(new EnvioIncompletoRespuesta(ex.Message, [.. ex.Faltantes]));

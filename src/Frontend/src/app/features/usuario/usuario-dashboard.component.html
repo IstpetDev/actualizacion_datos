@@ -31,6 +31,18 @@
         <span class="etiqueta">Nombre</span><strong>{{ ficha.nombre || 'Sin registrar' }}</strong>
       </div>
       <p class="ancho" role="status">{{ estado()?.mensaje }}</p>
+      @if (estado()?.puedeIniciarNuevaActualizacion) {
+        <p class="ancho">
+          <button
+            type="button"
+            data-testid="iniciar-actualizacion"
+            [disabled]="ocupado()"
+            (click)="iniciarNuevaActualizacion()"
+          >
+            Actualizar mis datos
+          </button>
+        </p>
+      }
       @if (estado()?.campanaActiva; as campana) {
         <p class="ancho">
           {{ campana.nombre }} · Desde {{ campana.fechaInicioUtc | date: 'medium' }} hasta
@@ -220,6 +232,8 @@
         }
       </ul>
     </section>
+
+    <app-mi-cuenta-bancaria [editable]="puedeEditar()" />
 
     <section class="tarjeta" aria-labelledby="titulo-envio">
       <h2 id="titulo-envio">4. Enviar a revisión</h2>

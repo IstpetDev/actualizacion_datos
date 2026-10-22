@@ -58,7 +58,6 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
             persona.CorreoVerificado,
             persona.EstadoActualizacion.ToString(),
             persona.DatosPersonalesJson,
-            persona.ArchivosSubidosJson,
             persona.TratamientoDatosAceptado,
             persona.FechaAceptacionTratamientoDatosUtc,
             estadoEdicion.PuedeEditar,
@@ -110,6 +109,33 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
             persona.InstitucionId,
             ahoraUtc,
             detalle: "Actualización enviada a revisión por el usuario."));
+
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task IniciarNuevaActualizacionAsync(string documento, CancellationToken ct = default)
+    {
+        // PD-HDV-04: solo con campaña abierta; el mensaje «fuera del período» se traduce a 403 como en el resto de /mis-datos.
+        var campanaActiva = await _servicioCampanas.ObtenerCampanaActivaAsync(ct);
+        if (campanaActiva == null)
+        {
+            throw new ReglaNegocioException("No se permite iniciar una nueva actualización fuera del período de una campaña abierta.");
+        }
+
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Documento == documento, ct)
+            ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
+
+        persona.IniciarNuevaActualizacion();
+
+        // RF-DAT-004: queda constancia de quién reabrió su actualización y en qué campaña.
+        _context.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            persona.Documento,
+            "IniciarNuevaActualizacion",
+            persona.InstitucionId,
+            DateTime.UtcNow,
+            detalle: $"Nueva actualización iniciada en la campaña {campanaActiva.Id}."));
 
         await _context.SaveChangesAsync(ct);
     }

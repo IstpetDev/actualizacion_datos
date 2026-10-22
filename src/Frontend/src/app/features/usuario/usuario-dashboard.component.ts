@@ -13,10 +13,11 @@ import {
   MisDatosDto,
 } from '../../api-client';
 import { mensajeError } from '../../core/auth/mensaje-error';
+import { MiCuentaBancariaComponent } from '../cuenta-bancaria/mi-cuenta-bancaria.component';
 
 @Component({
   selector: 'app-usuario-dashboard',
-  imports: [FormsModule, DatePipe, DecimalPipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, MiCuentaBancariaComponent],
   templateUrl: './usuario-dashboard.component.html',
   styleUrl: './usuario-dashboard.component.css',
 })
@@ -157,6 +158,29 @@ export class UsuarioDashboardComponent implements OnInit {
           : estado,
       );
       this.aviso.set('Tu actualización se envió a revisión.');
+    });
+  }
+
+  // PD-HDV-04 (spec-0003): con la actualización aprobada y la campaña abierta, la persona reabre
+  // su actualización con una acción explícita. La API decide si se permite.
+  iniciarNuevaActualizacion(): void {
+    if (this.ocupado() || this.cargando() || !this.estado()?.puedeIniciarNuevaActualizacion) return;
+    this.realizar(this.cliente.iniciarNuevaActualizacion(), () => {
+      this.datos.update((datos) =>
+        datos ? { ...datos, estadoActualizacion: 'Borrador', puedeEditar: true } : datos,
+      );
+      this.estado.update((estado) =>
+        estado
+          ? {
+              ...estado,
+              puedeEditar: true,
+              puedeIniciarNuevaActualizacion: false,
+              estadoActualizacion: 'Borrador',
+              mensaje: 'Nueva actualización iniciada. Puedes editar tu información.',
+            }
+          : estado,
+      );
+      this.aviso.set('Nueva actualización iniciada. Revisa tus datos y vuelve a enviarlos.');
     });
   }
 

@@ -9,5 +9,4 @@ public interface IServicioCampanas
     Task<CampanaDto?> ObtenerCampanaActivaAsync(CancellationToken ct = default);
     Task<EstadoEdicionDto> ObtenerEstadoEdicionAsync(string documento, CancellationToken ct = default);
     Task ActualizarDatosUsuarioAsync(string documento, ActualizarDatosRequest request, CancellationToken ct = default);
-    Task SubirArchivoUsuarioAsync(string documento, SubirArchivoRequest request, CancellationToken ct = default);
 }

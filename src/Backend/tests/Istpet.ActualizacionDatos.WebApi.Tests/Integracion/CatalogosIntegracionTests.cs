@@ -44,14 +44,17 @@ public sealed class CatalogosIntegracionTests : IAsyncLifetime
         Assert.All(segunda, r => { Assert.Equal(0, r.Creados); Assert.Equal(0, r.Actualizados); });
         Assert.Equal(ids, await db.ElementosCatalogo.AsNoTracking().Select(e => e.Id).OrderBy(id => id).ToListAsync());
         var elementos = await db.ElementosCatalogo.AsNoTracking().ToListAsync();
-        Assert.Equal(2104, elementos.Count);
-        Assert.Equal(27, elementos.Count(e => e.Id < 1000));
+        // #45 siembra los tipos de cuenta bancaria 71 y 72 (ADR-0013).
+        Assert.Equal(2106, elementos.Count);
+        Assert.Equal(29, elementos.Count(e => e.Id < 1000));
         Assert.All(elementos.Where(e => e.PadreId.HasValue), hijo =>
         {
             var padre = elementos.Single(e => e.Id == hijo.PadreId);
             Assert.Equal(ElementoCatalogo.TipoPadre(hijo.Tipo), padre.Tipo);
         });
-        Assert.All(Enum.GetValues<TipoCatalogo>(), tipo => Assert.Contains(elementos, e => e.Tipo == tipo));
+        // Banco (ADR-0013) aún no tiene CSV: su fuente (Superintendencia de Bancos) está pendiente en PD-HDV-03.
+        Assert.All(Enum.GetValues<TipoCatalogo>().Where(t => t != TipoCatalogo.Banco), tipo => Assert.Contains(elementos, e => e.Tipo == tipo));
+        Assert.Contains(elementos, e => e.Id == 71 && e.Tipo == TipoCatalogo.TipoCuentaBancaria);
         Assert.Contains(elementos, e => e.Id == 61 && e.Tipo == TipoCatalogo.GradoAcademico && e.PadreId == 51);
         Assert.Contains(elementos, e => e.Id == 62 && e.Tipo == TipoCatalogo.GradoAcademico && e.PadreId == 52);
         Assert.Contains(elementos, e => e.Id == 48 && e.Codigo == "INSTRUCCION_PROFESIONAL");

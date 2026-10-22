@@ -159,6 +159,131 @@ export class RevisionClient {
     /**
      * @return OK
      */
+    listarEstadosCuentasBancarias(): Observable<EstadoCuentaPersonaDto[]> {
+        let url_ = this.baseUrl + "/api/revision/cuentas-bancarias";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processListarEstadosCuentasBancarias(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processListarEstadosCuentasBancarias(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<EstadoCuentaPersonaDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<EstadoCuentaPersonaDto[]>;
+        }));
+    }
+
+    protected processListarEstadosCuentasBancarias(response: HttpResponseBase): Observable<EstadoCuentaPersonaDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as EstadoCuentaPersonaDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    obtenerCuentaBancariaParaRevision(documento: string): Observable<CuentaBancariaDto> {
+        let url_ = this.baseUrl + "/api/revision/{documento}/cuenta-bancaria";
+        if (documento === undefined || documento === null)
+            throw new globalThis.Error("The parameter 'documento' must be defined.");
+        url_ = url_.replace("{documento}", encodeURIComponent("" + documento));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processObtenerCuentaBancariaParaRevision(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processObtenerCuentaBancariaParaRevision(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CuentaBancariaDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CuentaBancariaDto>;
+        }));
+    }
+
+    protected processObtenerCuentaBancariaParaRevision(response: HttpResponseBase): Observable<CuentaBancariaDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CuentaBancariaDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("No Content", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     listarPendientesRevision(): Observable<ResumenRevisionPendienteDto[]> {
         let url_ = this.baseUrl + "/api/revision/pendientes";
         url_ = url_.replace(/[?&]$/, "");
@@ -767,152 +892,6 @@ export class MisDatosClient {
      * @param documento (optional) 
      * @return OK
      */
-    subirArchivoMisDatos(body: SubirArchivoRequest, documento?: string | undefined): Observable<MensajeRespuesta> {
-        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
-        if (documento === null)
-            throw new globalThis.Error("The parameter 'documento' cannot be null.");
-        else if (documento !== undefined)
-            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_ : any = {
-            body: content_,
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processSubirArchivoMisDatos(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processSubirArchivoMisDatos(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<MensajeRespuesta>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<MensajeRespuesta>;
-        }));
-    }
-
-    protected processSubirArchivoMisDatos(response: HttpResponseBase): Observable<MensajeRespuesta> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return _observableOf(result200);
-            }));
-        } else if (status === 400) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Bad Request", status, _responseText, _headers, result400);
-            }));
-        } else if (status === 401) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            }));
-        } else if (status === 403) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Forbidden", status, _responseText, _headers, result403);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param documento (optional) 
-     * @return OK
-     */
-    listarArchivosMisDatos(documento?: string | undefined): Observable<ArchivoDto[]> {
-        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
-        if (documento === null)
-            throw new globalThis.Error("The parameter 'documento' cannot be null.");
-        else if (documento !== undefined)
-            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_ : any = {
-            observe: "response",
-            responseType: "blob",
-            headers: new HttpHeaders({
-                "Accept": "application/json"
-            })
-        };
-
-        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processListarArchivosMisDatos(response_);
-        })).pipe(_observableCatch((response_: any) => {
-            if (response_ instanceof HttpResponseBase) {
-                try {
-                    return this.processListarArchivosMisDatos(response_ as any);
-                } catch (e) {
-                    return _observableThrow(e) as any as Observable<ArchivoDto[]>;
-                }
-            } else
-                return _observableThrow(response_) as any as Observable<ArchivoDto[]>;
-        }));
-    }
-
-    protected processListarArchivosMisDatos(response: HttpResponseBase): Observable<ArchivoDto[]> {
-        const status = response.status;
-        const responseBlob =
-            response instanceof HttpResponse ? response.body :
-            (response as any).error instanceof Blob ? (response as any).error : undefined;
-
-        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
-        if (status === 200) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result200: any = null;
-            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArchivoDto[];
-            return _observableOf(result200);
-            }));
-        } else if (status === 400) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result400: any = null;
-            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Bad Request", status, _responseText, _headers, result400);
-            }));
-        } else if (status === 401) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("Unauthorized", status, _responseText, _headers);
-            }));
-        } else if (status === 403) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            let result403: any = null;
-            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
-            return throwException("Forbidden", status, _responseText, _headers, result403);
-            }));
-        } else if (status !== 200 && status !== 204) {
-            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            }));
-        }
-        return _observableOf(null as any);
-    }
-
-    /**
-     * @param documento (optional) 
-     * @return OK
-     */
     aceptarTratamientoDatos(documento?: string | undefined): Observable<MensajeRespuesta> {
         let url_ = this.baseUrl + "/api/mis-datos/aceptar-tratamiento?";
         if (documento === null)
@@ -1096,6 +1075,77 @@ export class MisDatosClient {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             let result200: any = null;
             result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ObservacionDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param documento (optional) 
+     * @return OK
+     */
+    listarArchivosMisDatos(documento?: string | undefined): Observable<ArchivoDto[]> {
+        let url_ = this.baseUrl + "/api/mis-datos/archivos?";
+        if (documento === null)
+            throw new globalThis.Error("The parameter 'documento' cannot be null.");
+        else if (documento !== undefined)
+            url_ += "documento=" + encodeURIComponent("" + documento) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processListarArchivosMisDatos(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processListarArchivosMisDatos(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ArchivoDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ArchivoDto[]>;
+        }));
+    }
+
+    protected processListarArchivosMisDatos(response: HttpResponseBase): Observable<ArchivoDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ArchivoDto[];
             return _observableOf(result200);
             }));
         } else if (status === 400) {
@@ -4990,6 +5040,304 @@ export class ConfiguracionClient {
     }
 }
 
+@Injectable({
+    providedIn: 'root'
+})
+export class CuentaBancariaClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @return OK
+     */
+    obtenerMiCuentaBancaria(): Observable<CuentaBancariaDto> {
+        let url_ = this.baseUrl + "/api/mis-datos/cuenta-bancaria";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processObtenerMiCuentaBancaria(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processObtenerMiCuentaBancaria(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CuentaBancariaDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CuentaBancariaDto>;
+        }));
+    }
+
+    protected processObtenerMiCuentaBancaria(response: HttpResponseBase): Observable<CuentaBancariaDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CuentaBancariaDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("No Content", status, _responseText, _headers);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 503) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result503: any = null;
+            result503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Service Unavailable", status, _responseText, _headers, result503);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    guardarMiCuentaBancaria(body: GuardarCuentaBancariaRequest): Observable<CuentaBancariaDto> {
+        let url_ = this.baseUrl + "/api/mis-datos/cuenta-bancaria";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processGuardarMiCuentaBancaria(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processGuardarMiCuentaBancaria(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CuentaBancariaDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CuentaBancariaDto>;
+        }));
+    }
+
+    protected processGuardarMiCuentaBancaria(response: HttpResponseBase): Observable<CuentaBancariaDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CuentaBancariaDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 503) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result503: any = null;
+            result503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Service Unavailable", status, _responseText, _headers, result503);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    confirmarMiCuentaBancaria(): Observable<CuentaBancariaDto> {
+        let url_ = this.baseUrl + "/api/mis-datos/cuenta-bancaria/confirmar";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processConfirmarMiCuentaBancaria(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processConfirmarMiCuentaBancaria(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<CuentaBancariaDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<CuentaBancariaDto>;
+        }));
+    }
+
+    protected processConfirmarMiCuentaBancaria(response: HttpResponseBase): Observable<CuentaBancariaDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as CuentaBancariaDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    leerMiNumeroCuentaBancaria(): Observable<NumeroCuentaCompletoDto> {
+        let url_ = this.baseUrl + "/api/mis-datos/cuenta-bancaria/numero";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processLeerMiNumeroCuentaBancaria(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processLeerMiNumeroCuentaBancaria(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<NumeroCuentaCompletoDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<NumeroCuentaCompletoDto>;
+        }));
+    }
+
+    protected processLeerMiNumeroCuentaBancaria(response: HttpResponseBase): Observable<NumeroCuentaCompletoDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as NumeroCuentaCompletoDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 503) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result503: any = null;
+            result503 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Service Unavailable", status, _responseText, _headers, result503);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
 export interface ActualizarDatosRequest {
     datosJson: string;
 
@@ -5098,6 +5446,20 @@ export interface CrearInstitucionRequest {
     [key: string]: any;
 }
 
+export interface CuentaBancariaDto {
+    id: string;
+    tipoCuentaId: number;
+    tipoCuenta: string | undefined;
+    bancoId: number | undefined;
+    banco: string;
+    numeroEnmascarado: string;
+    ultimosDigitos: string;
+    estado: string;
+    fechaActualizacionUtc: Date;
+
+    [key: string]: any;
+}
+
 export interface DevolverActualizacionRequest {
     observacionGeneral: string;
     marcas?: MarcaObservacionItem[] | undefined;
@@ -5157,11 +5519,24 @@ export interface EnvioIncompletoRespuesta {
     [key: string]: any;
 }
 
+export interface EstadoCuentaPersonaDto {
+    personaId: string;
+    documento: string;
+    nombre: string | undefined;
+    estado: string;
+    banco: string | undefined;
+    tipoCuenta: string | undefined;
+    ultimosDigitos: string | undefined;
+
+    [key: string]: any;
+}
+
 export interface EstadoEdicionDto {
     puedeEditar: boolean;
     mensaje: string;
     campanaActiva?: CampanaDto | undefined;
     estadoActualizacion?: string | undefined;
+    puedeIniciarNuevaActualizacion?: boolean;
 
     [key: string]: any;
 }
@@ -5174,7 +5549,6 @@ export interface ExpedienteRevisionDto {
     correo: string | undefined;
     estadoActualizacion: string;
     datosPersonalesJson: string | undefined;
-    archivosSubidosJson: string | undefined;
     tratamientoDatosAceptado: boolean;
     fechaAceptacionTratamientoDatosUtc: Date | undefined;
     observaciones: ObservacionDto[];
@@ -5252,6 +5626,15 @@ export interface GuardarCapacitacionRequest {
     lugar?: string | undefined;
     financiadaPorInstitucion?: boolean;
     archivoId?: string | undefined;
+
+    [key: string]: any;
+}
+
+export interface GuardarCuentaBancariaRequest {
+    tipoCuentaId: number;
+    numero: string;
+    bancoId?: number | undefined;
+    nombreBancoOtro?: string | undefined;
 
     [key: string]: any;
 }
@@ -5458,12 +5841,17 @@ export interface MisDatosDto {
     correoVerificado: boolean;
     estadoActualizacion: string;
     datosPersonalesJson: string | undefined;
-    archivosSubidosJson: string | undefined;
     tratamientoDatosAceptado: boolean;
     fechaAceptacionTratamientoDatosUtc: Date | undefined;
     puedeEditar: boolean;
     mensajeEstado: string;
     observaciones: ObservacionDto[];
+
+    [key: string]: any;
+}
+
+export interface NumeroCuentaCompletoDto {
+    numero: string;
 
     [key: string]: any;
 }
@@ -5588,14 +5976,6 @@ export interface SesionUsuarioDto {
     rol: string;
     debeCambiarContrasena: boolean;
     correoVerificado: boolean;
-
-    [key: string]: any;
-}
-
-export interface SubirArchivoRequest {
-    nombreArchivo: string;
-    tipoContenido: string;
-    tamanoBytes: number;
 
     [key: string]: any;
 }
