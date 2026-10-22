@@ -500,7 +500,7 @@ export class HojaDeVidaComponent implements OnInit {
   readonly mostrarModalFaltantes = signal(false);
 
   ngOnInit(): void {
-    this.state.cargarTodo();
+    this.state.cargarTodo().subscribe();
   }
 
   validarYEnviar(): void {

@@ -64,7 +64,7 @@ describe('HojaDeVidaComponent', () => {
 
   beforeEach(async () => {
     stateMock = {
-      cargarTodo: vi.fn(),
+      cargarTodo: vi.fn().mockReturnValue(of({})),
       cargando: signal(false),
       guardando: signal(false),
       error: signal(''),
