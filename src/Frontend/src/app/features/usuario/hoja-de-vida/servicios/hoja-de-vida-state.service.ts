@@ -121,7 +121,7 @@ export class HojaDeVidaStateService {
       catchError((err) => {
         const msg = err?.message || 'No fue posible cargar la información de la hoja de vida.';
         this.error.set(msg);
-        throw err;
+        return of(null);
       }),
       finalize(() => this.cargando.set(false)),
     );
