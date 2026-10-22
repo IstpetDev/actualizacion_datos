@@ -1,0 +1,122 @@
+{
+  "fecha_consulta": "2026-10-22",
+  "fuentes": [
+    {
+      "nombre": "INEC DPA 2026",
+      "url": "https://aplicaciones2.ecuadorencifras.gob.ec/SIN/descargas/cdpa2026.xlsx",
+      "sha256_recurso": "0d0ae33a0a0023ed44abcaa6b38a1c173fbda423e368a8f12bedda59d65d8f3a"
+    },
+    {
+      "nombre": "ONU M49",
+      "url": "https://unstats.un.org/unsd/methodology/m49/overview/",
+      "sha256_recurso": "b9048114f6e7f2abda83bf03d4263c9d7cd1bd7230e3d0461025ee7839a7a1fb"
+    },
+    {
+      "nombre": "SENESCYT Docentes 2020",
+      "url": "https://siau.senescyt.gob.ec/download/guias-de-registro/?wpdmdl=10021&ind=10016&filename=gripp_docentes.pdf",
+      "sha256_recurso": "f142b904145f10d293299bac3cb05deab12e643a4fc37fdf0019a2d7493dae5d"
+    },
+    {
+      "nombre": "SENESCYT Matriculados",
+      "url": "https://siau.senescyt.gob.ec/download/guias-de-registro/?wpdmdl=10021&ind=10014&filename=gripp_matriculas.pdf",
+      "sha256_recurso": "a05ef8842bcec49553251b0b394460a0a3df33d407c1900de88e301ca1654e35"
+    },
+    {
+      "nombre": "CES CINE adaptada",
+      "url": "https://www.ces.gob.ec/lotaip/Anexos%20Generales/a3/Reglamento_Armonizaci%C3%B3n_nomenclatura_T%C3%ADtulosProfesionales_GradosAcad%C3%A9micos.pdf",
+      "sha256_recurso": "e22663a4d652825a0e23b31ba536da4467cd1a12dd1908c3ba4c3531a7130cb4"
+    },
+    {
+      "nombre": "CES Públicas",
+      "url": "https://www.ces.gob.ec/?page_id=328",
+      "sha256_recurso": "5463563e62d3c09e09bb7bfa498671214d72b5baff1dcd5842282594ba450570"
+    },
+    {
+      "nombre": "CES Cofinanciadas",
+      "url": "https://www.ces.gob.ec/?page_id=5398",
+      "sha256_recurso": "01d08439ebfad10fb69960aaf07e656e4778f178ba7ce357f77ee426cd6d7274"
+    },
+    {
+      "nombre": "CES Autofinanciadas",
+      "url": "https://www.ces.gob.ec/?page_id=1540",
+      "sha256_recurso": "42ad05d9299d180977e8d634d9252012a4d90b5e8aba3d8f17b9247a07a61644"
+    }
+  ],
+  "archivos": [
+    {
+      "archivo": "CampoAmplioUnesco.csv",
+      "filas": 10,
+      "sha256": "47b8187174c36329845f30f80e00fe5dadbe660a5fd701eced6f7a101b61e97b"
+    },
+    {
+      "archivo": "CampoDetalladoUnesco.csv",
+      "filas": 97,
+      "sha256": "b7933a2cbe02c58cdf3ad2325b7fa6a4f868009b32cd43b2b956016b74a4017c"
+    },
+    {
+      "archivo": "CampoEspecificoUnesco.csv",
+      "filas": 26,
+      "sha256": "6afdb06e1a503cd17cc450030062531b719d9e259c691590c17118a0f80afaee"
+    },
+    {
+      "archivo": "Canton.csv",
+      "filas": 222,
+      "sha256": "1977cf894f74d1383fe981b3f71c3ee080aa1a34ab7464e45816b0eb4088463a"
+    },
+    {
+      "archivo": "Discapacidad.csv",
+      "filas": 7,
+      "sha256": "ec080ecee247727a0ab482423038cb49ec9a80849940221526947d375d4f5388"
+    },
+    {
+      "archivo": "Etnia.csv",
+      "filas": 9,
+      "sha256": "8746d9fc252aa6e1f33cb32485a467394c850bf4bdc55ab0b04c6e8d0d5dec43"
+    },
+    {
+      "archivo": "FinanciamientoBeca.csv",
+      "filas": 4,
+      "sha256": "d8bd0cd0a4002494288ea7c6b8ed6341aee9259b67544f2fb2d2c1c684957c9b"
+    },
+    {
+      "archivo": "GradoAcademico.csv",
+      "filas": 9,
+      "sha256": "510319b664d0cbeeb2dc1a7b57b94b32b2b39e46245569ddce0a33f782869e55"
+    },
+    {
+      "archivo": "NacionalidadIndigena.csv",
+      "filas": 34,
+      "sha256": "a505a2e296fc71562d7b769be09afb89d8b3eee470abeee83b43bb448a972ca7"
+    },
+    {
+      "archivo": "NivelAcademico.csv",
+      "filas": 9,
+      "sha256": "86f53b0f401bb6c22939b504c189dd7d66ae8723471117e1f53a036721ccd02f"
+    },
+    {
+      "archivo": "Pais.csv",
+      "filas": 248,
+      "sha256": "08952bf581a244b79ea45694d816684c229cf94e34d7a42a03c31ce869b87d56"
+    },
+    {
+      "archivo": "Parroquia.csv",
+      "filas": 1315,
+      "sha256": "9e294a401f830c5a2370ac7f2ebe29f4e0d91966920bcc3306c3e0d0efb881bf"
+    },
+    {
+      "archivo": "Provincia.csv",
+      "filas": 24,
+      "sha256": "56e9d83bedf1d0e2c11c3a593d8d4e5490ed6f192975d511dc0e3c0c20fefcef"
+    },
+    {
+      "archivo": "TipoBeca.csv",
+      "filas": 3,
+      "sha256": "a71eaeebdee4b7df20374640c60419ad02017a4c35f6c9300d21b841cce108fe"
+    },
+    {
+      "archivo": "Universidad.csv",
+      "filas": 64,
+      "sha256": "304dd914cd2b5bd5178d33433c59065dd1bbe6fbfbbb33dc6c7a3b0e02b5ddeb"
+    }
+  ]
+}

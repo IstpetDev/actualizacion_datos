@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -1179,6 +1180,10 @@ exportaciones.MapGet("/excel", async (
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
 .Produces(StatusCodes.Status401Unauthorized);
 
+
+await app.CargarCatalogosDesarrolloAsync();
+
+app.MapCatalogos();
 
 await app.RunAsync();
 
