@@ -94,7 +94,7 @@ Para no editar el validador cada vez, cada regla es una `IReglaCompletitudEnvio`
 3. **Quitar de `ContratosHojaDeVidaTests`** las filas de sus rutas en las pruebas de 501 y agregar pruebas de comportamiento (y la de aislamiento entre dos instituciones si lee o escribe hoja de vida).
 4. **Mapeo de enumeraciones:** la API usa texto en minúsculas: `TipoParticipacion` = `asistente|aprobado|facilitador`; `Tipo` de referencia = `personal|familiar`; `Tipo` de catálogo = nombre de `TipoCatalogo` (`ListarCatalogo` acepta cualquier combinación de mayúsculas y rechaza números).
 5. **Fechas:** `DateOnly` viaja como `"aaaa-MM-dd"`.
-6. **Respaldo por ítem:** el archivo se sube primero (`POST /api/archivos/subir`, sin `claveDestino` o con `claveDestino` = `titulo:{id}` cuando ya existe el ítem) y luego se envía su id en `archivoId`.
+6. **Respaldo por ítem:** el archivo se sube primero con `POST /api/archivos/subir` **sin** `claveDestino` y luego se envía su id en `archivoId`. Sin clave, la limpieza al aprobar (#32, ADR-0006) borra el respaldo viejo cuando el ítem cambia de archivo o se elimina; con clave quedaría guardado para siempre.
 7. **El usuario solo opera sobre sí mismo:** las rutas de `/api/mis-datos/hoja-de-vida` y `/api/mis-datos/documentos` no aceptan `?documento=`; el documento sale de la sesión.
 8. **Regenerar el cliente** si cambia una firma: `pnpm --dir src/Frontend generar:api` (o `dotnet build` del WebApi en Debug).
 
