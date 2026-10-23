@@ -180,13 +180,13 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0008  
 **Responsable:** @bryancito1090 (propuesta)
 
-- [ ] Pruebas: marca con clave de ítem existente; clave de otra persona rechazada; el usuario ve la marca; migración no necesaria o declarada.
-- [ ] Implementar y comprobar cómo se guarda `TipoDestino` antes de agregar el valor.
-- [ ] Ejecutar `dotnet test src/Backend`.
-- [ ] Verificar RF-HDV-011, 015.
-- [ ] Entregar diff, pruebas y riesgos.
+- [x] Pruebas: marca con clave de ítem existente; clave de otra persona rechazada; el usuario ve la marca; migración no necesaria o declarada.
+- [x] Implementar y comprobar cómo se guarda `TipoDestino` antes de agregar el valor.
+- [x] Ejecutar `dotnet test src/Backend`.
+- [x] Verificar RF-HDV-011, 015.
+- [x] Entregar diff, pruebas y riesgos.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completado en PR de #43  
 **Bloqueos:** Ninguno
 
 ## T-08 — Exportación por secciones

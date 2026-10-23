@@ -433,10 +433,44 @@ export class HojaDeVidaStateService {
    * Obtiene la marca de observación del supervisor para un ítem o sección dada
    */
   obtenerMarcaParaItem(tipoDestino: string, claveDestino: string): MarcaObservacionDto | undefined {
-    return this.marcasObservacion().find(
-      (m) =>
-        m.tipoDestino?.toLowerCase() === tipoDestino.toLowerCase() &&
-        m.claveDestino?.toLowerCase() === claveDestino.toLowerCase(),
-    );
+    const tipoLower = tipoDestino.toLowerCase();
+    const claveLower = claveDestino.toLowerCase();
+
+    return this.marcasObservacion().find((m) => {
+      const mTipo = m.tipoDestino?.toLowerCase();
+      const mClave = m.claveDestino?.toLowerCase();
+
+      // Coincidencia directa (campo o archivo previo)
+      if (mTipo === tipoLower && mClave === claveLower) {
+        return true;
+      }
+
+      // Coincidencia de marca por ítem (T-07: tipoDestino = 'item', claveDestino = 'tipo:id')
+      if (mTipo === 'item' && mClave) {
+        if (mClave === `${tipoLower}:${claveLower}`) {
+          return true;
+        }
+
+        // Variaciones con guion o guion bajo (p.ej. titulo_en_curso vs titulo-en-curso, experiencia_laboral vs experiencia)
+        const tipoNormalizado = tipoLower.replace(/[-_]/g, '');
+        const separador = mClave.indexOf(':');
+        if (separador > 0) {
+          const mPrefijo = mClave.substring(0, separador).replace(/[-_]/g, '');
+          const mId = mClave.substring(separador + 1);
+          if (
+            (mPrefijo === tipoNormalizado ||
+              (tipoNormalizado.startsWith('experiencia') && mPrefijo.startsWith('experiencia')) ||
+              (tipoNormalizado.startsWith('documento') && mPrefijo.startsWith('documento')) ||
+              (tipoNormalizado.startsWith('capacitacion') && mPrefijo.startsWith('curso')) ||
+              (tipoNormalizado.startsWith('curso') && mPrefijo.startsWith('capacitacion'))) &&
+            mId === claveLower
+          ) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    });
   }
 }
