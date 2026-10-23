@@ -117,9 +117,9 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         gap: 1.25rem;
       }
       .card-documento {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
         padding: 1.25rem;
         display: flex;
         flex-direction: column;

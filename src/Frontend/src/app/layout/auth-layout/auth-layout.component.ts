@@ -13,24 +13,19 @@ import { RouterOutlet } from '@angular/router';
   `,
   styles: `
     .auth-shell {
+      position: relative;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #f1f5f9;
-      padding: 1.5rem;
+      padding: 2rem 1.25rem;
       box-sizing: border-box;
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        Roboto,
-        sans-serif;
     }
     .auth-container {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 440px;
+      max-width: 400px;
     }
   `,
 })

@@ -258,216 +258,256 @@ export type TabSeccionHojaVida =
   styles: [
     `
       .hoja-vida-container {
-        max-width: 1100px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 1.5rem 1rem;
+        padding: 0.25rem 0;
       }
       .hoja-vida-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 1.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 1.25rem;
+        margin-bottom: 1.25rem;
+        padding: 1.5rem;
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-top: 3px solid var(--ammi-gold, #fcea1e);
+        border-radius: var(--radius-md, 8px);
+        box-shadow: var(--geist-shadow-sm);
       }
       .ceja {
-        font-size: 0.8125rem;
+        display: inline-block;
+        font-size: 0.72rem;
         font-weight: 700;
-        color: #0284c7;
+        color: #111111;
+        background: var(--ammi-gold, #fcea1e);
+        padding: 0.15rem 0.55rem;
+        border-radius: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        margin: 0 0 0.25rem 0;
+        margin: 0 0 0.5rem 0;
       }
       .titulo-principal {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 0.5rem 0;
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: var(--ammi-primary, #1d1e1c);
+        letter-spacing: -0.035em;
+        margin: 0 0 0.4rem 0;
       }
       .meta-usuario {
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem;
-        font-size: 0.875rem;
-        color: #475569;
+        gap: 1.25rem;
+        font-size: 0.85rem;
+        color: var(--ammi-text-muted, #666666);
       }
       .badge-estado {
         display: inline-block;
-        padding: 0.2rem 0.6rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.7rem;
+        font-weight: 600;
         text-transform: uppercase;
+        letter-spacing: 0.03em;
       }
       .badge-borrador {
-        background: #f1f5f9;
-        color: #475569;
+        background: #f5f5f5;
+        color: #444444;
+        border: 1px solid #eaeaea;
       }
       .badge-devuelto {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
       }
       .badge-enviado {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: rgba(252, 234, 30, 0.25);
+        color: #111111;
+        border: 1px solid var(--ammi-gold-border, #e5d415);
       }
       .banner-alerta {
-        border-radius: 8px;
+        border-radius: var(--radius-md, 8px);
         padding: 1rem 1.25rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid var(--geist-border, #eaeaea);
       }
       .banner-devuelto {
         background: #fef2f2;
-        border-left: 4px solid #ef4444;
+        border-color: #fecaca;
+        border-left: 3px solid #dc2626;
       }
       .banner-lectura {
-        background: #f8fafc;
-        border-left: 4px solid #94a3b8;
+        background: #ffffff;
+        border-left: 3px solid var(--ammi-primary, #1d1e1c);
       }
       .banner-titulo {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 700;
         color: #991b1b;
-        margin: 0 0 0.35rem 0;
+        margin: 0 0 0.25rem 0;
       }
       .banner-desc {
-        font-size: 0.875rem;
-        color: #334155;
+        font-size: 0.85rem;
+        color: #444444;
         margin: 0;
       }
       .observacion-general-box {
         background: #ffffff;
+        border: 1px solid #fecaca;
         border-left: 3px solid #dc2626;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-        font-style: italic;
-        color: #1e293b;
-        margin: 0.75rem 0;
-        border-radius: 0 6px 6px 0;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+        color: #171717;
+        margin: 0.65rem 0;
+        border-radius: 6px;
       }
       .banner-conteo-marcas {
-        font-size: 0.8125rem;
+        font-size: 0.8rem;
         color: #7f1d1d;
-        margin: 0.5rem 0 0 0;
+        margin: 0.4rem 0 0 0;
       }
       .secciones-nav {
         display: flex;
         flex-wrap: wrap;
         gap: 0.25rem;
-        border-bottom: 2px solid #e2e8f0;
-        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--geist-border, #eaeaea);
+        margin-bottom: 1.25rem;
+        background: var(--geist-surface, #ffffff);
+        padding: 0.35rem 0.5rem 0;
+        border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
+        border: 1px solid var(--geist-border, #eaeaea);
       }
       .seccion-tab-btn {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
         background: transparent;
         border: none;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #64748b;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.835rem;
+        font-weight: 500;
+        color: var(--ammi-text-muted, #666666);
         cursor: pointer;
         border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: all 0.15s ease-in-out;
+        margin-bottom: -1px;
+        transition: all var(--transition-fast);
       }
       .seccion-tab-btn:hover {
-        color: #0f172a;
+        color: var(--ammi-primary, #1d1e1c);
       }
       .seccion-tab-btn.active {
-        color: #0284c7;
-        border-bottom-color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
+        font-weight: 600;
+        border-bottom-color: var(--ammi-primary, #1d1e1c);
       }
       .tab-num {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 1.35rem;
-        height: 1.35rem;
+        width: 1.3rem;
+        height: 1.3rem;
         border-radius: 50%;
-        background: #e2e8f0;
-        color: #475569;
-        font-size: 0.75rem;
+        background: #f5f5f5;
+        border: 1px solid #eaeaea;
+        color: #666666;
+        font-size: 0.72rem;
         font-weight: 700;
       }
       .seccion-tab-btn.active .tab-num {
-        background: #0284c7;
-        color: #ffffff;
+        background: var(--ammi-gold, #fcea1e);
+        border-color: var(--ammi-primary, #1d1e1c);
+        color: #111111;
       }
       .tab-badge {
-        background: #f1f5f9;
-        color: #475569;
-        padding: 0.125rem 0.4rem;
+        background: #f5f5f5;
+        color: #444444;
+        border: 1px solid #eaeaea;
+        padding: 0.1rem 0.4rem;
         border-radius: 9999px;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-size: 0.68rem;
+        font-weight: 600;
       }
       .seccion-tab-btn.active .tab-badge {
-        background: #e0f2fe;
-        color: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        border-color: var(--ammi-primary, #1d1e1c);
+        color: var(--ammi-gold, #fcea1e);
       }
       .seccion-activa-wrapper {
         min-height: 420px;
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.5rem;
+        box-shadow: var(--geist-shadow-sm);
       }
       .hoja-vida-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1.5rem;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
+        padding: 1rem 1.5rem;
+        box-shadow: var(--geist-shadow-sm);
       }
       .btn {
         padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
+        border-radius: var(--radius-sm, 6px);
+        font-size: 0.85rem;
         font-weight: 600;
         cursor: pointer;
-        border: none;
-        transition: background-color 0.15s ease;
+        border: 1px solid transparent;
+        transition: all var(--transition-fast);
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
         color: #ffffff;
+        border-color: var(--ammi-primary, #1d1e1c);
       }
       .btn-primary:hover:not(:disabled) {
-        background: #0369a1;
+        background: #000000;
+        border-color: var(--ammi-gold, #fcea1e);
+        color: var(--ammi-gold, #fcea1e);
+        box-shadow: 0 0 0 1px var(--ammi-gold, #fcea1e);
       }
       .btn-primary:disabled {
-        opacity: 0.6;
+        background: #f5f5f5;
+        color: #999999;
+        border-color: #eaeaea;
         cursor: not-allowed;
       }
       .btn-lg {
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        padding: 0.65rem 1.25rem;
+        font-size: 0.875rem;
       }
       .cargando-box {
         text-align: center;
         padding: 3rem 1rem;
-        color: #64748b;
+        color: var(--ammi-text-subtle, #888888);
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: var(--radius-md, 8px);
       }
       .alert-danger {
-        background: #fee2e2;
-        color: #991b1b;
+        background: #fef2f2;
+        color: #dc2626;
         padding: 0.75rem 1rem;
-        border-radius: 6px;
+        border-radius: var(--radius-sm, 6px);
+        border: 1px solid #fecaca;
         margin-bottom: 1rem;
       }
       .mt-4 {
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
       }
       .m-0 {
         margin: 0;
       }
       .text-sm {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
       }
       .text-muted {
-        color: #64748b;
+        color: var(--ammi-text-muted, #666666);
       }
     `,
   ],

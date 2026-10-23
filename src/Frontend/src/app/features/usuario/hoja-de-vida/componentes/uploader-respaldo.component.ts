@@ -132,7 +132,7 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
         gap: 0.75rem;
       }
       .btn-enlace {
-        color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
         font-size: 0.8125rem;
         text-decoration: underline;
         font-weight: 500;
@@ -159,7 +159,7 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
       }
       .subiendo-indicador {
         font-size: 0.8125rem;
-        color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
         font-style: italic;
       }
       .alerta-tamanio {

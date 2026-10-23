@@ -303,9 +303,9 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin: 0;
       }
       .card-formulario-item {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        background: var(--geist-surface-subtle, #fafafa);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
         padding: 1.25rem;
         margin-bottom: 1.5rem;
       }
@@ -407,7 +407,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin-left: 0.5rem;
       }
       .btn-editar {
-        color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
       }
       .btn-eliminar {
         color: #ef4444;
@@ -425,7 +425,8 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.8125rem;
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        border: 1px solid var(--ammi-primary, #1d1e1c);
         color: #ffffff;
       }
       .btn-secondary {

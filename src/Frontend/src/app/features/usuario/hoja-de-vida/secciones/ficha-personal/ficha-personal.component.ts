@@ -411,10 +411,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin: 0;
       }
       .grupo-campos {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1.25rem;
-        background: #ffffff;
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.35rem;
+        background: var(--geist-surface, #ffffff);
       }
       .grupo-titulo {
         font-size: 0.95rem;
@@ -457,8 +457,8 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
       }
       .form-control:focus {
         outline: none;
-        border-color: #0284c7;
-        box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+        border-color: var(--ammi-primary, #1d1e1c);
+        box-shadow: 0 0 0 2px rgba(252, 234, 30, 0.45);
       }
       .form-control:disabled {
         background-color: #f8fafc;
@@ -478,11 +478,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         border: none;
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        border: 1px solid var(--ammi-primary, #1d1e1c);
         color: #ffffff;
       }
       .btn-primary:hover:not(:disabled) {
-        background: #0369a1;
+        background: var(--ammi-primary-hover, #0f100e);
+        border-color: var(--ammi-gold, #fcea1e);
+        color: var(--ammi-gold, #fcea1e);
       }
       .btn-primary:disabled {
         opacity: 0.6;

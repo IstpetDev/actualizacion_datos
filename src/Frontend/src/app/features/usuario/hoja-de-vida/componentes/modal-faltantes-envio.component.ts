@@ -149,7 +149,8 @@ import { FaltanteEnvioDto } from '../../../../api-client';
         border: none;
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        border: 1px solid var(--ammi-primary, #1d1e1c);
         color: #ffffff;
       }
     `,
