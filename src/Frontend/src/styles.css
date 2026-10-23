@@ -1,27 +1,27 @@
 /* ==========================================================================
    Paleta Institucional AMMI (Academia Militar General Miguel Iturralde)
-   Tokens CSS para identidad visual, contraste y accesibilidad.
+   Basada estrictamente en el escudo oficial institucional (Amarillo y Negro).
    ========================================================================== */
 
 :root {
-  /* Colores Corporativos Oficiales AMMI */
-  --ammi-primary: #171f32; /* Azul marino profundo */
-  --ammi-primary-hover: #0f1522; /* Variante más oscura para interactividad */
-  --ammi-primary-light: #24304d; /* Variante clara de soporte */
+  /* Colores Oficiales del Escudo AMMI */
+  --ammi-primary: #1d1e1c; /* Negro institucional / fondo oscuro de contraste */
+  --ammi-primary-hover: #111111; /* Negro profundo para hover e interacción */
+  --ammi-primary-light: #2b2c2a; /* Tono de soporte gris oscuro */
 
-  --ammi-gold: #e9b902; /* Oro / Amarillo distintivo */
-  --ammi-gold-hover: #cdb82b; /* Oro atenuado / hover */
-  --ammi-gold-soft: #fef9e6; /* Fondo dorado suave */
-  --ammi-gold-border: #f5d76e; /* Borde dorado */
+  --ammi-gold: #fcea1e; /* Amarillo heráldico oficial del escudo */
+  --ammi-gold-hover: #e5d415; /* Amarillo atenuado / hover */
+  --ammi-gold-soft: #fefde8; /* Fondo sutil amarillo para alertas/focos */
+  --ammi-gold-border: #f4e31b; /* Borde amarillo de resalte */
 
-  --ammi-accent: #ff5421; /* Acento / Naranja corporativo */
-  --ammi-accent-hover: #e04413;
+  --ammi-accent: #fcea1e; /* Color de acento principal basado en el escudo */
+  --ammi-accent-hover: #e5d415;
 
   /* Superficies y Neutros */
   --ammi-bg-main: #f8fafc;
   --ammi-surface: #ffffff;
   --ammi-border: #e2e8f0;
-  --ammi-border-focus: #171f32;
+  --ammi-border-focus: #1d1e1c;
 
   /* Tipografía */
   --ammi-text-main: #111111;
