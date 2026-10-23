@@ -1,45 +1,50 @@
 /* ==========================================================================
    Paleta Institucional AMMI (Academia Militar General Miguel Iturralde)
-   Basada estrictamente en el escudo oficial institucional (Amarillo y Negro).
+   Tokens CSS para identidad visual, contraste y Glassmorphism Moderno.
    ========================================================================== */
 
 :root {
   /* Colores Oficiales del Escudo AMMI */
-  --ammi-primary: #1d1e1c; /* Negro institucional / fondo oscuro de contraste */
-  --ammi-primary-hover: #111111; /* Negro profundo para hover e interacción */
-  --ammi-primary-light: #2b2c2a; /* Tono de soporte gris oscuro */
+  --ammi-primary: #1d1e1c; /* Negro institucional */
+  --ammi-primary-hover: #111111; /* Negro profundo */
+  --ammi-primary-light: #2b2c2a; /* Gris carbón */
 
-  --ammi-gold: #fcea1e; /* Amarillo heráldico oficial del escudo */
-  --ammi-gold-hover: #e5d415; /* Amarillo atenuado / hover */
-  --ammi-gold-soft: #fefde8; /* Fondo sutil amarillo para alertas/focos */
-  --ammi-gold-border: #f4e31b; /* Borde amarillo de resalte */
+  --ammi-gold: #fcea1e; /* Amarillo heráldico oficial */
+  --ammi-gold-hover: #e5d415; /* Amarillo atenuado */
+  --ammi-gold-soft: rgba(252, 234, 30, 0.12); /* Brillo / Glow dorado */
+  --ammi-gold-border: rgba(252, 234, 30, 0.45);
 
-  --ammi-accent: #fcea1e; /* Color de acento principal basado en el escudo */
+  --ammi-accent: #fcea1e;
   --ammi-accent-hover: #e5d415;
 
-  /* Superficies y Neutros */
-  --ammi-bg-main: #f8fafc;
-  --ammi-surface: #ffffff;
-  --ammi-border: #e2e8f0;
-  --ammi-border-focus: #1d1e1c;
+  /* Glassmorphism & Superficies */
+  --ammi-bg-main: #0f1218; /* Fondo oscuro contemporáneo */
+  --glass-surface: rgba(255, 255, 255, 0.72);
+  --glass-surface-dark: rgba(29, 30, 28, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-border-gold: rgba(252, 234, 30, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.18);
+  --glass-shadow-glow: 0 8px 32px 0 rgba(252, 234, 30, 0.12);
+  --glass-blur: blur(14px);
 
   /* Tipografía */
-  --ammi-text-main: #111111;
+  --ammi-text-main: #0f172a;
   --ammi-text-muted: #475569;
   --ammi-text-subtle: #64748b;
   --ammi-text-inverse: #ffffff;
 
   /* Estados Funcionales Semánticos */
   --ammi-success: #15803d;
-  --ammi-success-bg: #ecfdf5;
+  --ammi-success-bg: rgba(236, 253, 245, 0.85);
   --ammi-warning: #92400e;
-  --ammi-warning-bg: #fffbeb;
+  --ammi-warning-bg: rgba(254, 243, 199, 0.85);
   --ammi-danger: #b91c1c;
-  --ammi-danger-bg: #fef2f2;
+  --ammi-danger-bg: rgba(254, 242, 242, 0.85);
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
   font-family:
     system-ui,
     -apple-system,
@@ -47,6 +52,13 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
-  background-color: var(--ammi-bg-main);
+  background-color: #0b0e14;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(252, 234, 30, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(29, 30, 28, 0.9) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(252, 234, 30, 0.05) 0px, transparent 60%),
+    linear-gradient(180deg, #0e1219 0%, #151a24 100%);
+  background-attachment: fixed;
   color: var(--ammi-text-main);
+  -webkit-font-smoothing: antialiased;
 }

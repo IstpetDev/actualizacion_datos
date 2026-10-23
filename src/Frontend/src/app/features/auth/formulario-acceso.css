@@ -1,75 +1,145 @@
 :host {
   display: block;
   font-family: system-ui, sans-serif;
-  color: var(--ammi-text-main, #111111);
+  color: var(--ammi-text-main, #0f172a);
 }
+
 .tarjeta {
-  padding: 2rem;
-  background: var(--ammi-surface, white);
-  border: 1px solid var(--ammi-border, #e2e8f0);
-  border-top: 4px solid var(--ammi-gold, #e9b902);
-  border-radius: 0.75rem;
-  max-width: 32rem;
-  margin: auto;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  padding: 2.5rem 2.25rem;
+  background: var(--glass-surface, rgba(255, 255, 255, 0.75));
+  backdrop-filter: var(--glass-blur, blur(16px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(16px));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.4));
+  border-top: 3px solid var(--ammi-gold, #fcea1e);
+  border-radius: 1.25rem;
+  max-width: 30rem;
+  margin: 3.5rem auto;
+  box-shadow:
+    0 20px 40px -15px rgba(0, 0, 0, 0.35),
+    0 0 25px rgba(252, 234, 30, 0.1);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
+
+.tarjeta::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(252, 234, 30, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
 h1 {
   margin-top: 0;
-  font-size: 1.5rem;
-  color: var(--ammi-primary, #171f32);
+  margin-bottom: 0.35rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: -0.025em;
 }
+
 p {
   color: var(--ammi-text-muted, #475569);
   line-height: 1.5;
+  font-size: 0.925rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
 }
+
 fieldset {
   border: 0;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
   min-width: 0;
 }
+
 label {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--ammi-primary, #171f32);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
+
 input,
 button {
   font: inherit;
-  border-radius: 0.375rem;
-  padding: 0.75rem;
+  border-radius: 0.65rem;
+  padding: 0.85rem 1rem;
   box-sizing: border-box;
   width: 100%;
 }
+
 input {
-  border: 1px solid #94a3b8;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  color: #0f172a;
   min-width: 0;
+  font-size: 0.95rem;
+  transition: all 180ms ease-in-out;
 }
+
+input:focus {
+  background: #ffffff;
+  border-color: var(--ammi-gold, #fcea1e);
+  box-shadow:
+    0 0 0 3px rgba(252, 234, 30, 0.35),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  outline: none;
+}
+
 button {
-  border: 0;
-  background: var(--ammi-primary, #171f32);
-  color: var(--ammi-text-inverse, white);
-  font-weight: 600;
+  margin-top: 0.5rem;
+  border: 1px solid var(--ammi-gold, #fcea1e);
+  background: #111111;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background-color 150ms ease-in-out;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  transition: all 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 button:hover:not(:disabled) {
-  background: var(--ammi-primary-hover, #0f1522);
+  background: var(--ammi-gold, #fcea1e);
+  color: #111111;
+  box-shadow: 0 0 20px rgba(252, 234, 30, 0.45);
+  transform: translateY(-1px);
 }
+
 button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: default;
+  border-color: transparent;
+  background: #64748b;
+  box-shadow: none;
 }
+
 :focus-visible {
-  outline: 3px solid var(--ammi-gold, #e9b902);
+  outline: 2px solid var(--ammi-gold, #fcea1e);
   outline-offset: 2px;
 }
+
 .error {
-  padding: 0.75rem;
-  background: var(--ammi-danger-bg, #fef2f2);
-  color: var(--ammi-danger, #991b1b);
-  border-radius: 0.375rem;
-  border-left: 4px solid var(--ammi-danger, #b91c1c);
+  padding: 0.85rem 1rem;
+  background: rgba(254, 242, 242, 0.9);
+  backdrop-filter: blur(8px);
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-left: 4px solid #ef4444;
+  margin-top: 1.25rem;
+  margin-bottom: 0;
 }
