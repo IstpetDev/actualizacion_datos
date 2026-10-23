@@ -45,6 +45,37 @@ public sealed class CargaNominaAmpliadaTests : IDisposable
     }
 
     [Fact]
+    public async Task Codigo_de_tipo_es_opcional_tiene_prioridad_y_no_resuelve_tipos_ajenos_o_inactivos()
+    {
+        var institucion = InstitucionId.Nuevo();
+        var otraInstitucion = InstitucionId.Nuevo();
+        await using var db = await CrearContextoAsync(institucion);
+        db.Instituciones.Add(new Institucion(otraInstitucion, "Otra institución ficticia"));
+        var docente = new TipoFuncionario(Guid.NewGuid(), institucion, "DOCENTE", "Docente", true);
+        var otroCargo = new TipoFuncionario(Guid.NewGuid(), institucion, "OTRO", "Otro cargo ficticio");
+        db.TiposFuncionario.AddRange(docente, otroCargo,
+            new TipoFuncionario(Guid.NewGuid(), institucion, "INACTIVO", "Tipo ficticio inactivo", activo: false),
+            new TipoFuncionario(Guid.NewGuid(), otraInstitucion, "AJENO", "Tipo ficticio ajeno"));
+        await db.SaveChangesAsync();
+        var servicio = new ServicioPersonas(db, new ContextoInstitucion(institucion));
+        var resultado = await servicio.CargarPersonasAsync(new CargarPersonasRequest([
+            new PersonaCargaItem("0000000011", CargoTrabajo: otroCargo.Nombre, TipoFuncionarioCodigo: " docente "),
+            new PersonaCargaItem("0000000012", CargoTrabajo: "Docente"),
+            new PersonaCargaItem("0000000013", TipoFuncionarioCodigo: "AJENO"),
+            new PersonaCargaItem("0000000014", TipoFuncionarioCodigo: "INACTIVO"),
+            new PersonaCargaItem("0000000015", CargoTrabajo: "Docente", TipoFuncionarioCodigo: "INEXISTENTE"),
+            new PersonaCargaItem("0000000016"),
+        ]));
+        Assert.Equal(6, resultado.TotalCargados);
+        var personas = await db.Personas.OrderBy(p => p.Documento).ToListAsync();
+        Assert.Equal(docente.Id, personas[0].TipoFuncionarioId);
+        Assert.Equal(docente.Id, personas[1].TipoFuncionarioId);
+        Assert.All(personas.Skip(2), p => Assert.Null(p.TipoFuncionarioId));
+        Assert.Collection(resultado.Advertencias.Where(a => a.Columna == "TipoFuncionarioCodigo"),
+            a => Assert.Equal(3, a.Fila), a => Assert.Equal(4, a.Fila), a => Assert.Equal(5, a.Fila));
+    }
+
+    [Fact]
     public async Task SoloDocumentoRechazaFila_VacioONoNumerico()
     {
         var instId = InstitucionId.Nuevo();

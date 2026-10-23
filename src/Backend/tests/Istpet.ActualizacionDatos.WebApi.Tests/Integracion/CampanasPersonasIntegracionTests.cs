@@ -152,7 +152,7 @@ public sealed class CampanasPersonasIntegracionTests : IAsyncLifetime
             await dbInit.SaveChangesAsync();
         }
 
-        // 1. Carga por admin en Institución A con documentos duplicados en la lista (PD-09)
+        // 1. ADR-0012: se rechaza la segunda aparición de un documento dentro del archivo.
         var contextoA = new ContextoInstitucion(idInstA, esSuperadmin: false);
         await using (var dbA = new AplicacionDbContext(opciones, contextoA))
         {
@@ -169,7 +169,9 @@ public sealed class CampanasPersonasIntegracionTests : IAsyncLifetime
 
             Assert.Equal(3, resultado.TotalRecibidos);
             Assert.Equal(2, resultado.TotalCargados);
-            Assert.Equal(1, resultado.TotalDuplicadosOmitidos);
+            Assert.Equal(0, resultado.TotalDuplicadosOmitidos);
+            Assert.Equal(1, resultado.TotalRechazados);
+            Assert.Equal(2, Assert.Single(resultado.Rechazos).Fila);
             Assert.Equal(2, resultado.DocumentosCargados.Count);
 
             var personasEnA = await servicioPersonasA.ListarPersonasAsync();

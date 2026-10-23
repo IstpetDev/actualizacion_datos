@@ -24,7 +24,8 @@ public sealed record PersonaCargaItem(
     string? FecIngreso = null,
     string? TipoCuentaBanco = null,
     string? Banco = null,
-    string? NumCuentaBanco = null);
+    string? NumCuentaBanco = null,
+    string? TipoFuncionarioCodigo = null);
 
 public sealed record CargarPersonasRequest(
     List<PersonaCargaItem> Personas);

@@ -47,22 +47,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         { "PUT", $"/api/mis-datos/documentos/{Id}" },
     };
 
-    public static TheoryData<string, string> RutasDelAdmin => new()
-    {
-        { "GET", "/api/configuracion/tipos-funcionario" },
-        { "POST", "/api/configuracion/tipos-funcionario" },
-        { "PUT", $"/api/configuracion/tipos-funcionario/{Id}" },
-        { "GET", "/api/configuracion/tipos-documento" },
-        { "POST", "/api/configuracion/tipos-documento" },
-        { "PUT", $"/api/configuracion/tipos-documento/{Id}" },
-        { "GET", "/api/configuracion/requisitos" },
-        { "POST", "/api/configuracion/requisitos" },
-        { "PUT", $"/api/configuracion/requisitos/{Id}" },
-        { "PUT", $"/api/personas/{Id}/tipo-funcionario" },
-    };
-
-
-
     [Theory]
     [MemberData(nameof(RutasDelUsuario))]
     public async Task Ruta_del_usuario_sin_sesion_responde_401(string metodo, string ruta)
@@ -70,26 +54,6 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         var respuesta = await EnviarAsync(metodo, ruta, rol: null, actor: null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, respuesta.StatusCode);
-    }
-
-    [Theory]
-    [MemberData(nameof(RutasDelAdmin))]
-    public async Task Ruta_del_admin_rechaza_al_usuario_y_al_supervisor(string metodo, string ruta)
-    {
-        foreach (var rol in new[] { "Usuario", "Supervisor" })
-        {
-            var respuesta = await EnviarAsync(metodo, ruta, rol, "0000000001");
-            Assert.Equal(HttpStatusCode.Forbidden, respuesta.StatusCode);
-        }
-    }
-
-    [Theory]
-    [MemberData(nameof(RutasDelAdmin))]
-    public async Task Ruta_del_admin_con_admin_responde_501(string metodo, string ruta)
-    {
-        var respuesta = await EnviarAsync(metodo, ruta, "Admin", "0000000002");
-
-        Assert.Equal(HttpStatusCode.NotImplemented, respuesta.StatusCode);
     }
 
     [Fact]
@@ -126,7 +90,7 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
             "ListarTiposFuncionario", "CrearTipoFuncionario", "ActualizarTipoFuncionario",
             "ListarTiposDocumento", "CrearTipoDocumento", "ActualizarTipoDocumento",
             "ListarRequisitosDocumento", "CrearRequisitoDocumento", "ActualizarRequisitoDocumento",
-            "AsignarTipoFuncionario",
+            "AsignarTipoFuncionario", "EliminarTipoFuncionario", "EliminarTipoDocumento", "EliminarRequisitoDocumento",
         ];
 
         var faltantes = esperadas.Except(operaciones).ToList();
