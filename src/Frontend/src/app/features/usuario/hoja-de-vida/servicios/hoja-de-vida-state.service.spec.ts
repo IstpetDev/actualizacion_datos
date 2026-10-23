@@ -253,4 +253,32 @@ describe('HojaDeVidaStateService', () => {
     expect(service.hojaDeVida()?.estadoActualizacion).toBe('Enviado');
     expect(service.puedeEditar()).toBe(false);
   });
+
+  it('obtenerMarcaParaItem_encuentra_marca_por_item_con_prefijo', () => {
+    service.marcasObservacion.set([
+      {
+        id: 'marca-1',
+        tipoDestino: 'item',
+        claveDestino: 'titulo:tit-123',
+        texto: 'Verificar fecha de grado',
+      },
+      {
+        id: 'marca-2',
+        tipoDestino: 'item',
+        claveDestino: 'capacitacion:cap-456',
+        texto: 'Certificado no legible',
+      },
+    ]);
+
+    const marcaTitulo = service.obtenerMarcaParaItem('titulo', 'tit-123');
+    expect(marcaTitulo).toBeDefined();
+    expect(marcaTitulo?.texto).toBe('Verificar fecha de grado');
+
+    const marcaCap = service.obtenerMarcaParaItem('capacitacion', 'cap-456');
+    expect(marcaCap).toBeDefined();
+    expect(marcaCap?.texto).toBe('Certificado no legible');
+
+    const marcaInexistente = service.obtenerMarcaParaItem('titulo', 'tit-999');
+    expect(marcaInexistente).toBeUndefined();
+  });
 });

@@ -70,12 +70,21 @@ public class ObservacionTests
             claveDestino: "cedula_pdf",
             texto: "El documento está borroso, vuelva a escanear.");
 
+        var marcaItem = new MarcaObservacion(
+            Guid.NewGuid(),
+            obsId,
+            TipoDestinoMarca.Item,
+            claveDestino: $"titulo:{Guid.NewGuid()}",
+            texto: "El título debe indicar la institución.");
+
         observacion.AgregarMarca(marcaCampo);
         observacion.AgregarMarca(marcaArchivo);
+        observacion.AgregarMarca(marcaItem);
 
-        Assert.Equal(2, observacion.Marcas.Count);
+        Assert.Equal(3, observacion.Marcas.Count);
         Assert.Contains(observacion.Marcas, m => m.TipoDestino == TipoDestinoMarca.Campo && m.ClaveDestino == "telefono");
         Assert.Contains(observacion.Marcas, m => m.TipoDestino == TipoDestinoMarca.Archivo && m.ClaveDestino == "cedula_pdf");
+        Assert.Contains(observacion.Marcas, m => m.TipoDestino == TipoDestinoMarca.Item && m.ClaveDestino.StartsWith("titulo:", StringComparison.Ordinal));
     }
 
     [Theory]

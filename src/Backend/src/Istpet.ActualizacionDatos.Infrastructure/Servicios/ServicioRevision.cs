@@ -208,9 +208,24 @@ public class ServicioRevision : IServicioRevision
         {
             foreach (var item in request.Marcas)
             {
-                var tipoDestino = string.Equals(item.TipoDestino, "archivo", StringComparison.OrdinalIgnoreCase)
-                    ? TipoDestinoMarca.Archivo
-                    : TipoDestinoMarca.Campo;
+                TipoDestinoMarca tipoDestino;
+                if (string.Equals(item.TipoDestino, "archivo", StringComparison.OrdinalIgnoreCase))
+                {
+                    tipoDestino = TipoDestinoMarca.Archivo;
+                }
+                else if (string.Equals(item.TipoDestino, "item", StringComparison.OrdinalIgnoreCase))
+                {
+                    tipoDestino = TipoDestinoMarca.Item;
+                    await ValidarClaveDestinoItemAsync(persona.Id, item.ClaveDestino, ct);
+                }
+                else if (string.Equals(item.TipoDestino, "campo", StringComparison.OrdinalIgnoreCase))
+                {
+                    tipoDestino = TipoDestinoMarca.Campo;
+                }
+                else
+                {
+                    throw new ReglaNegocioException($"Tipo de destino '{item.TipoDestino}' no reconocido. Los valores permitidos son: campo, archivo, item.");
+                }
 
                 var marca = new MarcaObservacion(
                     Guid.NewGuid(),
@@ -235,5 +250,49 @@ public class ServicioRevision : IServicioRevision
             detalle: $"Actualización del usuario {persona.Documento} devuelta con observaciones en ronda {ronda}."));
 
         await _context.SaveChangesAsync(ct);
+    }
+
+    private async Task ValidarClaveDestinoItemAsync(Guid personaId, string? claveDestino, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(claveDestino))
+        {
+            throw new ReglaNegocioException("La clave de destino del ítem es obligatoria.");
+        }
+
+        var separador = claveDestino.IndexOf(':');
+        if (separador <= 0 || separador == claveDestino.Length - 1)
+        {
+            throw new ReglaNegocioException($"La clave de destino '{claveDestino}' no tiene un formato válido tipo:id (por ejemplo, 'titulo:{{guid}}').");
+        }
+
+        var tipo = claveDestino[..separador].Trim().ToLowerInvariant();
+        var idStr = claveDestino[(separador + 1)..].Trim();
+
+        if (!Guid.TryParse(idStr, out var itemId))
+        {
+            throw new ReglaNegocioException($"El identificador '{idStr}' en la clave de destino '{claveDestino}' no es un GUID válido.");
+        }
+
+        var existe = tipo switch
+        {
+            "titulo" or "titulo-academico" or "titulo_academico" =>
+                await _context.TitulosAcademicos.AnyAsync(t => t.Id == itemId && t.PersonaId == personaId, ct),
+            "titulo-en-curso" or "titulo_en_curso" or "titulocurso" =>
+                await _context.TitulosEnCurso.AnyAsync(t => t.Id == itemId && t.PersonaId == personaId, ct),
+            "capacitacion" or "capacitaciones" or "curso" or "cursos" =>
+                await _context.Capacitaciones.AnyAsync(c => c.Id == itemId && c.PersonaId == personaId, ct),
+            "experiencia" or "experiencias" or "experiencia-laboral" or "experiencia_laboral" =>
+                await _context.ExperienciasLaborales.AnyAsync(e => e.Id == itemId && e.PersonaId == personaId, ct),
+            "referencia" or "referencias" or "referencia-personal" or "referencia_personal" =>
+                await _context.ReferenciasPersonales.AnyAsync(r => r.Id == itemId && r.PersonaId == personaId, ct),
+            "documento" or "documentos" or "documento-personal" or "documento_personal" =>
+                await _context.DocumentosPersonales.AnyAsync(d => d.Id == itemId && d.PersonaId == personaId, ct),
+            _ => throw new ReglaNegocioException($"Tipo de ítem '{tipo}' no reconocido en la clave de destino. Tipos válidos: titulo, titulo-en-curso, capacitacion, experiencia, referencia, documento.")
+        };
+
+        if (!existe)
+        {
+            throw new ReglaNegocioException($"El ítem '{claveDestino}' no existe o no pertenece a la persona.");
+        }
     }
 }
