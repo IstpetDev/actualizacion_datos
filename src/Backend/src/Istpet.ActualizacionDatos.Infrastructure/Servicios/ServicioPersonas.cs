@@ -132,8 +132,19 @@ public class ServicioPersonas : IServicioPersonas
                 accesoHabilitado: false, // RF-MUL-002: Espera habilitación del superadmin
                 estadoActualizacion: EstadoActualizacion.Borrador);
 
-            // 4. Cargo de Trabajo
-            if (!string.IsNullOrWhiteSpace(item.CargoTrabajo))
+            // El código explícito tiene prioridad; si no coincide, la fila se carga sin tipo (ADR-0012).
+            if (!string.IsNullOrWhiteSpace(item.TipoFuncionarioCodigo))
+            {
+                var codigo = item.TipoFuncionarioCodigo.Trim().ToUpperInvariant();
+                var tipo = tiposFuncionario.FirstOrDefault(tf => tf.Codigo == codigo);
+                nuevaPersona.AsignarTipoFuncionario(tipo?.Id);
+                if (tipo == null)
+                {
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "TipoFuncionarioCodigo", "Código sin tipo de funcionario activo en la institución"));
+                }
+            }
+            // Compatibilidad con la nómina: resolver por cargo cuando no se indica código.
+            else if (!string.IsNullOrWhiteSpace(item.CargoTrabajo))
             {
                 var cargoNorm = NormalizarTexto(item.CargoTrabajo);
                 var tfEncontrado = tiposFuncionario.FirstOrDefault(tf => NormalizarTexto(tf.Nombre) == cargoNorm);

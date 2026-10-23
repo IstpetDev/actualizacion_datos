@@ -140,13 +140,14 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0004, ADR-0010 dec. 6  
 **Responsable:** @bryancito1090
 
-- [ ] Pruebas: código repetido rechazado dentro de la institución y permitido en otra; tipo de otra institución rechazado; rol `usuario` rechazado.
-- [ ] Implementar servicio y endpoints.
-- [ ] Ejecutar `dotnet test src/Backend`: todas en verde.
-- [ ] Verificar RF-HDV-012, 013, 015.
-- [ ] Entregar diff, pruebas y riesgos.
+- [x] Pruebas: código repetido rechazado dentro de la institución y permitido en otra; tipo de otra institución rechazado; rol `usuario` rechazado.
+- [x] Implementar servicio y endpoints.
+- [x] Ejecutar `dotnet test src/Backend`: todas en verde.
+- [x] Verificar RF-HDV-012, 013, 015.
+- [x] Entregar diff, pruebas y riesgos.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completado el 2026-10-23; [diff, pruebas y límites](../../evidencia/issue-31.md). Incluye RF-HDV-012, 013 y aislamiento RF-HDV-015; contrato y cliente regenerados.
+
 **Bloqueos:** Ninguno
 
 ## T-06 — Flujo de segunda campaña y archivos
