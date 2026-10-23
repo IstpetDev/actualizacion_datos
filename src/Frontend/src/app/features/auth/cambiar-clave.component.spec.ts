@@ -60,4 +60,35 @@ describe('cambio de clave', () => {
     expect(auth.verificarSesion).not.toHaveBeenCalled();
     expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
   });
+  it('alterna_visibilidad_de_campos_de_contrasena_con_botones_ojo', () => {
+    const fixture = TestBed.createComponent(CambiarClaveComponent);
+    fixture.detectChanges();
+
+    const inputNueva = fixture.nativeElement.querySelector('#clave-nueva') as HTMLInputElement;
+    const inputConfirmacion = fixture.nativeElement.querySelector(
+      '#clave-confirmacion',
+    ) as HTMLInputElement;
+    const btns = fixture.nativeElement.querySelectorAll(
+      '.btn-ojo',
+    ) as NodeListOf<HTMLButtonElement>;
+
+    expect(inputNueva.type).toBe('password');
+    expect(inputConfirmacion.type).toBe('password');
+
+    // Click primer ojo (nueva contraseña)
+    btns[0].click();
+    fixture.detectChanges();
+    expect(inputNueva.type).toBe('text');
+    expect(inputConfirmacion.type).toBe('password');
+
+    // Click segundo ojo (confirmación)
+    btns[1].click();
+    fixture.detectChanges();
+    expect(inputConfirmacion.type).toBe('text');
+
+    // Ocultar nuevamente
+    btns[0].click();
+    fixture.detectChanges();
+    expect(inputNueva.type).toBe('password');
+  });
 });

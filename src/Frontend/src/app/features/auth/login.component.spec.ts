@@ -78,4 +78,22 @@ describe('login real', () => {
     expect(cliente.iniciarSesion).toHaveBeenCalledTimes(1);
     pendiente.complete();
   });
+  it('alterna_visibilidad_de_contrasena_con_el_boton_ojo', () => {
+    const fixture = preparar();
+    const inputClave = fixture.nativeElement.querySelector('#contrasena') as HTMLInputElement;
+    const btnOjo = fixture.nativeElement.querySelector('.btn-ojo') as HTMLButtonElement;
+
+    expect(inputClave.type).toBe('password');
+    expect(btnOjo.getAttribute('aria-label')).toBe('Mostrar contraseña');
+
+    btnOjo.click();
+    fixture.detectChanges();
+    expect(inputClave.type).toBe('text');
+    expect(btnOjo.getAttribute('aria-label')).toBe('Ocultar contraseña');
+
+    btnOjo.click();
+    fixture.detectChanges();
+    expect(inputClave.type).toBe('password');
+    expect(btnOjo.getAttribute('aria-label')).toBe('Mostrar contraseña');
+  });
 });
