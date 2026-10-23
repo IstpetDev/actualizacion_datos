@@ -3113,10 +3113,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return Created
      */
-    agregarTituloAcademico(body?: GuardarTituloAcademicoRequest | undefined): Observable<TituloAcademicoDto> {
+    agregarTituloAcademico(body: GuardarTituloAcademicoRequest): Observable<TituloAcademicoDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/titulos";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3184,10 +3183,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return OK
      */
-    actualizarTituloAcademico(id: string, body?: GuardarTituloAcademicoRequest | undefined): Observable<TituloAcademicoDto> {
+    actualizarTituloAcademico(id: string, body: GuardarTituloAcademicoRequest): Observable<TituloAcademicoDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/titulos/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -3336,10 +3334,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return Created
      */
-    agregarTituloEnCurso(body?: GuardarTituloEnCursoRequest | undefined): Observable<TituloEnCursoDto> {
+    agregarTituloEnCurso(body: GuardarTituloEnCursoRequest): Observable<TituloEnCursoDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/titulos-en-curso";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3407,10 +3404,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return OK
      */
-    actualizarTituloEnCurso(id: string, body?: GuardarTituloEnCursoRequest | undefined): Observable<TituloEnCursoDto> {
+    actualizarTituloEnCurso(id: string, body: GuardarTituloEnCursoRequest): Observable<TituloEnCursoDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/titulos-en-curso/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -3559,10 +3555,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return Created
      */
-    agregarCapacitacion(body?: GuardarCapacitacionRequest | undefined): Observable<CapacitacionDto> {
+    agregarCapacitacion(body: GuardarCapacitacionRequest): Observable<CapacitacionDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/capacitaciones";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3630,10 +3625,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return OK
      */
-    actualizarCapacitacion(id: string, body?: GuardarCapacitacionRequest | undefined): Observable<CapacitacionDto> {
+    actualizarCapacitacion(id: string, body: GuardarCapacitacionRequest): Observable<CapacitacionDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/capacitaciones/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -3782,10 +3776,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return Created
      */
-    agregarExperienciaLaboral(body?: GuardarExperienciaLaboralRequest | undefined): Observable<ExperienciaLaboralDto> {
+    agregarExperienciaLaboral(body: GuardarExperienciaLaboralRequest): Observable<ExperienciaLaboralDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/experiencias";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -3853,10 +3846,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return OK
      */
-    actualizarExperienciaLaboral(id: string, body?: GuardarExperienciaLaboralRequest | undefined): Observable<ExperienciaLaboralDto> {
+    actualizarExperienciaLaboral(id: string, body: GuardarExperienciaLaboralRequest): Observable<ExperienciaLaboralDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/experiencias/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4005,10 +3997,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return Created
      */
-    agregarReferencia(body?: GuardarReferenciaRequest | undefined): Observable<ReferenciaDto> {
+    agregarReferencia(body: GuardarReferenciaRequest): Observable<ReferenciaDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/referencias";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -4076,10 +4067,9 @@ export class HojaDeVidaClient {
     }
 
     /**
-     * @param body (optional) 
      * @return OK
      */
-    actualizarReferencia(id: string, body?: GuardarReferenciaRequest | undefined): Observable<ReferenciaDto> {
+    actualizarReferencia(id: string, body: GuardarReferenciaRequest): Observable<ReferenciaDto> {
         let url_ = this.baseUrl + "/api/mis-datos/hoja-de-vida/referencias/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");

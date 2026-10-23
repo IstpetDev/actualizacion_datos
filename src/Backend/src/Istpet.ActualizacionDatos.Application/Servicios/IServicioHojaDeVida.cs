@@ -35,4 +35,6 @@ public interface IServicioHojaDeVida
     Task<ReferenciaDto> AgregarReferenciaAsync(string documento, GuardarReferenciaRequest request, CancellationToken ct = default);
     Task<ReferenciaDto> ActualizarReferenciaAsync(string documento, Guid id, GuardarReferenciaRequest request, CancellationToken ct = default);
     Task EliminarReferenciaAsync(string documento, Guid id, CancellationToken ct = default);
+
+    Task<HojaDeVidaDto> ObtenerParaRevisionAsync(string documento, CancellationToken ct = default);
 }

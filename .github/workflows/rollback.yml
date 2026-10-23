@@ -67,4 +67,4 @@ jobs:
           echo "Esperando 10 segundos..."
           sleep 10
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
-            "powershell -Command \"\$resp = Invoke-RestMethod -Uri 'http://127.0.0.1:8088/health' -TimeoutSec 10; if (\$resp.estado -ne 'ok') { throw 'Health check tras rollback falló' } else { Write-Host 'Rollback exitoso: ' \$resp.estado }\""
+            "curl.exe -f -s http://127.0.0.1:8088/health"

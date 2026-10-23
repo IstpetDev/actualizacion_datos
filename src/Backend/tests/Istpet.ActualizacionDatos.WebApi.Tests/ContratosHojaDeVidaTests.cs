@@ -61,16 +61,7 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         { "PUT", $"/api/personas/{Id}/tipo-funcionario" },
     };
 
-    [Theory]
-    [MemberData(nameof(RutasDelUsuario))]
-    public async Task Ruta_del_usuario_con_sesion_responde_501_hasta_que_se_implemente(string metodo, string ruta)
-    {
-        var respuesta = await EnviarAsync(metodo, ruta, "Usuario", DocumentoUsuario);
 
-        Assert.Equal(HttpStatusCode.NotImplemented, respuesta.StatusCode);
-        var cuerpo = await respuesta.Content.ReadFromJsonAsync<MensajeRespuesta>();
-        Assert.Contains("spec-0003", cuerpo!.Mensaje, StringComparison.Ordinal);
-    }
 
     [Theory]
     [MemberData(nameof(RutasDelUsuario))]
@@ -101,15 +92,12 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
         Assert.Equal(HttpStatusCode.NotImplemented, respuesta.StatusCode);
     }
 
-    [Theory]
-    [InlineData("Usuario", HttpStatusCode.Forbidden)]
-    [InlineData("Supervisor", HttpStatusCode.NotImplemented)]
-    [InlineData("Admin", HttpStatusCode.NotImplemented)]
-    public async Task Revision_de_hoja_de_vida_solo_supervisor_o_admin(string rol, HttpStatusCode esperado)
+    [Fact]
+    public async Task Revision_de_hoja_de_vida_solo_supervisor_o_admin()
     {
-        var respuesta = await EnviarAsync("GET", $"/api/revision/{DocumentoUsuario}/hoja-de-vida", rol, "0000000003");
+        var respuesta = await EnviarAsync("GET", $"/api/revision/{DocumentoUsuario}/hoja-de-vida", "Usuario", "0000000003");
 
-        Assert.Equal(esperado, respuesta.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, respuesta.StatusCode);
     }
 
     [Fact]

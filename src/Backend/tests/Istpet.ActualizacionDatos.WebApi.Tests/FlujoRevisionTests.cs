@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -95,6 +96,59 @@ public sealed class FlujoRevisionTests : IDisposable
 
         db.Personas.AddRange(p1, p2);
         db.Campanas.Add(campana);
+
+        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 903))
+        {
+            db.ElementosCatalogo.Add(new ElementoCatalogo(903, TipoCatalogo.Pais, "EC", "Ecuador"));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(906, TipoCatalogo.Provincia, "PICHINCHA", "Pichincha", padreId: 903));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(907, TipoCatalogo.Canton, "QUITO", "Quito", padreId: 906));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(905, TipoCatalogo.Parroquia, "PARROQUIA1", "Parroquia 1", padreId: 907));
+        }
+
+        var ficha1 = new FichaPersonal(new InstitucionId(institucionId), p1.Id);
+        ficha1.Actualizar(new DatosFichaPersonal(
+            PrimerNombre: "Usuario",
+            PrimerApellido: "Uno",
+            SegundoApellido: "Test",
+            SexoId: 1,
+            FechaNacimiento: new DateOnly(1990, 1, 1),
+            PaisNacimientoId: 903,
+            EstadoCivilId: 11,
+            PaisNacionalidadId: 903,
+            ParroquiaResidenciaId: 905,
+            CallePrincipal: "Av. Principal",
+            Celular: "0991234567",
+            CorreoInstitucional: p1.Correo));
+        db.FichasPersonales.Add(ficha1);
+
+        var archivoTitulo = new ArchivoAdjunto(
+            Guid.NewGuid(),
+            new InstitucionId(institucionId),
+            p1.Id,
+            "respaldo.pdf",
+            "application/pdf",
+            1024,
+            "hash123",
+            "ruta/respaldo.pdf");
+        db.ArchivosAdjuntos.Add(archivoTitulo);
+
+        var titulo1 = new TituloAcademico(Guid.NewGuid(), new InstitucionId(institucionId), p1.Id,
+            new DatosTituloAcademico("Primaria", 61, NombreInstitucionOtra: "Universidad"));
+        titulo1.AsociarArchivo(archivoTitulo.Id);
+        db.TitulosAcademicos.Add(titulo1);
+
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), p1.Id,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Uno", "0991111111")));
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), p1.Id,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Dos", "0992222222")));
+
+        db.CuentasBancarias.Add(CuentaBancaria.RegistradaPorPersona(
+            Guid.NewGuid(),
+            new InstitucionId(institucionId),
+            p1.Id,
+            new DatosCuentaBancaria(71, null, "Banco Pichincha", new NumeroCuentaProtegido("cifrado", "1234", "huella")),
+            DateTime.UtcNow));
+
         await db.SaveChangesAsync();
 
         return (institucionId, p1, p2);
