@@ -72,13 +72,15 @@ public class ServicioExportacion : IServicioExportacion
             // 2. Empaquetar documentos físicos en subcarpetas por persona
             foreach (var persona in personasAprobadas)
             {
+                var documentoSeguro = SanearSegmentoRuta(persona.Documento, persona.Id.ToString("N"));
                 var archivosPersona = archivosPorPersona[persona.Id].ToList();
                 var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var archivo in archivosPersona)
                 {
-                    var nombreArchivoSeguro = GenerarNombreArchivoUnico(archivo.NombreOriginal, nombresUsados);
-                    var rutaEnZip = $"{nombreCarpetaRaiz}/{persona.Documento}/{nombreArchivoSeguro}";
+                    var nombreSaneado = SanearNombreArchivoZip(archivo.NombreOriginal, archivo.Id);
+                    var nombreArchivoSeguro = GenerarNombreArchivoUnico(nombreSaneado, nombresUsados);
+                    var rutaEnZip = $"{nombreCarpetaRaiz}/{documentoSeguro}/{nombreArchivoSeguro}";
 
                     try
                     {
@@ -256,7 +258,7 @@ public class ServicioExportacion : IServicioExportacion
         foreach (var p in personas)
         {
             var cant = archivosPorPersona[p.Id].Count();
-            sb.AppendLine(CultureInfo.InvariantCulture, $"| `{p.Documento}` | {p.Nombre ?? "—"} | {p.Correo ?? "—"} | {p.Rol} | {cant} |");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"| {FormatearCodigoEnLineaMarkdown(p.Documento)} | {p.Nombre ?? "—"} | {p.Correo ?? "—"} | {p.Rol} | {cant} |");
         }
 
         sb.AppendLine();
@@ -267,10 +269,11 @@ public class ServicioExportacion : IServicioExportacion
 
         foreach (var p in personas)
         {
+            var documentoSeguro = SanearSegmentoRuta(p.Documento, p.Id.ToString("N"));
             var docs = archivosPorPersona[p.Id].ToList();
             sb.AppendLine(CultureInfo.InvariantCulture, $"### Persona: {p.Documento} — {p.Nombre ?? "Sin nombre"}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"- **Correo:** {p.Correo ?? "—"}");
-            sb.AppendLine(CultureInfo.InvariantCulture, $"- **Carpeta en paquete:** `{p.Documento}/`");
+            sb.AppendLine(CultureInfo.InvariantCulture, $"- **Carpeta en paquete:** {FormatearCodigoEnLineaMarkdown($"{documentoSeguro}/")}");
 
             if (docs.Count == 0)
             {
@@ -283,7 +286,8 @@ public class ServicioExportacion : IServicioExportacion
                 {
                     var a = docs[idx];
                     var kb = a.TamanoBytes / 1024.0;
-                    sb.AppendLine(CultureInfo.InvariantCulture, $"  {idx + 1}. `{a.NombreOriginal}` ({kb:F1} KB, `{a.TipoContenido}`) — SHA-256: `{a.HashSha256}`");
+                    var nombreMarkdown = FormatearCodigoEnLineaMarkdown(a.NombreOriginal);
+                    sb.AppendLine(CultureInfo.InvariantCulture, $"  {idx + 1}. {nombreMarkdown} ({kb:F1} KB, `{a.TipoContenido}`) — SHA-256: `{a.HashSha256}`");
                 }
             }
 
@@ -293,7 +297,91 @@ public class ServicioExportacion : IServicioExportacion
         return sb.ToString();
     }
 
-    private static string GenerarNombreArchivoUnico(string nombreOriginal, HashSet<string> nombresUsados)
+    private static readonly HashSet<char> CaracteresInvalidosNombreArchivo =
+        new(Path.GetInvalidFileNameChars().Concat(['/', '\\', ':', '*', '?', '"', '<', '>', '|']));
+
+    internal static string SanearNombreArchivoZip(string? nombreOriginal, Guid archivoId)
+        => SanearHojaRuta(nombreOriginal, $"{archivoId}.bin");
+
+    internal static string SanearSegmentoRuta(string? segmento, string reemplazoSiVacio)
+        => SanearHojaRuta(segmento, reemplazoSiVacio);
+
+    private static string SanearHojaRuta(string? valor, string reemplazoSiVacio)
+    {
+        if (string.IsNullOrWhiteSpace(valor))
+        {
+            return reemplazoSiVacio;
+        }
+
+        var normalizado = valor.Replace('\\', '/');
+        var hoja = Path.GetFileName(normalizado.AsSpan());
+
+        var sb = new StringBuilder(hoja.Length);
+        foreach (var c in hoja)
+        {
+            if (!char.IsControl(c) && !CaracteresInvalidosNombreArchivo.Contains(c))
+            {
+                sb.Append(c);
+            }
+        }
+
+        var resultado = sb.ToString().Trim();
+        if (string.IsNullOrEmpty(resultado) || resultado is "." or "..")
+        {
+            return reemplazoSiVacio;
+        }
+
+        return resultado;
+    }
+
+    internal static string FormatearCodigoEnLineaMarkdown(string? texto)
+    {
+        if (string.IsNullOrEmpty(texto))
+        {
+            return "``";
+        }
+
+        var sinSaltoDoble = texto.Replace("\r\n", "\n");
+        var sb = new StringBuilder(sinSaltoDoble.Length);
+        foreach (var c in sinSaltoDoble)
+        {
+            if (c is '\r' or '\n')
+            {
+                sb.Append(' ');
+            }
+            else if (!char.IsControl(c))
+            {
+                sb.Append(c);
+            }
+        }
+
+        var limpio = sb.ToString();
+        var maxComillas = 0;
+        var actual = 0;
+        foreach (var c in limpio)
+        {
+            if (c == '`')
+            {
+                actual++;
+                if (actual > maxComillas)
+                {
+                    maxComillas = actual;
+                }
+            }
+            else
+            {
+                actual = 0;
+            }
+        }
+
+        var delimitador = new string('`', maxComillas + 1);
+        var requiereEspacio = limpio.StartsWith('`') || limpio.EndsWith('`') || limpio.StartsWith(' ') || limpio.EndsWith(' ');
+        return requiereEspacio
+            ? $"{delimitador} {limpio} {delimitador}"
+            : $"{delimitador}{limpio}{delimitador}";
+    }
+
+    internal static string GenerarNombreArchivoUnico(string nombreOriginal, HashSet<string> nombresUsados)
     {
         var nombreBase = Path.GetFileNameWithoutExtension(nombreOriginal);
         var extension = Path.GetExtension(nombreOriginal);

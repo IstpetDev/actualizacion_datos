@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Istpet.ActualizacionDatos.WebApi.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Istpet.ActualizacionDatos.Application\Istpet.ActualizacionDatos.Application.csproj" />
   </ItemGroup>
 

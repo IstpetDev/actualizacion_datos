@@ -7,6 +7,7 @@ using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -269,5 +270,196 @@ public sealed class ExportacionesTests : IDisposable
 
         // Assert: 400 Bad Request por violación de aislamiento multitenant
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("../../etc/passwd", "passwd")]
+    [InlineData(@"..\..\evil.pdf", "evil.pdf")]
+    [InlineData("/abs/ruta.pdf", "ruta.pdf")]
+    [InlineData(@"C:\x\y.pdf", "y.pdf")]
+    [InlineData("titulo_profesional.pdf", "titulo_profesional.pdf")]
+    [InlineData("archivo\ncon\r\nsaltos\u0007.pdf", "archivoconsaltos.pdf")]
+    [InlineData("archivo`con`comillas.pdf", "archivo`con`comillas.pdf")]
+    public void SanearNombreArchivoZip_convierte_rutas_y_caracteres_peligrosos_en_hoja_segura(
+        string nombreOriginal,
+        string esperado)
+    {
+        var archivoId = Guid.Parse("11111111-2222-3333-4444-555555555555");
+
+        var resultado = ServicioExportacion.SanearNombreArchivoZip(nombreOriginal, archivoId);
+
+        Assert.Equal(esperado, resultado);
+        Assert.DoesNotContain("..", resultado, StringComparison.Ordinal);
+        Assert.DoesNotContain("/", resultado, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"\", resultado, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(".")]
+    [InlineData("..")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\r\n\t\0")]
+    [InlineData("../../../")]
+    [InlineData(@"..\..\..")]
+    public void SanearNombreArchivoZip_usa_id_bin_cuando_queda_vacio_o_punto(string nombreInvalido)
+    {
+        var archivoId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+
+        var resultado = ServicioExportacion.SanearNombreArchivoZip(nombreInvalido, archivoId);
+
+        Assert.Equal($"{archivoId}.bin", resultado);
+    }
+
+    [Fact]
+    public void Dos_archivos_con_el_mismo_nombre_saneado_conservan_nombres_distintos()
+    {
+        var archivoId1 = Guid.Parse("10000000-0000-0000-0000-000000000001");
+        var archivoId2 = Guid.Parse("10000000-0000-0000-0000-000000000002");
+        var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var saneado1 = ServicioExportacion.SanearNombreArchivoZip(@"..\..\documento.pdf", archivoId1);
+        var unico1 = ServicioExportacion.GenerarNombreArchivoUnico(saneado1, nombresUsados);
+
+        var saneado2 = ServicioExportacion.SanearNombreArchivoZip("/otra/ruta/documento.pdf", archivoId2);
+        var unico2 = ServicioExportacion.GenerarNombreArchivoUnico(saneado2, nombresUsados);
+
+        Assert.Equal("documento.pdf", unico1);
+        Assert.Equal("documento_2.pdf", unico2);
+    }
+
+    [Fact]
+    public void FormatearCodigoEnLineaMarkdown_escapa_comillas_invertidas_y_saltos_de_linea()
+    {
+        var conComillas = ServicioExportacion.FormatearCodigoEnLineaMarkdown("mi`archivo`raro.pdf");
+        Assert.Equal("``mi`archivo`raro.pdf``", conComillas);
+
+        var conSaltos = ServicioExportacion.FormatearCodigoEnLineaMarkdown("linea1\r\nlinea2\nfinal.pdf");
+        Assert.DoesNotContain("\r", conSaltos, StringComparison.Ordinal);
+        Assert.DoesNotContain("\n", conSaltos, StringComparison.Ordinal);
+        Assert.Equal("`linea1 linea2 final.pdf`", conSaltos);
+    }
+
+    [Fact]
+    public async Task ExportarZip_sanea_nombres_maliciosos_colisiones_e_indice_markdown()
+    {
+        // Arrange
+        Guid institucionId;
+        var documentoOriginal = @"..\..\1700000099";
+        var idPunto = Guid.Parse("20000000-0000-0000-0000-000000000001");
+        var idDoblePunto = Guid.Parse("20000000-0000-0000-0000-000000000002");
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var almacen = scope.ServiceProvider.GetRequiredService<IAlmacenArchivos>();
+
+            institucionId = Guid.NewGuid();
+            var inst = new Institucion(new InstitucionId(institucionId), "Instituto Pruebas Zip");
+            db.Instituciones.Add(inst);
+
+            var persona = new Persona(
+                Guid.NewGuid(),
+                new InstitucionId(institucionId),
+                documentoOriginal,
+                RolUsuario.Usuario,
+                "Persona Prueba Seguridad",
+                "seguridad.ficticia@ejemplo.test",
+                accesoHabilitado: true,
+                estadoActualizacion: EstadoActualizacion.Aprobado,
+                tratamientoDatosAceptado: true,
+                fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
+
+            db.Personas.Add(persona);
+
+            var casos = new (Guid Id, string NombreBruto)[]
+            {
+                (Guid.NewGuid(), "../../etc/passwd"),
+                (Guid.NewGuid(), @"..\..\evil.pdf"),
+                (Guid.NewGuid(), @"C:\carpeta\evil.pdf"),
+                (Guid.NewGuid(), "/abs/ruta.pdf"),
+                (idPunto, "."),
+                (idDoblePunto, ".."),
+                (Guid.NewGuid(), "nombre\ncon\r\nsaltos\u0007.pdf"),
+                (Guid.NewGuid(), "reporte`con`backticks.pdf"),
+                (Guid.NewGuid(), "certificado_normal.pdf"),
+            };
+
+            var contenidoPdf = Encoding.UTF8.GetBytes("%PDF-1.4\nContenido ficticio");
+
+            foreach (var (archivoId, nombreBruto) in casos)
+            {
+                using var ms = new MemoryStream(contenidoPdf);
+                var rutaRelativa = await almacen.GuardarAsync(
+                    new InstitucionId(institucionId),
+                    persona.Id,
+                    archivoId,
+                    ms);
+
+                var adjunto = new ArchivoAdjunto(
+                    archivoId,
+                    new InstitucionId(institucionId),
+                    persona.Id,
+                    "temporal.pdf",
+                    "application/pdf",
+                    contenidoPdf.Length,
+                    "hash_sha256_ficticio_1234567890abcdef",
+                    rutaRelativa);
+
+                db.ArchivosAdjuntos.Add(adjunto);
+                // Simular valor persistido directamente sin pasar por Path.GetFileName de la plataforma actual
+                db.Entry(adjunto).Property(a => a.NombreOriginal).CurrentValue = nombreBruto;
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        var request = CrearRequest(HttpMethod.Get, "/api/exportaciones/zip", institucionId, "admin@ejemplo.test", RolUsuario.Admin);
+
+        // Act
+        var response = await _cliente.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        using var zipStream = new MemoryStream(bytes);
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+
+        var indexEntry = archive.Entries.Single(e => e.FullName.EndsWith("/index.md", StringComparison.Ordinal));
+        var carpetaRaiz = indexEntry.FullName[..^"/index.md".Length];
+        var prefijoPersonaEsperado = $"{carpetaRaiz}/1700000099/";
+
+        var entradasArchivos = archive.Entries.Where(e => e != indexEntry).ToList();
+        Assert.Equal(9, entradasArchivos.Count);
+
+        foreach (var entry in archive.Entries)
+        {
+            Assert.DoesNotContain("..", entry.FullName, StringComparison.Ordinal);
+            Assert.DoesNotContain(@"\", entry.FullName, StringComparison.Ordinal);
+
+            if (entry != indexEntry)
+            {
+                Assert.StartsWith(prefijoPersonaEsperado, entry.FullName, StringComparison.Ordinal);
+                var restoRuta = entry.FullName[prefijoPersonaEsperado.Length..];
+                Assert.DoesNotContain("/", restoRuta, StringComparison.Ordinal);
+            }
+        }
+
+        var nombresHojas = entradasArchivos.Select(e => e.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("passwd", nombresHojas);
+        Assert.Contains("evil.pdf", nombresHojas);
+        Assert.Contains("evil_2.pdf", nombresHojas);
+        Assert.Contains("ruta.pdf", nombresHojas);
+        Assert.Contains($"{idPunto}.bin", nombresHojas);
+        Assert.Contains($"{idDoblePunto}.bin", nombresHojas);
+        Assert.Contains("nombreconsaltos.pdf", nombresHojas);
+        Assert.Contains("reporte`con`backticks.pdf", nombresHojas);
+        Assert.Contains("certificado_normal.pdf", nombresHojas);
+
+        using var reader = new StreamReader(indexEntry.Open(), Encoding.UTF8);
+        var contenidoIndice = await reader.ReadToEndAsync();
+        Assert.Contains("``reporte`con`backticks.pdf``", contenidoIndice, StringComparison.Ordinal);
+        Assert.Contains("`nombre con saltos.pdf`", contenidoIndice, StringComparison.Ordinal);
     }
 }
