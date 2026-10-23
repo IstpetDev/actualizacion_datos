@@ -1,60 +1,52 @@
 /* ==========================================================================
-   Sistema de Diseño Institucional AMMI — Glassmorphism UI/UX
-   Cumple normativas WCAG 2.1 AA/AAA de contraste, jerarquía visual y ergonomía.
+   Sistema de DiseÃ±o Institucional AMMI â€” Estilo Vercel (Geist Design System)
+   Arquitectura minimalista de bordes 1px, alto contraste y paleta AMMI.
    ========================================================================== */
 
 :root {
-  /* Identidad Heráldica AMMI (Escudo Oficial: Amarillo y Negro) */
-  --ammi-primary: #1d1e1c; /* Carbón / Negro institucional para acciones primarias */
-  --ammi-primary-hover: #0f100e; /* Negro profundo interactivo */
-  --ammi-primary-light: #2c2e2b; /* Gris obsidiana para superficies oscuras */
+  /* Colores Oficiales del Escudo AMMI (Amarillo HerÃ¡ldico y Negro) */
+  --ammi-primary: #1d1e1c; /* Negro / CarbÃ³n institucional (Geist foreground) */
+  --ammi-primary-hover: #000000; /* Negro puro interactivo */
+  --ammi-primary-light: #333333;
 
-  --ammi-gold: #fcea1e; /* Amarillo heráldico oficial (fondos, bordes, badges sobre oscuro) */
-  --ammi-gold-hover: #e5d415; /* Amarillo heráldico interactivo */
-  --ammi-gold-text: #856800; /* Oro oscuro accesible (WCAG AA >4.8:1 sobre fondo claro) */
-  --ammi-gold-soft: rgba(252, 234, 30, 0.16);
-  --ammi-gold-border: rgba(233, 185, 2, 0.55);
+  --ammi-gold: #fcea1e; /* Amarillo herÃ¡ldico oficial AMMI */
+  --ammi-gold-hover: #e5d415; /* Amarillo herÃ¡ldico atenuado */
+  --ammi-gold-text: #785c00; /* Oro oscuro de alto contraste sobre blanco */
+  --ammi-gold-soft: rgba(252, 234, 30, 0.14);
+  --ammi-gold-border: #e5d415;
 
-  /* Tokens de Glassmorphism (Acrílico / Vidrio Esmerilado) */
-  --ammi-bg-canvas: #eef2f6;
-  --glass-surface: rgba(255, 255, 255, 0.78);
-  --glass-surface-elevated: rgba(255, 255, 255, 0.9);
-  --glass-surface-subtle: rgba(248, 250, 252, 0.68);
-  --glass-header-dark: rgba(22, 24, 23, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.85);
-  --glass-border-outer: rgba(148, 163, 184, 0.32);
-  --glass-blur: blur(20px) saturate(180%);
-  --glass-shadow-sm:
-    0 4px 12px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-  --glass-shadow-md:
-    0 12px 32px -6px rgba(15, 23, 42, 0.08), 0 4px 14px -3px rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
-  --glass-shadow-lg:
-    0 20px 44px -10px rgba(15, 23, 42, 0.12), 0 8px 20px -4px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  /* Escala MonocromÃ¡tica Geist / Vercel */
+  --geist-bg: #fafafa;
+  --geist-surface: #ffffff;
+  --geist-surface-subtle: #f5f5f5;
+  --geist-header-bg: rgba(17, 17, 17, 0.88);
+  --geist-border: #eaeaea;
+  --geist-border-hover: #999999;
+  --geist-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --geist-shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --geist-shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --geist-blur: saturate(180%) blur(12px);
 
-  /* Tipografía y Jerarquía Semántica */
-  --ammi-text-main: #0f172a;
-  --ammi-text-secondary: #334155;
-  --ammi-text-muted: #475569;
-  --ammi-text-subtle: #64748b;
+  /* TipografÃ­a Geist */
+  --ammi-text-main: #171717;
+  --ammi-text-secondary: #444444;
+  --ammi-text-muted: #666666;
+  --ammi-text-subtle: #888888;
   --ammi-text-inverse: #ffffff;
 
-  /* Estados Semánticos Institucionales */
-  --ammi-success: #15803d;
-  --ammi-success-bg: rgba(220, 252, 231, 0.85);
-  --ammi-warning: #92400e;
-  --ammi-warning-bg: rgba(254, 243, 199, 0.88);
-  --ammi-danger: #b91c1c;
-  --ammi-danger-bg: rgba(254, 226, 226, 0.88);
+  /* Estados SemÃ¡nticos */
+  --ammi-success: #0f766e;
+  --ammi-success-bg: #f0fdf4;
+  --ammi-warning: #854d0e;
+  --ammi-warning-bg: #fefce8;
+  --ammi-danger: #dc2626;
+  --ammi-danger-bg: #fef2f2;
 
-  /* Radios y Transiciones */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.25rem;
-  --transition-fast: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* GeometrÃ­a Vercel */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -68,19 +60,18 @@ body {
   min-height: 100vh;
   font-family:
     'Inter',
-    system-ui,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
     sans-serif;
-  background-color: var(--ammi-bg-canvas);
+  background-color: var(--geist-bg);
   background-image:
-    radial-gradient(at 8% 12%, rgba(252, 234, 30, 0.2) 0px, transparent 42%),
-    radial-gradient(at 92% 8%, rgba(29, 30, 28, 0.07) 0px, transparent 45%),
-    radial-gradient(at 85% 88%, rgba(233, 185, 2, 0.14) 0px, transparent 48%),
-    radial-gradient(at 15% 85%, rgba(148, 163, 184, 0.18) 0px, transparent 50%),
-    linear-gradient(135deg, #f4f7fb 0%, #e9eef5 50%, #eef2f6 100%);
+    radial-gradient(at 50% 0%, rgba(252, 234, 30, 0.12) 0px, transparent 55%),
+    radial-gradient(#e4e4e7 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    24px 24px;
   background-attachment: fixed;
   color: var(--ammi-text-main);
   line-height: 1.5;

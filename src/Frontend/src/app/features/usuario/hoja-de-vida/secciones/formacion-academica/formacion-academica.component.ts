@@ -564,12 +564,9 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin-bottom: 1rem;
       }
       .card-formulario-item {
-        background: rgba(255, 255, 255, 0.78);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        outline: 1px solid rgba(148, 163, 184, 0.28);
-        border-radius: 12px;
-        box-shadow: var(--glass-shadow-sm);
+        background: var(--geist-surface-subtle, #fafafa);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
         padding: 1.25rem;
         margin-bottom: 1.5rem;
       }

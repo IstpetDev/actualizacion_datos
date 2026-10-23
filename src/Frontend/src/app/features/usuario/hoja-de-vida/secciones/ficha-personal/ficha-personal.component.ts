@@ -411,13 +411,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin: 0;
       }
       .grupo-campos {
-        border: 1px solid rgba(255, 255, 255, 0.9);
-        outline: 1px solid rgba(148, 163, 184, 0.24);
-        border-radius: 12px;
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
         padding: 1.35rem;
-        background: rgba(255, 255, 255, 0.68);
-        backdrop-filter: blur(12px);
-        box-shadow: var(--glass-shadow-sm);
+        background: var(--geist-surface, #ffffff);
       }
       .grupo-titulo {
         font-size: 0.95rem;

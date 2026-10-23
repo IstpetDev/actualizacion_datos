@@ -258,9 +258,9 @@ export type TabSeccionHojaVida =
   styles: [
     `
       .hoja-vida-container {
-        max-width: 1140px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 0.5rem 0;
+        padding: 0.25rem 0;
       }
       .hoja-vida-header {
         display: flex;
@@ -268,206 +268,194 @@ export type TabSeccionHojaVida =
         align-items: flex-start;
         gap: 1.5rem;
         margin-bottom: 1.25rem;
-        padding: 1.5rem 1.75rem;
-        background: var(--glass-surface);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border);
-        outline: 1px solid var(--glass-border-outer);
+        padding: 1.5rem;
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
         border-top: 3px solid var(--ammi-gold, #fcea1e);
-        border-radius: var(--radius-xl, 1.25rem);
-        box-shadow: var(--glass-shadow-md);
+        border-radius: var(--radius-md, 8px);
+        box-shadow: var(--geist-shadow-sm);
       }
       .ceja {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.75rem;
-        font-weight: 800;
-        color: var(--ammi-gold-text, #856800);
-        background: rgba(252, 234, 30, 0.22);
-        border: 1px solid rgba(233, 185, 2, 0.45);
-        padding: 0.2rem 0.65rem;
-        border-radius: 9999px;
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #111111;
+        background: var(--ammi-gold, #fcea1e);
+        padding: 0.15rem 0.55rem;
+        border-radius: 4px;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         margin: 0 0 0.5rem 0;
       }
       .titulo-principal {
-        font-size: 1.75rem;
-        font-weight: 800;
+        font-size: 1.65rem;
+        font-weight: 700;
         color: var(--ammi-primary, #1d1e1c);
-        letter-spacing: -0.025em;
-        margin: 0 0 0.5rem 0;
+        letter-spacing: -0.035em;
+        margin: 0 0 0.4rem 0;
       }
       .meta-usuario {
         display: flex;
         flex-wrap: wrap;
         gap: 1.25rem;
-        font-size: 0.875rem;
-        color: var(--ammi-text-muted, #475569);
+        font-size: 0.85rem;
+        color: var(--ammi-text-muted, #666666);
       }
       .badge-estado {
         display: inline-block;
-        padding: 0.2rem 0.65rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
-        font-size: 0.72rem;
-        font-weight: 700;
+        font-size: 0.7rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.03em;
       }
       .badge-borrador {
-        background: rgba(241, 245, 249, 0.9);
-        color: #334155;
-        border: 1px solid #cbd5e1;
+        background: #f5f5f5;
+        color: #444444;
+        border: 1px solid #eaeaea;
       }
       .badge-devuelto {
-        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.9));
-        color: var(--ammi-danger, #b91c1c);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
       }
       .badge-enviado {
         background: rgba(252, 234, 30, 0.25);
-        color: #713f12;
-        border: 1px solid rgba(234, 179, 8, 0.45);
+        color: #111111;
+        border: 1px solid var(--ammi-gold-border, #e5d415);
       }
       .banner-alerta {
-        border-radius: var(--radius-lg, 1rem);
-        padding: 1.15rem 1.5rem;
+        border-radius: var(--radius-md, 8px);
+        padding: 1rem 1.25rem;
         margin-bottom: 1.25rem;
-        backdrop-filter: var(--glass-blur, blur(20px));
-        box-shadow: var(--glass-shadow-sm);
+        border: 1px solid var(--geist-border, #eaeaea);
       }
       .banner-devuelto {
-        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.85));
-        border: 1px solid rgba(239, 68, 68, 0.25);
-        border-left: 4px solid #ef4444;
+        background: #fef2f2;
+        border-color: #fecaca;
+        border-left: 3px solid #dc2626;
       }
       .banner-lectura {
-        background: var(--glass-surface, rgba(255, 255, 255, 0.75));
-        border: 1px solid var(--glass-border);
-        border-left: 4px solid var(--ammi-primary, #1d1e1c);
+        background: #ffffff;
+        border-left: 3px solid var(--ammi-primary, #1d1e1c);
       }
       .banner-titulo {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 700;
         color: #991b1b;
-        margin: 0 0 0.35rem 0;
+        margin: 0 0 0.25rem 0;
       }
       .banner-desc {
-        font-size: 0.875rem;
-        color: #334155;
+        font-size: 0.85rem;
+        color: #444444;
         margin: 0;
       }
       .observacion-general-box {
-        background: rgba(255, 255, 255, 0.9);
+        background: #ffffff;
+        border: 1px solid #fecaca;
         border-left: 3px solid #dc2626;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-        font-style: italic;
-        color: #1e293b;
-        margin: 0.75rem 0;
-        border-radius: 0 8px 8px 0;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.85rem;
+        color: #171717;
+        margin: 0.65rem 0;
+        border-radius: 6px;
       }
       .banner-conteo-marcas {
-        font-size: 0.8125rem;
+        font-size: 0.8rem;
         color: #7f1d1d;
-        margin: 0.5rem 0 0 0;
+        margin: 0.4rem 0 0 0;
       }
       .secciones-nav {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.375rem;
-        padding: 0.4rem;
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border);
-        outline: 1px solid var(--glass-border-outer);
-        border-radius: var(--radius-lg, 1rem);
-        box-shadow: var(--glass-shadow-sm);
-        margin-bottom: 1.5rem;
+        gap: 0.25rem;
+        border-bottom: 1px solid var(--geist-border, #eaeaea);
+        margin-bottom: 1.25rem;
+        background: var(--geist-surface, #ffffff);
+        padding: 0.35rem 0.5rem 0;
+        border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
+        border: 1px solid var(--geist-border, #eaeaea);
       }
       .seccion-tab-btn {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.45rem;
         background: transparent;
-        border: 1px solid transparent;
-        border-radius: 0.65rem;
-        padding: 0.6rem 0.95rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--ammi-text-muted, #475569);
+        border: none;
+        padding: 0.65rem 0.85rem;
+        font-size: 0.835rem;
+        font-weight: 500;
+        color: var(--ammi-text-muted, #666666);
         cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
         transition: all var(--transition-fast);
       }
       .seccion-tab-btn:hover {
-        background: rgba(255, 255, 255, 0.75);
         color: var(--ammi-primary, #1d1e1c);
       }
       .seccion-tab-btn.active {
-        background: var(--ammi-primary, #1d1e1c);
-        color: #ffffff;
-        border-color: rgba(252, 234, 30, 0.35);
-        box-shadow: 0 4px 12px rgba(29, 30, 28, 0.16);
+        color: var(--ammi-primary, #1d1e1c);
+        font-weight: 600;
+        border-bottom-color: var(--ammi-primary, #1d1e1c);
       }
       .tab-num {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 1.4rem;
-        height: 1.4rem;
+        width: 1.3rem;
+        height: 1.3rem;
         border-radius: 50%;
-        background: rgba(203, 213, 225, 0.65);
-        color: #334155;
-        font-size: 0.75rem;
-        font-weight: 800;
-        transition: all var(--transition-fast);
+        background: #f5f5f5;
+        border: 1px solid #eaeaea;
+        color: #666666;
+        font-size: 0.72rem;
+        font-weight: 700;
       }
       .seccion-tab-btn.active .tab-num {
         background: var(--ammi-gold, #fcea1e);
+        border-color: var(--ammi-primary, #1d1e1c);
         color: #111111;
-        box-shadow: 0 0 8px rgba(252, 234, 30, 0.45);
       }
       .tab-badge {
-        background: rgba(226, 232, 240, 0.8);
-        color: #334155;
-        padding: 0.125rem 0.45rem;
+        background: #f5f5f5;
+        color: #444444;
+        border: 1px solid #eaeaea;
+        padding: 0.1rem 0.4rem;
         border-radius: 9999px;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-size: 0.68rem;
+        font-weight: 600;
       }
       .seccion-tab-btn.active .tab-badge {
-        background: rgba(252, 234, 30, 0.2);
+        background: var(--ammi-primary, #1d1e1c);
+        border-color: var(--ammi-primary, #1d1e1c);
         color: var(--ammi-gold, #fcea1e);
       }
       .seccion-activa-wrapper {
         min-height: 420px;
-        background: var(--glass-surface);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border);
-        outline: 1px solid var(--glass-border-outer);
-        border-radius: var(--radius-xl, 1.25rem);
-        padding: 1.5rem 1.75rem;
-        box-shadow: var(--glass-shadow-md);
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
+        padding: 1.5rem;
+        box-shadow: var(--geist-shadow-sm);
       }
       .hoja-vida-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1.5rem;
-        background: var(--glass-surface-elevated);
-        backdrop-filter: var(--glass-blur);
-        border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.9));
-        outline: 1px solid var(--glass-border-outer);
-        border-radius: var(--radius-lg, 1rem);
-        padding: 1.15rem 1.5rem;
-        box-shadow: var(--glass-shadow-md);
+        background: var(--geist-surface, #ffffff);
+        border: 1px solid var(--geist-border, #eaeaea);
+        border-radius: var(--radius-md, 8px);
+        padding: 1rem 1.5rem;
+        box-shadow: var(--geist-shadow-sm);
       }
       .btn {
-        padding: 0.55rem 1.15rem;
-        border-radius: var(--radius-md, 0.75rem);
-        font-size: 0.875rem;
-        font-weight: 700;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-sm, 6px);
+        font-size: 0.85rem;
+        font-weight: 600;
         cursor: pointer;
         border: 1px solid transparent;
         transition: all var(--transition-fast);
@@ -476,50 +464,50 @@ export type TabSeccionHojaVida =
         background: var(--ammi-primary, #1d1e1c);
         color: #ffffff;
         border-color: var(--ammi-primary, #1d1e1c);
-        box-shadow: 0 4px 12px rgba(29, 30, 28, 0.18);
       }
       .btn-primary:hover:not(:disabled) {
-        background: var(--ammi-primary-hover, #0f100e);
+        background: #000000;
         border-color: var(--ammi-gold, #fcea1e);
         color: var(--ammi-gold, #fcea1e);
-        transform: translateY(-1px);
+        box-shadow: 0 0 0 1px var(--ammi-gold, #fcea1e);
       }
       .btn-primary:disabled {
-        opacity: 0.55;
+        background: #f5f5f5;
+        color: #999999;
+        border-color: #eaeaea;
         cursor: not-allowed;
-        box-shadow: none;
       }
       .btn-lg {
-        padding: 0.75rem 1.5rem;
-        font-size: 0.95rem;
+        padding: 0.65rem 1.25rem;
+        font-size: 0.875rem;
       }
       .cargando-box {
         text-align: center;
         padding: 3rem 1rem;
-        color: var(--ammi-text-subtle, #64748b);
-        background: var(--glass-surface, rgba(255, 255, 255, 0.75));
-        backdrop-filter: var(--glass-blur, blur(16px));
-        border-radius: var(--radius-lg, 1rem);
+        color: var(--ammi-text-subtle, #888888);
+        background: #ffffff;
+        border: 1px solid #eaeaea;
+        border-radius: var(--radius-md, 8px);
       }
       .alert-danger {
-        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.9));
-        color: var(--ammi-danger, #991b1b);
-        padding: 0.85rem 1.15rem;
-        border-radius: var(--radius-md, 0.75rem);
-        border-left: 4px solid #ef4444;
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm, 6px);
+        border: 1px solid #fecaca;
         margin-bottom: 1rem;
       }
       .mt-4 {
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
       }
       .m-0 {
         margin: 0;
       }
       .text-sm {
-        font-size: 0.875rem;
+        font-size: 0.85rem;
       }
       .text-muted {
-        color: var(--ammi-text-subtle, #64748b);
+        color: var(--ammi-text-muted, #666666);
       }
     `,
   ],
