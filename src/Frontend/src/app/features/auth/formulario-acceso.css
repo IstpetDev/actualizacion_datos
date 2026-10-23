@@ -1,22 +1,25 @@
 :host {
   display: block;
   font-family: system-ui, sans-serif;
-  color: #0f172a;
+  color: var(--ammi-text-main, #111111);
 }
 .tarjeta {
   padding: 2rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--ammi-surface, white);
+  border: 1px solid var(--ammi-border, #e2e8f0);
+  border-top: 4px solid var(--ammi-gold, #e9b902);
   border-radius: 0.75rem;
   max-width: 32rem;
   margin: auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 h1 {
   margin-top: 0;
   font-size: 1.5rem;
+  color: var(--ammi-primary, #171f32);
 }
 p {
-  color: #475569;
+  color: var(--ammi-text-muted, #475569);
   line-height: 1.5;
 }
 fieldset {
@@ -30,6 +33,7 @@ fieldset {
 label {
   font-weight: 600;
   font-size: 0.875rem;
+  color: var(--ammi-primary, #171f32);
 }
 input,
 button {
@@ -45,21 +49,27 @@ input {
 }
 button {
   border: 0;
-  background: #4338ca;
-  color: white;
+  background: var(--ammi-primary, #171f32);
+  color: var(--ammi-text-inverse, white);
+  font-weight: 600;
   cursor: pointer;
+  transition: background-color 150ms ease-in-out;
+}
+button:hover:not(:disabled) {
+  background: var(--ammi-primary-hover, #0f1522);
 }
 button:disabled {
   opacity: 0.6;
   cursor: default;
 }
 :focus-visible {
-  outline: 3px solid #818cf8;
-  outline-offset: 3px;
+  outline: 3px solid var(--ammi-gold, #e9b902);
+  outline-offset: 2px;
 }
 .error {
   padding: 0.75rem;
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--ammi-danger-bg, #fef2f2);
+  color: var(--ammi-danger, #991b1b);
   border-radius: 0.375rem;
+  border-left: 4px solid var(--ammi-danger, #b91c1c);
 }

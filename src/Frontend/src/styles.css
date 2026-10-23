@@ -1,1 +1,52 @@
-/* You can add global styles to this file, and also import other style files */
+/* ==========================================================================
+   Paleta Institucional AMMI (Academia Militar General Miguel Iturralde)
+   Tokens CSS para identidad visual, contraste y accesibilidad.
+   ========================================================================== */
+
+:root {
+  /* Colores Corporativos Oficiales AMMI */
+  --ammi-primary: #171f32; /* Azul marino profundo */
+  --ammi-primary-hover: #0f1522; /* Variante más oscura para interactividad */
+  --ammi-primary-light: #24304d; /* Variante clara de soporte */
+
+  --ammi-gold: #e9b902; /* Oro / Amarillo distintivo */
+  --ammi-gold-hover: #cdb82b; /* Oro atenuado / hover */
+  --ammi-gold-soft: #fef9e6; /* Fondo dorado suave */
+  --ammi-gold-border: #f5d76e; /* Borde dorado */
+
+  --ammi-accent: #ff5421; /* Acento / Naranja corporativo */
+  --ammi-accent-hover: #e04413;
+
+  /* Superficies y Neutros */
+  --ammi-bg-main: #f8fafc;
+  --ammi-surface: #ffffff;
+  --ammi-border: #e2e8f0;
+  --ammi-border-focus: #171f32;
+
+  /* Tipografía */
+  --ammi-text-main: #111111;
+  --ammi-text-muted: #475569;
+  --ammi-text-subtle: #64748b;
+  --ammi-text-inverse: #ffffff;
+
+  /* Estados Funcionales Semánticos */
+  --ammi-success: #15803d;
+  --ammi-success-bg: #ecfdf5;
+  --ammi-warning: #92400e;
+  --ammi-warning-bg: #fffbeb;
+  --ammi-danger: #b91c1c;
+  --ammi-danger-bg: #fef2f2;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background-color: var(--ammi-bg-main);
+  color: var(--ammi-text-main);
+}

@@ -2,8 +2,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--ammi-bg-main, #f8fafc);
+  color: var(--ammi-text-main, #111111);
   font-family:
     system-ui,
     -apple-system,
@@ -18,9 +18,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background-color: var(--ammi-primary, #171f32);
+  border-bottom: 3px solid var(--ammi-gold, #e9b902);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
   gap: 1rem;
 }
 
@@ -33,19 +33,19 @@
 .brand-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--ammi-text-inverse, #ffffff);
   letter-spacing: -0.02em;
 }
 
 .brand-badge {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--ammi-gold, #e9b902);
+  color: var(--ammi-primary, #171f32);
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--ammi-gold, #e9b902);
 }
 
 .header-nav {
@@ -55,7 +55,7 @@
 }
 
 .nav-link {
-  color: #475569;
+  color: #cbd5e1;
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -65,14 +65,14 @@
 }
 
 .nav-link:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--ammi-text-inverse, #ffffff);
 }
 
 .active-link {
-  background-color: #e0e7ff;
-  color: #3730a3;
-  font-weight: 600;
+  background-color: var(--ammi-gold, #e9b902);
+  color: var(--ammi-primary, #171f32);
+  font-weight: 700;
 }
 
 .header-user {
@@ -90,7 +90,7 @@
 .user-name {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--ammi-text-inverse, #ffffff);
 }
 
 .role-badge {
@@ -99,8 +99,8 @@
   text-transform: uppercase;
   padding: 0.1rem 0.4rem;
   border-radius: 0.25rem;
-  background-color: #e2e8f0;
-  color: #334155;
+  background-color: #334155;
+  color: #f1f5f9;
   letter-spacing: 0.05em;
 }
 
@@ -126,8 +126,8 @@
 
 .btn-logout {
   background-color: transparent;
-  color: #64748b;
-  border: 1px solid #cbd5e1;
+  color: #cbd5e1;
+  border: 1px solid #475569;
   padding: 0.375rem 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.8125rem;
@@ -137,9 +137,9 @@
 }
 
 .btn-logout:hover {
-  background-color: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background-color: var(--ammi-danger, #b91c1c);
+  border-color: var(--ammi-danger, #b91c1c);
+  color: #ffffff;
 }
 
 .content-container {

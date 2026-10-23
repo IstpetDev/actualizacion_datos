@@ -1,6 +1,6 @@
 :host {
   display: block;
-  color: #0f172a;
+  color: var(--ammi-text-main, #111111);
 }
 .panel {
   max-width: 58rem;
@@ -12,26 +12,32 @@ header h1 {
   margin: 0.25rem 0 0.75rem;
   font-size: clamp(1.5rem, 4vw, 2rem);
   letter-spacing: -0.025em;
+  color: var(--ammi-primary, #171f32);
 }
 p {
   line-height: 1.6;
-  color: #475569;
+  color: var(--ammi-text-muted, #475569);
 }
 .ceja {
-  color: #4338ca;
-  font-weight: 600;
+  color: var(--ammi-gold, #e9b902);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.8125rem;
   margin: 0;
 }
 .tarjeta {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--ammi-surface, white);
+  border: 1px solid var(--ammi-border, #e2e8f0);
   border-radius: 0.75rem;
   padding: 1.5rem;
   min-width: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 h2 {
   margin: 0 0 0.75rem;
   font-size: 1.125rem;
+  color: var(--ammi-primary, #171f32);
 }
 h3 {
   font-size: 0.875rem;
@@ -43,7 +49,7 @@ h3 {
 }
 .etiqueta {
   display: block;
-  color: #64748b;
+  color: var(--ammi-text-subtle, #64748b);
   font-size: 0.8125rem;
   margin-bottom: 0.5rem;
 }
@@ -62,6 +68,7 @@ fieldset {
 label {
   font-size: 0.875rem;
   font-weight: 600;
+  color: var(--ammi-primary, #171f32);
 }
 input,
 button {
@@ -76,17 +83,26 @@ input {
   min-width: 0;
 }
 button {
-  border: 1px solid #4338ca;
-  background: #4338ca;
-  color: white;
+  border: 1px solid var(--ammi-primary, #171f32);
+  background: var(--ammi-primary, #171f32);
+  color: var(--ammi-text-inverse, white);
+  font-weight: 600;
   cursor: pointer;
   width: fit-content;
   max-width: 100%;
+  transition: all 150ms ease-in-out;
+}
+button:hover:not(:disabled) {
+  background: var(--ammi-primary-hover, #0f1522);
 }
 button.secundario {
   background: white;
-  color: #3730a3;
-  border-color: #c7d2fe;
+  color: var(--ammi-primary, #171f32);
+  border-color: #cbd5e1;
+}
+button.secundario:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: var(--ammi-primary, #171f32);
 }
 button:disabled {
   opacity: 0.55;
@@ -97,8 +113,8 @@ input:disabled {
   background: #f8fafc;
 }
 :focus-visible {
-  outline: 3px solid #818cf8;
-  outline-offset: 3px;
+  outline: 3px solid var(--ammi-gold, #e9b902);
+  outline-offset: 2px;
 }
 .mensaje {
   padding: 1rem;
@@ -106,20 +122,20 @@ input:disabled {
   border-radius: 0.5rem;
 }
 .error {
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--ammi-danger-bg, #fef2f2);
+  color: var(--ammi-danger, #991b1b);
 }
 .exito {
-  background: #ecfdf5;
-  color: #065f46;
+  background: var(--ammi-success-bg, #ecfdf5);
+  color: var(--ammi-success, #065f46);
 }
 .observaciones {
-  border-color: #fbbf24;
-  background: #fffbeb;
+  border-color: var(--ammi-gold, #e9b902);
+  background: var(--ammi-gold-soft, #fffbeb);
 }
 .marca {
   margin: 0;
-  color: #92400e;
+  color: var(--ammi-warning, #92400e);
   font-size: 0.875rem;
 }
 .texto-observacion {
