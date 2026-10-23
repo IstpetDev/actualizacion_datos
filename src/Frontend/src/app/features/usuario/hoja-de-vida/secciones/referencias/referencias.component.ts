@@ -267,8 +267,8 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin-bottom: -2px;
       }
       .subtab-btn.active {
-        color: #0284c7;
-        border-bottom-color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
+        border-bottom-color: var(--ammi-primary, #1d1e1c);
       }
       .tag-aviso {
         background: #fef08a;
@@ -284,9 +284,12 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin-bottom: 1rem;
       }
       .card-formulario-item {
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        outline: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 12px;
+        box-shadow: var(--glass-shadow-sm);
         padding: 1.25rem;
         margin-bottom: 1.5rem;
       }
@@ -355,7 +358,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin-left: 0.5rem;
       }
       .btn-editar {
-        color: #0284c7;
+        color: var(--ammi-primary, #1d1e1c);
       }
       .btn-eliminar {
         color: #ef4444;
@@ -373,7 +376,8 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.8125rem;
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        border: 1px solid var(--ammi-primary, #1d1e1c);
         color: #ffffff;
       }
       .btn-secondary {

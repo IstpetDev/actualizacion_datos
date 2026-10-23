@@ -258,72 +258,94 @@ export type TabSeccionHojaVida =
   styles: [
     `
       .hoja-vida-container {
-        max-width: 1100px;
+        max-width: 1140px;
         margin: 0 auto;
-        padding: 1.5rem 1rem;
+        padding: 0.5rem 0;
       }
       .hoja-vida-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 1.5rem;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 1.25rem;
+        margin-bottom: 1.25rem;
+        padding: 1.5rem 1.75rem;
+        background: var(--glass-surface);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        outline: 1px solid var(--glass-border-outer);
+        border-top: 3px solid var(--ammi-gold, #fcea1e);
+        border-radius: var(--radius-xl, 1.25rem);
+        box-shadow: var(--glass-shadow-md);
       }
       .ceja {
-        font-size: 0.8125rem;
-        font-weight: 700;
-        color: #0284c7;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--ammi-gold-text, #856800);
+        background: rgba(252, 234, 30, 0.22);
+        border: 1px solid rgba(233, 185, 2, 0.45);
+        padding: 0.2rem 0.65rem;
+        border-radius: 9999px;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin: 0 0 0.25rem 0;
+        letter-spacing: 0.06em;
+        margin: 0 0 0.5rem 0;
       }
       .titulo-principal {
         font-size: 1.75rem;
         font-weight: 800;
-        color: #0f172a;
+        color: var(--ammi-primary, #1d1e1c);
+        letter-spacing: -0.025em;
         margin: 0 0 0.5rem 0;
       }
       .meta-usuario {
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 1.25rem;
         font-size: 0.875rem;
-        color: #475569;
+        color: var(--ammi-text-muted, #475569);
       }
       .badge-estado {
         display: inline-block;
-        padding: 0.2rem 0.6rem;
+        padding: 0.2rem 0.65rem;
         border-radius: 9999px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
       .badge-borrador {
-        background: #f1f5f9;
-        color: #475569;
+        background: rgba(241, 245, 249, 0.9);
+        color: #334155;
+        border: 1px solid #cbd5e1;
       }
       .badge-devuelto {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.9));
+        color: var(--ammi-danger, #b91c1c);
+        border: 1px solid rgba(239, 68, 68, 0.3);
       }
       .badge-enviado {
-        background: #dbeafe;
-        color: #1d4ed8;
+        background: rgba(252, 234, 30, 0.25);
+        color: #713f12;
+        border: 1px solid rgba(234, 179, 8, 0.45);
       }
       .banner-alerta {
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
-        margin-bottom: 1.5rem;
+        border-radius: var(--radius-lg, 1rem);
+        padding: 1.15rem 1.5rem;
+        margin-bottom: 1.25rem;
+        backdrop-filter: var(--glass-blur, blur(20px));
+        box-shadow: var(--glass-shadow-sm);
       }
       .banner-devuelto {
-        background: #fef2f2;
+        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.85));
+        border: 1px solid rgba(239, 68, 68, 0.25);
         border-left: 4px solid #ef4444;
       }
       .banner-lectura {
-        background: #f8fafc;
-        border-left: 4px solid #94a3b8;
+        background: var(--glass-surface, rgba(255, 255, 255, 0.75));
+        border: 1px solid var(--glass-border);
+        border-left: 4px solid var(--ammi-primary, #1d1e1c);
       }
       .banner-titulo {
         font-size: 1rem;
@@ -337,14 +359,14 @@ export type TabSeccionHojaVida =
         margin: 0;
       }
       .observacion-general-box {
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.9);
         border-left: 3px solid #dc2626;
         padding: 0.75rem 1rem;
         font-size: 0.875rem;
         font-style: italic;
         color: #1e293b;
         margin: 0.75rem 0;
-        border-radius: 0 6px 6px 0;
+        border-radius: 0 8px 8px 0;
       }
       .banner-conteo-marcas {
         font-size: 0.8125rem;
@@ -354,8 +376,14 @@ export type TabSeccionHojaVida =
       .secciones-nav {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.25rem;
-        border-bottom: 2px solid #e2e8f0;
+        gap: 0.375rem;
+        padding: 0.4rem;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        outline: 1px solid var(--glass-border-outer);
+        border-radius: var(--radius-lg, 1rem);
+        box-shadow: var(--glass-shadow-sm);
         margin-bottom: 1.5rem;
       }
       .seccion-tab-btn {
@@ -363,98 +391,122 @@ export type TabSeccionHojaVida =
         align-items: center;
         gap: 0.5rem;
         background: transparent;
-        border: none;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
+        border: 1px solid transparent;
+        border-radius: 0.65rem;
+        padding: 0.6rem 0.95rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--ammi-text-muted, #475569);
         cursor: pointer;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: all 0.15s ease-in-out;
+        transition: all var(--transition-fast);
       }
       .seccion-tab-btn:hover {
-        color: #0f172a;
+        background: rgba(255, 255, 255, 0.75);
+        color: var(--ammi-primary, #1d1e1c);
       }
       .seccion-tab-btn.active {
-        color: #0284c7;
-        border-bottom-color: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
+        color: #ffffff;
+        border-color: rgba(252, 234, 30, 0.35);
+        box-shadow: 0 4px 12px rgba(29, 30, 28, 0.16);
       }
       .tab-num {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 1.35rem;
-        height: 1.35rem;
+        width: 1.4rem;
+        height: 1.4rem;
         border-radius: 50%;
-        background: #e2e8f0;
-        color: #475569;
+        background: rgba(203, 213, 225, 0.65);
+        color: #334155;
         font-size: 0.75rem;
-        font-weight: 700;
+        font-weight: 800;
+        transition: all var(--transition-fast);
       }
       .seccion-tab-btn.active .tab-num {
-        background: #0284c7;
-        color: #ffffff;
+        background: var(--ammi-gold, #fcea1e);
+        color: #111111;
+        box-shadow: 0 0 8px rgba(252, 234, 30, 0.45);
       }
       .tab-badge {
-        background: #f1f5f9;
-        color: #475569;
-        padding: 0.125rem 0.4rem;
+        background: rgba(226, 232, 240, 0.8);
+        color: #334155;
+        padding: 0.125rem 0.45rem;
         border-radius: 9999px;
         font-size: 0.6875rem;
         font-weight: 700;
       }
       .seccion-tab-btn.active .tab-badge {
-        background: #e0f2fe;
-        color: #0284c7;
+        background: rgba(252, 234, 30, 0.2);
+        color: var(--ammi-gold, #fcea1e);
       }
       .seccion-activa-wrapper {
         min-height: 420px;
+        background: var(--glass-surface);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border);
+        outline: 1px solid var(--glass-border-outer);
+        border-radius: var(--radius-xl, 1.25rem);
+        padding: 1.5rem 1.75rem;
+        box-shadow: var(--glass-shadow-md);
       }
       .hoja-vida-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1.5rem;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
+        background: var(--glass-surface-elevated);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.9));
+        outline: 1px solid var(--glass-border-outer);
+        border-radius: var(--radius-lg, 1rem);
+        padding: 1.15rem 1.5rem;
+        box-shadow: var(--glass-shadow-md);
       }
       .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
+        padding: 0.55rem 1.15rem;
+        border-radius: var(--radius-md, 0.75rem);
         font-size: 0.875rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        border: none;
-        transition: background-color 0.15s ease;
+        border: 1px solid transparent;
+        transition: all var(--transition-fast);
       }
       .btn-primary {
-        background: #0284c7;
+        background: var(--ammi-primary, #1d1e1c);
         color: #ffffff;
+        border-color: var(--ammi-primary, #1d1e1c);
+        box-shadow: 0 4px 12px rgba(29, 30, 28, 0.18);
       }
       .btn-primary:hover:not(:disabled) {
-        background: #0369a1;
+        background: var(--ammi-primary-hover, #0f100e);
+        border-color: var(--ammi-gold, #fcea1e);
+        color: var(--ammi-gold, #fcea1e);
+        transform: translateY(-1px);
       }
       .btn-primary:disabled {
-        opacity: 0.6;
+        opacity: 0.55;
         cursor: not-allowed;
+        box-shadow: none;
       }
       .btn-lg {
         padding: 0.75rem 1.5rem;
-        font-size: 1rem;
+        font-size: 0.95rem;
       }
       .cargando-box {
         text-align: center;
         padding: 3rem 1rem;
-        color: #64748b;
+        color: var(--ammi-text-subtle, #64748b);
+        background: var(--glass-surface, rgba(255, 255, 255, 0.75));
+        backdrop-filter: var(--glass-blur, blur(16px));
+        border-radius: var(--radius-lg, 1rem);
       }
       .alert-danger {
-        background: #fee2e2;
-        color: #991b1b;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
+        background: var(--ammi-danger-bg, rgba(254, 226, 226, 0.9));
+        color: var(--ammi-danger, #991b1b);
+        padding: 0.85rem 1.15rem;
+        border-radius: var(--radius-md, 0.75rem);
+        border-left: 4px solid #ef4444;
         margin-bottom: 1rem;
       }
       .mt-4 {
@@ -467,7 +519,7 @@ export type TabSeccionHojaVida =
         font-size: 0.875rem;
       }
       .text-muted {
-        color: #64748b;
+        color: var(--ammi-text-subtle, #64748b);
       }
     `,
   ],
