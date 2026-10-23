@@ -7,6 +7,7 @@ using System.Text;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
@@ -63,6 +64,61 @@ public sealed class Spec0001E2ETests : IDisposable
         _conexion.Dispose();
     }
 
+    private static async Task AgregarHojaDeVidaCompletaAsync(AplicacionDbContext db, Guid institucionId, Guid personaId, string correo)
+    {
+        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 903))
+        {
+            db.ElementosCatalogo.Add(new ElementoCatalogo(903, TipoCatalogo.Pais, "EC", "Ecuador"));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(906, TipoCatalogo.Provincia, "PICHINCHA", "Pichincha", padreId: 903));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(907, TipoCatalogo.Canton, "QUITO", "Quito", padreId: 906));
+            db.ElementosCatalogo.Add(new ElementoCatalogo(905, TipoCatalogo.Parroquia, "PARROQUIA1", "Parroquia 1", padreId: 907));
+        }
+
+        var ficha = new FichaPersonal(new InstitucionId(institucionId), personaId);
+        ficha.Actualizar(new DatosFichaPersonal(
+            PrimerNombre: "Usuario",
+            PrimerApellido: "Uno",
+            SegundoApellido: "Test",
+            SexoId: 1,
+            FechaNacimiento: new DateOnly(1990, 1, 1),
+            PaisNacimientoId: 903,
+            EstadoCivilId: 11,
+            PaisNacionalidadId: 903,
+            ParroquiaResidenciaId: 905,
+            CallePrincipal: "Av. Principal",
+            Celular: "0991234567",
+            CorreoInstitucional: correo));
+        db.FichasPersonales.Add(ficha);
+
+        var archivoTitulo = new ArchivoAdjunto(
+            Guid.NewGuid(),
+            new InstitucionId(institucionId),
+            personaId,
+            "respaldo.pdf",
+            "application/pdf",
+            1024,
+            "hash123",
+            "ruta/respaldo.pdf");
+        db.ArchivosAdjuntos.Add(archivoTitulo);
+
+        var titulo = new TituloAcademico(Guid.NewGuid(), new InstitucionId(institucionId), personaId,
+            new DatosTituloAcademico("Primaria", 61, NombreInstitucionOtra: "Universidad"));
+        titulo.AsociarArchivo(archivoTitulo.Id);
+        db.TitulosAcademicos.Add(titulo);
+
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), personaId,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Uno", "0991111111")));
+        db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), personaId,
+            new DatosReferencia(TipoReferencia.Personal, "Ref Dos", "0992222222")));
+
+        db.CuentasBancarias.Add(CuentaBancaria.RegistradaPorPersona(
+            Guid.NewGuid(),
+            new InstitucionId(institucionId),
+            personaId,
+            new DatosCuentaBancaria(71, null, "Banco Pichincha", new NumeroCuentaProtegido("cifrado", "1234", "huella")),
+            DateTime.UtcNow));
+    }
+
     private static HttpRequestMessage CrearRequest(
         HttpMethod metodo,
         string ruta,
@@ -87,12 +143,13 @@ public sealed class Spec0001E2ETests : IDisposable
     {
         // Preparación: institución, persona ficticia y campaña abierta
         var instId = Guid.NewGuid();
+        var personaId = Guid.NewGuid();
         using (var scope = _fabrica.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio Central"));
             db.Personas.Add(new Persona(
-                Guid.NewGuid(),
+                personaId,
                 new InstitucionId(instId),
                 "1700000001",
                 RolUsuario.Usuario,
@@ -106,6 +163,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 DateTime.UtcNow.AddDays(-5),
                 DateTime.UtcNow.AddDays(5),
                 activa: true));
+            await AgregarHojaDeVidaCompletaAsync(db, instId, personaId, "docente1@ejemplo.test");
             await db.SaveChangesAsync();
         }
 
@@ -195,6 +253,7 @@ public sealed class Spec0001E2ETests : IDisposable
     {
         var instId = Guid.NewGuid();
         var instBId = Guid.NewGuid();
+        var persona1Id = Guid.NewGuid();
 
         using (var scope = _fabrica.Services.CreateScope())
         {
@@ -203,7 +262,7 @@ public sealed class Spec0001E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto Beta"));
 
             var p1 = new Persona(
-                Guid.NewGuid(),
+                persona1Id,
                 new InstitucionId(instId),
                 "1700000001",
                 RolUsuario.Usuario,
@@ -233,6 +292,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 accesoHabilitado: true);
 
             db.Personas.AddRange(p1, supervisorA, supervisorB);
+            await AgregarHojaDeVidaCompletaAsync(db, instId, persona1Id, "docente.alpha@ejemplo.test");
             db.Campanas.Add(new Campana(
                 Guid.NewGuid(),
                 new InstitucionId(instId),
