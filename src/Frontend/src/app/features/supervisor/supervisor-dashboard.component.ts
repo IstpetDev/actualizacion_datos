@@ -6,17 +6,24 @@ import {
   ArchivoDto,
   DevolverActualizacionRequest,
   ExpedienteRevisionDto,
+  HojaDeVidaDto,
   MarcaObservacionItem,
   ResumenRevisionPendienteDto,
   RevisionClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
+import { ExpedienteSeccionesComponent } from './revision/expediente-secciones.component';
 
 @Component({
   selector: 'app-supervisor-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, CuentaBancariaRevisionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CuentaBancariaRevisionComponent,
+    ExpedienteSeccionesComponent,
+  ],
   template: `
     <section class="dashboard-section" data-testid="supervisor-panel">
       <header class="section-header">
@@ -248,6 +255,15 @@ import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuent
               }
             </section>
           </div>
+
+          @if (hojaDeVida(); as hdv) {
+            <app-expediente-secciones
+              [hojaDeVida]="hdv"
+              [archivos]="archivosExpediente()"
+              (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
+              (marcarItem)="iniciarMarcaItem($event)"
+            />
+          }
         </article>
       }
 
@@ -293,6 +309,7 @@ import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuent
                     >
                       <option value="Campo">Campo de Formulario</option>
                       <option value="Archivo">Archivo / Documento</option>
+                      <option value="Item">Ítem de Hoja de Vida</option>
                     </select>
                   </div>
                   <div class="form-group col">
@@ -793,6 +810,7 @@ export class SupervisorDashboardComponent implements OnInit {
   readonly mensajeExito = signal<string | null>(null);
 
   readonly expedienteSeleccionado = signal<ExpedienteRevisionDto | null>(null);
+  readonly hojaDeVida = signal<HojaDeVidaDto | null>(null);
   readonly archivosExpediente = signal<ArchivoDto[]>([]);
   readonly datosPersonalesParsed = signal<Record<string, unknown> | null>(null);
 
@@ -841,6 +859,12 @@ export class SupervisorDashboardComponent implements OnInit {
           this.datosPersonalesParsed.set(null);
         }
 
+        // Cargar la hoja de vida estructurada por secciones (spec-0003, RF-HDV-011)
+        this.revisionClient.obtenerHojaDeVidaParaRevision(documento).subscribe({
+          next: (hdv) => this.hojaDeVida.set(hdv),
+          error: () => this.hojaDeVida.set(null),
+        });
+
         // Cargar los archivos adjuntos del expediente
         this.revisionClient.listarArchivosExpediente(documento).subscribe({
           next: (archivos) => {
@@ -862,8 +886,16 @@ export class SupervisorDashboardComponent implements OnInit {
 
   cerrarExpediente(): void {
     this.expedienteSeleccionado.set(null);
+    this.hojaDeVida.set(null);
     this.archivosExpediente.set([]);
     this.datosPersonalesParsed.set(null);
+  }
+
+  iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
+    this.nuevaMarcaTipo.set(info.tipo || 'Item');
+    this.nuevaMarcaClave.set(info.clave);
+    this.nuevaMarcaTexto.set('');
+    this.mostrarModalDevolver.set(true);
   }
 
   aprobar(): void {

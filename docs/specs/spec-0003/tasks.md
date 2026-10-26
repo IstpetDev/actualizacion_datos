@@ -281,13 +281,13 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **ADR aplicable:** ADR-0003, ADR-0008  
 **Responsable:** @AlexanderMartinez0410
 
-- [ ] Pruebas de componente: marca sobre un ítem; devolución con observación general; creación de tipo de documento y requisito.
-- [ ] Implementar pantallas.
-- [ ] Ejecutar `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Verificar Escenarios 2 y 3.
-- [ ] Entregar diff, pruebas y riesgos.
+- [x] Pruebas de componente: marca sobre un ítem; devolución con observación general; creación de tipo de documento y requisito.
+- [x] Implementar pantallas.
+- [x] Ejecutar `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Verificar Escenarios 2 y 3.
+- [x] Entregar diff, pruebas y riesgos.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completado el 2026-10-26; evidencia en [issue-34.md](../../evidencia/issue-34.md). Incluye RF-HDV-011 (expediente por secciones y marcas por ítem), RF-HDV-012 y RF-HDV-013 (configuración de tipos de funcionario, tipos de documento, requisitos y asignación de personas).
 **Bloqueos:** Ninguno
 
 ## T-13 — Pruebas E2E y cierre

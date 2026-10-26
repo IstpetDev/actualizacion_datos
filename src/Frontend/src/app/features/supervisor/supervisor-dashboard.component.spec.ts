@@ -5,6 +5,7 @@ import {
   ArchivosClient,
   ArchivoDto,
   ExpedienteRevisionDto,
+  HojaDeVidaDto,
   ResumenRevisionPendienteDto,
   RevisionClient,
 } from '../../api-client';
@@ -17,6 +18,7 @@ describe('SupervisorDashboardComponent', () => {
   let revisionClientMock: {
     listarPendientesRevision: Mock;
     obtenerExpedienteParaRevision: Mock;
+    obtenerHojaDeVidaParaRevision: Mock;
     listarArchivosExpediente: Mock;
     aprobarActualizacion: Mock;
     devolverActualizacion: Mock;
@@ -71,10 +73,38 @@ describe('SupervisorDashboardComponent', () => {
     },
   ];
 
+  const mockHojaDeVida: HojaDeVidaDto = {
+    personaId: '11111111-1111-1111-1111-111111111111',
+    documento: '1700000001',
+    estadoActualizacion: 'Enviado',
+    puedeEditar: false,
+    ficha: {
+      personaId: '11111111-1111-1111-1111-111111111111',
+      primerNombre: 'Usuario',
+      primerApellido: 'Prueba',
+      fechaActualizacionUtc: new Date(),
+    } as unknown as HojaDeVidaDto['ficha'],
+    titulos: [
+      {
+        id: 'tit-100',
+        nombreTitulo: 'Ingeniero de Software',
+        nombreInstitucionOtra: 'Universidad Test',
+        gradoAcademicoId: 3,
+        archivoId: 'arc-respaldo-1',
+        fechaActualizacionUtc: new Date(),
+      } as unknown as HojaDeVidaDto['titulos'][0],
+    ],
+    titulosEnCurso: [],
+    capacitaciones: [],
+    experiencias: [],
+    referencias: [],
+  };
+
   beforeEach(async () => {
     revisionClientMock = {
       listarPendientesRevision: vi.fn().mockReturnValue(of(listaPendientesMock)),
       obtenerExpedienteParaRevision: vi.fn().mockReturnValue(of(expedienteMock)),
+      obtenerHojaDeVidaParaRevision: vi.fn().mockReturnValue(of(mockHojaDeVida)),
       listarArchivosExpediente: vi.fn().mockReturnValue(of(archivosMock)),
       aprobarActualizacion: vi.fn().mockReturnValue(of({ mensaje: 'Actualización aprobada' })),
       devolverActualizacion: vi.fn().mockReturnValue(of({ mensaje: 'Actualización devuelta' })),
@@ -203,5 +233,49 @@ describe('SupervisorDashboardComponent', () => {
       ],
     });
     expect(component.mostrarModalDevolver()).toBe(false);
+  });
+
+  it('iniciarMarcaItem_debe_abrir_el_modal_con_tipo_Item_y_clave_de_item_RF_HDV_011', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    expect(revisionClientMock.obtenerHojaDeVidaParaRevision).toHaveBeenCalledWith('1700000001');
+    expect(component.hojaDeVida()).toEqual(mockHojaDeVida);
+
+    component.iniciarMarcaItem({
+      tipo: 'Item',
+      clave: 'titulo:tit-100',
+      label: 'Ingeniero de Software',
+    });
+
+    expect(component.mostrarModalDevolver()).toBe(true);
+    expect(component.nuevaMarcaTipo()).toBe('Item');
+    expect(component.nuevaMarcaClave()).toBe('titulo:tit-100');
+
+    component.observacionGeneral.set('Título con respaldo ilegible');
+    component.nuevaMarcaTexto.set('Por favor volver a escanear el certificado');
+    component.agregarMarca();
+
+    expect(component.marcas()).toEqual([
+      {
+        tipoDestino: 'Item',
+        claveDestino: 'titulo:tit-100',
+        texto: 'Por favor volver a escanear el certificado',
+      },
+    ]);
+
+    component.confirmarDevolucion();
+    fixture.detectChanges();
+
+    expect(revisionClientMock.devolverActualizacion).toHaveBeenCalledWith('1700000001', {
+      observacionGeneral: 'Título con respaldo ilegible',
+      marcas: [
+        {
+          tipoDestino: 'Item',
+          claveDestino: 'titulo:tit-100',
+          texto: 'Por favor volver a escanear el certificado',
+        },
+      ],
+    });
   });
 });

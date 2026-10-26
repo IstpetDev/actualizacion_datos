@@ -80,6 +80,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/configuracion',
+        canActivate: [roleGuard('admin')],
+        loadComponent: () =>
+          import('./features/admin/configuracion/configuracion-requisitos.component').then(
+            (m) => m.ConfiguracionRequisitosComponent,
+          ),
+      },
+      {
         path: 'superadmin',
         canActivate: [roleGuard('superadmin')],
         loadComponent: () =>
