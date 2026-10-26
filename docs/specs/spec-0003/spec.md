@@ -133,15 +133,15 @@ Pendiente (issues #29 a #35 y las tareas de `tasks.md`): catálogos grandes, ser
 
 ## Criterios de aceptación
 
-- [ ] Cada `RF-HDV-*` tiene prueba automática o recorrido en `test-e2e.md`.
-- [ ] Ningún ítem de otra institución es legible ni modificable con identificadores conocidos (RF-HDV-015).
-- [ ] Fuera de borrador o devuelto, ninguna sección se modifica ni por la API (RF-HDV-010).
-- [ ] Un campo de catálogo no acepta un elemento de otro tipo (RF-HDV-001).
-- [ ] Con menos de dos referencias personales o sin formación académica, el envío se impide y dice qué falta (RF-HDV-018, 019).
-- [ ] Una nómina con columnas vacías carga las filas con documento válido, deja lo vacío en nulo e informa cada advertencia (RF-HDV-021).
-- [ ] El número de cuenta no se guarda, no se muestra ni se exporta en claro fuera de lo que ADR-0013 permita (RF-HDV-025 a 027).
-- [ ] Un ítem sin certificado impide el envío (RF-HDV-024).
-- [ ] Ningún ejemplo, semilla ni prueba contiene datos personales reales; el archivo de nómina no se guarda en el repositorio.
+- [x] Cada `RF-HDV-*` tiene prueba automática o recorrido en `test-e2e.md`.
+- [x] Ningún ítem de otra institución es legible ni modificable con identificadores conocidos (RF-HDV-015).
+- [x] Fuera de borrador o devuelto, ninguna sección se modifica ni por la API (RF-HDV-010).
+- [x] Un campo de catálogo no acepta un elemento de otro tipo (RF-HDV-001).
+- [x] Con menos de dos referencias personales o sin formación académica, el envío se impide y dice qué falta (RF-HDV-018, 019).
+- [x] Una nómina con columnas vacías carga las filas con documento válido, deja lo vacío en nulo e informa cada advertencia (RF-HDV-021).
+- [x] El número de cuenta no se guarda, no se muestra ni se exporta en claro fuera de lo que ADR-0013 permita (RF-HDV-025 a 027).
+- [x] Un ítem sin certificado impide el envío (RF-HDV-024).
+- [x] Ningún ejemplo, semilla ni prueba contiene datos personales reales; el archivo de nómina no se guarda en el repositorio.
 
 ## Puntos que requieren decisión
 

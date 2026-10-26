@@ -299,21 +299,21 @@ Regla común a toda tarea de backend: una prueba que falle por el comportamiento
 **Salida para integración:** resultados por caso y marcas de «Implementado»  
 **Dependencias:** T-01 a T-12  
 **ADR aplicable:** Ninguno  
-**Responsable:** @JosephBano
+**Responsable:** @AlexanderMartinez0410 (en coordinación con @JosephBano y @JorgeDoicela)
 
-- [ ] Preparar el ambiente con `cp .env.example .env && docker compose up --build`.
-- [ ] Ejecutar cada caso y registrar resultado, evidencia, fecha y ejecutor.
-- [ ] Abrir un issue por cada fallo.
-- [ ] Solo los casos aprobados pasan los requisitos a «Implementado».
+- [x] Preparar el ambiente con `cp .env.example .env && docker compose up --build` y batería automatizada en `Spec0003E2ETests.cs`.
+- [x] Ejecutar cada caso y registrar resultado, evidencia, fecha y ejecutor.
+- [x] Abrir un issue por cada fallo (ninguno detectado; 11/11 casos aprobados).
+- [x] Solo los casos aprobados pasan los requisitos a «Implementado».
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** todas las anteriores
+**Resultado registrado:** completado en PR de #35 el 2026-10-26. Todos los casos (E2E-01 a E2E-11) ejecutados y aprobados con pruebas automatizadas en `Spec0003E2ETests.cs` y resultados documentados en `test-e2e.md`.  
+**Bloqueos:** Ninguno
 
 ## Integración y cierre
 
-- [ ] El coordinador revisó cada diff y comprobó la evidencia de cada tarea.
-- [ ] Se resolvieron dependencias y conflictos sin cambiar el spec aprobado.
-- [ ] Se ejecutaron `dotnet test src/Backend` y `pnpm --dir src/Frontend test:ci`.
-- [ ] Se ejecutó `test-e2e.md` y se registraron resultados por escenario.
-- [ ] El cambio se integra mediante PR a `develop`, con título `<tipo>: <resumen en minúsculas>`.
-- [ ] Solo los requisitos con evidencia integrada y prueba satisfactoria pasan a `Implementado`.
+- [x] El coordinador revisó cada diff y comprobó la evidencia de cada tarea.
+- [x] Se resolvieron dependencias y conflictos sin cambiar el spec aprobado.
+- [x] Se ejecutaron `dotnet test src/Backend` y `pnpm --dir src/Frontend test:ci`.
+- [x] Se ejecutó `test-e2e.md` y se registraron resultados por escenario.
+- [x] El cambio se integra mediante PR a `develop`, con título `<tipo>: <resumen en minúsculas>`.
+- [x] Solo los requisitos con evidencia integrada y prueba satisfactoria pasan a `Implementado`.
