@@ -143,6 +143,13 @@ if (!string.IsNullOrWhiteSpace(connectionString))
     await db.Database.MigrateAsync();
 }
 
+if (args.Contains("--cargar-catalogos"))
+{
+    await app.CargarCatalogosAsync(forzar: true);
+    Console.WriteLine("Catálogos cargados y verificados. Finalizando proceso (--cargar-catalogos).");
+    return;
+}
+
 if (args.Contains("--migrar") || args.Contains("--migrate"))
 {
     Console.WriteLine("Migraciones de base de datos ejecutadas exitosamente. Finalizando proceso (--migrar).");
@@ -1177,7 +1184,7 @@ exportaciones.MapGet("/excel", async (
 .Produces(StatusCodes.Status401Unauthorized);
 
 
-await app.CargarCatalogosDesarrolloAsync();
+await app.CargarCatalogosAsync();
 
 app.MapCatalogos();
 

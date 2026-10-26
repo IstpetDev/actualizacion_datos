@@ -31,7 +31,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioArchivos, ServicioArchivos>();
         servicios.AddScoped<IServicioCatalogos, ServicioCatalogos>();
         servicios.AddScoped<ValidadorCatalogos>();
-        servicios.AddScoped<CargadorCatalogosDesarrollo>();
+        servicios.AddScoped<CargadorCatalogos>();
         servicios.AddScoped<IServicioExportacion, ServicioExportacion>();
         servicios.AddScoped<IServicioHojaDeVida, ServicioHojaDeVida>();
         servicios.AddScoped<IServicioDocumentosPersonales, ServicioDocumentosPersonales>();
