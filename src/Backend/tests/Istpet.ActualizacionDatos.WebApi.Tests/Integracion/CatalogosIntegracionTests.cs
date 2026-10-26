@@ -36,24 +36,25 @@ public sealed class CatalogosIntegracionTests : IAsyncLifetime
         Assert.NotNull(directorio);
         var ruta = Path.Combine(directorio.FullName, "data", "catalogos");
         await using var db = new AplicacionDbContext(Opciones());
-        var cargador = new CargadorCatalogosDesarrollo(new ServicioCatalogos(db));
+        var cargador = new CargadorCatalogos(new ServicioCatalogos(db), db);
         var primera = await cargador.CargarAsync(ruta);
         var ids = await db.ElementosCatalogo.AsNoTracking().Select(e => e.Id).OrderBy(id => id).ToListAsync();
         var segunda = await cargador.CargarAsync(ruta);
-        Assert.Equal(15, primera.Count);
+        Assert.Equal(17, primera.Count);
         Assert.All(segunda, r => { Assert.Equal(0, r.Creados); Assert.Equal(0, r.Actualizados); });
         Assert.Equal(ids, await db.ElementosCatalogo.AsNoTracking().Select(e => e.Id).OrderBy(id => id).ToListAsync());
         var elementos = await db.ElementosCatalogo.AsNoTracking().ToListAsync();
         // #45 siembra los tipos de cuenta bancaria 71 y 72 (ADR-0013).
-        Assert.Equal(2106, elementos.Count);
+        Assert.Equal(2350, elementos.Count);
         Assert.Equal(29, elementos.Count(e => e.Id < 1000));
         Assert.All(elementos.Where(e => e.PadreId.HasValue), hijo =>
         {
             var padre = elementos.Single(e => e.Id == hijo.PadreId);
             Assert.Equal(ElementoCatalogo.TipoPadre(hijo.Tipo), padre.Tipo);
         });
-        // Banco (ADR-0013) aún no tiene CSV: su fuente (Superintendencia de Bancos) está pendiente en PD-HDV-03.
-        Assert.All(Enum.GetValues<TipoCatalogo>().Where(t => t != TipoCatalogo.Banco), tipo => Assert.Contains(elementos, e => e.Tipo == tipo));
+        Assert.Equal(28, elementos.Count(e => e.Tipo == TipoCatalogo.Banco));
+        Assert.Equal(280, elementos.Count(e => e.Tipo == TipoCatalogo.Universidad));
+        Assert.All(Enum.GetValues<TipoCatalogo>(), tipo => Assert.Contains(elementos, e => e.Tipo == tipo));
         Assert.Contains(elementos, e => e.Id == 71 && e.Tipo == TipoCatalogo.TipoCuentaBancaria);
         Assert.Contains(elementos, e => e.Id == 61 && e.Tipo == TipoCatalogo.GradoAcademico && e.PadreId == 51);
         Assert.Contains(elementos, e => e.Id == 62 && e.Tipo == TipoCatalogo.GradoAcademico && e.PadreId == 52);

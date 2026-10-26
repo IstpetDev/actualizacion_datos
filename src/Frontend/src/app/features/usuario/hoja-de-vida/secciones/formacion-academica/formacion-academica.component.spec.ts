@@ -198,4 +198,82 @@ describe('FormacionAcademicaComponent', () => {
     component.eliminarEnCurso('enc-1');
     expect(stateMock.eliminarTituloEnCurso).toHaveBeenCalledWith('enc-1');
   });
+  it('filtra campos UNESCO por padre y limpia el detalle al cambiar la selección', () => {
+    component.camposEspecificos.set([
+      {
+        id: 20,
+        tipo: 13,
+        codigo: 'A.1',
+        nombre: 'Específico ficticio A',
+        padreId: 10,
+        codigoExterno: undefined,
+        orden: 1,
+      },
+      {
+        id: 21,
+        tipo: 13,
+        codigo: 'B.1',
+        nombre: 'Específico ficticio B',
+        padreId: 11,
+        codigoExterno: undefined,
+        orden: 2,
+      },
+    ]);
+    component.camposDetallados.set([
+      {
+        id: 30,
+        tipo: 14,
+        codigo: 'A.1.1',
+        nombre: 'Detalle ficticio',
+        padreId: 20,
+        codigoExterno: undefined,
+        orden: 1,
+      },
+    ]);
+    component.cambiarCampoAmplio(10);
+    expect(component.especificosDisponibles().map((campo) => campo.id)).toEqual([20]);
+    component.cambiarCampoEspecifico(20);
+    expect(component.detalladosDisponibles().map((campo) => campo.id)).toEqual([30]);
+    component.modeloTitulo.campoDetalladoUnescoId = 30;
+    component.cambiarCampoAmplio(11);
+    expect(component.modeloTitulo.campoDetalladoUnescoId).toBeUndefined();
+    expect(component.campoEspecificoId).toBeUndefined();
+  });
+
+  it('conserva beca y financiamiento al editar y los limpia al desmarcar', () => {
+    component.subtabActiva.set('en-curso');
+    component.editarEnCurso({
+      id: 'estudio-ficticio',
+      universidadId: undefined,
+      campoDetalladoUnescoId: undefined,
+      fechaInicio: undefined,
+      fechaFinEstimada: undefined,
+      montoBeca: undefined,
+      archivoId: undefined,
+      nombrePrograma: 'Programa ficticio',
+      gradoAcademicoId: 1,
+      nombreInstitucionOtra: 'Institución ficticia',
+      tieneBeca: true,
+      tipoBecaId: 40,
+      financiamientoBecaId: 50,
+      porcentajeBeca: 50,
+      fechaActualizacionUtc: new Date(),
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="select-tipo-beca"]'),
+    ).toBeTruthy();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="select-financiamiento-beca"]',
+      ),
+    ).toBeTruthy();
+    expect(component.modeloEnCurso.tipoBecaId).toBe(40);
+    expect(component.modeloEnCurso.financiamientoBecaId).toBe(50);
+    expect(component.modeloEnCurso.tieneBeca).toBe(true);
+    component.onBecaToggle(false);
+    expect(component.modeloEnCurso.tieneBeca).toBe(false);
+    expect(component.modeloEnCurso.tipoBecaId).toBeUndefined();
+    expect(component.modeloEnCurso.financiamientoBecaId).toBeUndefined();
+  });
 });

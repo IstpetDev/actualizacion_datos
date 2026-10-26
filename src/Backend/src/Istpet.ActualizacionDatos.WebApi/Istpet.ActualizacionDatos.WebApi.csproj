@@ -35,6 +35,13 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Fuente única de datos versionados, también en la distribución Release. -->
+    <Content Include="../../../../data/catalogos/*.csv;../../../../data/catalogos/fuentes.json"
+             Link="catalogos/%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Copia el JSON que emite el SDK a openapi/v1.json y genera el cliente
        TypeScript. Solo Debug local. -->
   <Target Name="PublicarClienteAngular"
