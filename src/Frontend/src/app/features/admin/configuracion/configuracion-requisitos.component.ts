@@ -199,24 +199,26 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                             </span>
                           </td>
                           <td class="text-right">
-                            <button
-                              type="button"
-                              class="btn btn-secondary btn-sm"
-                              (click)="iniciarEdicionFuncionario(tf)"
-                              [attr.data-testid]="'btn-editar-tf-' + tf.codigo"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              class="btn btn-sm ml-1"
-                              [class.btn-danger]="tf.activo"
-                              [class.btn-success]="!tf.activo"
-                              (click)="alternarActivoFuncionario(tf)"
-                              [attr.data-testid]="'btn-toggle-tf-' + tf.codigo"
-                            >
-                              {{ tf.activo ? 'Desactivar' : 'Activar' }}
-                            </button>
+                            <div class="acciones-tabla">
+                              <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                (click)="iniciarEdicionFuncionario(tf)"
+                                [attr.data-testid]="'btn-editar-tf-' + tf.codigo"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-sm"
+                                [class.btn-danger]="tf.activo"
+                                [class.btn-success]="!tf.activo"
+                                (click)="alternarActivoFuncionario(tf)"
+                                [attr.data-testid]="'btn-toggle-tf-' + tf.codigo"
+                              >
+                                {{ tf.activo ? 'Desactivar' : 'Activar' }}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       } @empty {
@@ -383,24 +385,26 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                             </span>
                           </td>
                           <td class="text-right">
-                            <button
-                              type="button"
-                              class="btn btn-secondary btn-sm"
-                              (click)="iniciarEdicionDocumento(td)"
-                              [attr.data-testid]="'btn-editar-td-' + td.codigo"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              class="btn btn-sm ml-1"
-                              [class.btn-danger]="td.activo"
-                              [class.btn-success]="!td.activo"
-                              (click)="alternarActivoDocumento(td)"
-                              [attr.data-testid]="'btn-toggle-td-' + td.codigo"
-                            >
-                              {{ td.activo ? 'Desactivar' : 'Activar' }}
-                            </button>
+                            <div class="acciones-tabla">
+                              <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                (click)="iniciarEdicionDocumento(td)"
+                                [attr.data-testid]="'btn-editar-td-' + td.codigo"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                class="btn btn-sm"
+                                [class.btn-danger]="td.activo"
+                                [class.btn-success]="!td.activo"
+                                (click)="alternarActivoDocumento(td)"
+                                [attr.data-testid]="'btn-toggle-td-' + td.codigo"
+                              >
+                                {{ td.activo ? 'Desactivar' : 'Activar' }}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       } @empty {
@@ -531,16 +535,18 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                             </span>
                           </td>
                           <td class="text-right">
-                            <button
-                              type="button"
-                              class="btn btn-sm"
-                              [class.btn-danger]="req.activo"
-                              [class.btn-success]="!req.activo"
-                              (click)="alternarActivoRequisito(req)"
-                              [attr.data-testid]="'btn-toggle-req-' + req.id"
-                            >
-                              {{ req.activo ? 'Desactivar' : 'Activar' }}
-                            </button>
+                            <div class="acciones-tabla">
+                              <button
+                                type="button"
+                                class="btn btn-sm"
+                                [class.btn-danger]="req.activo"
+                                [class.btn-success]="!req.activo"
+                                (click)="alternarActivoRequisito(req)"
+                                [attr.data-testid]="'btn-toggle-req-' + req.id"
+                              >
+                                {{ req.activo ? 'Desactivar' : 'Activar' }}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       } @empty {
@@ -859,6 +865,38 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
     }
     .text-muted {
       color: #64748b;
+    }
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
+    }
+    .acciones-tabla {
+      display: flex;
+      gap: 0.375rem;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      min-width: 140px;
+    }
+    @media (max-width: 640px) {
+      .config-subtabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        padding-bottom: 0.25rem;
+      }
+      .subtab-btn {
+        flex-shrink: 0;
+      }
+      .acciones-tabla {
+        justify-content: flex-start;
+      }
+      .config-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
     }
   `,
 })

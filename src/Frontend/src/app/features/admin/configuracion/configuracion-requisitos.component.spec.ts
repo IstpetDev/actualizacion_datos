@@ -286,4 +286,17 @@ describe('ConfiguracionRequisitosComponent', () => {
       tipoFuncionarioId: 'tf-001',
     });
   });
+
+  it('renderiza_los_botones_de_accion_dentro_del_contenedor_responsivo_acciones_tabla', () => {
+    component.cambiarTab('funcionarios');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const celdaAcciones = compiled.querySelector('[data-testid="fila-tf-DOCENTE"] td.text-right');
+    expect(celdaAcciones).toBeTruthy();
+
+    const contenedorAcciones = celdaAcciones?.querySelector('.acciones-tabla');
+    expect(contenedorAcciones).toBeTruthy();
+    expect(contenedorAcciones?.querySelectorAll('button').length).toBe(2);
+  });
 });
