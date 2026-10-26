@@ -55,6 +55,15 @@ public sealed record HabilitarPersonasRequest(
     List<Guid>? PersonaIds = null,
     bool HabilitarTodos = false);
 
+public sealed record CambiarAccesoPersonasRequest(
+    bool Habilitar,
+    List<Guid>? PersonaIds = null,
+    bool Todas = false);
+
+public sealed record ResultadoCambioAccesoDto(
+    int Cambiadas,
+    int YaEnEstado);
+
 public sealed record PersonaDto(
     Guid Id,
     Guid InstitucionId,

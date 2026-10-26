@@ -724,6 +724,80 @@ public class ServicioPersonas : IServicioPersonas
             p.FechaCreacionUtc)).ToList();
     }
 
+    public async Task<ResultadoCambioAccesoDto> CambiarAccesoAsync(CambiarAccesoPersonasRequest request, CancellationToken ct = default)
+    {
+        var institucionId = _contextoInstitucion.InstitucionId
+            ?? throw new ReglaNegocioException("Se requiere una institución activa para modificar el acceso de personas.");
+
+        // Solo se opera sobre usuarios con rol Usuario de la institución actual
+        // No se permite modificar a administradores ni supervisores
+        var query = _context.Personas
+            .Where(p => p.InstitucionId == institucionId && p.Rol == RolUsuario.Usuario);
+
+        // Prevenir que un admin se deshabilite a sí mismo si por alguna razón tuviera rol Usuario
+        if (!string.IsNullOrWhiteSpace(_contextoInstitucion.ActorActual))
+        {
+            var actor = _contextoInstitucion.ActorActual.Trim();
+            query = query.Where(p => p.Documento != actor);
+        }
+
+        if (!request.Todas)
+        {
+            var ids = request.PersonaIds?.Distinct().ToList() ?? [];
+            if (ids.Count == 0)
+            {
+                return new ResultadoCambioAccesoDto(0, 0);
+            }
+
+            query = query.Where(p => ids.Contains(p.Id));
+        }
+
+        var personas = await query.ToListAsync(ct);
+
+        var cambiadas = 0;
+        var yaEnEstado = 0;
+
+        foreach (var persona in personas)
+        {
+            if (persona.AccesoHabilitado != request.Habilitar)
+            {
+                if (request.Habilitar)
+                {
+                    persona.HabilitarAcceso();
+                }
+                else
+                {
+                    persona.DeshabilitarAcceso();
+                }
+                cambiadas++;
+            }
+            else
+            {
+                yaEnEstado++;
+            }
+        }
+
+        if (cambiadas > 0)
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+
+        // Auditoría según RF-ACC-006 / ADR-0023
+        var accion = request.Habilitar ? "HABILITAR_ACCESO" : "DESHABILITAR_ACCESO";
+        var detalle = $"{(request.Habilitar ? "Habilitado" : "Deshabilitado")} el acceso a {cambiadas} persona(s) ({yaEnEstado} ya en ese estado)";
+        _context.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            _contextoInstitucion.ActorActual ?? "admin",
+            accion,
+            institucionId,
+            DateTime.UtcNow,
+            detalle));
+
+        await _context.SaveChangesAsync(ct);
+
+        return new ResultadoCambioAccesoDto(cambiadas, yaEnEstado);
+    }
+
     private static string NormalizarTexto(string texto)
     {
         var normalizada = texto.Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);

@@ -291,7 +291,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
         var persona = await _context.Personas.IgnoreQueryFilters()
             .FirstOrDefaultAsync(p => p.Documento == documento.Trim(), ct);
 
-        if (persona == null)
+        if (persona == null || !persona.AccesoHabilitado)
         {
             return null;
         }

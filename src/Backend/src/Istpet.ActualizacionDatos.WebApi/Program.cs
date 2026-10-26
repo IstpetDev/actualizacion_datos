@@ -26,6 +26,34 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 
+        options.Events.OnValidatePrincipal = async ctx =>
+        {
+            var rol = ctx.Principal?.FindFirst(ClaimTypes.Role)?.Value;
+            if (string.Equals(rol, nameof(RolUsuario.Superadmin), StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var idStr = ctx.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(idStr, out var personaId))
+            {
+                var db = ctx.HttpContext.RequestServices.GetService<AplicacionDbContext>();
+                if (db != null)
+                {
+                    var persona = await db.Personas.IgnoreQueryFilters()
+                        .Where(p => p.Id == personaId)
+                        .Select(p => new { p.AccesoHabilitado })
+                        .FirstOrDefaultAsync();
+
+                    if (persona == null || !persona.AccesoHabilitado)
+                    {
+                        ctx.RejectPrincipal();
+                        await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    }
+                }
+            }
+        };
+
         options.Events.OnRedirectToLogin = ctx =>
         {
             ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -447,6 +475,41 @@ personas.MapGet("/", async (IServicioPersonas servicio, CancellationToken ct) =>
 })
 .WithName("ListarPersonas")
 .Produces<List<PersonaDto>>();
+
+personas.MapPost("/acceso", async (
+    CambiarAccesoPersonasRequest request,
+    HttpContext httpContext,
+    IContextoInstitucion contexto,
+    IServicioPersonas servicio,
+    CancellationToken ct) =>
+{
+    if (!EstaAutenticado(httpContext, contexto))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!EsRolAdmin(httpContext, contexto))
+    {
+        return Results.Json(
+            new MensajeRespuesta("No tiene permisos para modificar el acceso. Se requiere rol de Administrador."),
+            statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var resultado = await servicio.CambiarAccesoAsync(request, ct);
+        return Results.Ok(resultado);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("CambiarAccesoPersonas")
+.Produces<ResultadoCambioAccesoDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces(StatusCodes.Status401Unauthorized)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden);
 
 // --- Endpoints Campanas (RF-CAM-001, PD-07) ---
 var campanas = app.MapGroup("/api/campanas").WithTags("Campanas");
