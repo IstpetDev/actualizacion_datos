@@ -6185,6 +6185,9 @@ export interface MarcaObservacionItem {
 
 export interface MensajeRespuesta {
     mensaje: string;
+    codigo?: string | undefined;
+    errores?: { [key: string]: string[]; } | undefined;
+    traceId?: string | undefined;
 
     [key: string]: any;
 }

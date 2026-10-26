@@ -1,3 +1,4 @@
+import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
@@ -840,7 +841,7 @@ export class AdminDashboardComponent implements OnInit {
 
     this.campanasClient.listarCampanas().subscribe({
       next: (lista) => this.campanas.set(lista),
-      error: (err) => this.error.set(err?.message || 'Error al listar campañas.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al listar campañas.')),
     });
   }
 
@@ -870,7 +871,7 @@ export class AdminDashboardComponent implements OnInit {
         this.cargarDatosCampanas();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al crear la campaña.');
+        this.error.set(mensajeError(err, 'Error al crear la campaña.'));
         this.guardandoCampana.set(false);
       },
     });
@@ -924,7 +925,7 @@ export class AdminDashboardComponent implements OnInit {
         this.cargarDatosPersonas();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al procesar el archivo de nómina.');
+        this.error.set(mensajeError(err, 'Error al procesar el archivo de nómina.'));
         this.cargandoArchivo.set(false);
       },
     });
@@ -933,7 +934,7 @@ export class AdminDashboardComponent implements OnInit {
   cargarDatosPersonas(): void {
     this.personasClient.listarPersonas().subscribe({
       next: (lista) => this.personas.set(lista),
-      error: (err) => this.error.set(err?.message || 'Error al listar personas.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al listar personas.')),
     });
   }
 
@@ -976,7 +977,7 @@ export class AdminDashboardComponent implements OnInit {
         this.cargarDatosPersonas();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al procesar la carga de personas.');
+        this.error.set(mensajeError(err, 'Error al procesar la carga de personas.'));
         this.cargandoPersonas.set(false);
       },
     });
@@ -1015,7 +1016,7 @@ export class AdminDashboardComponent implements OnInit {
           this.exportandoZip.set(false);
         },
         error: async (err) => {
-          let msg = err?.message || 'Error al generar la exportación ZIP.';
+          let msg = mensajeError(err, 'Error al generar la exportación ZIP.');
           if (err?.error instanceof Blob) {
             try {
               const texto = await err.error.text();
@@ -1062,7 +1063,7 @@ export class AdminDashboardComponent implements OnInit {
           this.exportandoExcel.set(false);
         },
         error: async (err) => {
-          let msg = err?.message || 'Error al generar la exportación Excel.';
+          let msg = mensajeError(err, 'Error al generar la exportación Excel.');
           if (err?.error instanceof Blob) {
             try {
               const texto = await err.error.text();

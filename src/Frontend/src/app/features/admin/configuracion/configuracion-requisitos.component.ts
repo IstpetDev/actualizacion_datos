@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -953,17 +954,17 @@ export class ConfiguracionRequisitosComponent implements OnInit {
 
     this.configClient.listarTiposFuncionario().subscribe({
       next: (tfs) => this.tiposFuncionario.set(tfs || []),
-      error: (err) => this.error.set(err?.message || 'Error al cargar tipos de funcionario.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar tipos de funcionario.')),
     });
 
     this.configClient.listarTiposDocumento().subscribe({
       next: (tds) => this.tiposDocumento.set(tds || []),
-      error: (err) => this.error.set(err?.message || 'Error al cargar tipos de documento.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar tipos de documento.')),
     });
 
     this.configClient.listarRequisitosDocumento().subscribe({
       next: (reqs) => this.requisitos.set(reqs || []),
-      error: (err) => this.error.set(err?.message || 'Error al cargar requisitos de documento.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar requisitos de documento.')),
     });
 
     this.personasClient.listarPersonas().subscribe({
@@ -972,7 +973,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargando.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al cargar personas para asignación.');
+        this.error.set(mensajeError(err, 'Error al cargar personas para asignación.'));
         this.cargando.set(false);
       },
     });
@@ -1019,7 +1020,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al actualizar tipo de funcionario.');
+          this.error.set(mensajeError(err, 'Error al actualizar tipo de funcionario.'));
           this.guardando.set(false);
         },
       });
@@ -1032,7 +1033,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al crear tipo de funcionario.');
+          this.error.set(mensajeError(err, 'Error al crear tipo de funcionario.'));
           this.guardando.set(false);
         },
       });
@@ -1056,7 +1057,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) =>
-        this.error.set(err?.message || 'Error al cambiar estado del tipo de funcionario.'),
+        this.error.set(mensajeError(err, 'Error al cambiar estado del tipo de funcionario.')),
     });
   }
 
@@ -1107,7 +1108,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al actualizar tipo de documento.');
+          this.error.set(mensajeError(err, 'Error al actualizar tipo de documento.'));
           this.guardando.set(false);
         },
       });
@@ -1120,7 +1121,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al crear tipo de documento.');
+          this.error.set(mensajeError(err, 'Error al crear tipo de documento.'));
           this.guardando.set(false);
         },
       });
@@ -1146,7 +1147,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) =>
-        this.error.set(err?.message || 'Error al cambiar estado del tipo de documento.'),
+        this.error.set(mensajeError(err, 'Error al cambiar estado del tipo de documento.')),
     });
   }
 
@@ -1175,7 +1176,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al crear requisito de documento.');
+        this.error.set(mensajeError(err, 'Error al crear requisito de documento.'));
         this.guardando.set(false);
       },
     });
@@ -1195,7 +1196,8 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.mensajeExito.set(`Requisito ${nuevoEstado ? 'activado' : 'desactivado'}.`);
         this.cargarDatos();
       },
-      error: (err) => this.error.set(err?.message || 'Error al actualizar estado del requisito.'),
+      error: (err) =>
+        this.error.set(mensajeError(err, 'Error al actualizar estado del requisito.')),
     });
   }
 
@@ -1227,7 +1229,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           );
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al asignar tipo de funcionario a la persona.');
+          this.error.set(mensajeError(err, 'Error al asignar tipo de funcionario a la persona.'));
           this.cargarDatos();
         },
       });

@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -142,6 +143,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 id="fechaFin"
                 type="date"
                 class="form-control"
+                [min]="fechaInicioStr"
                 [ngModel]="fechaFinStr"
                 (ngModelChange)="onFechaFinChange($event)"
                 data-testid="input-fecha-fin"
@@ -188,7 +190,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </div>
 
           @if (errorFormulario()) {
-            <div class="alert alert-danger mt-2" data-testid="error-capacitacion">
+            <div class="alert alert-danger mt-2" role="alert" data-testid="error-capacitacion">
               {{ errorFormulario() }}
             </div>
           }
@@ -565,10 +567,19 @@ export class CapacitacionesComponent implements OnInit {
       this.errorFormulario.set('La institución organizadora es obligatoria.');
       return;
     }
+    if (
+      this.modelo.fechaInicio &&
+      this.modelo.fechaFin &&
+      this.modelo.fechaFin < this.modelo.fechaInicio
+    ) {
+      this.errorFormulario.set('La fecha de fin no puede ser anterior a la fecha de inicio.');
+      return;
+    }
 
     this.state.guardarCapacitacion(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar la capacitación.'),
+      error: (err) =>
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la capacitación.')),
     });
   }
 

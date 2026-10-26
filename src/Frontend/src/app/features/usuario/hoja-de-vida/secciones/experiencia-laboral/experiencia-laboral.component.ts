@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -566,7 +567,7 @@ export class ExperienciaLaboralComponent implements OnInit {
     this.state.guardarExperiencia(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
       error: (err) =>
-        this.errorFormulario.set(err?.message || 'Error al guardar la experiencia laboral.'),
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la experiencia laboral.')),
     });
   }
 

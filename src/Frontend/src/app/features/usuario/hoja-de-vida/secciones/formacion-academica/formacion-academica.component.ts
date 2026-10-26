@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -846,7 +847,7 @@ export class FormacionAcademicaComponent implements OnInit {
 
     this.state.guardarTitulo(this.modeloTitulo, this.idTituloEdicion()).subscribe({
       next: () => this.cancelarFormTitulo(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar el título.'),
+      error: (err) => this.errorFormulario.set(mensajeError(err, 'Error al guardar el título.')),
     });
   }
 
@@ -917,7 +918,7 @@ export class FormacionAcademicaComponent implements OnInit {
     this.state.guardarTituloEnCurso(this.modeloEnCurso, this.idEnCursoEdicion()).subscribe({
       next: () => this.cancelarFormEnCurso(),
       error: (err) =>
-        this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.'),
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar el estudio en curso.')),
     });
   }
 

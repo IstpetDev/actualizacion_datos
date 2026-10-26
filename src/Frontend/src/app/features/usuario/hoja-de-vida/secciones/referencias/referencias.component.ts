@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -510,7 +511,8 @@ export class ReferenciasComponent {
 
     this.state.guardarReferencia(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar la referencia.'),
+      error: (err) =>
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la referencia.')),
     });
   }
 
