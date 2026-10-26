@@ -1,3 +1,4 @@
+import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -491,12 +492,12 @@ export class ExperienciaLaboralComponent implements OnInit {
 
   onFechaInicioChange(valor: string): void {
     this.fechaInicioStr = valor;
-    this.modelo.fechaInicio = valor ? new Date(valor) : (undefined as unknown as Date);
+    this.modelo.fechaInicio = fechaSinHora(valor) as Date;
   }
 
   onFechaFinChange(valor: string): void {
     this.fechaFinStr = valor;
-    this.modelo.fechaFin = valor ? new Date(valor) : undefined;
+    this.modelo.fechaFin = fechaSinHora(valor);
   }
 
   onTrabajaActualmenteChange(activo: boolean): void {

@@ -1,3 +1,4 @@
+import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -605,13 +606,18 @@ export class FichaPersonalComponent implements OnInit {
   }
 
   private cargarCatalogosBase(): void {
-    this.catalogos.paises().subscribe((p) => this.paises.set(p));
+    this.catalogos.paises().subscribe((paises) => {
+      this.paises.set(paises);
+      const ecuador = paises.find((pais) => pais.codigo === '218');
+      if (ecuador) {
+        this.catalogos
+          .provincias(ecuador.id)
+          .subscribe((provincias) => this.provinciasResidencia.set(provincias));
+      }
+    });
     this.catalogos.estadosCiviles().subscribe((e) => this.estadosCiviles.set(e));
     this.catalogos.tiposSangre().subscribe((s) => this.tiposSangre.set(s));
     this.catalogos.etnias().subscribe((e) => this.etnias.set(e));
-
-    // Por defecto cargar provincias de Ecuador (ID 601 o similar) para residencia
-    this.catalogos.provincias(601).subscribe((provs) => this.provinciasResidencia.set(provs));
   }
 
   onProvinciaResidenciaChange(provinciaId?: number): void {
@@ -638,7 +644,7 @@ export class FichaPersonalComponent implements OnInit {
 
   onFechaNacimientoChange(valor: string): void {
     this.fechaNacimientoStr = valor;
-    this.modelo.fechaNacimiento = valor ? new Date(valor) : undefined;
+    this.modelo.fechaNacimiento = fechaSinHora(valor);
   }
 
   onFotoSubida(archivoId: string): void {

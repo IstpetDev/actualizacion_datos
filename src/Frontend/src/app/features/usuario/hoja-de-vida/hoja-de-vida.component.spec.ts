@@ -6,6 +6,7 @@ import {
   ArchivosClient,
   CapacitacionDto,
   CatalogosClient,
+  CuentaBancariaClient,
   DocumentoRequeridoDto,
   EstadoEdicionDto,
   ExperienciaLaboralDto,
@@ -114,6 +115,10 @@ describe('HojaDeVidaComponent', () => {
       providers: [
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosCacheMock },
+        {
+          provide: CuentaBancariaClient,
+          useValue: { obtenerMiCuentaBancaria: vi.fn().mockReturnValue(of(null)) },
+        },
         { provide: ArchivosClient, useValue: { subirArchivo: vi.fn() } },
         {
           provide: CatalogosClient,
@@ -131,6 +136,9 @@ describe('HojaDeVidaComponent', () => {
     expect(component).toBeTruthy();
     expect(stateMock.cargarTodo).toHaveBeenCalledTimes(1);
     expect(component.tabActiva()).toBe('ficha');
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('app-mi-cuenta-bancaria'),
+    ).toBeTruthy();
   });
 
   it('permite_cambiar_entre_secciones_pestanas', () => {

@@ -140,4 +140,12 @@ describe('FichaPersonalComponent', () => {
       }),
     );
   });
+  it('busca las provincias por el id recibido de Ecuador y no por un id fijo', () => {
+    catalogosMock.paises.mockReturnValue(
+      of([{ id: 9876, tipo: 6, codigo: '218', nombre: 'Ecuador', orden: 1 }]),
+    );
+    component.ngOnInit();
+    expect(catalogosMock.provincias).toHaveBeenLastCalledWith(9876);
+    expect(component.provinciasResidencia()).toEqual(mockProvincias);
+  });
 });

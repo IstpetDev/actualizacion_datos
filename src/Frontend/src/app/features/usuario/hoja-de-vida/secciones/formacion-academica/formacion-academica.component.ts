@@ -1,5 +1,7 @@
+import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
   ElementoCatalogoDto,
@@ -179,6 +181,55 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     (ngModelChange)="onFechaObtencionChange($event)"
                     data-testid="input-fecha-obtencion"
                   />
+                </div>
+              </div>
+
+              <div class="grid-dos mt-3">
+                <div class="form-group">
+                  <label for="campoAmplio">Campo de conocimiento amplio</label>
+                  <select
+                    id="campoAmplio"
+                    class="form-control"
+                    [ngModel]="campoAmplioId"
+                    (ngModelChange)="cambiarCampoAmplio($event)"
+                    data-testid="select-campo-amplio"
+                  >
+                    <option [ngValue]="undefined">Seleccione campo...</option>
+                    @for (campo of camposAmplios(); track campo.id) {
+                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="campoEspecifico">Campo específico</label>
+                  <select
+                    id="campoEspecifico"
+                    class="form-control"
+                    [ngModel]="campoEspecificoId"
+                    (ngModelChange)="cambiarCampoEspecifico($event)"
+                    [disabled]="!campoAmplioId"
+                    data-testid="select-campo-especifico"
+                  >
+                    <option [ngValue]="undefined">Seleccione campo...</option>
+                    @for (campo of especificosDisponibles(); track campo.id) {
+                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="campoDetallado">Campo detallado</label>
+                  <select
+                    id="campoDetallado"
+                    class="form-control"
+                    [(ngModel)]="modeloTitulo.campoDetalladoUnescoId"
+                    [disabled]="!campoEspecificoId"
+                    data-testid="select-campo-detallado"
+                  >
+                    <option [ngValue]="undefined">Seleccione campo...</option>
+                    @for (campo of detalladosDisponibles(); track campo.id) {
+                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
+                    }
+                  </select>
                 </div>
               </div>
 
@@ -733,6 +784,13 @@ export class FormacionAcademicaComponent implements OnInit {
   readonly gradosAcademicos = signal<ElementoCatalogoDto[]>([]);
   readonly todosLosGrados = signal<ElementoCatalogoDto[]>([]);
   readonly universidades = signal<ElementoCatalogoDto[]>([]);
+  readonly camposAmplios = signal<ElementoCatalogoDto[]>([]);
+  readonly camposEspecificos = signal<ElementoCatalogoDto[]>([]);
+  readonly camposDetallados = signal<ElementoCatalogoDto[]>([]);
+  readonly tiposBeca = signal<ElementoCatalogoDto[]>([]);
+  readonly financiamientosBeca = signal<ElementoCatalogoDto[]>([]);
+  campoAmplioId?: number;
+  campoEspecificoId?: number;
 
   readonly nivelSeleccionadoId = signal<number | undefined>(undefined);
 
@@ -771,6 +829,48 @@ export class FormacionAcademicaComponent implements OnInit {
     this.catalogos.universidades().subscribe((u) => this.universidades.set(u));
     // Cargar todos los grados para estudios en curso
     this.catalogos.obtener('GradoAcademico').subscribe((g) => this.todosLosGrados.set(g));
+    this.catalogos.obtener('TipoBeca').subscribe((datos) => this.tiposBeca.set(datos));
+    this.catalogos
+      .obtener('FinanciamientoBeca')
+      .subscribe((datos) => this.financiamientosBeca.set(datos));
+    forkJoin({
+      amplios: this.catalogos.obtener('CampoAmplioUnesco'),
+      especificos: this.catalogos.obtener('CampoEspecificoUnesco'),
+      detallados: this.catalogos.obtener('CampoDetalladoUnesco'),
+    }).subscribe(({ amplios, especificos, detallados }) => {
+      this.camposAmplios.set(amplios);
+      this.camposEspecificos.set(especificos);
+      this.camposDetallados.set(detallados);
+      this.restaurarCamposTitulo();
+    });
+  }
+
+  especificosDisponibles(): ElementoCatalogoDto[] {
+    return this.camposEspecificos().filter((campo) => campo.padreId === this.campoAmplioId);
+  }
+
+  detalladosDisponibles(): ElementoCatalogoDto[] {
+    return this.camposDetallados().filter((campo) => campo.padreId === this.campoEspecificoId);
+  }
+
+  cambiarCampoAmplio(id?: number): void {
+    this.campoAmplioId = id;
+    this.campoEspecificoId = undefined;
+    this.modeloTitulo.campoDetalladoUnescoId = undefined;
+  }
+
+  cambiarCampoEspecifico(id?: number): void {
+    this.campoEspecificoId = id;
+    this.modeloTitulo.campoDetalladoUnescoId = undefined;
+  }
+
+  private restaurarCamposTitulo(): void {
+    this.campoEspecificoId = this.camposDetallados().find(
+      (campo) => campo.id === this.modeloTitulo.campoDetalladoUnescoId,
+    )?.padreId;
+    this.campoAmplioId = this.camposEspecificos().find(
+      (campo) => campo.id === this.campoEspecificoId,
+    )?.padreId;
   }
 
   onNivelChange(nivelId?: number): void {
@@ -785,13 +885,15 @@ export class FormacionAcademicaComponent implements OnInit {
 
   onFechaObtencionChange(valor: string): void {
     this.fechaObtencionStr = valor;
-    this.modeloTitulo.fechaObtencion = valor ? new Date(valor) : undefined;
+    this.modeloTitulo.fechaObtencion = fechaSinHora(valor);
   }
 
   abrirFormTitulo(): void {
     this.idTituloEdicion.set(undefined);
     this.errorFormulario.set('');
     this.fechaObtencionStr = '';
+    this.campoAmplioId = undefined;
+    this.campoEspecificoId = undefined;
     this.nivelSeleccionadoId.set(undefined);
     this.modeloTitulo = {
       nombreTitulo: '',
@@ -812,11 +914,13 @@ export class FormacionAcademicaComponent implements OnInit {
       nombreTitulo: titulo.nombreTitulo,
       gradoAcademicoId: titulo.gradoAcademicoId,
       universidadId: titulo.universidadId,
+      campoDetalladoUnescoId: titulo.campoDetalladoUnescoId,
       nombreInstitucionOtra: titulo.nombreInstitucionOtra,
       numeroRegistroSenescyt: titulo.numeroRegistroSenescyt,
       fechaObtencion: titulo.fechaObtencion,
       archivoId: titulo.archivoId,
     };
+    this.restaurarCamposTitulo();
     if (titulo.fechaObtencion) {
       this.fechaObtencionStr = new Date(titulo.fechaObtencion).toISOString().split('T')[0];
     }
@@ -874,11 +978,14 @@ export class FormacionAcademicaComponent implements OnInit {
   editarEnCurso(enCurso: TituloEnCursoDto): void {
     this.idEnCursoEdicion.set(enCurso.id);
     this.errorFormulario.set('');
-    this.tieneBeca = !!(enCurso.porcentajeBeca || enCurso.montoBeca);
+    this.tieneBeca = enCurso.tieneBeca;
     this.modeloEnCurso = {
       nombrePrograma: enCurso.nombrePrograma,
       gradoAcademicoId: enCurso.gradoAcademicoId,
       nombreInstitucionOtra: enCurso.nombreInstitucionOtra ?? '',
+      tieneBeca: enCurso.tieneBeca,
+      tipoBecaId: enCurso.tipoBecaId,
+      financiamientoBecaId: enCurso.financiamientoBecaId,
       porcentajeBeca: enCurso.porcentajeBeca,
       montoBeca: enCurso.montoBeca,
       archivoId: enCurso.archivoId,
@@ -893,8 +1000,11 @@ export class FormacionAcademicaComponent implements OnInit {
 
   onBecaToggle(activa: boolean): void {
     this.tieneBeca = activa;
+    this.modeloEnCurso.tieneBeca = activa;
     if (!activa) {
       // RF-HDV-005: Limpiar beca si no aplica
+      this.modeloEnCurso.tipoBecaId = undefined;
+      this.modeloEnCurso.financiamientoBecaId = undefined;
       this.modeloEnCurso.porcentajeBeca = undefined;
       this.modeloEnCurso.montoBeca = undefined;
     }
