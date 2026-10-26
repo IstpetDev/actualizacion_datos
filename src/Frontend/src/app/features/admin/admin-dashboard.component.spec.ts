@@ -6,6 +6,7 @@ import { type Mock, vi } from 'vitest';
 import {
   CampanaDto,
   CampanasClient,
+  ConfiguracionClient,
   PersonaDto,
   PersonasClient,
   RevisionClient,
@@ -29,6 +30,7 @@ describe('AdminDashboardComponent', () => {
   };
   let authServiceMock: {
     sesion: Mock;
+    rolActual?: Mock;
   };
 
   const campanaActivaMock: CampanaDto = {
@@ -90,6 +92,7 @@ describe('AdminDashboardComponent', () => {
         rol: 'admin',
         institucionId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
       }),
+      rolActual: vi.fn().mockReturnValue('admin'),
     };
 
     await TestBed.configureTestingModule({
@@ -99,6 +102,14 @@ describe('AdminDashboardComponent', () => {
         provideHttpClientTesting(),
         { provide: CampanasClient, useValue: campanasClientMock },
         { provide: PersonasClient, useValue: personasClientMock },
+        {
+          provide: ConfiguracionClient,
+          useValue: {
+            listarTiposFuncionario: () => of([]),
+            listarTiposDocumento: () => of([]),
+            listarRequisitosDocumento: () => of([]),
+          },
+        },
         { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },
         { provide: AuthService, useValue: authServiceMock },
       ],
@@ -268,5 +279,17 @@ describe('AdminDashboardComponent', () => {
 
     expect(component.exportandoZip()).toBe(false);
     expect(component.error()).toContain('No tiene permisos para exportar datos.');
+  });
+
+  it('debe_permitir_navegar_a_la_pestana_de_configuracion_de_requisitos', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const tabBtn = compiled.querySelector('[data-testid="tab-configuracion"]') as HTMLButtonElement;
+    expect(tabBtn).toBeTruthy();
+
+    tabBtn.click();
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('configuracion');
+    expect(compiled.querySelector('[data-testid="contenido-configuracion"]')).toBeTruthy();
   });
 });

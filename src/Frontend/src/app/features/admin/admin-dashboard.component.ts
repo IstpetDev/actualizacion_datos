@@ -15,14 +15,21 @@ import {
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { EstadoCuentasBancariasComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
+import { ConfiguracionRequisitosComponent } from './configuracion/configuracion-requisitos.component';
 import { InformeNominaComponent } from './nomina/informe-nomina.component';
 
-type TabAdmin = 'campanas' | 'personas' | 'exportacion';
+type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, EstadoCuentasBancariasComponent, InformeNominaComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    EstadoCuentasBancariasComponent,
+    InformeNominaComponent,
+    ConfiguracionRequisitosComponent,
+  ],
   template: `
     <section class="dashboard-section" data-testid="admin-panel">
       <header class="section-header">
@@ -62,6 +69,15 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
           data-testid="tab-exportacion"
         >
           Exportación de Datos
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="tabActiva() === 'configuracion'"
+          (click)="cambiarTab('configuracion')"
+          data-testid="tab-configuracion"
+        >
+          Configuración de Requisitos
         </button>
       </nav>
 
@@ -398,6 +414,13 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion';
               </button>
             </div>
           </div>
+        </div>
+      }
+
+      <!-- PESTAÑA 4: CONFIGURACIÓN DE REQUISITOS (RF-HDV-012, RF-HDV-013, T-12) -->
+      @if (tabActiva() === 'configuracion') {
+        <div class="tab-content" data-testid="contenido-configuracion">
+          <app-configuracion-requisitos />
         </div>
       }
       <app-estado-cuentas-bancarias />
