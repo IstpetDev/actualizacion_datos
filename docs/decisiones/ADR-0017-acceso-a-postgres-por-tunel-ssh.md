@@ -1,4 +1,4 @@
-# ADR-0016 — Acceso a PostgreSQL de producción por túnel SSH
+# ADR-0017 — Acceso a PostgreSQL de producción por túnel SSH
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26

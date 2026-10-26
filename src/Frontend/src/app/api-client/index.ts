@@ -1326,6 +1326,70 @@ export class PersonasClient {
     }
 
     /**
+     * @param archivo (optional) 
+     * @return OK
+     */
+    cargarPersonasArchivo(archivo?: FileParameter | undefined): Observable<ResultadoCargaPersonasDto> {
+        let url_ = this.baseUrl + "/api/personas/cargar-archivo";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = new FormData();
+        if (archivo === null || archivo === undefined)
+            throw new globalThis.Error("The parameter 'archivo' cannot be null.");
+        else
+            content_.append("archivo", archivo.data, archivo.fileName ? archivo.fileName : "archivo");
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCargarPersonasArchivo(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCargarPersonasArchivo(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<ResultadoCargaPersonasDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<ResultadoCargaPersonasDto>;
+        }));
+    }
+
+    protected processCargarPersonasArchivo(response: HttpResponseBase): Observable<ResultadoCargaPersonasDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as ResultadoCargaPersonasDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
      * @return OK
      */
     listarPersonas(): Observable<PersonaDto[]> {

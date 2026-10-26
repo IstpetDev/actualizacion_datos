@@ -66,6 +66,8 @@ pnpm --dir src/Frontend test:ci
 
 El backend exporta el contrato a `openapi/v1.json` al compilar. El cliente de Angular (`src/Frontend/src/app/api-client/`) se genera con NSwag a partir de ese archivo y **se versiona**. El CI regenera ambos y falla si lo versionado está desactualizado.
 
+Para probar los endpoints desde el navegador, en `Development` el backend sirve Scalar en `/scalar/v1` (con Docker: `http://127.0.0.1:8080/scalar/v1`, o el `BACKEND_PUERTO` de su `.env`). Llame primero a `POST /api/auth/login`; la cookie de sesión queda en el navegador y se envía en las llamadas siguientes. En producción no existe. Decisión: [ADR-0016](docs/decisiones/ADR-0016-interfaz-de-prueba-de-la-api.md).
+
 Para regenerarlos tras cambiar la API:
 
 ```bash

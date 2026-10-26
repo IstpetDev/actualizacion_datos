@@ -48,8 +48,8 @@ describe('interceptor de sesión por cookie', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
   it('conserva_la_pantalla_si_la_campana_cierra_durante_la_edicion', () => {
-    http.put('/api/api/mis-datos', {}).subscribe({ error: () => undefined });
-    controlador.expectOne('/api/api/mis-datos').flush({}, { status: 403, statusText: 'Error' });
+    http.put('/api/mis-datos', {}).subscribe({ error: () => undefined });
+    controlador.expectOne('/api/mis-datos').flush({}, { status: 403, statusText: 'Error' });
     expect(router.navigate).not.toHaveBeenCalled();
   });
   it('redirige_al_cambio_obligatorio_ante_un_403', () => {
