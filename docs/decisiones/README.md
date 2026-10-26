@@ -47,5 +47,6 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0013](ADR-0013-datos-bancarios.md) | Datos bancarios del personal | Vigente |
 | [ADR-0014](ADR-0014-carga-de-nomina-real.md) | Carga de la nómina real: encabezados, nulos textuales y alias de catálogo | Propuesto |
 | [ADR-0015](ADR-0015-despliegue-por-etapas.md) | Despliegue dividido en etapas | Vigente |
+| [ADR-0016](ADR-0016-interfaz-de-prueba-de-la-api.md) | Interfaz para probar la API en desarrollo (Scalar) | Propuesto |
 
 <!-- prueba del ci: este comentario se puede borrar -->

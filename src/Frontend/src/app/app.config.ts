@@ -15,6 +15,6 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'es-EC' },
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    { provide: API_BASE_URL, useValue: '/api' },
+    { provide: API_BASE_URL, useValue: '' },
   ],
 };

@@ -28,6 +28,9 @@ appsettings.*.json
 *.publishsettings
 environment.*.ts
 
+# Archivos temporales locales
+datos_iniciales.*
+
 # Archivos subidos y comprimidos
 uploads/
 *.zip
