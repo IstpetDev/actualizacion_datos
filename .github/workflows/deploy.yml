@@ -78,7 +78,7 @@ jobs:
         run: |
           echo "Ejecutando migraciones con flag explícito --migrar..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
-            "cd /d ${DIR} && set TAG=${SHA} && docker compose -f docker-compose.prod.yml run --rm backend --migrar"
+            "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml run --rm backend --migrar"
 
       - name: Actualizar servicios en producción
         env:
@@ -89,7 +89,7 @@ jobs:
         run: |
           echo "Levantando versión ${SHA}..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
-            "cd /d ${DIR} && set TAG=${SHA} && docker compose -f docker-compose.prod.yml up -d --remove-orphans"
+            "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
       - name: Verificación de salud (Smoke Tests)
         env:
