@@ -55,7 +55,6 @@ Idea nueva o cambio: `brainstorming` -> spec en `docs/specs/` -> aprobación fun
 
 ## Qué NO hacer
 
-- **No ejecutar `git push`** (ni forzado ni a ninguna rama). Commits solo locales, y solo cuando se pidan.
 - **No cambiar reglas de GitHub** (rulesets, protección de ramas, environments, CodeQL, Dependabot) ni configurar el remoto. Son pasos manuales documentados en el [README.md](README.md#pasos-manuales-en-github).
 - **No tocar secretos**: no crear, leer, mover ni escribir credenciales, tokens ni cadenas de conexión reales; no desactivar el escaneo de secretos.
 - **No usar datos personales reales** bajo ningún pretexto.

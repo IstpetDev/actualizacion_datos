@@ -4,6 +4,9 @@
     <RootNamespace>Istpet.ActualizacionDatos.Infrastructure</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Istpet.ActualizacionDatos.WebApi.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Istpet.ActualizacionDatos.Application\Istpet.ActualizacionDatos.Application.csproj" />
@@ -11,5 +14,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>

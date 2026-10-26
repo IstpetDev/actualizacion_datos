@@ -1,0 +1,50 @@
+<div class="shell-layout">
+  <header class="app-header" role="banner">
+    <div class="header-brand">
+      <span class="brand-title">Actualización de Datos</span>
+      <span class="brand-badge">Institucional</span>
+    </div>
+
+    <nav class="header-nav" role="navigation" aria-label="Navegación principal">
+      @if (authService.tieneRol('usuario')) {
+        <a routerLink="/usuario" routerLinkActive="active-link" class="nav-link">Mis Datos</a>
+      }
+      @if (authService.tieneRol(['supervisor', 'admin'])) {
+        <a routerLink="/supervisor" routerLinkActive="active-link" class="nav-link">Revisión</a>
+      }
+      @if (authService.tieneRol('admin')) {
+        <a routerLink="/admin" routerLinkActive="active-link" class="nav-link">Administración</a>
+      }
+      @if (authService.tieneRol('superadmin')) {
+        <a routerLink="/superadmin" routerLinkActive="active-link" class="nav-link"
+          >Instituciones</a
+        >
+      }
+    </nav>
+
+    <div class="header-user">
+      @if (authService.sesion(); as usuario) {
+        <div class="user-info">
+          <span class="user-name">{{ usuario.nombre }}</span>
+          <span class="role-badge" [attr.data-role]="usuario.rol">{{ usuario.rol }}</span>
+        </div>
+        <button
+          type="button"
+          class="btn-logout"
+          [disabled]="cerrando()"
+          (click)="cerrarSesion()"
+          aria-label="Cerrar sesión"
+        >
+          Salir
+        </button>
+      }
+    </div>
+  </header>
+
+  <main class="content-container" role="main">
+    @if (errorCierre()) {
+      <p role="alert">{{ errorCierre() }}</p>
+    }
+    <router-outlet />
+  </main>
+</div>

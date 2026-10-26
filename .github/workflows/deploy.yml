@@ -1,0 +1,111 @@
+# Despliegue automático a producción (ADR-0011).
+# Se dispara únicamente al fusionar en la rama main (o por ejecución manual).
+name: Despliegue a producción
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    name: Construir y desplegar a producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: produccion
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Construir imágenes Docker
+        env:
+          SHA: ${{ github.sha }}
+        run: |
+          echo "Construyendo imagen del backend..."
+          docker build --pull -t "actualizacion-datos-backend:${SHA}" -t "actualizacion-datos-backend:latest" src/Backend
+
+          echo "Construyendo imagen del frontend..."
+          docker build --pull -t "actualizacion-datos-frontend:${SHA}" -t "actualizacion-datos-frontend:latest" src/Frontend
+
+      - name: Conectar a Tailscale
+        uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Configurar cliente SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Transferir imágenes Docker al servidor
+        env:
+          SHA: ${{ github.sha }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "Empaquetando y transfiriendo imágenes por SSH..."
+          docker save "actualizacion-datos-backend:${SHA}" "actualizacion-datos-frontend:${SHA}" "actualizacion-datos-backend:latest" "actualizacion-datos-frontend:latest" \
+            | ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load"
+
+      - name: Sincronizar archivos de orquestación
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" "powershell -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.prod.yml "${USER}@${HOST}:${DIR}/docker-compose.prod.yml"
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa deploy/nginx/default.conf "${USER}@${HOST}:${DIR}/deploy/nginx/default.conf"
+
+      - name: Ejecutar migraciones de base de datos
+        env:
+          SHA: ${{ github.sha }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
+        run: |
+          echo "Ejecutando migraciones con flag explícito --migrar..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "cd /d ${DIR} && set TAG=${SHA} && docker compose -f docker-compose.prod.yml run --rm backend --migrar"
+
+      - name: Actualizar servicios en producción
+        env:
+          SHA: ${{ github.sha }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
+        run: |
+          echo "Levantando versión ${SHA}..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "cd /d ${DIR} && set TAG=${SHA} && docker compose -f docker-compose.prod.yml up -d --remove-orphans"
+
+      - name: Verificación de salud (Smoke Tests)
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          echo "Esperando a que los servicios se estabilicen..."
+          sleep 10
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "curl.exe -f -s http://127.0.0.1:8088/health"
+
+      - name: Limpiar imágenes antiguas
+        if: always()
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "docker image prune -f"

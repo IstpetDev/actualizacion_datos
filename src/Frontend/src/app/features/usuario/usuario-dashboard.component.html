@@ -1,0 +1,273 @@
+<section
+  class="panel"
+  aria-labelledby="titulo-actualizacion"
+  [attr.aria-busy]="cargando() || ocupado()"
+>
+  <header>
+    <p class="ceja">Mi expediente</p>
+    <h1 id="titulo-actualizacion">Actualización de datos</h1>
+    <p>Revisa tu información, adjunta tus documentos y envía tu actualización a la institución.</p>
+  </header>
+  @if (error()) {
+    <p class="mensaje error" role="alert">{{ error() }}</p>
+  }
+  @if (aviso()) {
+    <p class="mensaje exito" role="status">{{ aviso() }}</p>
+  }
+  @if (cargando()) {
+    <p role="status">Cargando tu actualización…</p>
+  } @else if (!estado()) {
+    <button type="button" (click)="cargar()">Reintentar carga</button>
+  } @else if (datos(); as ficha) {
+    <section class="tarjeta resumen" aria-label="Estado de la actualización">
+      <div>
+        <span class="etiqueta">Estado</span
+        ><strong data-testid="estado">{{ ficha.estadoActualizacion }}</strong>
+      </div>
+      <div>
+        <span class="etiqueta">Documento</span><strong>{{ ficha.documento }}</strong>
+      </div>
+      <div>
+        <span class="etiqueta">Nombre</span><strong>{{ ficha.nombre || 'Sin registrar' }}</strong>
+      </div>
+      <p class="ancho" role="status">{{ estado()?.mensaje }}</p>
+      @if (estado()?.puedeIniciarNuevaActualizacion) {
+        <p class="ancho">
+          <button
+            type="button"
+            data-testid="iniciar-actualizacion"
+            [disabled]="ocupado()"
+            (click)="iniciarNuevaActualizacion()"
+          >
+            Actualizar mis datos
+          </button>
+        </p>
+      }
+      @if (estado()?.campanaActiva; as campana) {
+        <p class="ancho">
+          {{ campana.nombre }} · Desde {{ campana.fechaInicioUtc | date: 'medium' }} hasta
+          {{ campana.fechaFinUtc | date: 'medium' }}
+        </p>
+      }
+    </section>
+
+    @if (observaciones().length) {
+      <section class="tarjeta observaciones" aria-labelledby="titulo-observaciones">
+        <h2 id="titulo-observaciones">Observaciones de revisión</h2>
+        @for (observacion of observaciones(); track observacion.id) {
+          <article>
+            <h3>Ronda {{ observacion.ronda }} · {{ observacion.fechaUtc | date: 'medium' }}</h3>
+            <p class="texto-observacion">{{ observacion.texto }}</p>
+            @if (observacion.marcas.length) {
+              <ul>
+                @for (marca of observacion.marcas; track marca.id) {
+                  <li>{{ marca.tipoDestino }} · {{ marca.claveDestino }}: {{ marca.texto }}</li>
+                }
+              </ul>
+            }
+          </article>
+        }
+      </section>
+    }
+
+    <section class="tarjeta" aria-labelledby="titulo-correo">
+      <h2 id="titulo-correo">1. Correo de contacto</h2>
+      <p>
+        {{
+          correoConfirmado
+            ? 'Correo verificado'
+            : 'Verifica tu correo para poder enviar la actualización.'
+        }}
+      </p>
+      <form #formularioCorreo="ngForm" (ngSubmit)="solicitarCodigo()">
+        <fieldset [disabled]="!puedeEditar() || ocupado()">
+          <label for="correo">Correo electrónico</label>
+          <input
+            id="correo"
+            name="correo"
+            type="email"
+            [(ngModel)]="correo"
+            required
+            email
+            autocomplete="email"
+          />
+          <button type="submit" class="secundario" [disabled]="formularioCorreo.invalid">
+            {{ correoDestino ? 'Enviar un código nuevo' : 'Enviar código de verificación' }}
+          </button>
+        </fieldset>
+      </form>
+      @if (correoDestino && !correoConfirmado) {
+        <p>
+          Enviamos el código a {{ correoDestino }}. Ingresa los 6 dígitos; vence en 15 minutos y
+          admite hasta 5 intentos.
+        </p>
+        <form #formularioCodigo="ngForm" (ngSubmit)="verificarCorreo()">
+          <fieldset [disabled]="!puedeEditar() || ocupado()">
+            <label for="codigo">Código de verificación</label>
+            <input
+              id="codigo"
+              name="codigo"
+              [(ngModel)]="codigo"
+              required
+              pattern="[0-9]{6}"
+              maxlength="6"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+            />
+            <button
+              type="submit"
+              [disabled]="formularioCodigo.invalid || correo.trim() !== correoDestino"
+            >
+              Verificar correo
+            </button>
+          </fieldset>
+        </form>
+      }
+    </section>
+
+    <form
+      #formularioDatos="ngForm"
+      (ngSubmit)="guardar()"
+      class="tarjeta"
+      aria-labelledby="titulo-contacto"
+    >
+      <h2 id="titulo-contacto">2. Datos de contacto</h2>
+      <p>Completa o corrige tus datos. Puedes guardar el borrador antes de enviarlo.</p>
+      <fieldset [disabled]="!puedeEditar() || ocupado()">
+        @for (campo of campos; track campo.clave) {
+          <label [for]="campo.clave">{{ campo.etiqueta }}</label>
+          <input
+            [id]="campo.clave"
+            [name]="campo.clave"
+            [type]="campo.tipo"
+            [autocomplete]="campo.autocompletar"
+            [(ngModel)]="contacto[campo.clave]"
+            [attr.aria-describedby]="'observacion-' + campo.clave"
+          />
+          <div [id]="'observacion-' + campo.clave">
+            @for (marca of marcas('campo', campo.clave); track $index) {
+              <p class="marca">{{ marca }}</p>
+            }
+          </div>
+        }
+        <button type="submit" class="secundario" [disabled]="formularioDatos.invalid">
+          Guardar borrador
+        </button>
+      </fieldset>
+    </form>
+
+    <section class="tarjeta" aria-labelledby="titulo-archivos">
+      <h2 id="titulo-archivos">3. Documentos adjuntos</h2>
+      <p id="limites-archivo">
+        PDF, JPG o PNG. Máximo 10 MB por archivo; te avisaremos desde 5 MB.
+      </p>
+      <form #formularioArchivo="ngForm" (ngSubmit)="subirArchivo(entradaArchivo)">
+        <fieldset [disabled]="!puedeEditar() || ocupado()">
+          <label for="clave-documento"
+            >Tipo o clave del documento indicada por tu institución</label
+          >
+          <input id="clave-documento" name="claveDocumento" [(ngModel)]="claveDocumento" required />
+          <label for="archivo">Seleccionar archivo</label>
+          <input
+            #entradaArchivo
+            id="archivo"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            aria-describedby="limites-archivo aviso-archivo"
+            (change)="seleccionarArchivo($event)"
+          />
+          <p id="aviso-archivo" role="status">{{ avisoArchivo() }}</p>
+          <button
+            type="submit"
+            class="secundario"
+            [disabled]="formularioArchivo.invalid || !archivoSeleccionado()"
+          >
+            Subir archivo
+          </button>
+        </fieldset>
+      </form>
+      <ul class="archivos">
+        @for (archivo of archivos(); track archivo.id) {
+          <li>
+            <div class="detalle-archivo">
+              <strong>{{ archivo.nombreOriginal }}</strong>
+              <span
+                >{{ archivo.claveDestino }} ·
+                {{
+                  (archivo.tamanoBytes >= 1048576
+                    ? archivo.tamanoBytes / 1048576
+                    : archivo.tamanoBytes / 1024
+                  ) | number: '1.0-2'
+                }}
+                {{ archivo.tamanoBytes >= 1048576 ? 'MB' : 'KB' }} ·
+                {{ archivo.fechaSubidaUtc | date: 'medium' }}</span
+              >
+              @for (marca of marcas('archivo', archivo.claveDestino || ''); track $index) {
+                <p class="marca">{{ marca }}</p>
+              }
+            </div>
+            <div class="acciones">
+              <button
+                type="button"
+                class="secundario"
+                [disabled]="ocupado()"
+                (click)="descargarArchivo(archivo)"
+                [attr.aria-label]="'Descargar ' + archivo.nombreOriginal"
+              >
+                Descargar
+              </button>
+              <button
+                type="button"
+                class="secundario"
+                [disabled]="!puedeEditar() || ocupado()"
+                (click)="eliminarArchivo(archivo)"
+                [attr.aria-label]="'Eliminar ' + archivo.nombreOriginal"
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        } @empty {
+          <li>Aún no hay documentos adjuntos.</li>
+        }
+      </ul>
+    </section>
+
+    <app-mi-cuenta-bancaria [editable]="puedeEditar()" />
+
+    <section class="tarjeta" aria-labelledby="titulo-envio">
+      <h2 id="titulo-envio">4. Enviar a revisión</h2>
+      <p>
+        Al enviar se guardan tus datos y se bloquea la edición hasta que la institución termine la
+        revisión o devuelva la actualización con observaciones.
+      </p>
+      <label class="consentimiento" for="tratamiento">
+        <input
+          id="tratamiento"
+          name="tratamiento"
+          type="checkbox"
+          [(ngModel)]="aceptaTratamiento"
+          [disabled]="!puedeEditar() || ocupado() || ficha.tratamientoDatosAceptado"
+        />
+        Acepto el tratamiento de mis datos personales y documentos para la actualización de
+        información institucional.
+      </label>
+      @if (ficha.tratamientoDatosAceptado) {
+        <p>
+          Aceptación registrada
+          @if (ficha.fechaAceptacionTratamientoDatosUtc) {
+            el {{ ficha.fechaAceptacionTratamientoDatosUtc | date: 'medium' }}
+          }
+          .
+        </p>
+      }
+      <button
+        type="button"
+        [disabled]="!puedeEditar() || ocupado() || !aceptaTratamiento || !correoConfirmado"
+        (click)="enviar()"
+      >
+        {{ ocupado() ? 'Procesando…' : 'Enviar actualización a revisión' }}
+      </button>
+    </section>
+  }
+</section>

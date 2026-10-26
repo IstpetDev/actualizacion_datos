@@ -1,1 +1,80 @@
-/* You can add global styles to this file, and also import other style files */
+/* ==========================================================================
+   Sistema de DiseÃ±o Institucional AMMI â€” Estilo Vercel (Geist Design System)
+   Arquitectura minimalista de bordes 1px, alto contraste y paleta AMMI.
+   ========================================================================== */
+
+:root {
+  /* Colores Oficiales del Escudo AMMI (Amarillo HerÃ¡ldico y Negro) */
+  --ammi-primary: #1d1e1c; /* Negro / CarbÃ³n institucional (Geist foreground) */
+  --ammi-primary-hover: #000000; /* Negro puro interactivo */
+  --ammi-primary-light: #333333;
+
+  --ammi-gold: #fcea1e; /* Amarillo herÃ¡ldico oficial AMMI */
+  --ammi-gold-hover: #e5d415; /* Amarillo herÃ¡ldico atenuado */
+  --ammi-gold-text: #785c00; /* Oro oscuro de alto contraste sobre blanco */
+  --ammi-gold-soft: rgba(252, 234, 30, 0.14);
+  --ammi-gold-border: #e5d415;
+
+  /* Escala MonocromÃ¡tica Geist / Vercel */
+  --geist-bg: #fafafa;
+  --geist-surface: #ffffff;
+  --geist-surface-subtle: #f5f5f5;
+  --geist-header-bg: rgba(17, 17, 17, 0.88);
+  --geist-border: #eaeaea;
+  --geist-border-hover: #999999;
+  --geist-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --geist-shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --geist-shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+  --geist-blur: saturate(180%) blur(12px);
+
+  /* TipografÃ­a Geist */
+  --ammi-text-main: #171717;
+  --ammi-text-secondary: #444444;
+  --ammi-text-muted: #666666;
+  --ammi-text-subtle: #888888;
+  --ammi-text-inverse: #ffffff;
+
+  /* Estados SemÃ¡nticos */
+  --ammi-success: #0f766e;
+  --ammi-success-bg: #f0fdf4;
+  --ammi-warning: #854d0e;
+  --ammi-warning-bg: #fefce8;
+  --ammi-danger: #dc2626;
+  --ammi-danger-bg: #fef2f2;
+
+  /* GeometrÃ­a Vercel */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background-color: var(--geist-bg);
+  background-image:
+    radial-gradient(at 50% 0%, rgba(252, 234, 30, 0.12) 0px, transparent 55%),
+    radial-gradient(#e4e4e7 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    24px 24px;
+  background-attachment: fixed;
+  color: var(--ammi-text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

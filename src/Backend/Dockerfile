@@ -33,6 +33,12 @@ ENV DOTNET_gcServer=0
 
 EXPOSE 8080
 
+# Carpetas de archivos (ADR-0006) escribibles por el usuario sin privilegios: /app/almacen_archivos en
+# desarrollo (#46) y /datos/archivos en producción (Almacenamiento__RutaRaiz de docker-compose.prod.yml).
+# Un volumen nombrado nuevo hereda este dueño; sin ellas Docker las crea de root y la subida falla.
+RUN mkdir -p /app/almacen_archivos && chown -R $APP_UID:$APP_UID /app/almacen_archivos
+RUN mkdir -p /datos/archivos && chown -R $APP_UID:$APP_UID /datos/archivos
+
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Istpet.ActualizacionDatos.WebApi.dll"]

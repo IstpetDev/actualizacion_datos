@@ -37,7 +37,14 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0003](ADR-0003-cliente-openapi-generado.md) | Cliente OpenAPI generado en el frontend | Vigente |
 | [ADR-0004](ADR-0004-multitenancia-esquema-unico.md) | Multitenancy: esquema único con `institucion_id` | Vigente |
 | [ADR-0005](ADR-0005-ci-por-niveles.md) | CI por niveles y filtro por rutas | Vigente |
-| [ADR-0006](ADR-0006-almacenamiento-de-archivos.md) | Almacenamiento de archivos | Propuesto |
-| [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Propuesto |
-| [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Propuesto |
+| [ADR-0006](ADR-0006-almacenamiento-de-archivos.md) | Almacenamiento de archivos | Vigente |
+| [ADR-0007](ADR-0007-autenticacion-con-cedula.md) | Autenticación con cédula, cambio obligatorio y correo | Vigente |
+| [ADR-0008](ADR-0008-granularidad-del-rechazo.md) | Granularidad del rechazo | Vigente |
 | [ADR-0009](ADR-0009-campos-configurables.md) | Campos configurables por institución | Propuesto |
+| [ADR-0010](ADR-0010-hoja-de-vida-estructurada.md) | Hoja de vida estructurada y catálogos | Vigente |
+| [ADR-0011](ADR-0011-despliegue-a-produccion.md) | Despliegue automático a producción | Vigente |
+| [ADR-0012](ADR-0012-carga-de-nomina-nulos-y-nombres.md) | Carga de nómina: columnas, valores nulos y división de nombres | Vigente |
+| [ADR-0013](ADR-0013-datos-bancarios.md) | Datos bancarios del personal | Vigente |
+| [ADR-0014](ADR-0014-carga-de-nomina-real.md) | Carga de la nómina real: encabezados, nulos textuales y alias de catálogo | Propuesto |
+
+<!-- prueba del ci: este comentario se puede borrar -->
