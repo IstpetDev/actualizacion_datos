@@ -58,6 +58,8 @@ public class ServicioInstituciones : IServicioInstituciones
             }
         }
 
+        await SemillaTiposInstitucionales.AgregarFaltantesAsync(_context, institucionId, ct);
+
         // RF-MUL-004: Auditoría de la operación inter-institucional
         var auditoria = new Auditoria(
             Guid.NewGuid(),
