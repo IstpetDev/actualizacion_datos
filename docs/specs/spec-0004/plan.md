@@ -43,3 +43,17 @@ Riesgos: divergencia entre datos de migración y alta (comparación en PostgreSQ
 - [x] ADR registrados antes de implementar.
 - [x] Todos los requisitos tienen tarea y verificación.
 - [x] Pruebas de HTTP, persistencia real y componente cubren límites distintos.
+
+## Ampliación aprobada v0.2
+
+Aprobación funcional: «Aprobar la spec v0.2 e implementar todo su alcance», 2026-10-26. ADR-0021 y ADR-0022 vigentes antes de las tareas. Sin subagentes ni dependencias nuevas.
+
+| Requisitos | Tarea y archivos | Verificación |
+|---|---|---|
+| RF-CAT-004, 005, 010 | T-04: `data/catalogos/Banco.csv`, `InstitutosSuperiores.csv`, `fuentes.json`, `README.md` | Fuentes oficiales, hashes, códigos, cantidades, ausencia de colisiones |
+| RF-CAT-001, 002, 003, 006 | T-05: `Infrastructure/Servicios/CargadorCatalogos.cs`, `RegistroDeInfraestructura.cs`, `WebApi/Endpoints/CargaCatalogos.cs`, `Program.cs`; pruebas `CatalogosTests.cs` e `Integracion/CatalogosIntegracionTests.cs` | Doble carga, inactivos, hashes, fallo atómico por CSV, padres y arranque Production |
+| RF-CAT-001, 002, 010 | T-06: `WebApi.csproj`, `src/Backend/Dockerfile`, `.dockerignore`, `docker-compose.yml`, `.github/workflows/ci.yml`, `deploy.yml`, `.github/scripts/filtrar-rutas.sh` y su prueba | Publish e imagen reales con 17 CSV, scripts y workflows válidos; carga posterior a migración |
+| RF-CAT-007, 008, 009 | T-07: prueba reproducible `scripts/verificar-catalogos-produccion.mjs` y fixture de datos ficticios en tests de integración | PostgreSQL limpio, distribución Production real, Angular y navegador sin API simulada; guardado y recuperación |
+| Todos | T-08: evidencia, PR #91, sincronización con develop, CI | Compilación, pruebas, formato, lint, Docker; intento de aprobación, merge y cierre |
+
+Rutas de backend en la tabla relativas a `src/Backend/src/Istpet.ActualizacionDatos.` cuando se indica Infrastructure o WebApi. No cambia ningún DTO. Si aparece un cambio de contrato necesario, se regeneran OpenAPI y cliente juntos. La verificación no usa servidor ni secretos de producción; solo una instancia efímera y personas ficticias. T-04 precede a T-05/T-06; T-07 requiere ambos; T-08 termina la integración. Cada tarea la ejecuta el coordinador secuencialmente.

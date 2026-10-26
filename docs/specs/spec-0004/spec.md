@@ -2,9 +2,9 @@
 
 **ID:** spec-0004; issue #80 (unifica #81)
 
-**Versión:** 0.2 (ampliación propuesta; la v0.1 se conserva debajo)
+**Versión:** 0.2 (ampliación aprobada; conserva la v0.1)
 
-**Estado:** v0.2 en revisión funcional; rige la v0.1 aprobada
+**Estado:** v0.2 aprobada
 
 **Revisor funcional:** Responsable funcional del issue #80
 
@@ -237,12 +237,12 @@ Las cinco listas cortas que no requieren CSV (`EstadoCivil`, `TipoSangre`, `Tipo
 
 **Versión revisada:** 0.2.
 
-**Decisión:** Pendiente; la v0.1 continúa aprobada y ya está implementada en el PR #91.
+**Decisión:** Aprobada; PD-CAT-01 a PD-CAT-04 resueltos con las propuestas de esta versión.
 
-**Aprobó:** Pendiente de aprobación explícita de esta versión concreta.
+**Aprobó:** Responsable solicitante en esta conversación.
 
-**Fecha y evidencia:** Solicitud de ampliación del 2026-10-26 en esta conversación; todavía no constituye aprobación de las decisiones redactadas posteriormente.
+**Fecha y evidencia:** 2026-10-26; respuesta explícita «Aprobar la spec v0.2 e implementar todo su alcance» a la revisión funcional de esta versión.
 
-**Ajustes solicitados:** Pendiente de revisión.
+**Ajustes solicitados:** Ninguno.
 
-`plan.md`, `tasks.md` y `test-e2e.md` siguen correspondiendo a v0.1. Solo tras aprobar v0.2 se actualizarán esos tres documentos, se registrarán los ADR de sus decisiones y se implementará la ampliación. El PR #91 permanece en borrador y #80 abierto hasta completar todo el alcance aprobado.
+La aprobación habilita actualizar `plan.md`, `tasks.md` y `test-e2e.md`, registrar los ADR e implementar la ampliación. El PR #91 permanece en borrador y #80 abierto hasta completar todo el alcance aprobado.

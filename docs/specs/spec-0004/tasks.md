@@ -44,3 +44,13 @@
 - [ ] Intentar aprobación, integrar cuando se cumplan criterios y cerrar #80 sin comentarios adicionales.
 
 **Bloqueos:** aclarar alcance de la propuesta posterior de catálogos globales antes del cierre de #80. **Resultado registrado:** `docs/evidencia/issue-80.md`; código en `ac22381` y `74d377d`.
+
+## Ampliación v0.2 aprobada
+
+ADR-0021 y ADR-0022 registrados antes de implementación. Responsable único: coordinador. Sin bloqueos funcionales; el cierre ya está autorizado al cumplir todos los criterios.
+
+- [ ] T-04 (RF-CAT-004, 005, 010): extraer solo tablas de organizaciones de fuentes oficiales; generar Banco e InstitutosSuperiores, documentar códigos y hashes; verificar colisiones.
+- [ ] T-05 (RF-CAT-002, 003, 006): generalizar cargador, validar manifiesto y relaciones, agregar comando y comprobación Production; cubrir errores y repetición con tests.
+- [ ] T-06 (RF-CAT-001, 002): publicar contenido, construir imagen desde raíz con contexto limitado, incorporar etapa de carga y filtro CI; validar Docker, actionlint, shellcheck y scripts.
+- [ ] T-07 (RF-CAT-007 a 009): preparar base y cuentas ficticias; ejecutar navegador con API real, ficha, títulos/IES/otra institución, becas y bancos; conservar script y capturas.
+- [ ] T-08: compilar y probar todo, registrar evidencia, resolver conflictos, actualizar título y descripción del PR al alcance final, verificar CI, intentar aprobar e integrar y cerrar #80 sin comentarios.
