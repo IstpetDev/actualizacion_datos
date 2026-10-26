@@ -34,8 +34,13 @@ import { nuloSiNoHayContenido, textoEstadoCuenta } from './cuenta-bancaria';
       } @else {
         <div class="resumen-barra" data-testid="resumen-cuentas">
           <span class="metrica-chip chip-difiere">{{ contar('difiere') }} difieren</span> ·
-          <span class="metrica-chip chip-sin-confirmar">{{ contar('sin-confirmar') }} sin confirmar</span> ·
-          <span class="metrica-chip chip-sin-registrar">{{ contar('sin-registrar') }} sin registrar</span>
+          <span class="metrica-chip chip-sin-confirmar"
+            >{{ contar('sin-confirmar') }} sin confirmar</span
+          >
+          ·
+          <span class="metrica-chip chip-sin-registrar"
+            >{{ contar('sin-registrar') }} sin registrar</span
+          >
         </div>
 
         <div class="tabla-contenedor">
