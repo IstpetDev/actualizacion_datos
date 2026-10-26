@@ -148,4 +148,16 @@ describe('FichaPersonalComponent', () => {
     expect(catalogosMock.provincias).toHaveBeenLastCalledWith(9876);
     expect(component.provinciasResidencia()).toEqual(mockProvincias);
   });
+  it('detecta_cambios_cuando_se_modifican_campos_y_los_descarta_correctamente', () => {
+    component.ngOnInit();
+    const originalNombre = component.modelo.primerNombre;
+    expect(component.tieneCambios()).toBe(false);
+
+    component.modelo.primerNombre = 'NombreModificado';
+    expect(component.tieneCambios()).toBe(true);
+
+    component.descartarCambios();
+    expect(component.modelo.primerNombre).toBe(originalNombre);
+    expect(component.tieneCambios()).toBe(false);
+  });
 });

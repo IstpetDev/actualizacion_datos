@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, forkJoin, map, Observable, of, tap } from 'rxjs';
+import { SeccionConCambios } from './seccion-con-cambios';
 import {
   CapacitacionDto,
   DocumentoPersonalDto,
@@ -41,6 +42,33 @@ export class HojaDeVidaStateService {
   readonly marcasObservacion = signal<MarcaObservacionDto[]>([]);
   readonly estadoEdicion = signal<EstadoEdicionDto | null>(null);
   readonly observaciones = signal<ObservacionDto[]>([]);
+
+  readonly seccionActiva = signal<SeccionConCambios | null>(null);
+  readonly tieneCambiosSinGuardarSignal = signal<boolean>(false);
+
+  registrarSeccion(seccion: SeccionConCambios): void {
+    this.seccionActiva.set(seccion);
+    this.actualizarEstadoCambios();
+  }
+
+  desregistrarSeccion(seccion: SeccionConCambios): void {
+    if (this.seccionActiva() === seccion) {
+      this.seccionActiva.set(null);
+      this.tieneCambiosSinGuardarSignal.set(false);
+    }
+  }
+
+  actualizarEstadoCambios(): void {
+    const s = this.seccionActiva();
+    this.tieneCambiosSinGuardarSignal.set(!!s && s.tieneCambios());
+  }
+
+  tieneCambiosSinGuardar(): boolean {
+    const s = this.seccionActiva();
+    const hay = !!s && s.tieneCambios();
+    this.tieneCambiosSinGuardarSignal.set(hay);
+    return hay;
+  }
 
   readonly cargando = signal<boolean>(false);
   readonly guardando = signal<boolean>(false);
