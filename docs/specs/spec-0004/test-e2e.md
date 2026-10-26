@@ -20,8 +20,8 @@ Las pruebas existentes de configuración cubren permisos de usuario/supervisor, 
 
 | Caso | Estado | Resultado obtenido |
 |---|---|---|
-| V-01 | Pendiente | Pendiente |
-| V-02 | Pendiente | Pendiente |
-| V-03 | Pendiente | Pendiente |
-| V-04 | Pendiente | Pendiente |
+| V-01 | Aprobado | Alta HTTP, valores persistidos y fallo atómico; evidencia en `docs/evidencia/issue-80.md` |
+| V-02 | Aprobado | SQLite y PostgreSQL real: repetición, preservación y aislamiento; misma evidencia |
+| V-03 | Aprobado | Vitest y Chromium con API simulada; misma evidencia y capturas |
+| V-04 | Aprobado | DOM y solicitudes en Vitest; edición HTTP; captura en Chromium |
 | V-05 | Aprobado | Spec v0.1 aprobada y ADR registrados; etiqueta `decision` comprobada en #80 |

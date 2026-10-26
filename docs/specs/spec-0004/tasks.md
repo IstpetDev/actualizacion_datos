@@ -1,6 +1,6 @@
 # Tipos institucionales base — Tareas
 
-**Spec aprobado:** v0.1. **Plan:** `plan.md`. **Estado:** En ejecución.
+**Spec aprobado:** v0.1. **Plan:** `plan.md`. **Estado:** Implementación y verificación local completadas; integración pendiente.
 
 **Rama:** `feature/80-semillas-tipos-institucionales`. **Responsable:** agente coordinador.
 
@@ -22,25 +22,25 @@
 
 **Contrato:** tipos y valores de spec v0.1; guardado único, sin nueva API. **Salida:** instituciones nuevas y existentes con datos base; personalizaciones conservadas. **ADR:** ADR-0019.
 
-- [ ] Comprobar con pruebas el comportamiento ausente.
-- [ ] Implementar semilla idempotente y alta atómica.
-- [ ] Generar migración con datos inmutables y probarla en PostgreSQL.
-- [ ] Ejecutar `dotnet test src/Backend --filter FullyQualifiedName~SemillaTiposInstitucionales` y revisar RF-TIP-001 a 003.
+- [x] Cubrir con pruebas la ausencia de tipos, las repeticiones y el fallo de persistencia.
+- [x] Implementar semilla idempotente y alta atómica.
+- [x] Generar migración con datos inmutables y probarla en PostgreSQL.
+- [x] Ejecutar `dotnet test src/Backend --filter FullyQualifiedName~SemillaTiposInstitucionales` y revisar RF-TIP-001 a 003.
 
 ## T-02 — Formulario y orden
 
 **Archivos exclusivos:** componente de configuración y su `.spec.ts`. **Contrato:** misma API y atributo docente conservado. **Salida:** formulario sin control docente; orden siguiente al máximo. **ADR:** ADR-0020.
 
-- [ ] Reproducir con pruebas la sugerencia incorrecta y el control visible.
-- [ ] Implementar RF-TIP-004 y 005, incluida recarga asíncrona.
-- [ ] Ejecutar `corepack pnpm --dir src/Frontend test:ci`.
+- [x] Reproducir con pruebas la sugerencia incorrecta y el control visible.
+- [x] Implementar RF-TIP-004 y 005, incluida recarga asíncrona.
+- [x] Ejecutar `corepack pnpm --dir src/Frontend test:ci`.
 
 ## T-03 — Integración y cierre
 
-- [ ] Revisar diff y coherencia de semilla/migración.
-- [ ] Ejecutar compilación, pruebas completas, formato y lint; registrar salida real en `docs/evidencia/issue-80.md`.
-- [ ] Ejecutar los recorridos de `test-e2e.md` e identificar qué nivel cubre cada requisito.
+- [x] Revisar diff y coherencia de semilla/migración.
+- [x] Ejecutar compilación, pruebas completas, formato y lint; registrar salida real en `docs/evidencia/issue-80.md`.
+- [x] Ejecutar los recorridos de `test-e2e.md` e identificar qué nivel cubre cada requisito.
 - [ ] Crear PR hacia `develop`, resolver conflictos y comprobar CI en el HEAD final.
 - [ ] Intentar aprobación, integrar cuando se cumplan criterios y cerrar #80 sin comentarios adicionales.
 
-**Bloqueos:** Ninguno. **Resultado registrado:** Pendiente de implementación y verificación.
+**Bloqueos:** aclarar alcance de la propuesta posterior de catálogos globales antes del cierre de #80. **Resultado registrado:** `docs/evidencia/issue-80.md`; código en `ac22381` y `74d377d`.
