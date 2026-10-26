@@ -1,16 +1,39 @@
 using System.Net;
+using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Istpet.ActualizacionDatos.WebApi.Tests;
 
-public class ContratoOpenApiTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ContratoOpenApiTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private readonly WebApplicationFactory<Program> _fabrica;
+    private readonly SqliteConnection _conexion = new("DataSource=:memory:");
 
     public ContratoOpenApiTests(WebApplicationFactory<Program> fabrica)
     {
-        _fabrica = fabrica;
+        _conexion.Open();
+        _fabrica = fabrica.WithWebHostBuilder(b => b.ConfigureServices(servicios =>
+        {
+            servicios.Remove(servicios.Single(d => d.ServiceType == typeof(DbContextOptions<AplicacionDbContext>)));
+            servicios.AddDbContext<AplicacionDbContext>(o => o.UseSqlite(_conexion).UseSnakeCaseNamingConvention());
+            using var proveedor = servicios.BuildServiceProvider();
+            using var alcance = proveedor.CreateScope();
+            var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            db.Database.EnsureCreated();
+            new CargadorCatalogos(new ServicioCatalogos(db), db)
+                .CargarAsync(Path.Combine(AppContext.BaseDirectory, "catalogos")).GetAwaiter().GetResult();
+        }));
+    }
+
+    public void Dispose()
+    {
+        _fabrica.Dispose();
+        _conexion.Dispose();
     }
 
     [Fact]

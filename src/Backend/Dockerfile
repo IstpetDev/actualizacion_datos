@@ -1,21 +1,22 @@
 # Imagen de Istpet.ActualizacionDatos.WebApi. No depende de src/Frontend.
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /origen
+WORKDIR /origen/src/Backend
 
-COPY global.json Directory.Build.props Directory.Packages.props ./
-COPY Istpet.ActualizacionDatos.sln ./
-COPY src/Istpet.ActualizacionDatos.Domain/Istpet.ActualizacionDatos.Domain.csproj src/Istpet.ActualizacionDatos.Domain/
-COPY src/Istpet.ActualizacionDatos.Application/Istpet.ActualizacionDatos.Application.csproj src/Istpet.ActualizacionDatos.Application/
-COPY src/Istpet.ActualizacionDatos.Infrastructure/Istpet.ActualizacionDatos.Infrastructure.csproj src/Istpet.ActualizacionDatos.Infrastructure/
-COPY src/Istpet.ActualizacionDatos.WebApi/Istpet.ActualizacionDatos.WebApi.csproj src/Istpet.ActualizacionDatos.WebApi/
-COPY tests/Istpet.ActualizacionDatos.Domain.Tests/Istpet.ActualizacionDatos.Domain.Tests.csproj tests/Istpet.ActualizacionDatos.Domain.Tests/
-COPY tests/Istpet.ActualizacionDatos.Application.Tests/Istpet.ActualizacionDatos.Application.Tests.csproj tests/Istpet.ActualizacionDatos.Application.Tests/
-COPY tests/Istpet.ActualizacionDatos.WebApi.Tests/Istpet.ActualizacionDatos.WebApi.Tests.csproj tests/Istpet.ActualizacionDatos.WebApi.Tests/
+COPY src/Backend/global.json src/Backend/Directory.Build.props src/Backend/Directory.Packages.props ./
+COPY src/Backend/Istpet.ActualizacionDatos.sln ./
+COPY src/Backend/src/Istpet.ActualizacionDatos.Domain/Istpet.ActualizacionDatos.Domain.csproj src/Istpet.ActualizacionDatos.Domain/
+COPY src/Backend/src/Istpet.ActualizacionDatos.Application/Istpet.ActualizacionDatos.Application.csproj src/Istpet.ActualizacionDatos.Application/
+COPY src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Istpet.ActualizacionDatos.Infrastructure.csproj src/Istpet.ActualizacionDatos.Infrastructure/
+COPY src/Backend/src/Istpet.ActualizacionDatos.WebApi/Istpet.ActualizacionDatos.WebApi.csproj src/Istpet.ActualizacionDatos.WebApi/
+COPY src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/Istpet.ActualizacionDatos.Domain.Tests.csproj tests/Istpet.ActualizacionDatos.Domain.Tests/
+COPY src/Backend/tests/Istpet.ActualizacionDatos.Application.Tests/Istpet.ActualizacionDatos.Application.Tests.csproj tests/Istpet.ActualizacionDatos.Application.Tests/
+COPY src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Istpet.ActualizacionDatos.WebApi.Tests.csproj tests/Istpet.ActualizacionDatos.WebApi.Tests/
 
 RUN dotnet restore Istpet.ActualizacionDatos.sln
 
-COPY . .
+COPY src/Backend/ ./
+COPY data/catalogos/ /origen/data/catalogos/
 
 RUN dotnet publish src/Istpet.ActualizacionDatos.WebApi/Istpet.ActualizacionDatos.WebApi.csproj \
       --configuration Release \

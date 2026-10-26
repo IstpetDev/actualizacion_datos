@@ -1,5 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
 import { FaltanteEnvioDto } from '../../../api-client';
 import { ModalFaltantesEnvioComponent } from './componentes/modal-faltantes-envio.component';
 import { CapacitacionesComponent } from './secciones/capacitaciones/capacitaciones.component';
@@ -20,6 +21,7 @@ export type TabSeccionHojaVida =
     CommonModule,
     DatePipe,
     FichaPersonalComponent,
+    MiCuentaBancariaComponent,
     FormacionAcademicaComponent,
     CapacitacionesComponent,
     ExperienciaLaboralComponent,
@@ -204,6 +206,7 @@ export type TabSeccionHojaVida =
           @switch (tabActiva()) {
             @case ('ficha') {
               <app-ficha-personal></app-ficha-personal>
+              <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
             }
             @case ('formacion') {
               <app-formacion-academica></app-formacion-academica>
