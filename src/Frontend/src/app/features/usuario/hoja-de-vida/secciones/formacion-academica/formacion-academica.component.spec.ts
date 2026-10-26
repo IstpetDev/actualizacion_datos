@@ -276,4 +276,31 @@ describe('FormacionAcademicaComponent', () => {
     expect(component.modeloEnCurso.tipoBecaId).toBeUndefined();
     expect(component.modeloEnCurso.financiamientoBecaId).toBeUndefined();
   });
+  it('bloquea_cambio_de_subpestana_si_hay_datos_sin_guardar_en_formulario', () => {
+    component.abrirFormTitulo();
+    component.modeloTitulo.nombreTitulo = 'Maestría en Computación';
+    fixture.detectChanges();
+
+    expect(component.tieneCambios()).toBe(true);
+
+    component.intentarCambiarSubtab('en-curso');
+    fixture.detectChanges();
+
+    expect(component.subtabActiva()).toBe('obtenidos');
+    expect(component.mostrarModalSubtab()).toBe(true);
+  });
+
+  it('descartar_cambios_de_subpestana_limpia_formulario_y_cambia_de_subpestana', () => {
+    component.abrirFormTitulo();
+    component.modeloTitulo.nombreTitulo = 'Maestría en Computación';
+    component.intentarCambiarSubtab('en-curso');
+    expect(component.mostrarModalSubtab()).toBe(true);
+
+    component.descartarYCambiarSubtab();
+    fixture.detectChanges();
+
+    expect(component.mostrarModalSubtab()).toBe(false);
+    expect(component.mostrarFormTitulo()).toBe(false);
+    expect(component.subtabActiva()).toBe('en-curso');
+  });
 });

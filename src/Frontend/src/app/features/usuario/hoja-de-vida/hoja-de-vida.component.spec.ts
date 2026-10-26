@@ -19,6 +19,7 @@ import {
   TituloEnCursoDto,
 } from '../../../api-client';
 import { CatalogosCacheService } from './servicios/catalogos-cache.service';
+import { SeccionConCambios } from './servicios/seccion-con-cambios';
 import { HojaDeVidaStateService } from './servicios/hoja-de-vida-state.service';
 import { HojaDeVidaComponent } from './hoja-de-vida.component';
 
@@ -48,6 +49,12 @@ describe('HojaDeVidaComponent', () => {
     obtenerFaltantes: Mock;
     enviarRevision: Mock;
     obtenerMarcaParaItem: Mock;
+    tieneCambiosSinGuardarSignal: WritableSignal<boolean>;
+    tieneCambiosSinGuardar: Mock;
+    seccionActiva: WritableSignal<SeccionConCambios | null>;
+    registrarSeccion: Mock;
+    desregistrarSeccion: Mock;
+    actualizarEstadoCambios: Mock;
   };
 
   const mockHdv: HojaDeVidaDto = {
@@ -92,6 +99,12 @@ describe('HojaDeVidaComponent', () => {
       obtenerFaltantes: vi.fn().mockReturnValue(of([])),
       enviarRevision: vi.fn().mockReturnValue(of({})),
       obtenerMarcaParaItem: vi.fn().mockReturnValue(undefined),
+      tieneCambiosSinGuardarSignal: signal(false),
+      tieneCambiosSinGuardar: vi.fn().mockReturnValue(false),
+      seccionActiva: signal<SeccionConCambios | null>(null),
+      registrarSeccion: vi.fn(),
+      desregistrarSeccion: vi.fn(),
+      actualizarEstadoCambios: vi.fn(),
     };
 
     const catalogosCacheMock = {
@@ -193,5 +206,114 @@ describe('HojaDeVidaComponent', () => {
     expect(stateMock.obtenerFaltantes).toHaveBeenCalled();
     expect(stateMock.enviarRevision).toHaveBeenCalledTimes(1);
     expect(component.mostrarModalFaltantes()).toBe(false);
+  });
+  it('bloquea_cambio_de_pestana_si_hay_cambios_sin_guardar_y_muestra_modal', () => {
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+    stateMock.tieneCambiosSinGuardarSignal.set(true);
+
+    component.intentarCambiarTab('formacion');
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('ficha');
+    expect(component.mostrarModalCambios()).toBe(true);
+  });
+
+  it('opcion_quedarme_aqui_cancela_cambio_y_oculta_modal', () => {
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+    component.intentarCambiarTab('formacion');
+    expect(component.mostrarModalCambios()).toBe(true);
+
+    component.onQuedarmeAqui();
+
+    expect(component.mostrarModalCambios()).toBe(false);
+    expect(component.tabActiva()).toBe('ficha');
+  });
+
+  it('opcion_descartar_cambios_descarta_y_cambia_de_pestana', () => {
+    const seccionMock: SeccionConCambios = {
+      tieneCambios: vi.fn().mockReturnValue(true),
+      guardarCambios: vi.fn().mockReturnValue(of(true)),
+      descartarCambios: vi.fn(),
+    };
+    stateMock.seccionActiva.set(seccionMock);
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+
+    component.intentarCambiarTab('formacion');
+    expect(component.mostrarModalCambios()).toBe(true);
+
+    component.onDescartarYContinuar();
+
+    expect(seccionMock.descartarCambios).toHaveBeenCalledTimes(1);
+    expect(component.mostrarModalCambios()).toBe(false);
+    expect(component.tabActiva()).toBe('formacion');
+  });
+
+  it('opcion_guardar_y_continuar_guarda_y_cambia_de_pestana_si_exito', () => {
+    const seccionMock: SeccionConCambios = {
+      tieneCambios: vi.fn().mockReturnValue(true),
+      guardarCambios: vi.fn().mockReturnValue(of(true)),
+      descartarCambios: vi.fn(),
+    };
+    stateMock.seccionActiva.set(seccionMock);
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+
+    component.intentarCambiarTab('formacion');
+    expect(component.mostrarModalCambios()).toBe(true);
+
+    component.onGuardarYContinuar();
+
+    expect(seccionMock.guardarCambios).toHaveBeenCalledTimes(1);
+    expect(component.mostrarModalCambios()).toBe(false);
+    expect(component.tabActiva()).toBe('formacion');
+  });
+
+  it('opcion_guardar_y_continuar_muestra_error_si_guardado_falla', () => {
+    const seccionMock: SeccionConCambios = {
+      tieneCambios: vi.fn().mockReturnValue(true),
+      guardarCambios: vi.fn().mockReturnValue(of(false)),
+      descartarCambios: vi.fn(),
+    };
+    stateMock.seccionActiva.set(seccionMock);
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+
+    component.intentarCambiarTab('formacion');
+    expect(component.mostrarModalCambios()).toBe(true);
+
+    component.onGuardarYContinuar();
+
+    expect(seccionMock.guardarCambios).toHaveBeenCalledTimes(1);
+    expect(component.mostrarModalCambios()).toBe(true);
+    expect(component.tabActiva()).toBe('ficha');
+    expect(component.errorCambios()).toContain('No fue posible guardar los cambios');
+  });
+
+  it('muestra_punto_indicador_cuando_hay_cambios_sin_guardar', () => {
+    stateMock.tieneCambiosSinGuardarSignal.set(true);
+    fixture.detectChanges();
+
+    const punto = (fixture.nativeElement as HTMLElement).querySelector('.tab-punto-cambios');
+    expect(punto).toBeTruthy();
+    expect(punto?.textContent).toBe('•');
+  });
+
+  it('beforeunload_previene_cierre_si_hay_cambios_sin_guardar', () => {
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+    const event = new Event('beforeunload') as BeforeUnloadEvent;
+    const preventDefaultSpy = vi.spyOn(event, 'preventDefault');
+
+    component.onBeforeUnload(event);
+
+    expect(preventDefaultSpy).toHaveBeenCalled();
+    expect(event.returnValue).toBe(true);
+  });
+
+  it('puedeDesactivar_permite_si_no_hay_cambios_y_muestra_modal_si_hay_cambios', () => {
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(false);
+    expect(component.puedeDesactivar()).toBe(true);
+
+    stateMock.tieneCambiosSinGuardar.mockReturnValue(true);
+    const resultado = component.puedeDesactivar();
+    expect(resultado).not.toBe(true);
+    expect(component.mostrarModalCambios()).toBe(true);
   });
 });

@@ -1,6 +1,8 @@
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
   CapacitacionDto,
@@ -469,7 +471,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class CapacitacionesComponent implements OnInit {
+export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCambios {
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -498,8 +500,41 @@ export class CapacitacionesComponent implements OnInit {
     archivoId: undefined,
   };
 
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    if (this.mostrarFormulario()) {
+      return !!(
+        this.idEdicion() ||
+        this.modelo.nombreEvento?.trim() ||
+        this.modelo.institucionOrganizadora?.trim() ||
+        this.modelo.tipoCapacitacionId ||
+        this.modelo.archivoId ||
+        this.fechaInicioStr ||
+        this.fechaFinStr ||
+        this.modelo.lugar?.trim()
+      );
+    }
+    return false;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (!this.mostrarFormulario()) return of(true);
+    return this.guardarObservable();
+  }
+
+  descartarCambios(): void {
+    this.cancelarFormulario();
+    this.state.actualizarEstadoCambios?.();
+  }
+
   ngOnInit(): void {
     this.catalogos.tiposCapacitacion().subscribe((t) => this.tiposCapacitacion.set(t));
+    this.state.registrarSeccion?.(this);
+  }
+
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
   }
 
   onFechaInicioChange(valor: string): void {
@@ -557,20 +592,31 @@ export class CapacitacionesComponent implements OnInit {
     this.idEdicion.set(undefined);
   }
 
-  guardar(): void {
+  guardarObservable(): Observable<boolean> {
     if (!this.modelo.nombreEvento?.trim()) {
       this.errorFormulario.set('El nombre del evento o curso es obligatorio.');
-      return;
+      return of(false);
     }
     if (!this.modelo.institucionOrganizadora?.trim()) {
       this.errorFormulario.set('La institución organizadora es obligatoria.');
-      return;
+      return of(false);
     }
 
-    this.state.guardarCapacitacion(this.modelo, this.idEdicion()).subscribe({
-      next: () => this.cancelarFormulario(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar la capacitación.'),
-    });
+    return this.state.guardarCapacitacion(this.modelo, this.idEdicion()).pipe(
+      map(() => {
+        this.cancelarFormulario();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
+        this.errorFormulario.set(err?.message || 'Error al guardar la capacitación.');
+        return of(false);
+      }),
+    );
+  }
+
+  guardar(): void {
+    this.guardarObservable().subscribe();
   }
 
   eliminar(id: string): void {
