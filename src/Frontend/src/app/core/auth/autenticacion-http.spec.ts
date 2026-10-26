@@ -28,7 +28,7 @@ describe('integración HTTP de autenticación con cliente generado', () => {
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: API_BASE_URL, useValue: '/api' },
+        { provide: API_BASE_URL, useValue: '' },
       ],
     });
     controlador = TestBed.inject(HttpTestingController);
@@ -43,7 +43,7 @@ describe('integración HTTP de autenticación con cliente generado', () => {
     fixture.componentInstance.documento = '0000000000';
     fixture.componentInstance.contrasena = 'clave-de-ejemplo';
     fixture.componentInstance.enviarLogin();
-    const peticion = controlador.expectOne('/api/api/auth/login');
+    const peticion = controlador.expectOne('/api/auth/login');
     expect(peticion.request.method).toBe('POST');
     expect(JSON.parse(peticion.request.body)).toEqual({
       documento: '0000000000',
@@ -64,7 +64,7 @@ describe('integración HTTP de autenticación con cliente generado', () => {
       rol: 'admin',
     });
     auth.verificarSesion().subscribe();
-    const peticion = controlador.expectOne('/api/api/auth/sesion');
+    const peticion = controlador.expectOne('/api/auth/sesion');
     expect(peticion.request.method).toBe('GET');
     peticion.flush(new Blob([JSON.stringify(sesion)], { type: 'application/json' }));
     await vi.waitFor(() => expect(auth.rolActual()).toBe('usuario'));
@@ -76,7 +76,7 @@ describe('integración HTTP de autenticación con cliente generado', () => {
       .subscribe(() => {
         completado = true;
       });
-    const peticion = controlador.expectOne('/api/api/auth/logout');
+    const peticion = controlador.expectOne('/api/auth/logout');
     expect(peticion.request.method).toBe('POST');
     peticion.flush(
       new Blob([JSON.stringify({ mensaje: 'Sesión cerrada' })], { type: 'application/json' }),

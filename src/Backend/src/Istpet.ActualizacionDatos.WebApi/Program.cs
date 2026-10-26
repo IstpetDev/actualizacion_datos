@@ -10,6 +10,7 @@ using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -151,6 +152,8 @@ if (args.Contains("--migrar") || args.Contains("--migrate"))
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    // ADR-0016: interfaz para probar la API en desarrollo, en /scalar/v1. Nunca en producción.
+    app.MapScalarApiReference(opciones => opciones.WithTitle("Actualización de datos — API (desarrollo)"));
 }
 
 app.MapGet("/health", () => Results.Ok(new RespuestaDeSalud("ok")))
@@ -411,6 +414,29 @@ personas.MapPost("/cargar", async (CargarPersonasRequest request, IServicioPerso
     }
 })
 .WithName("CargarPersonas")
+.Produces<ResultadoCargaPersonasDto>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest);
+
+personas.MapPost("/cargar-archivo", async (IFormFile archivo, IServicioPersonas servicio, CancellationToken ct) =>
+{
+    if (archivo == null || archivo.Length == 0)
+    {
+        return Results.BadRequest(new MensajeRespuesta("Debe proporcionar un archivo .xlsx o .csv no vacío."));
+    }
+
+    try
+    {
+        await using var stream = archivo.OpenReadStream();
+        var resultado = await servicio.CargarDesdeArchivoAsync(stream, archivo.FileName, ct);
+        return Results.Ok(resultado);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.DisableAntiforgery()
+.WithName("CargarPersonasArchivo")
 .Produces<ResultadoCargaPersonasDto>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest);
 
