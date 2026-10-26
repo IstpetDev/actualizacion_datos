@@ -13,6 +13,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
     volumes:
       - postgres-datos:/var/lib/postgresql/data
+    ports:
+      # Solo loopback (ADR-0016): se accede desde un cliente SQL con túnel SSH, nunca desde la red.
+      - "127.0.0.1:${PUERTO_POSTGRES:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
