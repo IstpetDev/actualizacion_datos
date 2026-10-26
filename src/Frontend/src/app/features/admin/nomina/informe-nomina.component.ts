@@ -34,6 +34,13 @@ import { ResultadoCargaPersonasDto } from '../../../api-client';
             <span class="metrica-valor text-warning">{{ res.totalDuplicadosOmitidos }}</span>
           </div>
 
+          @if (res.totalExistentesHabilitados) {
+            <div class="metrica-card card-exito" data-testid="metrica-habilitados">
+              <span class="metrica-etiqueta">Accesos Habilitados</span>
+              <span class="metrica-valor text-success">{{ res.totalExistentesHabilitados }}</span>
+            </div>
+          }
+
           <div class="metrica-card card-error" data-testid="metrica-rechazados">
             <span class="metrica-etiqueta">Filas Rechazadas</span>
             <span class="metrica-valor text-danger">{{ res.totalRechazados }}</span>
