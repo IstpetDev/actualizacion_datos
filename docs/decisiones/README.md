@@ -46,5 +46,6 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0012](ADR-0012-carga-de-nomina-nulos-y-nombres.md) | Carga de nómina: columnas, valores nulos y división de nombres | Vigente |
 | [ADR-0013](ADR-0013-datos-bancarios.md) | Datos bancarios del personal | Vigente |
 | [ADR-0014](ADR-0014-carga-de-nomina-real.md) | Carga de la nómina real: encabezados, nulos textuales y alias de catálogo | Propuesto |
+| [ADR-0015](ADR-0015-despliegue-por-etapas.md) | Despliegue dividido en etapas | Vigente |
 
 <!-- prueba del ci: este comentario se puede borrar -->

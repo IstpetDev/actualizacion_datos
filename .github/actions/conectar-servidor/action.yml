@@ -1,0 +1,30 @@
+# Acción compuesta: abre la VPN Tailscale y deja listo el cliente SSH.
+# La usan los jobs de deploy.yml que necesitan hablar con el servidor.
+name: Conectar al servidor de producción
+description: Conecta a Tailscale y configura la llave SSH del runner.
+
+inputs:
+  tailscale-authkey:
+    description: Clave de autenticación efímera de Tailscale.
+    required: true
+  ssh-private-key:
+    description: Llave privada SSH del usuario de despliegue.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Conectar a Tailscale
+      uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4
+      with:
+        authkey: ${{ inputs.tailscale-authkey }}
+
+    - name: Configurar cliente SSH
+      shell: bash
+      env:
+        SSH_KEY: ${{ inputs.ssh-private-key }}
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
