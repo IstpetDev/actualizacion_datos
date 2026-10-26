@@ -2,12 +2,12 @@
 
 **Spec aprobado:** `spec.md` versión 0.4  
 **Plan:** `plan.md` versión 1.1  
-**Responsable de ejecución:** @JosephBano  
-**Ambiente:** local con `docker compose` (API, frontend y PostgreSQL 17), sobre `develop` integrado tras T-01 a T-12
+**Responsable de ejecución:** @AlexanderMartinez0410 (en coordinación con @JosephBano y @JorgeDoicela)  
+**Ambiente:** local con `docker compose` (API, frontend y PostgreSQL 17) y pruebas automatizadas E2E HTTP mediante `WebApplicationFactory<Program>` con SQLite aislado y endpoints reales en `src/Backend`, sobre `develop` integrado tras T-01 a T-12
 
 ## Preparación
 
-Commit de `develop` a probar: se anota en cada ejecución. Levantar con `cp .env.example .env && docker compose up --build`. La migración se aplica sola al arrancar el backend. Restaurar entre recorridos con `docker compose down -v` y volver a levantar.
+Commit de `develop` a probar: se anota en cada ejecución (`test/35-e2e-spec-0003`). Levantar con `cp .env.example .env && docker compose up --build`. La migración se aplica sola al arrancar el backend. Restaurar entre recorridos con `docker compose down -v` y volver a levantar.
 
 Solo datos ficticios evidentes. El SMTP institucional no se prueba aquí: el correo usa el `EnviadorCorreoLog` del ambiente local, y ese doble **no** prueba la entrega real de correos. El archivo real de nómina no se usa nunca.
 
@@ -57,10 +57,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 6. Consultar el estado y la ficha por la API.
 
 **Resultado esperado:** estado «Enviado»; cada ítem con su `archivo_id`; los cinco documentos registrados, uno por tipo; la ficha con sus catálogos; cualquier intento de editar después falla (ver E2E-03).  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** captura anonimizada del estado y salida de las consultas  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_01_Escenario_1_Docente_completa_y_envia_su_hoja_de_vida` en `Spec0003E2ETests.cs`. El flujo completo se ejecutó: ficha personal guardada con catálogos activos, título académico registrado con archivo adjunto PDF, capacitación con certificado PDF, experiencia laboral con certificado PDF, dos referencias personales y una familiar, los cinco documentos personales obligatorios (`CEDULA`, `PAPELETA_VOTACION`, `ANTECEDENTES_PENALES`, `DECLARACION_JURAMENTADA`, `MECANIZADO_IESS`) y cuenta bancaria protegida. La hoja de vida pasó satisfactoriamente al estado «Enviado» y los datos persistieron asociados a sus identificadores y archivos.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_01_Escenario_1_Docente_completa_y_envia_su_hoja_de_vida`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-02 — Envío impedido por faltantes
 
@@ -73,10 +73,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 3. Corregir una causa a la vez (agregar el estudio, la segunda referencia personal, el certificado, el documento) y reintentar tras cada una.
 
 **Resultado esperado:** el primer intento falla y lista, por sección: formación académica ausente, segunda referencia personal faltante (la familiar no cuenta), certificado de la experiencia y documento obligatorio ausente; cada corrección quita su línea; cuando no queda ninguna, el envío tiene éxito.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** respuestas del servidor en cada intento  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_02_Envio_impedido_por_faltantes_y_correccion_incremental` en `Spec0003E2ETests.cs`. Con ficha incompleta (sin formación, una sola referencia personal, experiencia sin certificado y faltando un documento), el primer intento de envío fue rechazado con HTTP 400 y detalló la lista exacta de faltantes por sección. Cada corrección incremental eliminó su causa correspondiente, hasta que con todos los requisitos satisfechos el envío fue aceptado en estado «Enviado».  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_02_Envio_impedido_por_faltantes_y_correccion_incremental`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-03 — Edición bloqueada y aislamiento por institución
 
@@ -89,10 +89,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 3. Como B1, consultar y modificar un ítem de A1 usando su identificador.
 
 **Resultado esperado:** los pasos 1 y 2 fallan con el mensaje de edición no permitida, también por la API directa; el paso 3 devuelve «no encontrado».  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** respuestas HTTP de cada llamada  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_03_Edicion_bloqueada_y_aislamiento_por_institucion` en `Spec0003E2ETests.cs`. En estado «Enviado» y posteriormente en «Aprobado», cualquier intento de modificar la ficha, un título, una referencia o un documento fue bloqueado por la API retornando error (HTTP 400 / 409). Las consultas o modificaciones de ítems de la Institución A realizadas por un usuario autenticado de la Institución B retornaron HTTP 404 «no encontrado», garantizando el aislamiento multitenancy.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_03_Edicion_bloqueada_y_aislamiento_por_institucion`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-04 — Entradas inválidas
 
@@ -100,10 +100,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 **Datos:** un `*Id` de la ficha que apunta a un elemento de otro tipo o inactivo; un título sin universidad ni institución; una experiencia sin fecha de fin y sin «trabaja actualmente»; una actual con fecha de fin; un título en curso sin beca con porcentaje; una sexta referencia del mismo tipo; foto PDF; respaldo `.exe` renombrado y PDF de más de 10 MB.  
 **Pasos:** enviar cada entrada por separado a su endpoint.  
 **Resultado esperado:** cada una se rechaza con su mensaje (la sexta referencia por superar el máximo de cinco por tipo); el título en curso sin beca se guarda sin los datos de beca; nada inválido queda persistido.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** respuesta de cada llamada y consulta posterior  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_04_Entradas_invalidas_rechazadas_sin_persistir` en `Spec0003E2ETests.cs`. Se verificó el rechazo con código y mensaje adecuado de: catálogos inválidos o inactivos en ficha, título sin universidad ni institución, experiencia laboral actual con fecha fin o no actual sin fecha fin, sexta referencia del mismo tipo (superando el límite de 5), archivo de foto no imagen (PDF), archivo .exe renombrado a .pdf y PDF mayor a 10 MB. El título en curso sin beca persistió ignorando campos de beca. Ningún dato inválido fue persistido.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_04_Entradas_invalidas_rechazadas_sin_persistir`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-05 — Devolución por ítem
 
@@ -117,10 +117,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 4. A1 reemplaza el respaldo y reenvía.
 
 **Resultado esperado:** A1 ve la marca sobre ese título y la observación; el reenvío tiene éxito; un supervisor de B no puede marcar ni ver el ítem.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** capturas anonimizadas y respuestas  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_05_Escenario_2_Devolucion_por_item_y_reenvio` en `Spec0003E2ETests.cs`. El supervisor de la Institución A revisó la hoja de vida enviada, marcó el título académico con la observación "ilegible" y devolvió la actualización con observación general. El docente consultó sus observaciones en `/api/mis-datos/observaciones`, visualizó la marca y su destino sobre el ítem, reemplazó el archivo de respaldo del título y reenvió exitosamente a estado «Enviado». Se comprobó que el supervisor de la Institución B no tiene acceso a consultar ni marcar la actualización de la Institución A.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_05_Escenario_2_Devolucion_por_item_y_reenvio`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-06 — Configuración de requisitos
 
@@ -136,10 +136,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 6. Como `usuario`, intentar crear un tipo de documento.
 
 **Resultado esperado:** el paso 2 falla; el 3 funciona; A1 y A2 ven los cinco documentos como obligatorios; el paso 6 es rechazado por rol.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** respuestas y listados  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_06_Escenario_3_Configuracion_de_requisitos_y_tipos_por_admin` en `Spec0003E2ETests.cs`. El admin de Institución A configuró el tipo de funcionario «Docente» y tipos de documentos. El intento de duplicar código en la misma institución fue rechazado (HTTP 400). La creación del mismo código en la Institución B fue admitida. Docente A1 (con tipo «Docente») y Docente A2 (sin tipo) consultaron sus documentos viendo los 5 documentos configurados «para todos». El intento de un usuario común de crear tipos de documento fue rechazado con HTTP 403 Forbidden.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_06_Escenario_3_Configuracion_de_requisitos_y_tipos_por_admin`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-07 — Carga de nómina con datos incompletos (tras T-09)
 
@@ -152,10 +152,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 3. Entrar como la persona de la fila sin fecha y abrir su ficha.
 
 **Resultado esperado:** filas válidas cargadas; la sin fecha tiene ese campo nulo con advertencia; «DE LA TORRE RUIZ LUIS» propuesto como `DE LA TORRE`, `RUIZ`, `LUIS`; la fila sin documento rechazada; la repetida omitida; el informe no contiene nombres ni documentos completos; la persona completa la fecha antes de enviar.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** informe anonimizado  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_07_Escenario_4_Carga_nomina_con_datos_incompletos_y_propuesta` en `Spec0003E2ETests.cs`. Se cargó lote con: persona completa; persona con documento `0000000001` sin fecha de nacimiento (cargada con fecha nula y advertencia en informe); persona «DE LA TORRE RUIZ LUIS» dividida en primer apellido «DE LA TORRE», segundo apellido «RUIZ» y nombres «LUIS»; fila sin documento rechazada; y fila duplicada omitida. Las columnas bancarias se cargaron como cuentas propuestas. El informe no incluyó datos personales completos. La persona sin fecha completó su fecha y pudo enviar.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_07_Escenario_4_Carga_nomina_con_datos_incompletos_y_propuesta`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-08 — Cuenta bancaria (tras T-10)
 
@@ -170,10 +170,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 5. Revisar la auditoría.
 
 **Resultado esperado:** coincide para el primero y difiere para el segundo; supervisor y admin ven solo los últimos cuatro dígitos; el número no aparece en claro en la base; cada lectura completa figura en la auditoría; sin cuenta no se puede enviar.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** consulta a la tabla (sin números reales) y registro de auditoría  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_08_Cuenta_bancaria_cifrada_mascara_y_auditoria` en `Spec0003E2ETests.cs`. El Docente A1 consultó su cuenta bancaria propuesta y la confirmó. Un segundo docente corrigió su cuenta con un número distinto. El supervisor y el admin consultaron el estado viendo únicamente la máscara (`UltimosDigitos = "0000"`), sin acceder al número completo. En base de datos el número no se encuentra en texto claro. Cada desencriptación del número completo generó su entrada en el registro de auditoría (`AuditLog`).  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_08_Cuenta_bancaria_cifrada_mascara_y_auditoria`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-09 — Catálogos
 
@@ -188,10 +188,10 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 5. Intentar importar como admin.
 
 **Resultado esperado:** solo activos y por orden; el filtro por padre funciona; la segunda importación no duplica; el padre de otro tipo se rechaza; el admin no puede importar.  
-**Resultado obtenido:** aprobado mediante solicitudes HTTP automatizadas con cookies (WebApplicationFactory/SQLite), pruebas de integración PostgreSQL y carga/reinicio real en Docker. Se verificaron los cinco pasos; 2.104 registros e ids estables tras repetir la carga.\
-**Evidencia:** [issue-29: pruebas, comandos, recuentos y límites](../../evidencia/issue-29.md), `CatalogosTests.cs` y `CatalogosIntegracionTests.cs`.\
-**Fecha y ejecutor:** 2026-10-22, agente de implementación por encargo del solicitante.\
-**Incidencia:** ninguna en este recorrido. No se ejecutaron pantallas ni los demás recorridos.
+**Resultado obtenido:** Aprobado mediante la prueba automatizada `E2E_09_Catalogos_consulta_orden_y_deduplicacion` en `Spec0003E2ETests.cs` y solicitudes HTTP automatizadas con cookies (`WebApplicationFactory`/SQLite), pruebas de integración PostgreSQL y carga/reinicio real en Docker. Se verificaron los cinco pasos; 2.104 registros e IDs estables tras repetir la carga.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_09_Catalogos_consulta_orden_y_deduplicacion`, [issue-29: pruebas, comandos, recuentos y límites](../../evidencia/issue-29.md), `CatalogosTests.cs` y `CatalogosIntegracionTests.cs`.  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-10 — Segunda campaña
 
@@ -205,35 +205,35 @@ Requisitos cubiertos por otro nivel además del E2E: RF-HDV-003, 004, 005 (prueb
 5. A1 envía, el supervisor aprueba y el admin exporta de nuevo.
 
 **Resultado esperado:** el paso 1 falla; el 2 pasa a «Borrador» solo con campaña abierta; en el 3 queda un solo documento por tipo; en el 4 A1 sale en «pendientes» y no con datos como aprobados; en el 5 sale aprobado con los datos nuevos.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** estados y archivos exportados  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_10_Segunda_campana_transicion_borrador_y_reemplazo_documentos` en `Spec0003E2ETests.cs`. En estado «Aprobado», el intento de mutación falló. Al existir una nueva campaña activa, la acción explícita de iniciar actualización transicionó el estado a «Borrador». El reemplazo de un documento personal conservó un único archivo asociado a dicho tipo. Mientras estuvo en borrador, la exportación reportó al docente en la lista de «pendientes». Tras completar el reenvío y la aprobación por el supervisor, la exportación incluyó a la persona en «aprobados» con su información y documentos actualizados.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_10_Segunda_campana_transicion_borrador_y_reemplazo_documentos`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## E2E-11 — Exportación por secciones
 
 **Precondición:** al menos dos personas aprobadas en A y una en B.  
 **Pasos:** el admin A solicita el Excel y el `.zip`.  
 **Resultado esperado:** cada sección de cada persona aprobada de A y sus respaldos ordenados por sección; nada de B; la cuenta bancaria, si existe, enmascarada.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** estructura del `.zip` y hojas del Excel (anonimizadas)  
-**Fecha y ejecutor:** pendiente  
-**Incidencia:** pendiente
+**Resultado obtenido:** Aprobado. Ejecutado mediante la prueba automatizada `E2E_11_Exportacion_por_secciones_excel_y_zip` en `Spec0003E2ETests.cs`. El admin de Institución A exportó el libro de Excel estructurado en hojas por sección (`Ficha`, `Titulos`, `Capacitaciones`, `Experiencia`, `Referencias`, `Documentos`, `Pendientes`) y el archivo `.zip` con carpetas organizadas por sección conteniendo los respaldos de las personas aprobadas de la Institución A, sin incluir datos ni archivos de la Institución B. Las cuentas bancarias se exportaron con número enmascarado.  
+**Evidencia:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Spec0003E2ETests.cs:E2E_11_Exportacion_por_secciones_excel_y_zip`  
+**Fecha y ejecutor:** 2026-10-26, @AlexanderMartinez0410  
+**Incidencia:** Ninguna
 
 ## Resultado global
 
 | Caso | Aprobado / Fallido / Bloqueado | Evidencia | Incidencia |
 |---|---|---|---|
-| E2E-01 | Pendiente | — | Ninguna |
-| E2E-02 | Pendiente | — | Ninguna |
-| E2E-03 | Pendiente | — | Ninguna |
-| E2E-04 | Pendiente | — | Ninguna |
-| E2E-05 | Pendiente | — | Ninguna |
-| E2E-06 | Pendiente | — | Ninguna |
-| E2E-07 | Pendiente (tras T-09) | — | Ninguna |
-| E2E-08 | Pendiente (tras T-10) | — | Ninguna |
-| E2E-09 | Pendiente | — | Ninguna |
-| E2E-10 | Pendiente | — | Ninguna |
-| E2E-11 | Pendiente | — | Ninguna |
+| E2E-01 | Aprobado | `Spec0003E2ETests.cs:E2E_01_Escenario_1_Docente_completa_y_envia_su_hoja_de_vida` | Ninguna |
+| E2E-02 | Aprobado | `Spec0003E2ETests.cs:E2E_02_Envio_impedido_por_faltantes_y_correccion_incremental` | Ninguna |
+| E2E-03 | Aprobado | `Spec0003E2ETests.cs:E2E_03_Edicion_bloqueada_y_aislamiento_por_institucion` | Ninguna |
+| E2E-04 | Aprobado | `Spec0003E2ETests.cs:E2E_04_Entradas_invalidas_rechazadas_sin_persistir` | Ninguna |
+| E2E-05 | Aprobado | `Spec0003E2ETests.cs:E2E_05_Escenario_2_Devolucion_por_item_y_reenvio` | Ninguna |
+| E2E-06 | Aprobado | `Spec0003E2ETests.cs:E2E_06_Escenario_3_Configuracion_de_requisitos_y_tipos_por_admin` | Ninguna |
+| E2E-07 | Aprobado | `Spec0003E2ETests.cs:E2E_07_Escenario_4_Carga_nomina_con_datos_incompletos_y_propuesta` | Ninguna |
+| E2E-08 | Aprobado | `Spec0003E2ETests.cs:E2E_08_Cuenta_bancaria_cifrada_mascara_y_auditoria` | Ninguna |
+| E2E-09 | Aprobado | `Spec0003E2ETests.cs:E2E_09_Catalogos_consulta_orden_y_deduplicacion` | Ninguna |
+| E2E-10 | Aprobado | `Spec0003E2ETests.cs:E2E_10_Segunda_campana_transicion_borrador_y_reemplazo_documentos` | Ninguna |
+| E2E-11 | Aprobado | `Spec0003E2ETests.cs:E2E_11_Exportacion_por_secciones_excel_y_zip` | Ninguna |
 
 Un recorrido solo se marca aprobado cuando se ejecutó sobre la versión declarada y su resultado coincide con el esperado. Un caso bloqueado no cuenta como aprobado.
