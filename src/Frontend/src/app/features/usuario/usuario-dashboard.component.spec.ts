@@ -85,7 +85,7 @@ describe('panel de usuario', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: API_BASE_URL, useValue: '/api' },
+        { provide: API_BASE_URL, useValue: '' },
         { provide: MisDatosClient, useValue: datos },
         { provide: ArchivosClient, useValue: archivos },
         { provide: AutenticacionClient, useValue: auth },
@@ -328,7 +328,7 @@ describe('panel de usuario', () => {
     const componente = preparar().componentInstance;
     componente.descargarArchivo(archivo);
     const peticion = TestBed.inject(HttpTestingController).expectOne(
-      '/api/api/archivos/archivo-ficticio/descargar',
+      '/api/archivos/archivo-ficticio/descargar',
     );
     expect(peticion.request.responseType).toBe('blob');
     peticion.flush(new Blob(['%PDF-ejemplo'], { type: 'application/pdf' }));

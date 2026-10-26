@@ -1,7 +1,10 @@
 namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 
 using System.Globalization;
+using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
@@ -14,13 +17,16 @@ public class ServicioPersonas : IServicioPersonas
 {
     private readonly AplicacionDbContext _context;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IServicioCuentaBancaria? _servicioCuentaBancaria;
 
     public ServicioPersonas(
         AplicacionDbContext context,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IServicioCuentaBancaria? servicioCuentaBancaria = null)
     {
         _context = context;
         _contextoInstitucion = contextoInstitucion;
+        _servicioCuentaBancaria = servicioCuentaBancaria;
     }
 
     public async Task<ResultadoCargaPersonasDto> CargarPersonasAsync(CargarPersonasRequest request, CancellationToken ct = default)
@@ -100,6 +106,17 @@ public class ServicioPersonas : IServicioPersonas
             if (setExistentes.Contains(docLimpio))
             {
                 totalDuplicados++;
+
+                // Si no tenía cuenta bancaria y en el archivo vienen datos bancarios, se registran como propuesta (ADR-0013)
+                if (_servicioCuentaBancaria != null && !string.IsNullOrWhiteSpace(item.NumCuentaBanco))
+                {
+                    var personaExistente = await _context.Personas.FirstOrDefaultAsync(p => p.InstitucionId == institucionId && p.Documento == docLimpio, ct);
+                    if (personaExistente != null && !await _context.CuentasBancarias.AnyAsync(c => c.PersonaId == personaExistente.Id, ct))
+                    {
+                        await RegistrarCuentaPropuestaAsync(personaExistente.Id, item, elementosCatalogo, numeroFila, advertencias, ct);
+                    }
+                }
+
                 continue;
             }
 
@@ -320,6 +337,9 @@ public class ServicioPersonas : IServicioPersonas
             _context.Personas.Add(nuevaPersona);
             _context.FichasPersonales.Add(ficha);
 
+            // 12. Registrar propuesta de cuenta bancaria si viene en la nómina (ADR-0013 Dec. 7)
+            await RegistrarCuentaPropuestaAsync(nuevaPersona.Id, item, elementosCatalogo, numeroFila, advertencias, ct);
+
             setExistentes.Add(docLimpio);
             cargados.Add(docLimpio);
         }
@@ -334,6 +354,342 @@ public class ServicioPersonas : IServicioPersonas
             advertencias,
             rechazos,
             cargados);
+    }
+
+    public async Task<ResultadoCargaPersonasDto> CargarDesdeArchivoAsync(Stream stream, string nombreArchivo, CancellationToken ct = default)
+    {
+        List<PersonaCargaItem> items;
+        if (nombreArchivo.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            items = ParsearExcel(stream);
+        }
+        else
+        {
+            items = ParsearCsv(stream);
+        }
+
+        if (items.Count == 0)
+        {
+            throw new ReglaNegocioException("No se encontraron registros válidos ni columnas reconocidas en el archivo.");
+        }
+
+        return await CargarPersonasAsync(new CargarPersonasRequest(items), ct);
+    }
+
+    private async Task RegistrarCuentaPropuestaAsync(
+        Guid personaId,
+        PersonaCargaItem item,
+        List<ElementoCatalogo> elementosCatalogo,
+        int numeroFila,
+        List<AdvertenciaCargaDto> advertencias,
+        CancellationToken ct)
+    {
+        if (_servicioCuentaBancaria == null || string.IsNullOrWhiteSpace(item.NumCuentaBanco))
+        {
+            return;
+        }
+
+        var numLimpio = new string(item.NumCuentaBanco.Where(char.IsAsciiDigit).ToArray());
+        if (numLimpio.Length < 4)
+        {
+            return;
+        }
+
+        var tipoCuentaId = 71; // Ahorros por defecto (ADR-0013)
+        if (!string.IsNullOrWhiteSpace(item.TipoCuentaBanco))
+        {
+            var tcNorm = NormalizarTexto(item.TipoCuentaBanco);
+            var tc = elementosCatalogo.FirstOrDefault(e => e.Tipo == TipoCatalogo.TipoCuentaBancaria && NormalizarTexto(e.Nombre) == tcNorm);
+            if (tc != null)
+            {
+                tipoCuentaId = tc.Id;
+            }
+            else if (tcNorm.Contains("corrient"))
+            {
+                tipoCuentaId = 72;
+            }
+        }
+
+        int? bancoId = null;
+        string? nombreBancoOtro = null;
+        if (!string.IsNullOrWhiteSpace(item.Banco))
+        {
+            var bNorm = NormalizarTexto(item.Banco);
+            var b = elementosCatalogo.FirstOrDefault(e => e.Tipo == TipoCatalogo.Banco && NormalizarTexto(e.Nombre) == bNorm);
+            if (b != null)
+            {
+                bancoId = b.Id;
+            }
+            else
+            {
+                nombreBancoOtro = item.Banco.Trim();
+            }
+        }
+
+        try
+        {
+            await _servicioCuentaBancaria.RegistrarPropuestaNominaAsync(
+                personaId,
+                new CuentaNominaPropuesta(tipoCuentaId, numLimpio, bancoId, nombreBancoOtro),
+                ct);
+        }
+        catch (CuentaBancariaNoDisponibleException)
+        {
+            advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Cuenta Bancaria", "Módulo de cuenta bancaria no disponible"));
+        }
+        catch (ReglaNegocioException ex)
+        {
+            advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Cuenta Bancaria", ex.Message));
+        }
+    }
+
+    private static List<PersonaCargaItem> ParsearExcel(Stream stream)
+    {
+        var items = new List<PersonaCargaItem>();
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+
+        var sharedStrings = new List<string>();
+        var sharedEntry = archive.GetEntry("xl/sharedStrings.xml");
+        if (sharedEntry != null)
+        {
+            using var ssStream = sharedEntry.Open();
+            var docXml = new XmlDocument();
+            docXml.Load(ssStream);
+            var siNodes = docXml.GetElementsByTagName("si");
+            foreach (XmlNode si in siNodes)
+            {
+                var tNode = si["t"];
+                if (tNode != null)
+                {
+                    sharedStrings.Add(tNode.InnerText);
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+                    foreach (XmlNode child in si.ChildNodes)
+                    {
+                        if (child.Name == "r" && child["t"] != null)
+                        {
+                            sb.Append(child["t"]!.InnerText);
+                        }
+                    }
+                    sharedStrings.Add(sb.ToString());
+                }
+            }
+        }
+
+        var sheetEntry = archive.GetEntry("xl/worksheets/sheet1.xml")
+            ?? archive.Entries.FirstOrDefault(e => e.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+        if (sheetEntry == null) return items;
+
+        using var sheetStream = sheetEntry.Open();
+        var sheetDoc = new XmlDocument();
+        sheetDoc.Load(sheetStream);
+
+        var rowNodes = sheetDoc.GetElementsByTagName("row");
+        var columnaPorEncabezado = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        int filaEncabezado = -1;
+
+        for (int i = 0; i < Math.Min(10, rowNodes.Count); i++)
+        {
+            var row = rowNodes[i]!;
+            var celdasFila = ObtenerCeldasFila(row, sharedStrings);
+            foreach (var kvp in celdasFila)
+            {
+                var valNorm = NormalizarTexto(kvp.Value);
+                if (valNorm == "dni" || valNorm == "documento" || valNorm == "cedula")
+                {
+                    filaEncabezado = i;
+                    break;
+                }
+            }
+
+            if (filaEncabezado != -1)
+            {
+                foreach (var kvp in celdasFila)
+                {
+                    var key = MapearNombreColumna(kvp.Value);
+                    if (!string.IsNullOrEmpty(key) && !columnaPorEncabezado.ContainsKey(key))
+                    {
+                        columnaPorEncabezado[key] = kvp.Key;
+                    }
+                }
+                break;
+            }
+        }
+
+        if (filaEncabezado == -1) return items;
+
+        for (int i = filaEncabezado + 1; i < rowNodes.Count; i++)
+        {
+            var row = rowNodes[i]!;
+            var celdas = ObtenerCeldasFila(row, sharedStrings);
+
+            string? ObtenerValor(string clave)
+            {
+                if (columnaPorEncabezado.TryGetValue(clave, out var col) && celdas.TryGetValue(col, out var v))
+                {
+                    var limpio = v.Trim();
+                    return limpio.Equals("NULL", StringComparison.OrdinalIgnoreCase) || limpio.Equals("N/A", StringComparison.OrdinalIgnoreCase) || limpio == "-" ? null : limpio;
+                }
+                return null;
+            }
+
+            var doc = ObtenerValor("documento");
+            if (string.IsNullOrWhiteSpace(doc)) continue;
+
+            items.Add(new PersonaCargaItem(
+                Documento: doc,
+                Nombre: ObtenerValor("nombre"),
+                CargoTrabajo: ObtenerValor("cargo"),
+                Nacimiento: ObtenerValor("nacimiento"),
+                Edad: ObtenerValor("edad"),
+                EstadoCivil: ObtenerValor("estadocivil"),
+                Estudios: ObtenerValor("estudios"),
+                Nacionalidad: ObtenerValor("nacionalidad"),
+                Direccion: ObtenerValor("direccion"),
+                Ciudad: ObtenerValor("ciudad"),
+                Sangre: ObtenerValor("sangre"),
+                FecIngreso: ObtenerValor("fecingreso"),
+                Telefono2: ObtenerValor("telefono2"),
+                TipoCuentaBanco: ObtenerValor("tipocuenta"),
+                Banco: ObtenerValor("banco"),
+                NumCuentaBanco: ObtenerValor("numcuenta")));
+        }
+
+        return items;
+    }
+
+    private static Dictionary<string, string> ObtenerCeldasFila(XmlNode row, List<string> sharedStrings)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (XmlNode c in row.ChildNodes)
+        {
+            if (c.Name != "c") continue;
+            var rAttr = c.Attributes?["r"]?.Value;
+            if (string.IsNullOrEmpty(rAttr)) continue;
+            var colLetter = Regex.Replace(rAttr, @"[\d]", "");
+
+            var tAttr = c.Attributes?["t"]?.Value;
+            var vNode = c["v"];
+            var valor = "";
+            if (vNode != null)
+            {
+                if (tAttr == "s" && int.TryParse(vNode.InnerText, out var idx) && idx >= 0 && idx < sharedStrings.Count)
+                {
+                    valor = sharedStrings[idx];
+                }
+                else
+                {
+                    valor = vNode.InnerText;
+                }
+            }
+            dict[colLetter] = valor;
+        }
+        return dict;
+    }
+
+    private static List<PersonaCargaItem> ParsearCsv(Stream stream)
+    {
+        var items = new List<PersonaCargaItem>();
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
+        string? linea;
+        var delimitador = ',';
+        var encabezados = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var fila = 0;
+
+        while ((linea = reader.ReadLine()) != null)
+        {
+            fila++;
+            if (string.IsNullOrWhiteSpace(linea)) continue;
+
+            if (fila <= 10 && encabezados.Count == 0)
+            {
+                delimitador = linea.Contains(';') ? ';' : (linea.Contains('\t') ? '\t' : ',');
+                var partes = linea.Split(delimitador);
+                var tieneDoc = false;
+                for (int i = 0; i < partes.Length; i++)
+                {
+                    var mapeado = MapearNombreColumna(partes[i].Trim());
+                    if (mapeado == "documento")
+                    {
+                        tieneDoc = true;
+                        break;
+                    }
+                }
+
+                if (tieneDoc)
+                {
+                    for (int j = 0; j < partes.Length; j++)
+                    {
+                        var key = MapearNombreColumna(partes[j].Trim());
+                        if (!string.IsNullOrEmpty(key) && !encabezados.ContainsKey(key))
+                        {
+                            encabezados[key] = j;
+                        }
+                    }
+                }
+                continue;
+            }
+
+            if (encabezados.Count == 0) continue;
+
+            var cols = linea.Split(delimitador);
+            string? Val(string clave)
+            {
+                if (encabezados.TryGetValue(clave, out var idx) && idx < cols.Length)
+                {
+                    var l = cols[idx].Trim().Trim('"');
+                    return l.Equals("NULL", StringComparison.OrdinalIgnoreCase) || l.Equals("N/A", StringComparison.OrdinalIgnoreCase) || l == "-" ? null : l;
+                }
+                return null;
+            }
+
+            var doc = Val("documento");
+            if (string.IsNullOrWhiteSpace(doc)) continue;
+
+            items.Add(new PersonaCargaItem(
+                Documento: doc,
+                Nombre: Val("nombre"),
+                CargoTrabajo: Val("cargo"),
+                Nacimiento: Val("nacimiento"),
+                Edad: Val("edad"),
+                EstadoCivil: Val("estadocivil"),
+                Estudios: Val("estudios"),
+                Nacionalidad: Val("nacionalidad"),
+                Direccion: Val("direccion"),
+                Ciudad: Val("ciudad"),
+                Sangre: Val("sangre"),
+                FecIngreso: Val("fecingreso"),
+                Telefono2: Val("telefono2"),
+                TipoCuentaBanco: Val("tipocuenta"),
+                Banco: Val("banco"),
+                NumCuentaBanco: Val("numcuenta")));
+        }
+
+        return items;
+    }
+
+    private static string MapearNombreColumna(string texto)
+    {
+        var n = NormalizarTexto(texto);
+        if (n == "dni" || n == "documento" || n == "cedula") return "documento";
+        if (n == "nombre" || n.Contains("apellidos")) return "nombre";
+        if (n.Contains("cargo")) return "cargo";
+        if (n.Contains("nacimiento")) return "nacimiento";
+        if (n == "edad") return "edad";
+        if (n.Contains("estado civil") || n == "estadocivil") return "estadocivil";
+        if (n.Contains("estudio") || n.Contains("instruccion")) return "estudios";
+        if (n.Contains("nacionalidad") || n.Contains("pais")) return "nacionalidad";
+        if (n.Contains("direccion") || n.Contains("domicilio")) return "direccion";
+        if (n.Contains("ciudad") || n.Contains("canton")) return "ciudad";
+        if (n.Contains("sangre")) return "sangre";
+        if (n.Contains("ingreso")) return "fecingreso";
+        if (n.Contains("telefono") || n.Contains("celular")) return "telefono2";
+        if (n.Contains("tipo") && n.Contains("cuenta")) return "tipocuenta";
+        if (n == "banco" || n.Contains("institucion financiera")) return "banco";
+        if (n.Contains("num") && n.Contains("cuenta")) return "numcuenta";
+        return n;
     }
 
     public async Task<List<PersonaDto>> ListarPersonasAsync(CancellationToken ct = default)

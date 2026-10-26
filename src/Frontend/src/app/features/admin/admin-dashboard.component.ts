@@ -241,6 +241,39 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                 formato <code>documento,nombre,correo</code>.
               </p>
 
+              <!-- Carga mediante archivo Excel / CSV -->
+              <div class="carga-archivo-box card-destacada">
+                <h3 class="card-title">Cargar Nómina desde Archivo (.xlsx o .csv)</h3>
+                <p class="card-desc">
+                  Suba la nómina en formato Excel o CSV. Los registros ya existentes se omitirán sin
+                  sobrescribir y las personas nuevas se habilitarán con sus datos personales y
+                  cuentas bancarias propuestas.
+                </p>
+                <div class="fila-archivo">
+                  <input
+                    type="file"
+                    #archivoInput
+                    accept=".xlsx,.csv"
+                    (change)="onArchivoSeleccionado($event)"
+                    class="form-control"
+                    data-testid="input-archivo-nomina"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    [disabled]="!archivoParaCargar || cargandoArchivo()"
+                    (click)="enviarArchivoNomina(archivoInput)"
+                    data-testid="btn-subir-archivo-nomina"
+                  >
+                    {{ cargandoArchivo() ? 'Procesando archivo...' : 'Importar Nómina' }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="divisor-o">
+                <span>— o ingrese personas manualmente —</span>
+              </div>
+
               <!-- Formulario simple para añadir fila -->
               <div class="fila-builder">
                 <div class="form-row">
@@ -518,6 +551,28 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       color: #64748b;
       margin-bottom: 1rem;
     }
+    .carga-archivo-box {
+      margin-bottom: 1.25rem;
+      border: 1px dashed #93c5fd;
+      border-radius: 0.375rem;
+      padding: 1rem;
+    }
+    .fila-archivo {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .fila-archivo .form-control {
+      flex: 1;
+      min-width: 200px;
+    }
+    .divisor-o {
+      margin: 1.25rem 0;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: #94a3b8;
+    }
     .grid-dos-columnas {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -751,6 +806,8 @@ export class AdminDashboardComponent implements OnInit {
   filaDoc = '';
   filaNom = '';
   filaCor = '';
+  archivoParaCargar: File | null = null;
+  readonly cargandoArchivo = signal(false);
 
   ngOnInit(): void {
     this.cargarDatosCampanas();
@@ -803,6 +860,60 @@ export class AdminDashboardComponent implements OnInit {
       error: (err) => {
         this.error.set(err?.message || 'Error al crear la campaña.');
         this.guardandoCampana.set(false);
+      },
+    });
+  }
+
+  onArchivoSeleccionado(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.archivoParaCargar = input.files[0];
+      this.error.set(null);
+    } else {
+      this.archivoParaCargar = null;
+    }
+  }
+
+  enviarArchivoNomina(inputElement?: HTMLInputElement): void {
+    if (!this.archivoParaCargar) return;
+
+    this.cargandoArchivo.set(true);
+    this.error.set(null);
+
+    const fileParam = {
+      data: this.archivoParaCargar,
+      fileName: this.archivoParaCargar.name,
+    };
+
+    this.personasClient.cargarPersonasArchivo(fileParam).subscribe({
+      next: (res) => {
+        this.resultadoCarga.set(res);
+        if (res.totalCargados > 0) {
+          const omitidosTexto =
+            res.totalDuplicadosOmitidos > 0
+              ? ` (${res.totalDuplicadosOmitidos} omitidos por ya existir)`
+              : '';
+          this.mensajeExito.set(
+            `Carga procesada: ${res.totalCargados} personas nuevas habilitadas${omitidosTexto}.`,
+          );
+        } else if (res.totalDuplicadosOmitidos > 0) {
+          this.mensajeExito.set(
+            `No hay nuevas personas que cargar: las ${res.totalDuplicadosOmitidos} personas del archivo ya estaban registradas en la institución.`,
+          );
+        } else {
+          this.mensajeExito.set(`Archivo procesado: ${res.totalRecibidos} filas recibidas.`);
+        }
+
+        this.archivoParaCargar = null;
+        if (inputElement) {
+          inputElement.value = '';
+        }
+        this.cargandoArchivo.set(false);
+        this.cargarDatosPersonas();
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Error al procesar el archivo de nómina.');
+        this.cargandoArchivo.set(false);
       },
     });
   }

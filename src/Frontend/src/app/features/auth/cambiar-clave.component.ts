@@ -72,7 +72,7 @@ import { mensajeError } from '../../core/auth/mensaje-error';
                     stroke-linejoin="round"
                     aria-hidden="true"
                   >
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 }
@@ -130,7 +130,7 @@ import { mensajeError } from '../../core/auth/mensaje-error';
                   stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               }
@@ -192,13 +192,117 @@ import { mensajeError } from '../../core/auth/mensaje-error';
                   stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               }
             </button>
           </div>
-          <button type="submit" [disabled]="formulario.invalid">
+          <div class="requisitos-clave" aria-label="Requisitos de contraseña">
+            <div class="requisito-item" [class.cumplido]="cumpleLongitud">
+              <span class="icono-check" aria-hidden="true">
+                @if (cumpleLongitud) {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                } @else {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                }
+              </span>
+              <span>Al menos 8 caracteres</span>
+            </div>
+            <div class="requisito-item" [class.cumplido]="cumpleDistintaDocumento">
+              <span class="icono-check" aria-hidden="true">
+                @if (cumpleDistintaDocumento) {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                } @else {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                }
+              </span>
+              <span>Distinta de tu número de documento</span>
+            </div>
+            <div class="requisito-item" [class.cumplido]="cumpleCoincidencia">
+              <span class="icono-check" aria-hidden="true">
+                @if (cumpleCoincidencia) {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                } @else {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                }
+              </span>
+              <span>Las contraseñas coinciden</span>
+            </div>
+          </div>
+          <button type="submit" [disabled]="formulario.invalid || !todosCumplidos">
             {{ ocupado() ? 'Guardando…' : 'Cambiar contraseña y continuar' }}
           </button>
         </fieldset>
@@ -222,13 +326,26 @@ export class CambiarClaveComponent {
   readonly ocupado = signal(false);
   readonly error = signal('');
 
+  get cumpleLongitud(): boolean {
+    return this.nueva.trim().length >= 8;
+  }
+
+  get cumpleDistintaDocumento(): boolean {
+    const cedula = this.auth.sesion()?.cedula;
+    return this.nueva.trim().length > 0 && (!cedula || this.nueva.trim() !== cedula);
+  }
+
+  get cumpleCoincidencia(): boolean {
+    return this.nueva.length > 0 && this.nueva === this.confirmacion;
+  }
+
+  get todosCumplidos(): boolean {
+    return this.cumpleLongitud && this.cumpleDistintaDocumento && this.cumpleCoincidencia;
+  }
+
   cambiarClave(): void {
     if (this.ocupado()) return;
-    if (
-      this.nueva.trim().length < 8 ||
-      this.nueva.trim() === this.auth.sesion()?.cedula ||
-      this.nueva !== this.confirmacion
-    ) {
+    if (!this.todosCumplidos) {
       this.error.set(
         'Las contraseñas deben coincidir, tener al menos 8 caracteres y ser distintas de tu documento.',
       );
