@@ -721,7 +721,8 @@ public class ServicioPersonas : IServicioPersonas
             p.Rol.ToString(),
             p.AccesoHabilitado,
             p.EstadoActualizacion.ToString(),
-            p.FechaCreacionUtc)).ToList();
+            p.FechaCreacionUtc,
+            p.TipoFuncionarioId)).ToList();
     }
 
     private static string NormalizarTexto(string texto)

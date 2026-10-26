@@ -147,8 +147,15 @@ public sealed class ConfiguracionHojaDeVidaTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, (await _cliente.PutAsJsonAsync($"/api/configuracion/requisitos/{requisito.Id}", paraTodos with { EsObligatorio = false })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await _cliente.PutAsJsonAsync($"/api/personas/{personaId}/tipo-funcionario", new AsignarTipoFuncionarioRequest(funcionario.Id))).StatusCode);
         Assert.Equal(funcionario.Id, await TipoAsignadoAsync(personaId));
+        var listaPersonas = (await _cliente.GetFromJsonAsync<List<PersonaDto>>("/api/personas"))!;
+        var personaEnLista = listaPersonas.Single(p => p.Id == personaId);
+        Assert.Equal(funcionario.Id, personaEnLista.TipoFuncionarioId);
+
         Assert.Equal(HttpStatusCode.OK, (await _cliente.PutAsJsonAsync($"/api/personas/{personaId}/tipo-funcionario", new AsignarTipoFuncionarioRequest(null))).StatusCode);
         Assert.Null(await TipoAsignadoAsync(personaId));
+        listaPersonas = (await _cliente.GetFromJsonAsync<List<PersonaDto>>("/api/personas"))!;
+        personaEnLista = listaPersonas.Single(p => p.Id == personaId);
+        Assert.Null(personaEnLista.TipoFuncionarioId);
 
         Assert.Equal(HttpStatusCode.NoContent, (await _cliente.DeleteAsync($"/api/configuracion/requisitos/{requisito.Id}")).StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, (await _cliente.DeleteAsync($"/api/configuracion/tipos-documento/{documento.Id}")).StatusCode);
@@ -260,5 +267,54 @@ public sealed class ConfiguracionHojaDeVidaTests : IDisposable
         Assert.Equal(codigos.Order(), documentos.Select(d => d.Codigo).Order());
         Assert.All(documentos, d => Assert.True(d.EsObligatorio));
     }
+    [Fact]
+    public async Task Asignar_tipo_masivo_a_seleccionadas_y_a_personas_sin_tipo()
+    {
+        var adminId = await AutenticarAsync(RolUsuario.Admin);
+        var tipo1 = await CrearFuncionarioAsync("DOCENTE");
+        var tipo2 = await CrearFuncionarioAsync("ADMINISTRATIVO");
 
+        var p1 = await AutenticarAsync(RolUsuario.Usuario, institucion: null);
+        var p2 = await AutenticarAsync(RolUsuario.Usuario, institucion: null);
+        var p3 = await AutenticarAsync(RolUsuario.Usuario, institucion: null);
+
+        // Volver a autenticar como admin
+        await AutenticarAsync(RolUsuario.Admin);
+
+        // 1. Asignar masivamente a p1 y p2 el tipo1
+        var respMasiva = await _cliente.PostAsJsonAsync("/api/personas/asignar-tipo-masivo",
+            new AsignarTipoFuncionarioMasivoRequest(tipo1.Id, [p1, p2]));
+        Assert.Equal(HttpStatusCode.OK, respMasiva.StatusCode);
+        var resultado = (await respMasiva.Content.ReadFromJsonAsync<ResultadoAsignacionTipoMasivoDto>())!;
+        Assert.Equal(2, resultado.TotalModificados);
+
+        var personas = (await _cliente.GetFromJsonAsync<List<PersonaDto>>("/api/personas"))!;
+        Assert.Equal(tipo1.Id, personas.Single(p => p.Id == p1).TipoFuncionarioId);
+        Assert.Equal(tipo1.Id, personas.Single(p => p.Id == p2).TipoFuncionarioId);
+        Assert.Null(personas.Single(p => p.Id == p3).TipoFuncionarioId);
+
+        // 2. Asignar tipo2 a todas las personas sin tipo (debe asignar a p3 y a adminId si no tenía)
+        var respSinTipo = await _cliente.PostAsJsonAsync("/api/personas/asignar-tipo-masivo",
+            new AsignarTipoFuncionarioMasivoRequest(tipo2.Id, SoloSinTipo: true));
+        Assert.Equal(HttpStatusCode.OK, respSinTipo.StatusCode);
+        var resSinTipo = (await respSinTipo.Content.ReadFromJsonAsync<ResultadoAsignacionTipoMasivoDto>())!;
+        Assert.True(resSinTipo.TotalModificados >= 1);
+
+        personas = (await _cliente.GetFromJsonAsync<List<PersonaDto>>("/api/personas"))!;
+        Assert.Equal(tipo1.Id, personas.Single(p => p.Id == p1).TipoFuncionarioId);
+        Assert.Equal(tipo1.Id, personas.Single(p => p.Id == p2).TipoFuncionarioId);
+        Assert.Equal(tipo2.Id, personas.Single(p => p.Id == p3).TipoFuncionarioId);
+        Assert.Equal(0, personas.Count(p => p.TipoFuncionarioId == null));
+
+        // 3. Validar rechazo con tipo inactivo
+        await _cliente.DeleteAsync($"/api/configuracion/tipos-funcionario/{tipo1.Id}");
+        var respInactivo = await _cliente.PostAsJsonAsync("/api/personas/asignar-tipo-masivo",
+            new AsignarTipoFuncionarioMasivoRequest(tipo1.Id, [p1]));
+        Assert.Equal(HttpStatusCode.BadRequest, respInactivo.StatusCode);
+
+        // 4. Validar rechazo sin selección ni SoloSinTipo
+        var respVacio = await _cliente.PostAsJsonAsync("/api/personas/asignar-tipo-masivo",
+            new AsignarTipoFuncionarioMasivoRequest(tipo2.Id, PersonaIds: [], SoloSinTipo: false));
+        Assert.Equal(HttpStatusCode.BadRequest, respVacio.StatusCode);
+    }
 }

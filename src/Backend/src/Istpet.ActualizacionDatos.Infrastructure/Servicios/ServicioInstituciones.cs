@@ -220,5 +220,5 @@ public class ServicioInstituciones : IServicioInstituciones
     }
 
     private static PersonaDto MapearPersona(Persona p) =>
-        new(p.Id, p.InstitucionId.Valor, p.Documento, p.Nombre, p.Correo, p.Rol.ToString(), p.AccesoHabilitado, p.EstadoActualizacion.ToString(), p.FechaCreacionUtc);
+        new(p.Id, p.InstitucionId.Valor, p.Documento, p.Nombre, p.Correo, p.Rol.ToString(), p.AccesoHabilitado, p.EstadoActualizacion.ToString(), p.FechaCreacionUtc, p.TipoFuncionarioId);
 }

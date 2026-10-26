@@ -90,7 +90,7 @@ public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFacto
             "ListarTiposFuncionario", "CrearTipoFuncionario", "ActualizarTipoFuncionario",
             "ListarTiposDocumento", "CrearTipoDocumento", "ActualizarTipoDocumento",
             "ListarRequisitosDocumento", "CrearRequisitoDocumento", "ActualizarRequisitoDocumento",
-            "AsignarTipoFuncionario", "EliminarTipoFuncionario", "EliminarTipoDocumento", "EliminarRequisitoDocumento",
+            "AsignarTipoFuncionario", "AsignarTipoFuncionarioMasivo", "EliminarTipoFuncionario", "EliminarTipoDocumento", "EliminarRequisitoDocumento",
         ];
 
         var faltantes = esperadas.Except(operaciones).ToList();

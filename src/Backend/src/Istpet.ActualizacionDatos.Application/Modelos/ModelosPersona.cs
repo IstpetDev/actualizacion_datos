@@ -64,4 +64,5 @@ public sealed record PersonaDto(
     string Rol,
     bool AccesoHabilitado,
     string EstadoActualizacion,
-    DateTime FechaCreacionUtc);
+    DateTime FechaCreacionUtc,
+    Guid? TipoFuncionarioId = null);

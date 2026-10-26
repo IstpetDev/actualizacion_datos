@@ -50,5 +50,6 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0016](ADR-0016-interfaz-de-prueba-de-la-api.md) | Interfaz para probar la API en desarrollo (Scalar) | Propuesto |
 | [ADR-0017](ADR-0017-acceso-a-postgres-por-tunel-ssh.md) | Acceso a PostgreSQL de producción por túnel SSH | Vigente |
 | [ADR-0018](ADR-0018-la-carga-de-nomina-habilita-el-acceso.md) | La carga de nómina habilita el acceso de las personas | Vigente |
+| [ADR-0019](ADR-0019-asignacion-masiva-y-persistencia-tipo-funcionario.md) | Asignación masiva y persistencia de tipo de funcionario | Vigente |
 
 <!-- prueba del ci: este comentario se puede borrar -->
