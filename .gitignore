@@ -58,6 +58,9 @@ junit.xml
 .nuget/
 
 # Angular / Node
+.npmrc
+src/Frontend/.npmrc
+scripts/node-compat.cjs
 src/Frontend/dist/
 src/Frontend/tmp/
 src/Frontend/out-tsc/

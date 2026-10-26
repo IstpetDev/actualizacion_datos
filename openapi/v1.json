@@ -6375,6 +6375,10 @@
           "fechaCreacionUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "tieneFicha": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

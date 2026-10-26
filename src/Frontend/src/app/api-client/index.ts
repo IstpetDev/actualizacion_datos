@@ -6257,6 +6257,7 @@ export interface PersonaDto {
     accesoHabilitado: boolean;
     estadoActualizacion: string;
     fechaCreacionUtc: Date;
+    tieneFicha?: boolean;
 
     [key: string]: any;
 }
