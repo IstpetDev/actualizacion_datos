@@ -2,8 +2,8 @@
 
 **ID:** spec-0001  
 **Versión:** 0.1  
-**Estado:** Borrador para revisión funcional  
-**Revisor funcional:** Pendiente de asignar  
+**Estado:** Aprobado (2026-10-22, issue #14; ver «Revisión funcional»)  
+**Revisor funcional:** @AlexanderMartinez0410 con @JorgeDoicela  
 **Fecha:** 2026-10-20  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
 
