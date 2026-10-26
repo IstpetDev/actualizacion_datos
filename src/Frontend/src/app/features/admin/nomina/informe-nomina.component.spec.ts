@@ -54,6 +54,22 @@ describe('InformeNominaComponent', () => {
     );
   });
 
+  it('muestra_los_accesos_habilitados_de_personas_ya_cargadas_solo_si_hay', () => {
+    fixture.componentRef.setInput('resultado', mockResultadoCompleto);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="metrica-habilitados"]')).toBeNull();
+
+    fixture.componentRef.setInput('resultado', {
+      ...mockResultadoCompleto,
+      totalExistentesHabilitados: 7,
+    });
+    fixture.detectChanges();
+    expect(compiled.querySelector('[data-testid="metrica-habilitados"]')?.textContent).toContain(
+      '7',
+    );
+  });
+
   it('renderiza_tabla_de_rechazos_con_documento_anonimizado', () => {
     fixture.componentRef.setInput('resultado', mockResultadoCompleto);
     fixture.detectChanges();

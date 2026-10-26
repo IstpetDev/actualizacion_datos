@@ -6306,6 +6306,7 @@ export interface ResultadoCargaPersonasDto {
     advertencias: AdvertenciaCargaDto[];
     rechazos: RechazoCargaDto[];
     documentosCargados: string[];
+    totalExistentesHabilitados?: number;
 
     [key: string]: any;
 }
