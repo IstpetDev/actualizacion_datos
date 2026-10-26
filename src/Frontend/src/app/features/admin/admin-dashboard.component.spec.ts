@@ -151,6 +151,23 @@ describe('AdminDashboardComponent', () => {
     expect(component.mensajeExito()).toContain('creada exitosamente');
   });
 
+  it('la_tabla_de_personas_indica_si_el_acceso_esta_habilitado_o_pendiente', () => {
+    personasMock.push({
+      ...personasMock[0],
+      id: '22222222-2222-2222-2222-222222222222',
+      accesoHabilitado: false,
+    });
+    component.cambiarTab('personas');
+    fixture.detectChanges();
+    component.personas.set([...personasMock]);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelectorAll('[data-testid="acceso-habilitado"]').length).toBe(1);
+    expect(compiled.querySelectorAll('[data-testid="acceso-pendiente"]').length).toBe(1);
+    personasMock.pop();
+  });
+
   it('permite_cargar_nomina_de_personas_y_muestra_resultados', () => {
     component.cambiarTab('personas');
     fixture.detectChanges();

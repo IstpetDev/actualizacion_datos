@@ -47,7 +47,8 @@ public sealed record ResultadoCargaPersonasDto(
     int TotalDuplicadosOmitidos,
     List<AdvertenciaCargaDto> Advertencias,
     List<RechazoCargaDto> Rechazos,
-    List<string> DocumentosCargados);
+    List<string> DocumentosCargados,
+    int TotalExistentesHabilitados = 0);
 
 public sealed record HabilitarPersonasRequest(
     List<string>? Documentos = null,

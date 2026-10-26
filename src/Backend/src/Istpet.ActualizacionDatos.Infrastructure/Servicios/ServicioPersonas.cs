@@ -40,6 +40,7 @@ public class ServicioPersonas : IServicioPersonas
         var advertencias = new List<AdvertenciaCargaDto>();
         var rechazos = new List<RechazoCargaDto>();
         var totalDuplicados = 0;
+        var totalExistentesHabilitados = 0;
 
         // Cargar documentos existentes en la institución actual
         var existentesEnInstitucion = await _context.Personas
@@ -48,6 +49,12 @@ public class ServicioPersonas : IServicioPersonas
             .ToListAsync(ct);
 
         var setExistentes = new HashSet<string>(existentesEnInstitucion, StringComparer.OrdinalIgnoreCase);
+
+        // ADR-0018: estar en la nómina habilita el acceso; las personas cargadas antes con acceso pendiente se habilitan al volver a cargarlas.
+        var pendientesDeAcceso = (await _context.Personas
+                .Where(p => p.InstitucionId == institucionId && p.Rol == RolUsuario.Usuario && !p.AccesoHabilitado)
+                .ToListAsync(ct))
+            .ToDictionary(p => p.Documento, StringComparer.OrdinalIgnoreCase);
 
         // Catálogos precargados para resolución eficiente en memoria
         var tiposFuncionario = await _context.TiposFuncionario
@@ -107,6 +114,12 @@ public class ServicioPersonas : IServicioPersonas
             {
                 totalDuplicados++;
 
+                if (pendientesDeAcceso.Remove(docLimpio, out var personaPendiente))
+                {
+                    personaPendiente.HabilitarAcceso();
+                    totalExistentesHabilitados++;
+                }
+
                 // Si no tenía cuenta bancaria y en el archivo vienen datos bancarios, se registran como propuesta (ADR-0013)
                 if (_servicioCuentaBancaria != null && !string.IsNullOrWhiteSpace(item.NumCuentaBanco))
                 {
@@ -146,7 +159,7 @@ public class ServicioPersonas : IServicioPersonas
                 RolUsuario.Usuario,
                 nombreOriginal,
                 item.Correo,
-                accesoHabilitado: false, // RF-MUL-002: Espera habilitación del superadmin
+                accesoHabilitado: true, // ADR-0018: la carga por el admin de la institución habilita el acceso
                 estadoActualizacion: EstadoActualizacion.Borrador);
 
             // El código explícito tiene prioridad; si no coincide, la fila se carga sin tipo (ADR-0012).
@@ -353,7 +366,8 @@ public class ServicioPersonas : IServicioPersonas
             totalDuplicados,
             advertencias,
             rechazos,
-            cargados);
+            cargados,
+            totalExistentesHabilitados);
     }
 
     public async Task<ResultadoCargaPersonasDto> CargarDesdeArchivoAsync(Stream stream, string nombreArchivo, CancellationToken ct = default)

@@ -246,8 +246,8 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                 <h3 class="card-title">Cargar Nómina desde Archivo (.xlsx o .csv)</h3>
                 <p class="card-desc">
                   Suba la nómina en formato Excel o CSV. Los registros ya existentes se omitirán sin
-                  sobrescribir y las personas nuevas se habilitarán con sus datos personales y
-                  cuentas bancarias propuestas.
+                  sobrescribir sus datos (si tenían el acceso pendiente, se habilita) y las personas
+                  nuevas se habilitarán con sus datos personales y cuentas bancarias propuestas.
                 </p>
                 <div class="fila-archivo">
                   <input
@@ -374,6 +374,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                       <th>Nombre</th>
                       <th>Correo</th>
                       <th>Rol</th>
+                      <th>Acceso</th>
                       <th>Estado</th>
                     </tr>
                   </thead>
@@ -389,12 +390,23 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                           <span class="badge badge-info">{{ per.rol }}</span>
                         </td>
                         <td>
+                          @if (per.accesoHabilitado) {
+                            <span class="badge badge-success" data-testid="acceso-habilitado"
+                              >Habilitado</span
+                            >
+                          } @else {
+                            <span class="badge badge-secondary" data-testid="acceso-pendiente"
+                              >Pendiente</span
+                            >
+                          }
+                        </td>
+                        <td>
                           <span class="badge badge-warning">{{ per.estadoActualizacion }}</span>
                         </td>
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="5" class="text-center empty-state">
+                        <td colspan="6" class="text-center empty-state">
                           No hay personas registradas en la institución.
                         </td>
                       </tr>

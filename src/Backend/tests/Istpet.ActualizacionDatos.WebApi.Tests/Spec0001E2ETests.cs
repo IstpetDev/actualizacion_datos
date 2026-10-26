@@ -567,11 +567,8 @@ public sealed class Spec0001E2ETests : IDisposable
         var msgError = await respLoginInexistente.Content.ReadFromJsonAsync<MensajeRespuesta>();
         Assert.Equal("Credenciales incorrectas o usuario no habilitado.", msgError?.Mensaje);
 
-        // 4. RF-MUL-002, RF-ACC-004: Persona recién cargada no tiene acceso habilitado hasta que el superadmin/admin la habilite
-        var respLoginAntesDeHabilitar = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest("1710000001", "1710000001"));
-        Assert.Equal(HttpStatusCode.Unauthorized, respLoginAntesDeHabilitar.StatusCode);
-
-        // Superadmin habilita el acceso de la persona cargada (RF-MUL-002)
+        // 4. RF-MUL-002: el superadmin conserva la habilitación explícita; sobre una persona ya habilitada por la carga es inocua.
+        // Va antes del login porque el cliente de prueba conserva la cookie de la última sesión.
         var reqHabilitar = new HttpRequestMessage(HttpMethod.Post, $"/api/instituciones/{instAlphaId}/habilitar-personas")
         {
             Content = JsonContent.Create(new HabilitarPersonasRequest(Documentos: new List<string> { "1710000001" }))
@@ -579,7 +576,7 @@ public sealed class Spec0001E2ETests : IDisposable
         var respHabilitar = await _cliente.SendAsync(reqHabilitar);
         Assert.Equal(HttpStatusCode.OK, respHabilitar.StatusCode);
 
-        // Una vez habilitada, la persona puede autenticarse con su documento (RF-MUL-002, RF-ACC-002)
+        // ADR-0018: la persona cargada por el admin queda con acceso habilitado y se autentica con su documento (RF-ACC-002)
         var respLoginCargado = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest("1710000001", "1710000001"));
         Assert.Equal(HttpStatusCode.OK, respLoginCargado.StatusCode);
         var loginDto = await respLoginCargado.Content.ReadFromJsonAsync<ResultadoLoginDto>();
@@ -594,6 +591,48 @@ public sealed class Spec0001E2ETests : IDisposable
             Assert.Contains(auditorias, a => a.Accion == "CREAR_INSTITUCION");
             Assert.Contains(auditorias, a => a.Accion == "HABILITAR_PERSONAS");
         }
+    }
+
+    [Fact]
+    public async Task E2E_04b_Volver_a_cargar_la_nomina_habilita_a_las_personas_con_acceso_pendiente()
+    {
+        var reqCrearInst = new HttpRequestMessage(HttpMethod.Post, "/api/instituciones")
+        {
+            Content = JsonContent.Create(new CrearInstitucionRequest(
+                "Instituto Recarga",
+                new List<AdminInicialRequest> { new("1700000098", "Admin Recarga", "admin@recarga.ejemplo.test") }))
+        };
+        var respInst = await _cliente.SendAsync(reqCrearInst);
+        Assert.Equal(HttpStatusCode.Created, respInst.StatusCode);
+        var instId = (await respInst.Content.ReadFromJsonAsync<InstitucionDto>())!.Id;
+
+        // Persona cargada antes de ADR-0018: existe, pero con el acceso pendiente
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(instId), "1710000002", RolUsuario.Usuario, "Persona Pendiente", accesoHabilitado: false));
+            await db.SaveChangesAsync();
+        }
+
+        var respLoginAntes = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest("1710000002", "1710000002"));
+        Assert.Equal(HttpStatusCode.Unauthorized, respLoginAntes.StatusCode);
+
+        var reqRecarga = CrearRequest(
+            HttpMethod.Post,
+            "/api/personas/cargar",
+            instId,
+            "1700000098",
+            RolUsuario.Admin,
+            new CargarPersonasRequest(new List<PersonaCargaItem> { new("1710000002", "Persona Pendiente") }));
+        var respRecarga = await _cliente.SendAsync(reqRecarga);
+        Assert.Equal(HttpStatusCode.OK, respRecarga.StatusCode);
+        var resumen = await respRecarga.Content.ReadFromJsonAsync<ResultadoCargaPersonasDto>();
+        Assert.NotNull(resumen);
+        Assert.Equal(1, resumen.TotalDuplicadosOmitidos);
+        Assert.Equal(1, resumen.TotalExistentesHabilitados);
+
+        var respLoginDespues = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest("1710000002", "1710000002"));
+        Assert.Equal(HttpStatusCode.OK, respLoginDespues.StatusCode);
     }
 
     [Fact]
