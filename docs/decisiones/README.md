@@ -51,4 +51,5 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0017](ADR-0017-acceso-a-postgres-por-tunel-ssh.md) | Acceso a PostgreSQL de producción por túnel SSH | Vigente |
 | [ADR-0018](ADR-0018-la-carga-de-nomina-habilita-el-acceso.md) | La carga de nómina habilita el acceso de las personas | Vigente |
 
-<!-- prueba del ci: este comentario se puede borrar -->
+| [ADR-0019](ADR-0019-semillas-de-tipos-institucionales.md) | Semillas de tipos institucionales | Vigente |
+| [ADR-0020](ADR-0020-retirada-del-control-docente.md) | Retirada del control de clasificación docente | Vigente |
