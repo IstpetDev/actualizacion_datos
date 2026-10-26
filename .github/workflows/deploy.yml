@@ -1,5 +1,7 @@
-# Despliegue automático a producción (ADR-0011).
+# Despliegue automático a producción (ADR-0011), dividido en etapas (ADR-0015).
 # Se dispara únicamente al fusionar en la rama main (o por ejecución manual).
+#
+# construir -> transferir -> migrar -> desplegar -> verificar -> limpiar
 name: Despliegue a producción
 
 on:
@@ -14,84 +16,167 @@ concurrency:
   group: deploy-produccion
   cancel-in-progress: false
 
+env:
+  DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
+
 jobs:
-  desplegar:
-    name: Construir y desplegar a producción
+  construir:
+    name: Construir imagen de ${{ matrix.servicio }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    strategy:
+      fail-fast: true
+      matrix:
+        servicio: [backend, frontend]
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Construir imagen Docker
+        env:
+          SHA: ${{ github.sha }}
+          SERVICIO: ${{ matrix.servicio }}
+        run: |
+          docker build --pull -t "actualizacion-datos-${SERVICIO}:${SHA}" -t "actualizacion-datos-${SERVICIO}:latest" "src/${SERVICIO^}"
+
+      - name: Empaquetar imagen
+        env:
+          SHA: ${{ github.sha }}
+          SERVICIO: ${{ matrix.servicio }}
+        run: |
+          docker save "actualizacion-datos-${SERVICIO}:${SHA}" "actualizacion-datos-${SERVICIO}:latest" | gzip > "imagen-${SERVICIO}.tar.gz"
+
+      - name: Publicar imagen como artefacto
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: imagen-${{ matrix.servicio }}
+          path: imagen-${{ matrix.servicio }}.tar.gz
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  transferir:
+    name: Transferir imágenes y archivos al servidor
+    needs: construir
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: produccion
 
     steps:
       - name: Descargar código fuente
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Construir imágenes Docker
-        env:
-          SHA: ${{ github.sha }}
-        run: |
-          echo "Construyendo imagen del backend..."
-          docker build --pull -t "actualizacion-datos-backend:${SHA}" -t "actualizacion-datos-backend:latest" src/Backend
-
-          echo "Construyendo imagen del frontend..."
-          docker build --pull -t "actualizacion-datos-frontend:${SHA}" -t "actualizacion-datos-frontend:latest" src/Frontend
-
-      - name: Conectar a Tailscale
-        uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4
+      - name: Descargar imágenes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          pattern: imagen-*
+          merge-multiple: true
 
-      - name: Configurar cliente SSH
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Transferir imágenes Docker al servidor
         env:
-          SHA: ${{ github.sha }}
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
-          echo "Empaquetando y transfiriendo imágenes por SSH..."
-          docker save "actualizacion-datos-backend:${SHA}" "actualizacion-datos-frontend:${SHA}" "actualizacion-datos-backend:latest" "actualizacion-datos-frontend:latest" \
-            | ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load"
+          for archivo in imagen-backend.tar.gz imagen-frontend.tar.gz; do
+            echo "Transfiriendo ${archivo}..."
+            gunzip -c "${archivo}" \
+              | ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load"
+          done
 
       - name: Sincronizar archivos de orquestación
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
-          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" "powershell -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.prod.yml "${USER}@${HOST}:${DIR}/docker-compose.prod.yml"
           scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa deploy/nginx/default.conf "${USER}@${HOST}:${DIR}/deploy/nginx/default.conf"
+
+  migrar:
+    name: Migrar base de datos
+    needs: transferir
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: produccion
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Ejecutar migraciones de base de datos
         env:
           SHA: ${{ github.sha }}
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
-          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
         run: |
           echo "Ejecutando migraciones con flag explícito --migrar..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml run --rm backend --migrar"
 
-      - name: Actualizar servicios en producción
+  desplegar:
+    name: Actualizar servicios en producción
+    needs: migrar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: produccion
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Actualizar servicios
         env:
           SHA: ${{ github.sha }}
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
-          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
         run: |
           echo "Levantando versión ${SHA}..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
-      - name: Verificación de salud (Smoke Tests)
+  verificar:
+    name: Verificación de salud (Smoke Tests)
+    needs: desplegar
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: produccion
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Comprobar /health
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
@@ -101,8 +186,28 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "curl.exe -f -s http://127.0.0.1:8088/health"
 
+  limpiar:
+    name: Limpiar imágenes antiguas
+    needs: [transferir, migrar, desplegar, verificar]
+    # Corre aunque falle una etapa posterior, pero no si nunca se llegó a transferir.
+    if: ${{ always() && needs.transferir.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: produccion
+
+    steps:
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/actions
+
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Limpiar imágenes antiguas
-        if: always()
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
