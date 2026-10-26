@@ -11,10 +11,21 @@ import { nuloSiNoHayContenido, textoEstadoCuenta } from './cuenta-bancaria';
   template: `
     <section class="tarjeta-cuentas" aria-labelledby="titulo-estado-cuentas">
       <div class="encabezado-cuentas">
-        <h2 id="titulo-estado-cuentas" class="titulo-cuentas">Cuentas bancarias</h2>
-        <p class="subtitulo-cuentas">
-          Monitoreo y cotejo de cuentas bancarias frente a la nómina institucional cargada.
-        </p>
+        <div class="titulos-cuentas">
+          <h2 id="titulo-estado-cuentas" class="titulo-cuentas">Cuentas bancarias</h2>
+          <p class="subtitulo-cuentas">
+            Monitoreo y cotejo de cuentas bancarias frente a la nómina institucional cargada.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="btn-refrescar"
+          (click)="cargar()"
+          [disabled]="cargando()"
+          data-testid="btn-refrescar-cuentas"
+        >
+          {{ cargando() ? 'Actualizando…' : 'Actualizar' }}
+        </button>
       </div>
 
       @if (error()) {
@@ -28,8 +39,8 @@ import { nuloSiNoHayContenido, textoEstadoCuenta } from './cuenta-bancaria';
           <p>Cargando cuentas…</p>
         </div>
       } @else if (!estados().length) {
-        <div class="estado-vacio">
-          <p>No hay personas cargadas.</p>
+        <div class="estado-vacio" data-testid="estado-cuentas-vacio">
+          <p>No hay personas registradas en la institución o la nómina aún no ha sido cargada.</p>
         </div>
       } @else {
         <div class="resumen-barra" data-testid="resumen-cuentas">
@@ -92,7 +103,35 @@ import { nuloSiNoHayContenido, textoEstadoCuenta } from './cuenta-bancaria';
       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
     }
     .encabezado-cuentas {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
       margin-bottom: 1rem;
+    }
+    .titulos-cuentas {
+      flex: 1;
+      min-width: 200px;
+    }
+    .btn-refrescar {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+    .btn-refrescar:hover:not(:disabled) {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+    .btn-refrescar:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     .titulo-cuentas {
       font-size: 1.125rem;
@@ -249,6 +288,18 @@ import { nuloSiNoHayContenido, textoEstadoCuenta } from './cuenta-bancaria';
       color: #15803d;
       border: 1px solid #bbf7d0;
     }
+    @media (max-width: 640px) {
+      .tarjeta-cuentas {
+        padding: 1rem;
+      }
+      .encabezado-cuentas {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn-refrescar {
+        align-self: flex-start;
+      }
+    }
   `,
 })
 export class EstadoCuentasBancariasComponent implements OnInit {
@@ -258,6 +309,12 @@ export class EstadoCuentasBancariasComponent implements OnInit {
   readonly error = signal('');
 
   ngOnInit(): void {
+    this.cargar();
+  }
+
+  cargar(): void {
+    this.cargando.set(true);
+    this.error.set('');
     this.cliente
       .listarEstadosCuentasBancarias()
       .pipe(finalize(() => this.cargando.set(false)))
