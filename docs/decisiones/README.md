@@ -55,3 +55,5 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0020](ADR-0020-retirada-del-control-docente.md) | Retirada del control de clasificación docente | Vigente |
 | [ADR-0021](ADR-0021-carga-de-catalogos-en-produccion.md) | Carga de catálogos en producción | Vigente |
 | [ADR-0022](ADR-0022-bancos-e-instituciones-superiores.md) | Bancos e instituciones de educación superior | Vigente |
+| [ADR-0023](ADR-0023-validacion-y-dominios-institucionales.md) | Validación y dominios institucionales | Vigente |
+| [ADR-0024](ADR-0024-perfil-profesional-generado.md) | Perfil profesional generado | Vigente |

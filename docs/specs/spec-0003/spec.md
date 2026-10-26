@@ -230,3 +230,7 @@ Los datos personales, la formación por niveles, los cursos (curso → `NombreEv
 **Cambios de 0.1 a 0.2:** se agregan referencias personales y familiares, perfil, foto, formación académica por niveles y declaración firmada al alcance; los obligatorios del formato (RF-HDV-009, 018, 019); la carga de nómina con valores nulos y la división de nombres (RF-HDV-021 a 023, ADR-0012); el escenario 4; los puntos PD-HDV-09 a 16; y las respuestas propuestas para PD-HDV-01 a 08.
 
 Aprobación registrada: `plan.md`, `tasks.md` y `test-e2e.md` se crearon el 2026-10-22 a partir de la versión 0.3 y se ajustaron a la 0.4. Cualquier cambio de alcance vuelve a revisión funcional antes de ejecutar tareas dependientes.
+
+## Modificación aprobada por spec-0005 v0.1 — issue #88
+
+La aprobación explícita del 2026-10-26 («si, continua» en la conversación de #88) y ADR-0024 sustituyen únicamente la parte de perfil de RF-HDV-020: la persona ya no lo escribe ni puede enviarlo. Se genera al revisar y exportar, con datos del expediente y sin persistir texto automático. La foto continúa opcional y bajo ADR-0006. Esta nota no aprueba las demás propuestas de v0.5 ni reescribe la aprobación histórica de v0.4.

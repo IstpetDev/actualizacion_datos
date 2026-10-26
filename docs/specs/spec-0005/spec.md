@@ -4,7 +4,7 @@
 
 **Versión:** 0.1
 
-**Estado:** Borrador para revisión funcional
+**Estado:** Aprobado
 
 **Revisor funcional:** Responsable solicitante de #88
 
@@ -172,12 +172,12 @@ Los logs de validación no contienen cuerpo, nombres, teléfonos, correos, perfi
 
 **Versión revisada:** 0.1.
 
-**Decisión:** Pendiente.
+**Decisión:** Aprobada; PD-VAL-01 a PD-VAL-05 aceptados.
 
-**Aprobó:** Pendiente de aprobación explícita de esta versión en la conversación.
+**Aprobó:** Responsable solicitante en esta conversación.
 
-**Fecha y evidencia:** Se preparó a partir del issue y del código de `develop` revisados el 2026-10-26; todavía no autoriza implementar las propuestas nuevas.
+**Fecha y evidencia:** 2026-10-26; respuesta «si, continua» después de presentar y solicitar aprobación de spec-0005 v0.1.
 
-**Ajustes solicitados:** Pendiente.
+**Ajustes solicitados:** Ninguno.
 
 Solo tras aprobar esta versión se crean `plan.md`, `tasks.md` y `test-e2e.md`, se registran los ADR correspondientes y se implementa. La aprobación del merge y cierre ya está autorizada por la solicitud del usuario, condicionada a completar y probar todo el alcance.
