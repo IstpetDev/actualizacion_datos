@@ -804,6 +804,59 @@
         }
       }
     },
+    "/api/personas/acceso": {
+      "post": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "CambiarAccesoPersonas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarAccesoPersonasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoCambioAccesoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/campanas": {
       "post": {
         "tags": [
@@ -4193,6 +4246,31 @@
           }
         }
       },
+      "CambiarAccesoPersonasRequest": {
+        "required": [
+          "habilitar"
+        ],
+        "type": "object",
+        "properties": {
+          "habilitar": {
+            "type": "boolean"
+          },
+          "personaIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "todas": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "CambiarContrasenaRequest": {
         "required": [
           "contrasenaActual",
@@ -6495,6 +6573,31 @@
         "properties": {
           "estado": {
             "type": "string"
+          }
+        }
+      },
+      "ResultadoCambioAccesoDto": {
+        "required": [
+          "cambiadas",
+          "yaEnEstado"
+        ],
+        "type": "object",
+        "properties": {
+          "cambiadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "yaEnEstado": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

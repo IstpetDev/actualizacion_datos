@@ -49,3 +49,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0002](spec-0002/spec.md) | Pantallas del usuario, issue #11 | Aprobado (2026-10-22) |
 | [spec-0003](spec-0003/spec.md) | Hoja de vida del personal | Aprobado (v0.4, 2026-10-22); v0.5 en revisión |
 | [spec-0004](spec-0004/spec.md) | Tipos institucionales y catálogos completos en producción, issue #80 | v0.2 ampliada aprobada (2026-10-26) |
+| [spec-0005](spec-0005/spec.md) | Habilitación y deshabilitación del acceso de personas | Borrador (2026-10-26) |
