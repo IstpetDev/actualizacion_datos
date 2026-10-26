@@ -35,4 +35,4 @@ Las pruebas existentes de configuración cubren permisos de usuario/supervisor, 
 - V-10 (RF-CAT-004/009): opciones reales de beca/financiamiento y capacitación; banco y tipo de cuenta, cuenta solo ficticia y alternativa de banco escrito; confirmar respuesta enmascarada.
 - V-11 (RF-CAT-010): manifiesto, fuentes oficiales y hashes; acciones externas fijadas por hash; permisos y contratos existentes conservados.
 
-Resultados V-06 a V-11: pendientes; se registran en `docs/evidencia/issue-80.md`. Las capturas de v0.1 con API simulada no aprueban estos recorridos.
+Resultados V-06 a V-11: aprobados; ejecución y límites registrados en `docs/evidencia/issue-80.md`. Las capturas de v0.1 con API simulada no aprueban estos recorridos.

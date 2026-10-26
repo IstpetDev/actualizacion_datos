@@ -103,11 +103,11 @@ Solo se crean datos de configuración institucional, sin datos personales ni ser
 
 ## Criterios de aceptación
 
-- [ ] RF-TIP-001: una institución nueva contiene los tipos aprobados, con instrucciones y vencimientos correctos.
-- [ ] RF-TIP-002 y 003: doble ejecución, catálogo parcial, personalización, desactivación y aislamiento verificados.
-- [ ] RF-TIP-004: orden sugerido verificado al cargar, crear, reiniciar y editar, con lista vacía y tipos inactivos.
-- [ ] RF-TIP-005: pantalla sin el control ni columna docente; ediciones preservan el dato interno.
-- [ ] RF-TIP-006: decisiones en ADR; issue conserva etiqueta `decision`.
+- [x] RF-TIP-001: una institución nueva contiene los tipos aprobados, con instrucciones y vencimientos correctos.
+- [x] RF-TIP-002 y 003: doble ejecución, catálogo parcial, personalización, desactivación y aislamiento verificados.
+- [x] RF-TIP-004: orden sugerido verificado al cargar, crear, reiniciar y editar, con lista vacía y tipos inactivos.
+- [x] RF-TIP-005: pantalla sin el control ni columna docente; ediciones preservan el dato interno.
+- [x] RF-TIP-006: decisiones en ADR; issue conserva etiqueta `decision`.
 - [ ] Compilación y pruebas de backend y frontend ejecutadas; salida real registrada; checks del HEAD final correctos y PR sin conflictos antes de integrar y cerrar #80.
 
 ## Puntos que requieren decisión
@@ -214,14 +214,14 @@ Las cinco listas cortas que no requieren CSV (`EstadoCivil`, `TipoSangre`, `Tipo
 
 ### Criterios de aceptación de v0.2
 
-- [ ] Se mantienen todos los criterios RF-TIP-001 a 006 de v0.1 y sus pruebas.
-- [ ] RF-CAT-001 y 002: artefacto de producción con datos, migración y carga en entorno limpio, sin descargas al arrancar.
-- [ ] RF-CAT-003: doble ejecución, ids estables, inactivos conservados, errores y recuperación verificados en PostgreSQL.
-- [ ] RF-CAT-004 y 005: bancos e institutos con fuente oficial y hashes; 64 universidades conservadas y alternativas de texto verificadas.
-- [ ] RF-CAT-006: arranque Production rechazado ante catálogo o relación obligatoria ausente; error operativo identificable sin información sensible.
-- [ ] RF-CAT-007 a 009: formularios contra API y PostgreSQL reales en entorno limpio; ficha, tercer nivel, IES, instituto, otra institución, becas y bancos comprobados.
-- [ ] RF-CAT-010: decisiones en ADR y trazabilidad completa; sin datos personales reales, secretos ni cambios de reglas de GitHub.
-- [ ] Compilaciones, pruebas, formato, lint, imagen Docker y validación de workflows afectados aprobados; OpenAPI y cliente regenerados si cambia algún contrato.
+- [x] Se mantienen todos los criterios RF-TIP-001 a 006 de v0.1 y sus pruebas.
+- [x] RF-CAT-001 y 002: artefacto de producción con datos, migración y carga en entorno limpio, sin descargas al arrancar.
+- [x] RF-CAT-003: doble ejecución, ids estables, inactivos conservados, errores y recuperación verificados en PostgreSQL.
+- [x] RF-CAT-004 y 005: bancos e institutos con fuente oficial y hashes; 64 universidades conservadas y alternativas de texto verificadas.
+- [x] RF-CAT-006: arranque Production rechazado ante catálogo o relación obligatoria ausente; error operativo identificable sin información sensible.
+- [x] RF-CAT-007 a 009: formularios contra API y PostgreSQL reales en entorno limpio; ficha, tercer nivel, IES, instituto, otra institución, becas y bancos comprobados.
+- [x] RF-CAT-010: decisiones en ADR y trazabilidad completa; sin datos personales reales, secretos ni cambios de reglas de GitHub.
+- [x] Compilaciones, pruebas, formato, lint, imagen Docker y validación de workflows afectados aprobados; OpenAPI y cliente regenerados si cambia algún contrato.
 - [ ] PR #91 actualizado al alcance final, sin conflictos y con los checks aplicables correctos sobre su HEAD final. Intentar aprobación, integrar a `develop` y verificar PR integrado e issue #80 cerrado por completado, sin comentarios adicionales.
 
 ### Decisiones pendientes de aprobación de v0.2

@@ -1,45 +1,81 @@
-# Evidencia del issue #80 — Tipos institucionales
+# Evidencia del issue #80 — Tipos y catálogos completos
 
-Fecha: 2026-10-26. Spec aprobada: spec-0004 v0.1. Código verificado: commit `74d377d`, con backend en `ac22381`. Rama: `feature/80-semillas-tipos-institucionales`, desde `develop` (`48d6e54`). Los commits posteriores de documentación no cambian el código probado.
+Fecha: 2026-10-26. Spec-0004 v0.1 y ampliación v0.2 aprobadas explícitamente en esta conversación. Rama `feature/80-semillas-tipos-institucionales`; PR #91 hacia `develop`. Se incorporó `origin/develop` (`1752d00`) sin conflictos mediante merge, sin reescribir historial.
 
-## Resultados ejecutados
+## Resultado ejecutado sobre el alcance completo
 
-| Comando / recorrido | Resultado real |
+| Comprobación | Salida real |
 |---|---|
 | `dotnet build src/Backend` | `Build succeeded. 0 Warning(s). 0 Error(s).` |
-| `dotnet test src/Backend --no-build` | Application: 13; Domain: 102; WebApi: 253. Total: **368 aprobadas, 0 fallidas, 0 omitidas**, incluidas las de integración con PostgreSQL 17 mediante Testcontainers. |
-| `dotnet test src/Backend --filter FullyQualifiedName~SemillaTiposInstitucionales` | **5 aprobadas, 0 fallidas, 0 omitidas**: alta, repetición y personalización, reversión atómica, HTTP y migración real. |
-| `dotnet format src/Backend --verify-no-changes --no-restore` | Salida vacía; código de salida 0. |
-| `corepack pnpm --dir src/Frontend test:ci` | **29 archivos y 192 pruebas aprobadas**. |
-| Pruebas del componente antes de corregirlo | **3 fallidas y 6 aprobadas**: control docente visible, orden inicial incorrecto y falta de recálculo. |
-| Pruebas del componente después de corregirlo | **9 aprobadas**. |
-| `corepack pnpm --dir src/Frontend build` | Compilación de producción correcta. Cuatro avisos por presupuesto de estilos en componentes existentes de hoja de vida, supervisor, admin y usuario; ningún error. |
+| `dotnet test src/Backend --no-build -- RunConfiguration.MaxCpuCount=1` | Application: **13**; Domain: **102**; WebApi: **258**. Total **373 aprobadas, 0 fallidas, 0 omitidas**, incluidas las de integración con PostgreSQL 17 mediante Testcontainers. |
+| Pruebas de catálogos y contrato OpenAPI | **36 aprobadas**: carga completa, repetición, archivos ausentes, hashes, CSV inválidos, padres, preservación y validación Production. |
+| `dotnet format src/Backend --verify-no-changes --no-restore` | Código 0, sin diferencias. |
+| `corepack pnpm --dir src/Frontend test:ci` | **30 archivos, 196 pruebas aprobadas**. |
+| `corepack pnpm --dir src/Frontend build` | Compilación de producción correcta. Cuatro avisos de presupuesto de estilos existentes; ningún error. |
 | `corepack pnpm --dir src/Frontend lint` | `All files pass linting.` |
 | `corepack pnpm --dir src/Frontend format:check` | `All matched files use Prettier code style!` |
-| `corepack pnpm --dir src/Frontend audit --audit-level=high` | Código 0; cuatro vulnerabilidades de severidad inferior al umbral: dos bajas y dos moderadas. No se modificaron dependencias. |
-| `dotnet list src/Backend package --vulnerable --include-transitive` | Ningún paquete vulnerable en los siete proyectos según las fuentes consultadas por NuGet. |
-| Regeneración OpenAPI/NSwag durante compilación Debug | Sin diferencias en `openapi/v1.json` ni en el cliente Angular; no cambia el contrato. |
-| Recorrido Chromium sobre Angular servido localmente | Control y columna docente ausentes; seis documentos; orden inicial 7; alta de documento ficticio y nuevo orden 8; sin errores de página. API simulada con interceptación de peticiones, no una conexión contra el backend. |
-| `git diff origin/develop --check` | Sin errores de espacios en los cambios. |
+| `docker build -f src/Backend/Dockerfile -t actualizacion-datos-backend:issue-80 .` | Imagen construida correctamente, etiqueta de prueba local. |
+| actionlint y shellcheck con las imágenes fijadas en CI | Código 0 y sin diagnósticos. |
+| Pruebas de scripts de ramas y filtro por rutas | **55 y 15 casos correctos**, respectivamente. Los cambios de CSV y `.dockerignore` disparan backend/OpenAPI. |
+| OpenAPI y NSwag durante compilación Debug | Regenerados sin diferencias de contrato ni cliente. |
+| `git diff --check` | Sin errores. |
 
-Entorno: .NET SDK 10.0.402, Node 22.23.3 y pnpm 12.4.1 mediante Corepack. No había ejecutable directo de pnpm; se usó `corepack pnpm` con la versión fijada por el proyecto. Se restauraron las dependencias del backend y frontend tras actualizar `develop`.
+Entorno: SDK .NET 10.0.402, Node 22.23.3, pnpm 12.4.1 mediante Corepack. La primera ejecución conjunta de backend se abortó por cierre del proceso de pruebas; se repitió y la ejecución completa terminó con las 373 pruebas aprobadas. No se omiten pruebas ni checks.
 
-## Cobertura de los criterios
+Auditoría ejecutada durante v0.1, con las mismas dependencias: NuGet sin paquetes vulnerables; frontend sin altas/críticas, con dos bajas y dos moderadas. No se añaden dependencias al producto.
 
-- **V-01 / RF-TIP-001:** el alta HTTP de una institución devuelve los tipos base. Los tests de persistencia verifican nombres, instrucciones, vencimientos, órdenes y ausencia de requisitos automáticos. Un trigger SQLite que rechaza la inserción de documentos demuestra que se revierten institución, administradores, auditoría y tipos.
-- **V-02 / RF-TIP-002 y 003:** el helper se ejecuta dos veces antes de guardar y otra después; no duplica ni cambia los tipos personalizados o inactivos. La consulta usa un contexto de otra institución para verificar el alcance explícito. PostgreSQL migra desde `AgregarCuentaBancaria` con un catálogo parcial y otro vacío, aplica la nueva migración, repite su SQL real y revierte/reaplica. Los identificadores no cambian; el alta nueva y la migración producen los mismos valores. El filtro institucional conserva el aislamiento.
-- **V-03 / RF-TIP-004:** Vitest comprueba máximo más uno con órdenes 1, 4 y 7, incluido el inactivo; cancelación; lista vacía; edición que conserva 4; dos altas con recarga asíncrona. Chromium verifica visualmente el orden 7 y el siguiente 8.
-- **V-04 / RF-TIP-005:** el DOM no contiene el check ni la cabecera docente. Las solicitudes de edición y desactivación preservan `EsDocente = true`; una creación manual envía `false`. La prueba HTTP edita y desactiva los tipos sembrados.
-- **V-05 / RF-TIP-006:** ADR-0019 y ADR-0020 registrados después de la aprobación funcional explícita de spec v0.1 y antes de sus tareas. El issue #80 tiene la etiqueta `decision`; #81 ya estaba cerrado por unificación.
+## Semillas institucionales: RF-TIP-001 a 006
 
-## Capturas con datos ficticios
+- Alta HTTP con dos funcionarios y seis documentos, instrucciones, vencimientos y órdenes aprobados; ningún requisito creado automáticamente.
+- Doble semilla antes y después de guardar: conserva ids, personalizaciones y desactivaciones. Otra institución permanece aislada.
+- Trigger SQLite que rechaza la inserción de documentos: se revierten institución, administradores, auditoría y tipos.
+- PostgreSQL real: institución parcial y otra vacía antes de la migración, ejecución del SQL dos veces y reversión/reaplicación; mismos ids y valores conservados. El alta y la migración producen la misma lista.
+- Formulario sin check ni columna docente; edición y desactivación conservan `EsDocente`. Orden sugerido máximo más uno, incluidos inactivos, recarga asíncrona, edición y lista vacía. Las tres regresiones originales fallaron antes de corregirse.
+- ADR-0019/0020 vigentes y etiqueta `decision` en #80. #81 ya estaba cerrado por unificación.
 
-Se capturaron sobre la aplicación Angular real, con respuestas API simuladas y sin datos personales reales. No son evidencia de carga de catálogos globales en producción.
+## Recorrido real de v0.2: RF-CAT-001 a 010
 
-![Tipos de funcionario sin el control ni la columna docente](issue-80/funcionarios.png)
+Ejecutado con `scripts/verificar-catalogos-produccion.mjs`: imagen Release del backend, PostgreSQL 17 recién creado, distribución Angular de producción y Chromium. **Sin interceptar ni simular la API**. El script elimina sus contenedores y red efímeros al terminar. No usa `.env`, servidores, claves ni datos personales de producción.
 
-![Seis tipos de documento y siguiente orden sugerido en 7](issue-80/documentos.png)
+Salida final:
+
+```text
+V-06/07: imagen con 17 CSV, Production incompleta rechazada, 2350 elementos, doble carga e inactivo conservado.
+V-08: país, etnia y cascada geográfica; ficha guardada en PostgreSQL.
+V-09: 280 IES; tres títulos con respaldo y UNESCO guardados y recuperados; becas disponibles.
+V-10: 28 bancos y 2 tipos, componente con API real; banco de catálogo y escrito, número enmascarado. Sin errores de página.
+```
+
+- **V-06/07:** verifica los 17 CSV dentro de la imagen, migra una base vacía y demuestra que Production rechaza iniciarse antes de cargar catálogos. Ejecuta `--cargar-catalogos` dos veces, compara cantidad y huella de ids/códigos, y conserva una etnia desactivada. Comprueba 2350 elementos y los 21 tipos con activos. Las pruebas SQLite/PostgreSQL complementan errores de hash, archivo ausente, padre inexistente y archivo parcialmente inválido; el lote se recupera al repetirlo.
+- **V-08:** login real de persona ficticia, cambio de clave inicial, campaña ficticia abierta, selección de país, etnia, provincia → cantón → parroquia; guardado de ficha y consulta real de ids persistidos. Se corrigió la búsqueda de Ecuador por id fijo 601 para usar su código estable `218`.
+- **V-09:** 280 IES (64 universidades y 216 institutos). Guarda tres títulos de tercer nivel, con universidad, instituto y otra institución extranjera ficticia, campos UNESCO dependientes, registro y PDF ficticios; recarga y comprueba los tres respaldos/ids. Guarda también un estudio con beca y financiamiento y comprueba sus valores persistidos.
+- **V-10:** componente bancario existente conectado a la ficha; muestra 28 bancos y dos tipos de cuenta. Guarda desde el formulario una cuenta ficticia con banco del catálogo y otra con banco escrito, recarga y comprueba la máscara. Capacitación tiene sus opciones.
+- **V-11:** nuevos datos con fuente oficial y hashes en `fuentes.json`; ADR-0021/0022 aprobados antes de implementar. La distribución contiene datos y manifiesto; no descarga fuentes durante el arranque. No cambia el contrato HTTP ni los permisos.
+
+El recorrido real detectó que DateOnly se enviaba como fecha con hora y daba 400. `fecha-sin-hora.ts` corrige los seis controles de fechas de la hoja de vida sin cambiar DateTime de campañas. Su prueba verifica ambos formatos. También se conectaron los campos UNESCO y de becas ya contemplados en los contratos; no se añadieron reglas de negocio.
+
+Para reproducir, desde la raíz, con Docker y Node compatibles:
+
+```bash
+docker build -f src/Backend/Dockerfile -t actualizacion-datos-backend:issue-80 .
+corepack pnpm --dir src/Frontend build
+npm install --prefix /tmp/issue-80-navegador --no-audit --no-fund playwright@1.64.1
+/tmp/issue-80-navegador/node_modules/.bin/playwright install chromium
+PLAYWRIGHT_MODULO=/tmp/issue-80-navegador/node_modules/playwright/test node scripts/verificar-catalogos-produccion.mjs
+```
+
+En esta ejecución se usó un Chromium previamente instalado mediante `NAVEGADOR_PRUEBA`; el script admite esa ruta opcional. Playwright queda fuera del proyecto y no cambia sus dependencias. No ejecutar el script sobre una base real: siempre crea su propia PostgreSQL y red.
+
+## Capturas de v0.2 con API real y datos ficticios
+
+![Ficha con catálogos y selección geográfica](issue-80/v2/ficha.png)
+
+![Tres títulos persistidos con sus respaldos](issue-80/v2/titulos.png)
+
+![Cuenta ficticia enmascarada y banco escrito](issue-80/v2/cuenta.png)
+
+Las capturas originales `issue-80/funcionarios.png` y `documentos.png` documentan la interfaz de v0.1 con API simulada; no sustituyen este recorrido real.
 
 ## Integración
 
-La integración queda condicionada a revisar conflictos y el CI del HEAD final. La propuesta posterior de ampliar los catálogos globales de producción en el comentario del issue se consulta por separado: no está incluida en spec-0004 v0.1 ni se presenta como implementada por estas pruebas.
+No se ejecutó ningún despliegue real. La integración del PR #91 y el cierre de #80 están autorizados tras confirmar criterios, ausencia de conflictos y checks aplicables correctos sobre el HEAD final. La autoaprobación se intentará sin comentario; si GitHub rechaza que el autor se apruebe, se registrará esa limitación en la respuesta final.
