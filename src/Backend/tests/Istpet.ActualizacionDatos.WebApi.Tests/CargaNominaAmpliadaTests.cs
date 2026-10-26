@@ -296,4 +296,24 @@ public sealed class CargaNominaAmpliadaTests : IDisposable
         Assert.Contains(resultado.Advertencias, a => a.Fila == 2 && a.Columna == "Sangre");
         Assert.Contains(resultado.Advertencias, a => a.Fila == 2 && a.Columna == "Teléfono 2");
     }
+
+    [Theory]
+    [InlineData("0900000000", true, false)] [InlineData("020000000", false, true)]
+    [InlineData("09000abc00", false, false)] [InlineData("0800000000", false, false)] [InlineData("09 00000000", false, false)]
+    public async Task Importacion_no_reclasifica_telefonos_invalidos_y_advierte_sin_eco(string telefono, bool celular, bool convencional)
+    {
+        var institucion = InstitucionId.Nuevo();
+        await using var db = await CrearContextoAsync(institucion);
+        var servicio = new ServicioPersonas(db, new ContextoInstitucion(institucion));
+        var resultado = await servicio.CargarPersonasAsync(new CargarPersonasRequest([
+            new PersonaCargaItem("0000000088", Nombre: "FICTICIO APELLIDO NOMBRE ENSAYO", Nacimiento: "2099-01-01", Telefono2: telefono)
+        ]));
+        Assert.Equal(1, resultado.TotalCargados);
+        var ficha = await db.FichasPersonales.SingleAsync();
+        Assert.Equal(celular, ficha.Celular is not null);
+        Assert.Equal(convencional, ficha.TelefonoConvencional is not null);
+        Assert.Null(ficha.FechaNacimiento);
+        Assert.All(resultado.Advertencias, a => { Assert.DoesNotContain(telefono, a.Motivo); Assert.DoesNotContain("2099-01-01", a.Motivo); });
+        if (!celular && !convencional) Assert.Contains(resultado.Advertencias, a => a.Columna == "Teléfono 2");
+    }
 }

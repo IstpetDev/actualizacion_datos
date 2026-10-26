@@ -24,6 +24,8 @@ public class InstitucionConfiguracion : IEntityTypeConfiguration<Institucion>
             .IsRequired()
             .HasColumnName("activa");
 
+        builder.Property(i => i.DominiosCorreoJson).HasColumnName("dominios_correo_json").HasDefaultValue("[]").IsRequired();
+
         builder.Property(i => i.FechaCreacionUtc)
             .IsRequired()
             .HasColumnName("fecha_creacion_utc");

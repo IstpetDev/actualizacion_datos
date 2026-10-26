@@ -1,3 +1,5 @@
+import { ConfiguracionClient } from '../../api-client';
+import politicaPrueba from '../usuario/hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -43,6 +45,10 @@ describe('mi cuenta bancaria', () => {
     TestBed.configureTestingModule({
       imports: [MiCuentaBancariaComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: CuentaBancariaClient, useValue: cuentas },
         { provide: CatalogosClient, useValue: catalogos },
       ],
@@ -181,11 +187,11 @@ describe('mi cuenta bancaria', () => {
     const fixture = preparar(true);
     const componente = fixture.componentInstance;
     componente.nombreBancoOtro = 'Banco ficticio';
-    componente.numero = '123';
+    componente.numero = '0000000000';
     componente.guardar();
     fixture.detectChanges();
     expect(componente.error()).toContain('entre 6 y 20');
-    expect(componente.numero).toBe('123');
+    expect(componente.numero).toBe('0000000000');
     expect(componente.ocupado()).toBe(false);
   });
 

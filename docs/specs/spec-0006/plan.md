@@ -1,6 +1,6 @@
 # Validación y perfil automático — Plan
 
-Spec v0.1 aprobada el 2026-10-26 («si, continua»). ADR-0023/0024 registrados antes de implementar. Un coordinador, sin subagentes, sin dependencias nuevas.
+Spec v0.1 aprobada el 2026-10-26 («si, continua»). ADR-0024/0024 registrados antes de implementar. Un coordinador, sin subagentes, sin dependencias nuevas.
 
 | Requisitos | Tarea | Rutas desde la raíz | Verificación |
 |---|---|---|---|

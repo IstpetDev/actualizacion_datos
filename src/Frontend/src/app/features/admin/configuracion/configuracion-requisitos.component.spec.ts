@@ -1,3 +1,4 @@
+import politicaPrueba from '../../usuario/hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
@@ -16,6 +17,7 @@ describe('ConfiguracionRequisitosComponent', () => {
   let component: ConfiguracionRequisitosComponent;
   let fixture: ComponentFixture<ConfiguracionRequisitosComponent>;
   let configClientMock: {
+    obtenerPoliticaValidacion: Mock;
     listarTiposFuncionario: Mock;
     crearTipoFuncionario: Mock;
     actualizarTipoFuncionario: Mock;
@@ -85,6 +87,7 @@ describe('ConfiguracionRequisitosComponent', () => {
 
   beforeEach(async () => {
     configClientMock = {
+      obtenerPoliticaValidacion: vi.fn().mockReturnValue(of(politicaPrueba)),
       listarTiposFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario)),
       crearTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),
       actualizarTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),

@@ -239,7 +239,7 @@ try {
   await pagina.getByTestId("input-primer-apellido").fill("Ficticia");
   await pagina.getByTestId("input-fecha-nacimiento").fill("1990-01-01");
   await pagina.getByTestId("input-calle-principal").fill("Calle ficticia");
-  await pagina.getByTestId("input-celular").fill("0000000000");
+  await pagina.getByTestId("input-celular").fill("0900000000");
   await pagina.getByTestId("input-correo-inst").fill("persona@ejemplo.test");
   const elegir = async (testid, indice = 1) => {
     const select = pagina.getByTestId(testid);

@@ -17,3 +17,5 @@ public sealed record InstitucionDto(
     string Nombre,
     bool Activa,
     DateTime FechaCreacionUtc);
+
+public sealed record GuardarDominiosCorreoRequest(string[] DominiosCorreoPermitidos);

@@ -1,11 +1,11 @@
-# ADR-0023 — Validación y dominios institucionales
+# ADR-0024 — Validación y dominios institucionales
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26
 
 ## Contexto
 
-Spec-0005 v0.1 aprobada mediante «si, continua» define formatos, dominios, borradores y corrección de antiguos. El contrato de errores de #94 sigue en un PR ajeno abierto; se debe mantener compatibilidad sin copiar su middleware global.
+Spec-0006 v0.1 aprobada mediante «si, continua» define formatos, dominios, borradores y corrección de antiguos. El contrato de errores de #94 sigue en un PR ajeno abierto; se debe mantener compatibilidad sin copiar su middleware global.
 
 ## Opciones
 
@@ -31,4 +31,4 @@ Cambian DTO y cliente generado en el mismo PR. Se conserva el borrador incomplet
 - ADR-0004 — Aislamiento institucional.
 - ADR-0010 — Hoja de vida.
 - ADR-0014 — Propuesto; solo regla telefónica pedida por #88.
-- ADR-0024 — Perfil automático y exportación.
+- ADR-0025 — Perfil automático y exportación.

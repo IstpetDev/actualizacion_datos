@@ -1,3 +1,5 @@
+import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../../../api-client';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -68,6 +70,10 @@ describe('CapacitacionesComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CapacitacionesComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosMock },
         { provide: ArchivosClient, useValue: { subirArchivo: vi.fn() } },
@@ -146,5 +152,24 @@ describe('CapacitacionesComponent', () => {
     expect(compiled.querySelector('[data-testid="btn-nueva-capacitacion"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-editar-capacitacion"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-eliminar-capacitacion"]')).toBeNull();
+  });
+
+  it('muestra_error_de_formato_y_bloquea_guardar_hasta_corregir', async () => {
+    component.abrirFormulario();
+    component.modelo.numeroHoras = 0;
+    fixture.detectChanges();
+    const boton = fixture.nativeElement.querySelector(
+      '[data-testid="btn-guardar-capacitacion"]',
+    ) as HTMLButtonElement;
+    expect(boton.disabled).toBe(true);
+    await fixture.whenStable();
+    expect(
+      fixture.nativeElement.querySelector('#error-modelo-numeroHoras').textContent.trim().length,
+    ).toBeGreaterThan(5);
+    component.modelo.numeroHoras = 24;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(boton.disabled).toBe(false);
   });
 });

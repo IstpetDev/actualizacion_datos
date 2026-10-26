@@ -1410,6 +1410,13 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("activa");
 
+                    b.Property<string>("DominiosCorreoJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("[]")
+                        .HasColumnName("dominios_correo_json");
+
                     b.Property<DateTime>("FechaCreacionUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_creacion_utc");

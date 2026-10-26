@@ -11,7 +11,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class ConfiguracionHojaDeVidaTests : IDisposable
+public sealed partial class ConfiguracionHojaDeVidaTests : IDisposable
 {
     private readonly SqliteConnection _conexion = new("DataSource=:memory:");
     private readonly WebApplicationFactory<Program> _fabrica;

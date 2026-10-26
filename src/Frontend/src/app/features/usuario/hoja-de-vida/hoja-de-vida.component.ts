@@ -1,3 +1,4 @@
+import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
@@ -67,7 +68,7 @@ export type TabSeccionHojaVida =
             <button
               type="button"
               class="btn btn-primary"
-              [disabled]="guardando() || cargando()"
+              [disabled]="guardando() || cargando() || validacion.hayErrores()"
               (click)="validarYEnviar()"
               data-testid="btn-enviar-revision-top"
             >
@@ -239,7 +240,7 @@ export type TabSeccionHojaVida =
               <button
                 type="button"
                 class="btn btn-primary btn-lg"
-                [disabled]="guardando()"
+                [disabled]="guardando() || validacion.hayErrores()"
                 (click)="validarYEnviar()"
                 data-testid="btn-enviar-revision"
               >
@@ -516,6 +517,7 @@ export type TabSeccionHojaVida =
   ],
 })
 export class HojaDeVidaComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
 
   readonly cargando = this.state.cargando;
@@ -547,6 +549,7 @@ export class HojaDeVidaComponent implements OnInit {
   }
 
   validarYEnviar(): void {
+    if (this.validacion.hayErrores()) return;
     this.state.obtenerFaltantes().subscribe({
       next: (faltantes: FaltanteEnvioDto[]) => {
         if (faltantes && faltantes.length > 0) {

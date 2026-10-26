@@ -1,11 +1,11 @@
-# ADR-0024 — Perfil profesional generado
+# ADR-0025 — Perfil profesional generado
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26
 
 ## Contexto
 
-RF-HDV-020 de spec-0003 permitía perfil escrito por la persona. El responsable funcional solicita generación automática en #88, aprobada en spec-0005 v0.1 mediante «si, continua». La exportación actual no tiene CV individual.
+RF-HDV-020 de spec-0003 permitía perfil escrito por la persona. El responsable funcional solicita generación automática en #88, aprobada en spec-0006 v0.1 mediante «si, continua». La exportación actual no tiene CV individual.
 
 ## Opciones
 
@@ -26,4 +26,4 @@ No se necesita guardar ni sincronizar el texto; revisión y exportación usan la
 
 - ADR-0010 — Estructura del expediente.
 - ADR-0013 — Cuenta enmascarada.
-- ADR-0023 — Validación y dominios.
+- ADR-0024 — Validación y dominios.

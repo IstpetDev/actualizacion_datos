@@ -1,6 +1,10 @@
+import {
+  ValidacionHojaDeVidaService,
+  fechaPolitica,
+} from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   CapacitacionDto,
@@ -17,6 +21,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
   standalone: true,
   imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
   template: `
+    @if (validacion.errorCarga()) {
+      <p role="alert">
+        {{ validacion.errorCarga() }}
+        <button type="button" (click)="validacion.cargar()">Reintentar</button>
+      </p>
+    }
+
     <section class="seccion-capacitaciones" data-testid="seccion-capacitaciones">
       <header class="seccion-header">
         <div class="header-titulos">
@@ -54,6 +65,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 >Nombre del Evento / Curso <span class="text-danger">*</span></label
               >
               <input
+                [attr.aria-describedby]="'error-modelo-nombreEvento'"
                 id="nombreEvento"
                 type="text"
                 class="form-control"
@@ -61,6 +73,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Metodologías Ágiles de Aprendizaje"
                 data-testid="input-nombre-evento"
               />
+              @if (validacion.mensaje(modelo, 'capacitacion', 'nombreEvento'); as mensaje) {
+                <small id="error-modelo-nombreEvento" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
@@ -68,6 +85,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 >Institución Organizadora <span class="text-danger">*</span></label
               >
               <input
+                [attr.aria-describedby]="'error-modelo-institucionOrganizadora'"
                 id="institucionOrganizadora"
                 type="text"
                 class="form-control"
@@ -75,6 +93,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Red de Institutos Tecnológicos"
                 data-testid="input-institucion-organizadora"
               />
+              @if (
+                validacion.mensaje(modelo, 'capacitacion', 'institucionOrganizadora');
+                as mensaje
+              ) {
+                <small id="error-modelo-institucionOrganizadora" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
           </div>
 
@@ -82,6 +108,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <div class="form-group">
               <label for="tipoCapacitacion">Tipo de Capacitación</label>
               <select
+                [attr.aria-describedby]="'error-modelo-tipoCapacitacionId'"
                 id="tipoCapacitacion"
                 class="form-control"
                 [(ngModel)]="modelo.tipoCapacitacionId"
@@ -92,11 +119,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   <option [ngValue]="tc.id">{{ tc.nombre }}</option>
                 }
               </select>
+              @if (validacion.mensaje(modelo, 'capacitacion', 'tipoCapacitacionId'); as mensaje) {
+                <small id="error-modelo-tipoCapacitacionId" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
               <label for="tipoParticipacion">Tipo de Participación</label>
               <select
+                [attr.aria-describedby]="'error-modelo-tipoParticipacion'"
                 id="tipoParticipacion"
                 class="form-control"
                 [(ngModel)]="modelo.tipoParticipacion"
@@ -108,11 +141,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <option value="Facilitador">Facilitador / Instructor</option>
                 <option value="Organizador">Organizador</option>
               </select>
+              @if (validacion.mensaje(modelo, 'capacitacion', 'tipoParticipacion'); as mensaje) {
+                <small id="error-modelo-tipoParticipacion" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
               <label for="numeroHoras">Horas de Duración</label>
               <input
+                [attr.aria-describedby]="'error-modelo-numeroHoras'"
                 id="numeroHoras"
                 type="number"
                 min="1"
@@ -121,6 +160,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="40"
                 data-testid="input-numero-horas"
               />
+              @if (validacion.mensaje(modelo, 'capacitacion', 'numeroHoras'); as mensaje) {
+                <small id="error-modelo-numeroHoras" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
           </div>
 
@@ -128,6 +172,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <div class="form-group">
               <label for="fechaInicio">Fecha de Inicio</label>
               <input
+                [attr.aria-describedby]="'error-modelo-fechaInicio'"
                 id="fechaInicio"
                 type="date"
                 class="form-control"
@@ -135,11 +180,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 (ngModelChange)="onFechaInicioChange($event)"
                 data-testid="input-fecha-inicio"
               />
+              @if (validacion.mensaje(modelo, 'capacitacion', 'fechaInicio'); as mensaje) {
+                <small id="error-modelo-fechaInicio" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
               <label for="fechaFin">Fecha de Finalización</label>
               <input
+                [attr.aria-describedby]="'error-modelo-fechaFin'"
                 id="fechaFin"
                 type="date"
                 class="form-control"
@@ -147,6 +198,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 (ngModelChange)="onFechaFinChange($event)"
                 data-testid="input-fecha-fin"
               />
+              @if (validacion.mensaje(modelo, 'capacitacion', 'fechaFin'); as mensaje) {
+                <small id="error-modelo-fechaFin" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
           </div>
 
@@ -154,6 +210,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <div class="form-group">
               <label for="lugar">Lugar / Ciudad o Modalidad</label>
               <input
+                [attr.aria-describedby]="'error-modelo-lugar'"
                 id="lugar"
                 type="text"
                 class="form-control"
@@ -161,15 +218,32 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Quito / Virtual"
                 data-testid="input-lugar"
               />
+              @if (validacion.mensaje(modelo, 'capacitacion', 'lugar'); as mensaje) {
+                <small id="error-modelo-lugar" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-check-centrado">
               <label class="checkbox-label">
                 <input
+                  [attr.aria-describedby]="'error-modelo-financiadaPorInstitucion'"
                   type="checkbox"
                   [(ngModel)]="modelo.financiadaPorInstitucion"
                   data-testid="checkbox-financiada"
                 />
+                @if (
+                  validacion.mensaje(modelo, 'capacitacion', 'financiadaPorInstitucion');
+                  as mensaje
+                ) {
+                  <small
+                    id="error-modelo-financiadaPorInstitucion"
+                    class="text-danger"
+                    role="alert"
+                    >{{ mensaje }}</small
+                  >
+                }
                 <span>¿Financiada o auspiciada por la institución?</span>
               </label>
             </div>
@@ -201,7 +275,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              [disabled]="guardando()"
+              [disabled]="guardando() || validacion.invalido(modelo, 'capacitacion')"
               (click)="guardar()"
               data-testid="btn-guardar-capacitacion"
             >
@@ -470,6 +544,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
   ],
 })
 export class CapacitacionesComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
+  private readonly registroValidacion = this.validacion.registrarFormulario(
+    'capacitaciones',
+    () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'capacitacion'),
+    inject(DestroyRef),
+  );
+  readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -558,6 +639,7 @@ export class CapacitacionesComponent implements OnInit {
   }
 
   guardar(): void {
+    if (this.validacion.invalido(this.modelo, 'capacitacion')) return;
     if (!this.modelo.nombreEvento?.trim()) {
       this.errorFormulario.set('El nombre del evento o curso es obligatorio.');
       return;
@@ -569,7 +651,10 @@ export class CapacitacionesComponent implements OnInit {
 
     this.state.guardarCapacitacion(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar la capacitación.'),
+      error: (err) => {
+        this.validacion.registrarError(err, this.modelo);
+        this.errorFormulario.set(err?.message || 'Error al guardar la capacitación.');
+      },
     });
   }
 

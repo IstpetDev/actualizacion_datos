@@ -31,7 +31,8 @@ public sealed class SemillaTiposInstitucionalesIntegracionTests
 
         var parcial = InstitucionId.Nuevo();
         var vacia = InstitucionId.Nuevo();
-        db.Instituciones.AddRange(new Institucion(parcial, "Institución ficticia parcial"), new Institucion(vacia, "Institución ficticia vacía"));
+        // La inserción representa el esquema histórico anterior a dominios_correo_json.
+        await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO instituciones (id, nombre, activa, fecha_creacion_utc) VALUES ({parcial.Valor}, {"Institución ficticia parcial"}, true, {DateTime.UtcNow}), ({vacia.Valor}, {"Institución ficticia vacía"}, true, {DateTime.UtcNow})");
         var docente = new TipoFuncionario(Guid.NewGuid(), parcial, "DOCENTE", "Tipo ficticio personalizado", false, false);
         var cedula = new TipoDocumento(Guid.NewGuid(), parcial, "CEDULA", "Documento ficticio personalizado", "Instrucción ficticia", false, 25, false);
         db.TiposFuncionario.Add(docente);

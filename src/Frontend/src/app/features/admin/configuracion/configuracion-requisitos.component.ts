@@ -1,3 +1,4 @@
+import { DominiosCorreoComponent } from './dominios-correo.component';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DominiosCorreoComponent],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -59,6 +60,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
           </div>
         }
 
+        <app-dominios-correo />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button

@@ -1,6 +1,10 @@
+import {
+  ValidacionHojaDeVidaService,
+  fechaPolitica,
+} from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ElementoCatalogoDto,
@@ -17,6 +21,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
   standalone: true,
   imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
   template: `
+    @if (validacion.errorCarga()) {
+      <p role="alert">
+        {{ validacion.errorCarga() }}
+        <button type="button" (click)="validacion.cargar()">Reintentar</button>
+      </p>
+    }
+
     <section class="seccion-experiencia" data-testid="seccion-experiencia-laboral">
       <header class="seccion-header">
         <div class="header-titulos">
@@ -54,6 +65,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 >Empresa / Institución Empleadora <span class="text-danger">*</span></label
               >
               <input
+                [attr.aria-describedby]="'error-modelo-empleador'"
                 id="empleador"
                 type="text"
                 class="form-control"
@@ -61,6 +73,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Instituto Superior Tecnológico..."
                 data-testid="input-empleador"
               />
+              @if (validacion.mensaje(modelo, 'experiencia', 'empleador'); as mensaje) {
+                <small id="error-modelo-empleador" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
@@ -68,6 +85,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 >Cargo o Puesto Desempeñado <span class="text-danger">*</span></label
               >
               <input
+                [attr.aria-describedby]="'error-modelo-cargo'"
                 id="cargo"
                 type="text"
                 class="form-control"
@@ -75,6 +93,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Docente a Tiempo Completo / Desarrollador"
                 data-testid="input-cargo"
               />
+              @if (validacion.mensaje(modelo, 'experiencia', 'cargo'); as mensaje) {
+                <small id="error-modelo-cargo" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
           </div>
 
@@ -82,6 +105,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <div class="form-group">
               <label for="paisExperiencia">País</label>
               <select
+                [attr.aria-describedby]="'error-modelo-paisId'"
                 id="paisExperiencia"
                 class="form-control"
                 [(ngModel)]="modelo.paisId"
@@ -92,11 +116,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   <option [ngValue]="p.id">{{ p.nombre }}</option>
                 }
               </select>
+              @if (validacion.mensaje(modelo, 'experiencia', 'paisId'); as mensaje) {
+                <small id="error-modelo-paisId" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
               <label for="ciudadExperiencia">Ciudad</label>
               <input
+                [attr.aria-describedby]="'error-modelo-ciudad'"
                 id="ciudadExperiencia"
                 type="text"
                 class="form-control"
@@ -104,6 +134,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 placeholder="Ej. Quito"
                 data-testid="input-ciudad-experiencia"
               />
+              @if (validacion.mensaje(modelo, 'experiencia', 'ciudad'); as mensaje) {
+                <small id="error-modelo-ciudad" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
           </div>
 
@@ -112,6 +147,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <div class="form-group">
               <label for="fechaInicio">Fecha de Inicio <span class="text-danger">*</span></label>
               <input
+                [attr.aria-describedby]="'error-modelo-fechaInicio'"
                 id="fechaInicio"
                 type="date"
                 class="form-control"
@@ -119,11 +155,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 (ngModelChange)="onFechaInicioChange($event)"
                 data-testid="input-fecha-inicio"
               />
+              @if (validacion.mensaje(modelo, 'experiencia', 'fechaInicio'); as mensaje) {
+                <small id="error-modelo-fechaInicio" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-group">
               <label for="fechaFin">Fecha de Salida</label>
               <input
+                [attr.aria-describedby]="'error-modelo-fechaFin'"
                 id="fechaFin"
                 type="date"
                 class="form-control"
@@ -132,16 +174,27 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 (ngModelChange)="onFechaFinChange($event)"
                 data-testid="input-fecha-fin"
               />
+              @if (validacion.mensaje(modelo, 'experiencia', 'fechaFin'); as mensaje) {
+                <small id="error-modelo-fechaFin" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
             </div>
 
             <div class="form-check-centrado">
               <label class="checkbox-label">
                 <input
+                  [attr.aria-describedby]="'error-modelo-trabajaActualmente'"
                   type="checkbox"
                   [(ngModel)]="modelo.trabajaActualmente"
                   (ngModelChange)="onTrabajaActualmenteChange($event)"
                   data-testid="checkbox-trabaja-actualmente"
                 />
+                @if (validacion.mensaje(modelo, 'experiencia', 'trabajaActualmente'); as mensaje) {
+                  <small id="error-modelo-trabajaActualmente" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
                 <span>Trabajo actualmente aquí</span>
               </label>
             </div>
@@ -150,6 +203,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <div class="form-group mt-3">
             <label for="funciones">Principales Funciones y Responsabilidades</label>
             <textarea
+              [attr.aria-describedby]="'error-modelo-funciones'"
               id="funciones"
               rows="3"
               class="form-control"
@@ -157,6 +211,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               placeholder="Describa brevemente las funciones desarrolladas..."
               data-testid="textarea-funciones"
             ></textarea>
+            @if (validacion.mensaje(modelo, 'experiencia', 'funciones'); as mensaje) {
+              <small id="error-modelo-funciones" class="text-danger" role="alert">{{
+                mensaje
+              }}</small>
+            }
           </div>
 
           <!-- Respaldo Digital de Experiencia -->
@@ -185,7 +244,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <button
               type="button"
               class="btn btn-primary btn-sm"
-              [disabled]="guardando()"
+              [disabled]="guardando() || validacion.invalido(modelo, 'experiencia')"
               (click)="guardar()"
               data-testid="btn-guardar-experiencia"
             >
@@ -459,6 +518,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
   ],
 })
 export class ExperienciaLaboralComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
+  private readonly registroValidacion = this.validacion.registrarFormulario(
+    'experiencia-laboral',
+    () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'experiencia'),
+    inject(DestroyRef),
+  );
+  readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -564,6 +630,7 @@ export class ExperienciaLaboralComponent implements OnInit {
       return;
     }
 
+    if (this.validacion.invalido(this.modelo, 'experiencia')) return;
     this.state.guardarExperiencia(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
       error: (err) =>

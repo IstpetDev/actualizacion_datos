@@ -1,6 +1,6 @@
 # Validación y perfil automático — Tareas
 
-Spec v0.1 y plan aprobados; estado: en ejecución. Rama `feature/88-validacion-ficha-y-perfil`. Responsable único: coordinador. ADR-0023/0024 vigentes. Sin subagentes.
+Spec v0.1 y plan aprobados; estado: en ejecución. Rama `feature/88-validacion-ficha-y-perfil`. Responsable único: coordinador. ADR-0024/0024 vigentes. Sin subagentes.
 
 - [x] T-00 Registrar aprobación, nota de RF-HDV-020 y ADR antes de implementar.
 - [ ] T-01 Reglas/metadatos y errores seguros; matriz por campo en xUnit, integración con los guardados y carga de nómina.
