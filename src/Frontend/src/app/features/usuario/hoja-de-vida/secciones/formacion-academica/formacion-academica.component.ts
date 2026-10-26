@@ -427,6 +427,36 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <div class="beca-campos-box mt-2" data-testid="seccion-beca">
                   <div class="grid-dos">
                     <div class="form-group">
+                      <label for="tipoBeca">Tipo de beca</label>
+                      <select
+                        id="tipoBeca"
+                        class="form-control"
+                        [(ngModel)]="modeloEnCurso.tipoBecaId"
+                        data-testid="select-tipo-beca"
+                      >
+                        <option [ngValue]="undefined">Seleccione tipo...</option>
+                        @for (tipo of tiposBeca(); track tipo.id) {
+                          <option [ngValue]="tipo.id">{{ tipo.nombre }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="financiamientoBeca">Financiamiento de beca</label>
+                      <select
+                        id="financiamientoBeca"
+                        class="form-control"
+                        [(ngModel)]="modeloEnCurso.financiamientoBecaId"
+                        data-testid="select-financiamiento-beca"
+                      >
+                        <option [ngValue]="undefined">Seleccione financiamiento...</option>
+                        @for (tipo of financiamientosBeca(); track tipo.id) {
+                          <option [ngValue]="tipo.id">{{ tipo.nombre }}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+                  <div class="grid-dos">
+                    <div class="form-group">
                       <label for="porcentajeBeca">Porcentaje de Cobertura (%)</label>
                       <input
                         id="porcentajeBeca"

@@ -241,6 +241,7 @@ describe('FormacionAcademicaComponent', () => {
   });
 
   it('conserva beca y financiamiento al editar y los limpia al desmarcar', () => {
+    component.subtabActiva.set('en-curso');
     component.editarEnCurso({
       id: 'estudio-ficticio',
       universidadId: undefined,
@@ -258,6 +259,15 @@ describe('FormacionAcademicaComponent', () => {
       porcentajeBeca: 50,
       fechaActualizacionUtc: new Date(),
     });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="select-tipo-beca"]'),
+    ).toBeTruthy();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="select-financiamiento-beca"]',
+      ),
+    ).toBeTruthy();
     expect(component.modeloEnCurso.tipoBecaId).toBe(40);
     expect(component.modeloEnCurso.financiamientoBecaId).toBe(50);
     expect(component.modeloEnCurso.tieneBeca).toBe(true);
