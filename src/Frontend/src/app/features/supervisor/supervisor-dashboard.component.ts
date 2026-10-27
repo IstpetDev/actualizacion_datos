@@ -1,8 +1,10 @@
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  API_BASE_URL,
   ArchivosClient,
   ArchivoDto,
   DevolverActualizacionRequest,
@@ -15,6 +17,7 @@ import {
 import { AuthService } from '../../core/auth';
 import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
 import { ExpedienteSeccionesComponent } from './revision/expediente-secciones.component';
+import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-archivo.util';
 
 @Component({
   selector: 'app-supervisor-dashboard',
@@ -125,6 +128,15 @@ import { ExpedienteSeccionesComponent } from './revision/expediente-secciones.co
               </h2>
             </div>
             <div class="expediente-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                (click)="descargarDocumentoPdf()"
+                [disabled]="descargandoPdf() || procesando()"
+                data-testid="btn-descargar-hdv-pdf"
+              >
+                {{ descargandoPdf() ? 'Descargando PDF...' : 'Descargar Hoja de Vida (PDF)' }}
+              </button>
               <button
                 type="button"
                 class="btn btn-danger"
@@ -802,11 +814,14 @@ export class SupervisorDashboardComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly revisionClient = inject(RevisionClient);
   private readonly archivosClient = inject(ArchivosClient);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
 
   readonly pendientes = signal<ResumenRevisionPendienteDto[]>([]);
   readonly cargando = signal<boolean>(false);
   readonly procesando = signal<boolean>(false);
   readonly cargandoExpediente = signal<boolean>(false);
+  readonly descargandoPdf = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
 
@@ -1009,5 +1024,39 @@ export class SupervisorDashboardComponent implements OnInit {
 
   obtenerClaves(obj: Record<string, unknown>): string[] {
     return Object.keys(obj || {});
+  }
+
+  descargarDocumentoPdf(): void {
+    const exp = this.expedienteSeleccionado();
+    if (!exp || this.descargandoPdf()) return;
+
+    this.descargandoPdf.set(true);
+    this.error.set(null);
+
+    const url = `${this.baseUrl}/api/personas/${exp.id}/documento-hoja-de-vida`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) {
+            this.error.set('No se recibió el documento PDF.');
+            this.descargandoPdf.set(false);
+            return;
+          }
+          const nombreArchivo =
+            extraerNombreArchivo(res.headers.get('content-disposition')) ||
+            `hoja-de-vida-${exp.documento}.pdf`;
+          descargarBlob(blob, nombreArchivo);
+          this.descargandoPdf.set(false);
+        },
+        error: (err) => {
+          this.error.set(mensajeError(err, 'Error al descargar la hoja de vida en PDF.'));
+          this.descargandoPdf.set(false);
+        },
+      });
   }
 }

@@ -133,25 +133,25 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 
 ## T-10 — Pantallas de plantillas y marca
 
-- [ ] Vitest: el `superadmin` lista, crea, publica y marca predeterminada; el `admin` elige plantilla, acepta versión nueva, sube logo y portada, fija colores, lema y compromiso; error accesible.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Vitest: el `superadmin` lista, crea, publica y marca predeterminada; el `admin` elige plantilla, acepta versión nueva, sube logo y portada, fija colores, lema y compromiso; error accesible.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. Implementados `PlantillasHojaDeVidaComponent` para superadmin y `ConfiguracionDocumentoComponent` para admin en Angular 22, con pruebas unitarias exhaustivas en Vitest (396 pruebas totales superadas), linter y formateo Prettier en verde.  
 **Bloqueos:** T-05, T-06.
 
 ## T-11 — Descarga y vista previa en pantalla
 
-- [ ] Vitest: botón de descarga en revisión y panel del `admin`; vista previa para la persona.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Vitest: botón de descarga en revisión y panel del `admin`; vista previa para la persona.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. Integrados botones de descarga en `HojaDeVidaComponent` (vista previa para el usuario), `SupervisorDashboardComponent` (revisión de expediente) y `AdminDashboardComponent` (listado institucional de personas), con utilidades `descarga-archivo.util.ts` y pruebas Vitest.  
 **Bloqueos:** T-08.
 
 ## T-12 — Verificación integral
 
-- [ ] `dotnet build src/Backend`, `dotnet test src/Backend` (con Docker para la integración).
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check`; `openapi/v1.json` y cliente al día.
-- [ ] Ejecutar `test-e2e.md` con datos ficticios y revisar un PDF a mano.
+- [x] `dotnet build src/Backend`, `dotnet test src/Backend` (con Docker para la integración).
+- [x] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check`; `openapi/v1.json` y cliente al día.
+- [x] Ejecutar `test-e2e.md` con datos ficticios y revisar un PDF a mano.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. 591 pruebas unitarias en backend (.NET 10) y 396 pruebas unitarias en frontend (Angular 22) pasando al 100%. Formato verificado con `dotnet format --verify-no-changes` y `prettier --check .`.  
 **Bloqueos:** T-01 a T-11.

@@ -3,10 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
+  ArchivosClient,
   ConfiguracionClient,
+  ConfiguracionDocumentoClient,
   ConfiguracionSeccionesClient,
   PersonaDto,
   PersonasClient,
+  PlantillasHojaDeVidaClient,
   RequisitoDocumentoDto,
   TipoDocumentoDto,
   TipoFuncionarioDto,
@@ -142,6 +145,27 @@ describe('ConfiguracionRequisitosComponent', () => {
           useValue: {
             listarSeccionesConfiguracion: vi.fn().mockReturnValue(of([])),
             cambiarEstadoSeccion: vi.fn().mockReturnValue(of({})),
+          },
+        },
+        {
+          provide: ConfiguracionDocumentoClient,
+          useValue: {
+            obtenerConfiguracionDocumento: vi.fn().mockReturnValue(of({})),
+            actualizarMarcaDocumento: vi.fn().mockReturnValue(of({})),
+            elegirPlantillaDocumento: vi.fn().mockReturnValue(of({})),
+            aceptarVersionDocumento: vi.fn().mockReturnValue(of({})),
+          },
+        },
+        {
+          provide: PlantillasHojaDeVidaClient,
+          useValue: {
+            listarPlantillasHojaDeVida: vi.fn().mockReturnValue(of([])),
+          },
+        },
+        {
+          provide: ArchivosClient,
+          useValue: {
+            subirArchivo: vi.fn().mockReturnValue(of({ id: 'mock-archivo-id' })),
           },
         },
       ],
