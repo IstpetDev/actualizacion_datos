@@ -156,7 +156,7 @@ describe('aviso de protección de datos al acceder', () => {
       .mockReturnValueOnce(of(pendiente))
       .mockReturnValueOnce(of(nuevo));
     cliente.aceptarTratamientoDatos.mockReturnValue(
-      throwError(() => ({ status: 409, mensaje: 'El aviso cambió' })),
+      throwError(() => ({ codigo: 'VERSION_AVISO_CAMBIADA', mensaje: 'El aviso cambió' })),
     );
     const componente = preparar().componentInstance;
     componente.acepta = true;

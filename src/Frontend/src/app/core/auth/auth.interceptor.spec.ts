@@ -69,4 +69,15 @@ describe('interceptor de sesión por cookie', () => {
     expect(auth.marcarProteccionPendiente).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/proteccion-datos']);
   });
+  it('lee_el_error_blob_del_cliente_generado_para_exigir_la_aceptacion', async () => {
+    const texto = JSON.stringify({ codigo: 'ACEPTACION_PROTECCION_DATOS_PENDIENTE' });
+    const cuerpo = new Blob([texto], { type: 'application/json' });
+    // jsdom puede no implementar Blob.text; el navegador admite esta API nativa.
+    if (typeof cuerpo.text !== 'function')
+      Object.defineProperty(cuerpo, 'text', { value: () => Promise.resolve(texto) });
+    http.get('/api/mis-datos', { responseType: 'blob' }).subscribe({ error: () => undefined });
+    controlador.expectOne('/api/mis-datos').flush(cuerpo, { status: 403, statusText: 'Forbidden' });
+    await vi.waitFor(() => expect(router.navigate).toHaveBeenCalledWith(['/proteccion-datos']));
+    expect(auth.marcarProteccionPendiente).toHaveBeenCalledTimes(1);
+  });
 });

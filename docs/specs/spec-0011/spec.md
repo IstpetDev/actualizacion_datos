@@ -118,15 +118,15 @@ El texto o su fuente oficial institucional, la evidencia de autorización y la v
 ## Criterios de aceptación
 
 - [ ] Esta versión tiene aprobación funcional explícita con roles, secuencia, rechazo, nuevas versiones y transición resueltos, y el aviso institucional autorizado o su fuente exacta está identificado (RF-PDP-001, 007, 009, 012; PD-PDP-01 a 05).
-- [ ] Se revisaron `TerminosService`, `TerminosController` y las tres entidades solicitadas, con procedencia y conclusiones conceptuales registradas, sin copiar código ni conectar bases externas (PD-PDP-07).
-- [ ] El primer acceso presenta la decisión explícita antes de cualquier dato de negocio y UI/API aplican el mismo bloqueo, incluidas llamadas directas, rutas nuevas, archivos y todos los roles aprobados (RF-PDP-001 a 004, 013, 014; E-PDP-01, 02, 09, 13).
-- [ ] Rechazar o cerrar no acepta; reingresar muestra el pendiente; una aceptación vigente no se pide de nuevo (RF-PDP-005 a 007; E-PDP-03, 04).
-- [ ] La evidencia mínima identifica persona, institución y versión exacta con fecha UTC; es idempotente y permite comprobar contenido histórico. Una versión nueva bloquea también sesiones abiertas (RF-PDP-005, 006, 009; E-PDP-05, 08, 14).
-- [ ] Fallos de carga/guardado, ausencia/vencimiento/ambigüedad y respuestas perdidas no generan aceptación implícita ni acceso anticipado (RF-PDP-008, 009; E-PDP-06, 07, 08).
-- [ ] Enviar sigue exigiendo aceptación vigente en backend; el flujo anterior no crea registros o decisiones incoherentes (RF-PDP-010, 011; E-PDP-11).
-- [ ] Las cuentas y sesiones antiguas siguen la transición aprobada; el booleano previo no acredita una versión y no se eliminan expedientes (RF-PDP-012; E-PDP-12).
+- [x] Se revisaron `TerminosService`, `TerminosController` y las tres entidades solicitadas, con procedencia y conclusiones conceptuales registradas, sin copiar código ni conectar bases externas (PD-PDP-07).
+- [x] El primer acceso presenta la decisión explícita antes de cualquier dato de negocio y UI/API aplican el mismo bloqueo, incluidas llamadas directas, rutas nuevas, archivos y todos los roles aprobados (RF-PDP-001 a 004, 013, 014; E-PDP-01, 02, 09, 13).
+- [x] Rechazar o cerrar no acepta; reingresar muestra el pendiente; una aceptación vigente no se pide de nuevo (RF-PDP-005 a 007; E-PDP-03, 04).
+- [x] La evidencia mínima identifica persona, institución y versión exacta con fecha UTC; es idempotente y permite comprobar contenido histórico. Una versión nueva bloquea también sesiones abiertas (RF-PDP-005, 006, 009; E-PDP-05, 08, 14).
+- [x] Fallos de carga/guardado, ausencia/vencimiento/ambigüedad y respuestas perdidas no generan aceptación implícita ni acceso anticipado (RF-PDP-008, 009; E-PDP-06, 07, 08).
+- [x] Enviar sigue exigiendo aceptación vigente en backend; el flujo anterior no crea registros o decisiones incoherentes (RF-PDP-010, 011; E-PDP-11).
+- [x] Las cuentas y sesiones antiguas siguen la transición aprobada; el booleano previo no acredita una versión y no se eliminan expedientes (RF-PDP-012; E-PDP-12).
 - [ ] Hay pruebas con datos ficticios de todos los escenarios, incluidos aislamiento institucional, suplantación, concurrencia y accesibilidad. OpenAPI y cliente se regeneran cuando cambie la API; resultados reales de compilación, pruebas y checks constan en el PR final (RF-PDP-015).
-- [ ] Toda nueva decisión de arquitectura tiene ADR revisado antes de sus tareas dependientes; ningún ADR propuesto se cierra por cuenta del agente (PD-PDP-06).
+- [x] Toda nueva decisión de arquitectura tiene ADR revisado antes de sus tareas dependientes; ningún ADR propuesto se cierra por cuenta del agente (PD-PDP-06).
 
 ## Puntos que requieren decisión
 
@@ -157,3 +157,5 @@ La delegación recibida después de presentar la v0.1 habilita el plan y la impl
 - PD-PDP-06: ADR-0030, registrado y revisado contra los ADR vigentes antes de ejecutar las tareas.
 - PD-PDP-07: resuelto por revisión del código exacto de Mi_ISTPET, con procedencia indicada arriba.
 - PD-PDP-01: pendiente institucional. Se localizaron la política publicada en `https://istpet.edu.ec/wp-content/uploads/2026/06/POLITICA-INTERNA-DE-PROTECCION-DE-DATOS-PERSONALES-PDF.pdf`, enlazada desde `https://istpet.edu.ec/index.php/normativa/`, y el aviso para alumnos `https://servicios.istpet.edu.ec/appEstudiantes/datosPersonales/AlumnosV1.html`. Se identifican como fuentes para revisión institucional, sin copiar su texto ni asumir su aplicabilidad al personal y a los cuatro roles. El sistema queda sin avisos reales sembrados y bloquea si falta uno autorizado.
+
+La evidencia técnica ejecutada está en [issue-99](../../evidencia/issue-99/README.md). El contenido legal pendiente no se marca cumplido.

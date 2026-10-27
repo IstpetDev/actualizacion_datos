@@ -1,6 +1,6 @@
 # Aceptación de protección de datos — Tareas
 
-**Spec y plan:** v0.2. **Estado:** En ejecución. **Responsable:** agente coordinador único.
+**Spec y plan:** v0.2. **Estado:** Implementación y verificación local completadas; CI y contenido institucional se verifican en el PR. **Responsable:** agente coordinador único.
 **Rama:** `feature/99-aceptacion-proteccion-datos`.
 
 | Tarea | Resultado verificable y archivos exclusivos | Requisitos | Dependencia | Prueba |
@@ -12,9 +12,9 @@
 
 Cada tarea crea pruebas de comportamiento, implementa el contrato acordado y entrega diff y salida real. No hay tareas paralelas ni subagentes. El registro de resultados queda en `docs/evidencia/issue-99/README.md`; no se marcan pruebas pendientes como aprobadas.
 
-- [ ] T-01 verificada.
-- [ ] T-02 verificada.
-- [ ] T-03 verificada.
-- [ ] T-04 verificada.
+- [x] T-01 verificada.
+- [x] T-02 verificada.
+- [x] T-03 verificada.
+- [ ] T-04: contratos, regresión y evidencia locales verificados; publicación del PR y CI pendientes al registrar esta evidencia.
 - [ ] Texto institucional autorizado y criterio legal acreditado; depende de la institución, no del agente.
 - [ ] Todos los criterios satisfechos, CI final en verde y PR sin conflictos antes de aprobar/integrar y cerrar #99.

@@ -156,10 +156,10 @@ export class AvisoProteccionDatosComponent implements OnInit {
             this.cargar();
           } else void this.router.navigate([destino]);
         },
-        error: (error: { status?: number }) => {
+        error: (error: { status?: number; codigo?: string }) => {
           this.acepta = false;
           this.ocupado.set(false);
-          if (error?.status === 409) this.cargar();
+          if (error?.status === 409 || error?.codigo === 'VERSION_AVISO_CAMBIADA') this.cargar();
           this.error.set(
             mensajeError(
               error,
