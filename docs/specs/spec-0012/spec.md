@@ -36,6 +36,8 @@ Resultado esperado:
 | ADR | ADR-0006, Vigente, `docs/decisiones/ADR-0006-almacenamiento-de-archivos.md` | Reglas de archivos (foto, logo, imagen de portada). |
 | ADR | ADR-0025, Vigente, `docs/decisiones/ADR-0025-perfil-profesional-generado.md` | El perfil se genera sin persistirse y sin PDF ni IA. Esta spec agrega el PDF y requiere ADR (PD-PLA-01). |
 | ADR | ADR-0013, Vigente, `docs/decisiones/ADR-0013-datos-bancarios.md` | La cuenta bancaria no se expone en claro. |
+| ADR | ADR-0031, Propuesto, docs/decisiones/ADR-0031-formato-plantillas-hoja-de-vida.md | Formato de plantillas declarativas en C# desacopladas de la marca de la institución. |
+| ADR | ADR-0032, Propuesto, docs/decisiones/ADR-0032-motor-generacion-pdf.md | Motor de generación de PDF nativo con QuestPDF (licencia Community, sin navegador headless). |
 | ADR abierto | ADR-0009, Propuesto, `docs/decisiones/ADR-0009-campos-configurables.md` | No se cierra con este cambio. |
 | Código | `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/GeneradorCvHtml.cs`, `ServicioExportacion.cs` | Generador HTML actual y su integración en el `.zip`. |
 | Código | `src/Backend/src/Istpet.ActualizacionDatos.Domain/Institucion.cs` | La institución solo tiene nombre, estado y dominios de correo; **no hay marca** (logo, portada, colores). |
@@ -202,7 +204,7 @@ Resultado esperado:
 | PD-PLA-06 | **Una plantilla por institución o por tipo de funcionario** (por ejemplo, una para docentes y otra para administrativos). **Propuesta:** una por institución en la v0.1; por tipo de funcionario queda para después. | RF-PLA-003 | Revisor funcional |
 | PD-PLA-07 | **Anexos.** El formato separa los certificados con una portada «Anexos generales». **Propuesta:** el documento lleva la portada de anexos y los certificados siguen en el `.zip`, ordenados por sección; unirlos en un solo PDF queda para otra fase. | RF-PLA-013 | Revisor funcional |
 | PD-PLA-08 | **Fecha y número de registro** del formato: la persona puede tener varios títulos. **Propuesta:** el del título de mayor nivel, con la fecha de su registro. | Mapa de datos | Revisor funcional |
-| PD-PLA-09 | **Generación de PDF.** El backend no tiene ninguna librería de PDF y ADR-0025 decidió no incorporar PDF. Elegir una dependencia es una decisión de arquitectura y de seguridad (versión fija, licencia, sin servicios externos). | Plan y tareas | ADR nuevo, a redactar antes de las tareas |
+| PD-PLA-09 | **Generación de PDF.** El backend no tiene ninguna librería de PDF. Se formula ADR-0032. **Propuesta del desarrollador:** QuestPDF bajo versión fija y licencia Community; ejecución nativa rápida en milisegundos sin navegador headless externo. | Plan y tareas | ADR-0032 |
 | PD-PLA-10 | **Vista previa de la persona.** **Propuesta:** siempre disponible, con marca de agua mientras no esté aprobada, y sin dejar copia guardada. | RF-PLA-012 | Revisor funcional |
 | PD-PLA-11 | **Sección sin datos.** **Propuesta:** se omite por completo; la plantilla puede indicar lo contrario. | RF-PLA-010 | Revisor funcional |
 | PD-PLA-12 | **Dónde viven los recursos de la plantilla inicial.** Las imágenes del formato de referencia incluyen menores y marca de una institución. **Propuesta:** no se guardan en el repositorio; la plantilla inicial usa imágenes neutras y la institución sube las suyas. | Pruebas y repositorio | Revisor funcional |
@@ -211,7 +213,7 @@ Resultado esperado:
 | PD-PLA-15 | **Jefe inmediato y teléfono** de la experiencia no existen y dependen de RF-HDV-028, aún sin aprobar. **Propuesta:** quedan fuera del documento hasta que se aprueben y se implementen. | Mapa de datos | Revisor funcional |
 | PD-PLA-16 | **Rendimiento y tamaño.** Falta una métrica: tiempo máximo para generar un documento y para una exportación de toda la institución (hoy unas 100 personas), y tamaño máximo del PDF. Sin esa métrica no puede probarse. | Plan, pruebas y la forma de exportar (sincrónica o en segundo plano) | Revisor funcional |
 | PD-PLA-17 | **HTML actual del `.zip`.** **Propuesta:** se conserva hasta que el PDF esté verificado y luego se retira por separado. | RF-PLA-013 | Revisor funcional |
-| PD-PLA-18 | **Orden respecto a otras specs.** **Propuesta:** después de spec-0010 y spec-0008. El generador respeta lo cargado aunque una sección esté cerrada (PD-SEC-04). | Planificación | Quien desarrolla |
+| PD-PLA-18 | **Orden y desacoplamiento.** **Propuesta del desarrollador:** El motor de PDF opera desacoplado contra un DTO puro (DatosDocumentoHojaDeVida). Si una sección está deshabilitada (spec-0010) o no tiene registros, se omite limpiamente. La implementación de la generación no queda bloqueada por la persistencia de spec-0010 ni spec-0008. | Planificación | Quien desarrolla |
 
 ## Revisión funcional
 
