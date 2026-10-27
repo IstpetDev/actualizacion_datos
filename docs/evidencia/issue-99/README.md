@@ -42,8 +42,10 @@ Chromium verificó teclado, casilla inicialmente desmarcada, botón deshabilitad
 - [Aviso pendiente en móvil](aviso-pendiente-movil.png).
 - [Aviso no disponible, reintento y salida](aviso-no-disponible.png).
 
-## Pendiente institucional y cierre
+## Aprobación institucional y cierre
 
-No se ha entregado ni acreditado autorización institucional de un aviso específico para este sistema y sus cuatro roles. Las fuentes oficiales localizadas están identificadas en PD-PDP-01 de la spec, sin asumir que un aviso para alumnos se aplica al personal. No se ha publicado un aviso real, sustituido por texto técnico ni fabricado esa aprobación.
+El solicitante confirmó en esta sesión el 2026-10-27 que el rector de la institución aprobó el aviso mediante un documento físico firmado que conserva bajo su custodia, y ordenó continuar hasta cerrar #99. Se registra esa declaración como la confirmación institucional recibida y como fuente del aviso aprobado en PD-PDP-01 de la spec. El agente no recibió ni examinó el original; no se inventan su número, fecha de firma, disposiciones o contenido, y no se publica una copia, firma o dato personal en el repositorio.
 
-La aprobación funcional y delegación técnica del solicitante están registradas en la spec. El primer criterio de #99 conserva la dependencia institucional anterior. El PR debe mantenerla visible; terminar las pruebas técnicas o tener CI verde no permite declarar satisfecho ese criterio y cerrar el issue. Los resultados de CI se consultan en los checks del PR sobre su HEAD; esta evidencia registra las ejecuciones locales previas a publicarlo.
+La aprobación funcional ya registrada y esta confirmación institucional habilitan el cierre de la entrega de código. El operador debe tomar del documento autorizado el contenido y los datos de vigencia para publicarlos mediante el procedimiento operativo; esa configuración de despliegue no se ejecutó en esta tarea. El sistema mantiene el bloqueo cuando todavía no se ha provisionado un aviso y no se publica un sustituto ficticio.
+
+La ejecución de CI [40532753603](https://github.com/IstpetDev/actualizacion_datos/actions/runs/40532753603) finalizó correctamente para el código `0d5e2f572b7bd13c9b188822058a659b52a065d7`: política, backend, frontend, Gitleaks, cliente OpenAPI y `ci-ok` en verde. Integración, imágenes Docker y workflows se omitieron según la política de rutas/destino del repositorio; PostgreSQL se verificó localmente. La actualización documental de aprobación se verifica también sobre su HEAD final antes de integrar el PR #106 y cerrar #99.

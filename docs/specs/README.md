@@ -55,4 +55,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0008](spec-0008/spec.md) | Capacitaciones obligatorias de la institución, issue #92 | Aprobado v0.2 (2026-10-27) |
 | [spec-0009](spec-0009/spec.md) | Mensajes de error al usuario y manejo uniforme, issue #89 | Aprobado (2026-10-26) |
 | [spec-0010](spec-0010/spec.md) | Liberación de secciones de la hoja de vida por fases, prioritaria | Aprobado v0.2 (2026-10-27) |
-| [spec-0011](spec-0011/spec.md) | Aceptación de protección de datos al iniciar sesión, issue #99 | v0.2 funcional aprobada; contenido legal pendiente (2026-10-27) |
+| [spec-0011](spec-0011/spec.md) | Aceptación de protección de datos al iniciar sesión, issue #99 | v0.2 aprobada; autorización rectoral confirmada por el solicitante (2026-10-27) |

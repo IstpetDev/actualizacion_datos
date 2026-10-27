@@ -37,7 +37,7 @@ Las pruebas nuevas ejercitan cookies y servicio reales, SQLite para recorridos H
 - Las aceptaciones antiguas no se convierten en evidencia versionada. Los expedientes y archivos se conservan.
 - Nuevas versiones restringen sesiones abiertas en la siguiente petición protegida. No se revocan respuestas ya entregadas.
 - Se actualizan OpenAPI y cliente Angular en el mismo cambio.
-- El contenido y la autorización institucional siguen pendientes; terminar el código no demuestra ese criterio de aceptación ni permite dar #99 por cerrado.
+- El 2026-10-27 el solicitante confirmó la aprobación rectoral del aviso en documento físico firmado bajo su custodia. El agente registra esa declaración sin inspeccionar ni publicar el original. El operador debe cargar el contenido de esa fuente autorizada antes del uso; el cierre de la entrega de código no implica publicar datos ni configurar producción.
 
 ## ADR relacionados
 

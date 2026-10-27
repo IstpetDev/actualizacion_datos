@@ -2,7 +2,7 @@
 
 **ID:** spec-0011; issue #99
 **Versión:** 0.2
-**Estado:** Aprobada funcionalmente para implementación; autorización del contenido legal pendiente
+**Estado:** Aprobada; autorización rectoral confirmada por el solicitante (2026-10-27)
 **Revisor funcional:** Solicitante del issue, con decisiones funcionales y técnicas delegadas en esta sesión
 **Fecha:** 2026-10-27
 **Áreas afectadas:** `src/Backend`, `src/Frontend`, persistencia PostgreSQL y contrato OpenAPI
@@ -20,6 +20,7 @@ Este documento propone ampliar RF-DAT-001 y la secuencia del escenario 1 de spec
 | Fuente | Ruta o enlace exacto | Regla o dato que aporta |
 |---|---|---|
 | Encargo | [Issue #99](https://github.com/IstpetDev/actualizacion_datos/issues/99) | Aprobación previa, referencia conceptual SIGAFI, bloqueo UI/API, evidencia versionada, migración y pruebas. Consultado el 2026-10-27: abierto, sin comentarios de aprobación. |
+| Fuente institucional autorizada | Documento físico firmado de aprobación rectoral del aviso de Actualización de Datos, bajo custodia del solicitante; confirmado por este en la sesión del 2026-10-27 | Aprobación institucional declarada por el solicitante. El agente no inspeccionó el original; su contenido y vigencia se toman de esa fuente al provisionar el aviso. |
 | Spec aprobada | [spec-0001](../spec-0001/spec.md), RF-DAT-001, RF-FLU-001, RF-ACC-002, RF-ACC-005, escenario 1 y PD-10 | Aceptación antes del envío; cambio obligatorio previo a otras acciones; correo requerido; texto legal pendiente de la institución. |
 | Referencia oficial | [Quinto Suplemento al Registro Oficial n.º 459](https://www.registroficial.gob.ec/quinto-suplemento-al-registro-oficial-no-459/) | Publicación de la Ley Orgánica de Protección de Datos Personales, 26 de mayo de 2021. Identifica la norma; no sustituye el aviso específico aprobado por la institución ni acredita que el consentimiento sea la base jurídica adecuada para cada finalidad. |
 | ADR-0001 | Vigente; [Clean Architecture](../../decisiones/ADR-0001-clean-architecture-backend.md) | Dominio, aplicación, infraestructura y API con responsabilidades separadas. |
@@ -113,11 +114,11 @@ La consulta del aviso durante la restricción no devuelve el perfil ni informaci
 
 La lectura del estado y la aceptación deben resolver vigencia e institución de forma coherente, incluso ante nuevas versiones y peticiones repetidas. Las garantías técnicas de persistencia, autorización y protección de las operaciones de escritura se definen en un ADR posterior a la aprobación funcional. Se mantiene PostgreSQL y la identidad propia del producto; SIGAFI aporta solo conceptos, sin conectividad ni dependencia de ejecución.
 
-El texto o su fuente oficial institucional, la evidencia de autorización y la vigencia de la primera versión están **pendientes de entrega y validación**. El enlace al Registro Oficial identifica la ley; no es el aviso particular de tratamiento de esta aplicación.
+La fuente institucional del aviso es el documento físico firmado de aprobación rectoral para Actualización de Datos, conservado por el solicitante. Su existencia y aprobación fueron confirmadas por este en la sesión del 2026-10-27. El agente no recibió ni examinó el documento y no transcribe ni interpreta su contenido. El operador debe tomar de ese original el texto íntegro, declaración, versión, destinatarios y vigencia al publicarlo mediante el procedimiento documentado. La publicación en el entorno operativo es configuración de despliegue y no se ejecutó como parte de este cambio. El enlace al Registro Oficial identifica la ley y no sustituye el aviso particular.
 
 ## Criterios de aceptación
 
-- [ ] Esta versión tiene aprobación funcional explícita con roles, secuencia, rechazo, nuevas versiones y transición resueltos, y el aviso institucional autorizado o su fuente exacta está identificado (RF-PDP-001, 007, 009, 012; PD-PDP-01 a 05).
+- [x] Esta versión tiene aprobación funcional explícita con roles, secuencia, rechazo, nuevas versiones y transición resueltos, y el aviso institucional autorizado o su fuente exacta está identificado (RF-PDP-001, 007, 009, 012; PD-PDP-01 a 05).
 - [x] Se revisaron `TerminosService`, `TerminosController` y las tres entidades solicitadas, con procedencia y conclusiones conceptuales registradas, sin copiar código ni conectar bases externas (PD-PDP-07).
 - [x] El primer acceso presenta la decisión explícita antes de cualquier dato de negocio y UI/API aplican el mismo bloqueo, incluidas llamadas directas, rutas nuevas, archivos y todos los roles aprobados (RF-PDP-001 a 004, 013, 014; E-PDP-01, 02, 09, 13).
 - [x] Rechazar o cerrar no acepta; reingresar muestra el pendiente; una aceptación vigente no se pide de nuevo (RF-PDP-005 a 007; E-PDP-03, 04).
@@ -125,14 +126,14 @@ El texto o su fuente oficial institucional, la evidencia de autorización y la v
 - [x] Fallos de carga/guardado, ausencia/vencimiento/ambigüedad y respuestas perdidas no generan aceptación implícita ni acceso anticipado (RF-PDP-008, 009; E-PDP-06, 07, 08).
 - [x] Enviar sigue exigiendo aceptación vigente en backend; el flujo anterior no crea registros o decisiones incoherentes (RF-PDP-010, 011; E-PDP-11).
 - [x] Las cuentas y sesiones antiguas siguen la transición aprobada; el booleano previo no acredita una versión y no se eliminan expedientes (RF-PDP-012; E-PDP-12).
-- [ ] Hay pruebas con datos ficticios de todos los escenarios, incluidos aislamiento institucional, suplantación, concurrencia y accesibilidad. OpenAPI y cliente se regeneran cuando cambie la API; resultados reales de compilación, pruebas y checks constan en el PR final (RF-PDP-015).
+- [x] Hay pruebas con datos ficticios de todos los escenarios, incluidos aislamiento institucional, suplantación, concurrencia y accesibilidad. OpenAPI y cliente se regeneran cuando cambie la API; resultados reales de compilación, pruebas y checks constan en el PR final (RF-PDP-015).
 - [x] Toda nueva decisión de arquitectura tiene ADR revisado antes de sus tareas dependientes; ningún ADR propuesto se cierra por cuenta del agente (PD-PDP-06).
 
 ## Puntos que requieren decisión
 
 | ID | Contradicción o dato faltante | Propuesta y efecto | Quién decide |
 |---|---|---|---|
-| PD-PDP-01 | PD-10 de spec-0001 no está resuelto: no se entregó aviso autorizado, finalidades, base jurídica, responsables, vigencia ni reglas de aceptación; la aplicabilidad adicional de LOEI sigue pendiente. | La institución entrega el contenido o su fuente institucional exacta y evidencia de autorización. No se inventa texto ni se activa un sustituto. Es requisito del criterio 1 de #99 y del despliegue. | Institución y responsable de protección de datos que designe |
+| PD-PDP-01 | Resuelto para la entrega del desarrollo por confirmación del solicitante: Rectorado aprobó el aviso en documento físico firmado, bajo su custodia. El agente no inspeccionó el original. | Esa fuente institucional gobierna contenido, destinatarios, declaración y vigencia al publicar. No se inventan disposiciones de LOPDP/LOEI ni se copia un aviso de alumnos. El operador carga el original autorizado antes de habilitar el uso. | Rectorado; documento bajo custodia del solicitante |
 | PD-PDP-02 | #99 pide definir roles; RF-DAT-001 menciona solo `usuario`. | Aplicar a los cuatro roles con aviso para su institución y funciones. Superadmin acepta el correspondiente a la institución de su propia cuenta; sus privilegios no permiten aceptación por terceros. Si se aprueban exenciones o avisos distintos, documentar destinatarios y razón institucional. | Revisor funcional e institución |
 | PD-PDP-03 | Mostrar el aviso inmediatamente tras validar credenciales puede entrar en conflicto con RF-ACC-002 y ADR-0007, que priorizan el cambio obligatorio. | Conservar cambio de clave → aviso → captura/verificación de correo y funciones. El aviso impide consultar o guardar datos de negocio. Si se elige aviso antes del cambio, registrar explícitamente el cambio de regla y un ADR que sustituya la prioridad actual. | Revisor funcional; responsable de arquitectura si cambia ADR-0007 |
 | PD-PDP-04 | No hay política aprobada de rechazo, versiones, vigencia o legado. | Rechazo cierra sesión; falta/error de aviso bloquea; cada versión nueva aplicable exige aceptación, incluso en sesiones abiertas; sin conversión del booleano histórico. Aprobar también ausencia de borrado automático y conservación de expedientes, y definir conservación/retirada por canal institucional. | Institución y revisor funcional |
@@ -143,12 +144,12 @@ El texto o su fuente oficial institucional, la evidencia de autorización y la v
 ## Revisión funcional
 
 **Versión revisada:** 0.2
-**Decisión:** Aprobada para implementación funcional; contenido legal y publicación real pendientes de la institución
+**Decisión:** Aprobada funcionalmente; autorización rectoral del aviso confirmada por el solicitante. La publicación real sigue el procedimiento de despliegue.
 **Aprobó:** Solicitante del issue en esta sesión; delegó completar la spec y resolver las decisiones funcionales y técnicas
 **Fecha y evidencia de aprobación:** 2026-10-27, respuesta a la v0.1: «hazlo tu, lo que pienses que sea lo mejor para el sistema, si te pide programar spect o completarla, hazlo».
 **Ajustes solicitados:** Completar y ejecutar el trabajo con autonomía. Se confirman los cuatro roles, orden clave → aviso → datos/correo, rechazo con salida, aceptación por versión, legado sin conversión y publicación por procedimiento operativo controlado. La aprobación funcional del solicitante no se presenta como autorización institucional del texto legal.
 
-La delegación recibida después de presentar la v0.1 habilita el plan y la implementación de las reglas completadas en esta v0.2. La institución debe aportar y autorizar el contenido antes de publicar un aviso real. No se declara cumplido ese criterio de #99 ni se cierra el issue solo por terminar el código.
+La delegación recibida después de presentar la v0.1 habilita el plan y la implementación de las reglas completadas en esta v0.2. La institución autorizó el aviso mediante el documento físico firmado cuya custodia confirmó el solicitante. Esa declaración se registra como evidencia institucional recibida en esta sesión; no como inspección independiente del documento. El contenido se toma del original al publicar un aviso real.
 
 ### Resolución de puntos abiertos
 
@@ -156,6 +157,10 @@ La delegación recibida después de presentar la v0.1 habilita el plan y la impl
 - PD-PDP-05: publicación operativa mediante comando de la aplicación y archivo JSON autorizado, sin panel nuevo ni excepción de acceso para administradores pendientes. El operador provisiona el primer aviso antes de habilitar el uso.
 - PD-PDP-06: ADR-0030, registrado y revisado contra los ADR vigentes antes de ejecutar las tareas.
 - PD-PDP-07: resuelto por revisión del código exacto de Mi_ISTPET, con procedencia indicada arriba.
-- PD-PDP-01: pendiente institucional. Se localizaron la política publicada en `https://istpet.edu.ec/wp-content/uploads/2026/06/POLITICA-INTERNA-DE-PROTECCION-DE-DATOS-PERSONALES-PDF.pdf`, enlazada desde `https://istpet.edu.ec/index.php/normativa/`, y el aviso para alumnos `https://servicios.istpet.edu.ec/appEstudiantes/datosPersonales/AlumnosV1.html`. Se identifican como fuentes para revisión institucional, sin copiar su texto ni asumir su aplicabilidad al personal y a los cuatro roles. El sistema queda sin avisos reales sembrados y bloquea si falta uno autorizado.
+- PD-PDP-01: resuelto para el cierre del desarrollo por la confirmación del solicitante de que el rector aprobó el aviso en un documento físico firmado que conserva bajo su custodia. Fuente institucional: ese original de aprobación rectoral del aviso para Actualización de Datos, referido en la sesión del 2026-10-27; no se aportaron número oficial, fecha de firma ni copia y no se inventan. Las fuentes públicas localizadas se mantienen como contexto y no sustituyen el documento aprobado. El sistema no siembra texto real ni ficticio y bloquea mientras el operador no publique el aviso autorizado.
 
-La evidencia técnica ejecutada está en [issue-99](../../evidencia/issue-99/README.md). El contenido legal pendiente no se marca cumplido.
+### Confirmación institucional recibida
+
+El 2026-10-27 el solicitante indicó: «ya lo aprobo el rector de la intitucion pero nos dieron un documento fisico firmado, eso ya lo tengo yo tu continua hasta cerrar el issue». Se registra su declaración sobre la aprobación y la custodia del soporte físico. No se incorpora al repositorio el documento, una firma, nombres ni datos personales. Esta confirmación libera el cierre de la entrega de código; no equivale a haber cargado un aviso en producción.
+
+La evidencia técnica y la confirmación recibida están registradas en [issue-99](../../evidencia/issue-99/README.md).
