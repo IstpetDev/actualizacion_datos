@@ -1,6 +1,6 @@
 # ADR-0026 — Modelo de las capacitaciones obligatorias de la institución
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-27
 
 ## Contexto
@@ -31,22 +31,22 @@ Este ADR decide **solo el modelo**. Los puntos funcionales (campaña, exoneracio
 
 ## Decisión
 
-**Pendiente.** Recomendación del desarrollador, sin cerrar el ADR: **opción B**, porque es la única que cumple el comportamiento pedido en el issue (la obligatoria aparece en «Capacitaciones», conserva horas y fechas y se exporta como capacitación) sin duplicar el concepto en «Documentación», y evita la migración posterior de la opción C.
+Se adopta la **opción B**, por indicación expresa de quien desarrolla (2026-10-27, conversación del issue #92). Es la única que cumple el comportamiento pedido en el issue: la obligatoria aparece en «Capacitaciones», conserva horas y fechas y se exporta como capacitación, sin duplicar el concepto en «Documentación» y sin la migración posterior de la opción C.
 
-Si se adopta B, el diseño parte de estas pautas, a precisar en el plan:
+El diseño parte de estas pautas, a precisar en el plan:
 
 - La obligatoria es `EntidadInstitucional` con alcance «todas» o un tipo de funcionario, en la misma forma que `RequisitoDocumento` (`AplicaA`).
 - El vínculo vive en `Capacitacion` (referencia opcional), y una segunda capacitación para la misma obligatoria reemplaza a la primera (RF-CAP-006).
 - El bloqueo del envío es una `IReglaCompletitudEnvio` nueva; no modifica las reglas actuales.
 - Desactivar una obligatoria no borra los certificados (RF-CAP-003).
 
-Este ADR sigue **Propuesto** hasta que quien desarrolla lo cierre. Un agente de IA no lo cierra por su cuenta (AGENTS.md), y las tareas que dependen del modelo no se ejecutan hasta entonces.
+Este ADR decide solo el modelo. La spec-0008 sigue pendiente de aprobación funcional; si sus puntos PD-CAP cambian el alcance, el plan se ajusta, pero no esta decisión salvo que invaliden el vínculo con `Capacitacion`.
 
 ## Consecuencias
 
-- **Si se adopta B:** se agrega una entidad y una columna a `capacitaciones`, con su migración; cambian la API y el cliente (hay que regenerar `openapi/v1.json`); la exportación y la revisión del supervisor leen del vínculo. Los datos existentes no se tocan: las capacitaciones actuales quedan sin obligatoria.
+- Se agrega una entidad y una columna a `capacitaciones`, con su migración; cambian la API y el cliente (hay que regenerar `openapi/v1.json`); la exportación y la revisión del supervisor leen del vínculo. Los datos existentes no se tocan: las capacitaciones actuales quedan sin obligatoria.
 - **Riesgo:** una persona puede haber subido ya una capacitación equivalente antes de que se cree la obligatoria; vincularla es una decisión funcional que la spec-0008 no cubre y queda como punto abierto para el plan.
-- **Sin B:** A deja el cumplimiento fuera de «Capacitaciones» y limita la exportación; C acumula deuda con migración pendiente.
+- Descartadas: A deja el cumplimiento fuera de «Capacitaciones» y limita la exportación; C acumula deuda con migración pendiente.
 
 ## ADR relacionados
 

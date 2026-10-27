@@ -57,4 +57,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0023](ADR-0023-habilitar-y-deshabilitar-acceso-de-personas.md) | Habilitación y deshabilitación del acceso de personas por el administrador | Vigente |
 | [ADR-0024](ADR-0024-validacion-y-dominios-institucionales.md) | Validación y dominios institucionales | Vigente |
 | [ADR-0025](ADR-0025-perfil-profesional-generado.md) | Perfil profesional generado | Vigente |
-| [ADR-0026](ADR-0026-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Propuesto |
+| [ADR-0026](ADR-0026-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Vigente |
