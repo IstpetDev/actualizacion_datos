@@ -13,6 +13,7 @@ using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Istpet.ActualizacionDatos.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -20,13 +21,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AgregarInfraestructura(builder.Configuration);
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "istpet_auth";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        var configuracionSecure = builder.Configuration.GetValue<string>("Autenticacion:CookieSecurePolicy");
+        options.Cookie.SecurePolicy = configuracionSecure switch
+        {
+            "Always" => CookieSecurePolicy.Always,
+            "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
+            "None" => CookieSecurePolicy.None,
+            _ => builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always
+        };
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 
@@ -105,6 +120,7 @@ app.UseStatusCodePages(async statusCodeContext =>
     var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
     await httpContext.Response.WriteAsJsonAsync(new MensajeRespuesta(mensaje, $"HTTP_{code}", null, traceId));
 });
+app.UseForwardedHeaders();
 app.UseAuthentication();
 app.UseAuthorization();
 
