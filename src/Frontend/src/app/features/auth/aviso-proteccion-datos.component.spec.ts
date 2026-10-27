@@ -181,4 +181,21 @@ describe('aviso de protección de datos al acceder', () => {
     expect(auth.cerrarSesion).not.toHaveBeenCalled();
     expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
   });
+
+  it('superadmin_sin_aviso_institucional_redirige_al_panel_global_al_consultar_o_recargar', () => {
+    cliente.obtenerAvisoProteccionDatos.mockReturnValue(
+      of({ aceptado: true, aviso: undefined, fechaAceptacionUtc: undefined }),
+    );
+    auth.verificarSesion.mockReturnValue(
+      of({
+        rol: 'superadmin',
+        debeCambiarContrasena: false,
+        requiereAceptarProteccionDatos: false,
+      }),
+    );
+    const fixture = preparar();
+    expect(fixture.nativeElement.querySelector('#aceptar-aviso')).toBeNull();
+    expect(cliente.aceptarTratamientoDatos).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/superadmin']);
+  });
 });

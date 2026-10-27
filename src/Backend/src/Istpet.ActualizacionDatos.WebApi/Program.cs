@@ -125,7 +125,7 @@ app.UseStatusCodePages(async statusCodeContext =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// La cookie autenticada es la autoridad. Las cabeceras nunca crean identidad ni cambian su institución.
+// La cookie autenticada es la autoridad. Solo Superadmin puede seleccionar otra institución mediante X-Institucion-Id (ADR-0034).
 app.Use(async (context, next) =>
 {
     var contexto = context.RequestServices.GetRequiredService<ContextoInstitucion>();
@@ -134,22 +134,47 @@ app.Use(async (context, next) =>
         var actor = context.User.FindFirst(ClaimTypes.Name)?.Value;
         var rolTexto = context.User.FindFirst(ClaimTypes.Role)?.Value;
         var institucion = context.User.FindFirst("institucion_id")?.Value;
-        var cabeceras = new[] { ("X-Actor", actor), ("X-Rol", rolTexto), ("X-Institucion-Id", institucion) };
-        if (!context.Request.Path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) &&
-            !context.Request.Path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase) &&
-            cabeceras.Any(c => context.Request.Headers.TryGetValue(c.Item1, out var valor) &&
-            !string.Equals(valor.ToString(), c.Item2, StringComparison.OrdinalIgnoreCase)))
+        var tieneRol = Enum.TryParse<RolUsuario>(rolTexto, out var rol);
+        var esSuperadmin = tieneRol && rol == RolUsuario.Superadmin;
+        var esRutaAuth = context.Request.Path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) ||
+                         context.Request.Path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase);
+
+        if (!esRutaAuth)
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El contexto solicitado no corresponde a la sesión autenticada.", "CONTEXTO_NO_AUTORIZADO"));
-            return;
+            var cabecerasIdentidad = new[] { ("X-Actor", actor), ("X-Rol", rolTexto) };
+            var identidadContradictoria = cabecerasIdentidad.Any(c =>
+                context.Request.Headers.TryGetValue(c.Item1, out var valor) &&
+                !string.Equals(valor.ToString(), c.Item2, StringComparison.OrdinalIgnoreCase));
+            var institucionContradictoria = !esSuperadmin &&
+                context.Request.Headers.TryGetValue("X-Institucion-Id", out var instValor) &&
+                !string.Equals(instValor.ToString(), institucion, StringComparison.OrdinalIgnoreCase);
+
+            if (identidadContradictoria || institucionContradictoria)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El contexto solicitado no corresponde a la sesión autenticada.", "CONTEXTO_NO_AUTORIZADO"));
+                return;
+            }
+
+            if (esSuperadmin && context.Request.Headers.TryGetValue("X-Institucion-Id", out var instSuperadmin) &&
+                !string.IsNullOrWhiteSpace(instSuperadmin))
+            {
+                if (!Guid.TryParse(instSuperadmin.ToString(), out var instSeleccionada))
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El encabezado X-Institucion-Id no tiene un formato Guid válido.", "CONTEXTO_INVALIDO"));
+                    return;
+                }
+                institucion = instSeleccionada.ToString();
+            }
         }
+
         contexto.ActorActual = actor;
         if (Guid.TryParse(institucion, out var institucionId)) contexto.InstitucionId = new(institucionId);
-        if (Enum.TryParse<RolUsuario>(rolTexto, out var rol))
+        if (tieneRol)
         {
             contexto.RolActual = rol;
-            contexto.EsSuperadmin = rol == RolUsuario.Superadmin;
+            contexto.EsSuperadmin = esSuperadmin;
         }
     }
     await next();

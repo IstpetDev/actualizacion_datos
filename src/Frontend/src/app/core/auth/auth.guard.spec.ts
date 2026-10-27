@@ -67,4 +67,16 @@ describe('guards de sesión del servidor', () => {
     expect(await comprobar(authGuard, '/proteccion-datos')).toBe(true);
     expect(auth.cerrarSesion).not.toHaveBeenCalled();
   });
+  it('permite_acceso_directo_a_superadmin_sin_aviso_y_redirige_fuera_de_proteccion_datos', async () => {
+    auth.verificarSesion.mockReturnValue(
+      of({
+        rol: 'superadmin',
+        debeCambiarContrasena: false,
+        requiereAceptarProteccionDatos: false,
+      }),
+    );
+    expect(await comprobar(authGuard, '/superadmin')).toBe(true);
+    expect(await comprobar(authGuard, '/proteccion-datos')).toBe('/superadmin');
+    expect(await comprobar(publicGuard)).toBe('/superadmin');
+  });
 });

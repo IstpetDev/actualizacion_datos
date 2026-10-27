@@ -107,7 +107,6 @@ public sealed class ProteccionDatosTests : IDisposable
     [InlineData(RolUsuario.Usuario)]
     [InlineData(RolUsuario.Supervisor)]
     [InlineData(RolUsuario.Admin)]
-    [InlineData(RolUsuario.Superadmin)]
     public async Task Cada_rol_acepta_su_aviso_sin_recibir_perfil_previamente(RolUsuario rol)
     {
         var persona = await CuentaAsync(rol);
@@ -334,7 +333,7 @@ public sealed class ProteccionDatosTests : IDisposable
     [Fact]
     public async Task No_hay_fallback_a_otro_rol_y_aceptar_no_habilita_una_cuenta_revocada()
     {
-        var persona = await CuentaAsync(RolUsuario.Superadmin);
+        var persona = await CuentaAsync(RolUsuario.Admin);
         await PublicarAsync(persona, roles: [RolUsuario.Usuario]);
         using var cliente = Cliente();
         await LoginAsync(cliente, persona);
@@ -346,6 +345,102 @@ public sealed class ProteccionDatosTests : IDisposable
             await db.SaveChangesAsync();
         }
         Assert.Equal(HttpStatusCode.Unauthorized, (await cliente.GetAsync("/api/proteccion-datos/aviso")).StatusCode);
+        Assert.Equal(0, await EvidenciasAsync());
+    }
+
+    [Fact]
+    public async Task Superadmin_accede_y_administra_instituciones_sin_aviso_mientras_roles_institucionales_siguen_protegidos()
+    {
+        // 1. Arranque en frío: ningún aviso publicado en ninguna institución; Superadmin entra con cambio obligatorio de clave.
+        var superadmin = await CuentaAsync(RolUsuario.Superadmin, cambiarClave: true, documento: "0000000099");
+        using var clienteSuperadmin = Cliente();
+
+        var loginSuperadmin = await LoginAsync(clienteSuperadmin, superadmin);
+        Assert.True(loginSuperadmin.DebeCambiarContrasena);
+        Assert.False(loginSuperadmin.RequiereAceptarProteccionDatos);
+        Assert.Empty(loginSuperadmin.Documento);
+
+        // El cambio obligatorio de contraseña se sigue aplicando a Superadmin antes de abrir el panel global.
+        Assert.Equal(HttpStatusCode.Forbidden, (await clienteSuperadmin.GetAsync("/api/instituciones")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.PostAsJsonAsync(
+            "/api/auth/cambiar-clave", new CambiarContrasenaRequest(null, "NuevaClaveSuperadmin99"))).StatusCode);
+
+        var sesionSuperadmin = (await clienteSuperadmin.GetFromJsonAsync<SesionUsuarioDto>("/api/auth/sesion"))!;
+        Assert.False(sesionSuperadmin.DebeCambiarContrasena);
+        Assert.False(sesionSuperadmin.RequiereAceptarProteccionDatos);
+        Assert.Equal(superadmin.Documento, sesionSuperadmin.Documento);
+        Assert.Equal(nameof(RolUsuario.Superadmin), sesionSuperadmin.Rol);
+
+        // 2. Si consulta el endpoint de aviso (p. ej. botón «Volver a cargar el aviso»), recibe estado habilitado sin aviso ni evidencia artificial.
+        var estadoAvisoSuperadmin = await EstadoAsync(clienteSuperadmin);
+        Assert.True(estadoAvisoSuperadmin.Aceptado);
+        Assert.Null(estadoAvisoSuperadmin.Aviso);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, (await AceptarAsync(clienteSuperadmin, Guid.NewGuid())).StatusCode);
+
+        // 3. Superadmin abre el panel global, lista y crea instituciones, asigna admins, consulta plantillas y administra otra institución.
+        var listadoInicial = await clienteSuperadmin.GetFromJsonAsync<List<InstitucionDto>>("/api/instituciones");
+        Assert.NotNull(listadoInicial);
+        Assert.Single(listadoInicial!);
+
+        var respuestaCrear = await clienteSuperadmin.PostAsJsonAsync("/api/instituciones", new CrearInstitucionRequest(
+            "Instituto Superior Ficticio Inicial",
+            [new AdminInicialRequest("1700000091", "Admin Inicial Ficticio", "admin.inicial@ejemplo.test")]));
+        Assert.Equal(HttpStatusCode.Created, respuestaCrear.StatusCode);
+        var nuevaInstitucion = (await respuestaCrear.Content.ReadFromJsonAsync<InstitucionDto>())!;
+
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.PostAsJsonAsync(
+            $"/api/instituciones/{nuevaInstitucion.Id}/admins",
+            new AsignarAdminsRequest([new AdminInicialRequest("1700000092", "Segundo Admin Ficticio", "admin2@ejemplo.test")]))).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.GetAsync("/api/plantillas-hoja-de-vida")).StatusCode);
+
+        using var peticionTipos = new HttpRequestMessage(HttpMethod.Get, "/api/configuracion/tipos-funcionario");
+        peticionTipos.Headers.Add("X-Institucion-Id", nuevaInstitucion.Id.ToString());
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.SendAsync(peticionTipos)).StatusCode);
+
+        using var peticionSecciones = new HttpRequestMessage(HttpMethod.Get, "/api/configuracion/secciones");
+        peticionSecciones.Headers.Add("X-Institucion-Id", nuevaInstitucion.Id.ToString());
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.SendAsync(peticionSecciones)).StatusCode);
+
+        using var peticionDocConfig = new HttpRequestMessage(HttpMethod.Get, "/api/configuracion/documento-hoja-de-vida");
+        peticionDocConfig.Headers.Add("X-Institucion-Id", nuevaInstitucion.Id.ToString());
+        Assert.Equal(HttpStatusCode.OK, (await clienteSuperadmin.SendAsync(peticionDocConfig)).StatusCode);
+
+        using var peticionInstInvalida = new HttpRequestMessage(HttpMethod.Get, "/api/configuracion/secciones");
+        peticionInstInvalida.Headers.Add("X-Institucion-Id", "no-es-un-guid");
+        Assert.Equal(HttpStatusCode.BadRequest, (await clienteSuperadmin.SendAsync(peticionInstInvalida)).StatusCode);
+
+        using var peticionSuplantarActor = new HttpRequestMessage(HttpMethod.Get, "/api/instituciones");
+        peticionSuplantarActor.Headers.Add("X-Actor", "1700000091");
+        Assert.Equal(HttpStatusCode.Forbidden, (await clienteSuperadmin.SendAsync(peticionSuplantarActor)).StatusCode);
+
+        // 4. La exigencia del aviso se conserva íntegra para Admin, Supervisor y Usuario en la institución recién creada sin aviso.
+        using var clienteAdmin = Cliente();
+        var loginAdminResp = await clienteAdmin.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest("1700000091", "1700000091", nuevaInstitucion.Id));
+        Assert.Equal(HttpStatusCode.OK, loginAdminResp.StatusCode);
+        var loginAdmin = (await loginAdminResp.Content.ReadFromJsonAsync<ResultadoLoginDto>())!;
+        Assert.True(loginAdmin.DebeCambiarContrasena);
+        Assert.True(loginAdmin.RequiereAceptarProteccionDatos);
+        Assert.Equal(HttpStatusCode.OK, (await clienteAdmin.PostAsJsonAsync(
+            "/api/auth/cambiar-clave", new CambiarContrasenaRequest(null, "NuevaClaveAdminInicial91"))).StatusCode);
+
+        var sesionAdmin = (await clienteAdmin.GetFromJsonAsync<SesionUsuarioDto>("/api/auth/sesion"))!;
+        Assert.True(sesionAdmin.RequiereAceptarProteccionDatos);
+        Assert.Empty(sesionAdmin.Documento);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, (await clienteAdmin.GetAsync("/api/proteccion-datos/aviso")).StatusCode);
+        var bloqueoAdmin = await clienteAdmin.GetAsync("/api/personas");
+        Assert.Equal(HttpStatusCode.Forbidden, bloqueoAdmin.StatusCode);
+        Assert.Equal("ACEPTACION_PROTECCION_DATOS_PENDIENTE", (await bloqueoAdmin.Content.ReadFromJsonAsync<MensajeRespuesta>())!.Codigo);
+
+        foreach (var rolInstitucional in new[] { RolUsuario.Supervisor, RolUsuario.Usuario })
+        {
+            var cuenta = await CuentaAsync(rolInstitucional, new InstitucionId(nuevaInstitucion.Id));
+            using var clienteRol = Cliente();
+            Assert.True((await LoginAsync(clienteRol, cuenta)).RequiereAceptarProteccionDatos);
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, (await clienteRol.GetAsync("/api/proteccion-datos/aviso")).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, (await clienteRol.GetAsync("/api/mis-datos")).StatusCode);
+        }
+
         Assert.Equal(0, await EvidenciasAsync());
     }
 

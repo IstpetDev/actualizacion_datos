@@ -106,11 +106,13 @@ public partial class AgregarPlantillasGlobalesYConfiguracionDocumento : Migratio
         migrationBuilder.DeleteData(
             table: "versiones_plantilla_hoja_de_vida",
             keyColumn: "id",
+            keyColumnType: "uuid",
             keyValue: versionId);
 
         migrationBuilder.DeleteData(
             table: "plantillas_hoja_de_vida",
             keyColumn: "id",
+            keyColumnType: "uuid",
             keyValue: plantillaId);
 
         migrationBuilder.DropTable(
