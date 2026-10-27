@@ -64,14 +64,14 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** endpoints y cliente que consumen T-03 a T-08.  
 **Dependencias:** T-01. **ADR aplicable:** ADR-0029, ADR-0004.
 
-- [ ] Pruebas que fallen: crear, editar, nombre repetido (409), tipo de funcionario de otra institución (404), desactivar conserva certificados (RF-CAP-003), rol sin permiso (RF-CAP-015), aislamiento entre instituciones (RF-CAP-013) y que crear no cambie el estado de actualizaciones enviadas o aprobadas (RF-CAP-012).
-- [ ] Implementar servicio y endpoints reutilizando `MapRecurso`.
-- [ ] Regenerar `openapi/v1.json` y el cliente.
-- [ ] `dotnet test src/Backend` (incluye el contrato OpenAPI).
-- [ ] Revisar RF-CAP-001, 003, 012, 013, 015.
+- [x] Pruebas que fallen: crear, editar, nombre repetido (409), tipo de funcionario de otra institución (404), desactivar conserva certificados (RF-CAP-003), rol sin permiso (RF-CAP-015), aislamiento entre instituciones (RF-CAP-013) y que crear no cambie el estado de actualizaciones enviadas o aprobadas (RF-CAP-012).
+- [x] Implementar servicio y endpoints reutilizando `MapRecurso`.
+- [x] Regenerar `openapi/v1.json` y el cliente.
+- [x] `dotnet test src/Backend` (incluye el contrato OpenAPI).
+- [x] Revisar RF-CAP-001, 003, 012, 013, 015.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-01.
+**Resultado registrado:** completado el 2026-10-27; endpoints CRUD, reporte de cumplimiento con detección automática de exención por fecha de ingreso, OpenAPI y cliente Angular actualizados; 7 pruebas específicas y 573 unitarias pasando.  
+**Bloqueos:** Ninguno.
 
 ## T-03 — La persona ve y sube sus obligatorias
 

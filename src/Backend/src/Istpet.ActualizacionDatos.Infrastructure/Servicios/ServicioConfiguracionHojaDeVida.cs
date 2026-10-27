@@ -267,4 +267,190 @@ public sealed class ServicioConfiguracionHojaDeVida(
     private static TipoFuncionarioDto Dto(TipoFuncionario t) => new(t.Id, t.Codigo, t.Nombre, t.EsDocente, t.Activo);
     private static TipoDocumentoDto Dto(TipoDocumento t) => new(t.Id, t.Codigo, t.Nombre, t.Descripcion, t.TieneVencimiento, t.Orden, t.Activo);
     private static RequisitoDocumentoDto Dto(RequisitoDocumento r) => new(r.Id, r.TipoDocumentoId, r.TipoFuncionarioId, r.EsObligatorio, r.Activo);
+    private static CapacitacionObligatoriaDto Dto(CapacitacionObligatoria c) =>
+        new(c.Id, c.Nombre, c.InstitucionOrganizadora, c.HorasEsperadas, c.FechaRealizacion, c.TipoFuncionarioId, c.Activo, c.Orden);
+
+    public async Task<List<CapacitacionObligatoriaDto>> ListarCapacitacionesObligatoriasAsync(CancellationToken ct = default)
+    {
+        return await db.CapacitacionesObligatorias
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == InstitucionActual)
+            .OrderBy(c => c.Orden)
+            .ThenBy(c => c.Nombre)
+            .Select(c => Dto(c))
+            .ToListAsync(ct);
+    }
+
+    public async Task<CapacitacionObligatoriaDto> CrearCapacitacionObligatoriaAsync(GuardarCapacitacionObligatoriaRequest request, CancellationToken ct = default)
+    {
+        ValidarCapacitacionObligatoria(request);
+        if (request.TipoFuncionarioId.HasValue)
+        {
+            await ObtenerTipoFuncionarioAsync(request.TipoFuncionarioId.Value, ct);
+        }
+
+#pragma warning disable CA1862, CA1304, CA1311
+        var nombreUpper = request.Nombre.Trim().ToUpperInvariant();
+        var existeMismoNombre = await db.CapacitacionesObligatorias
+            .AnyAsync(c => c.InstitucionId == InstitucionActual && c.Nombre.ToUpper() == nombreUpper, ct);
+#pragma warning restore CA1862, CA1304, CA1311
+
+        if (existeMismoNombre)
+        {
+            throw new ConflictoEstadoException($"Ya existe una capacitación obligatoria con el nombre '{request.Nombre.Trim()}' en la institución.");
+        }
+
+        var obligatoria = new CapacitacionObligatoria(
+            Guid.NewGuid(),
+            InstitucionActual,
+            request.Nombre,
+            request.InstitucionOrganizadora,
+            request.HorasEsperadas,
+            request.FechaRealizacion,
+            request.TipoFuncionarioId,
+            request.Activo,
+            request.Orden);
+
+        db.CapacitacionesObligatorias.Add(obligatoria);
+        await GuardarAsync(ct);
+        return Dto(obligatoria);
+    }
+
+    public async Task<CapacitacionObligatoriaDto> ActualizarCapacitacionObligatoriaAsync(Guid id, GuardarCapacitacionObligatoriaRequest request, CancellationToken ct = default)
+    {
+        ValidarCapacitacionObligatoria(request);
+        var obligatoria = await db.CapacitacionesObligatorias
+            .SingleOrDefaultAsync(c => c.Id == id && c.InstitucionId == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación obligatoria no existe en la institución.");
+
+        if (request.TipoFuncionarioId.HasValue && request.TipoFuncionarioId != obligatoria.TipoFuncionarioId)
+        {
+            await ObtenerTipoFuncionarioAsync(request.TipoFuncionarioId.Value, ct);
+        }
+
+#pragma warning disable CA1862, CA1304, CA1311
+        var nombreUpper = request.Nombre.Trim().ToUpperInvariant();
+        var existeMismoNombre = await db.CapacitacionesObligatorias
+            .AnyAsync(c => c.InstitucionId == InstitucionActual && c.Id != id && c.Nombre.ToUpper() == nombreUpper, ct);
+#pragma warning restore CA1862, CA1304, CA1311
+
+        if (existeMismoNombre)
+        {
+            throw new ConflictoEstadoException($"Ya existe otra capacitación obligatoria con el nombre '{request.Nombre.Trim()}' en la institución.");
+        }
+
+        obligatoria.Actualizar(
+            request.Nombre,
+            request.InstitucionOrganizadora,
+            request.HorasEsperadas,
+            request.FechaRealizacion,
+            request.TipoFuncionarioId,
+            request.Activo,
+            request.Orden);
+
+        await GuardarAsync(ct);
+        return Dto(obligatoria);
+    }
+
+    public async Task EliminarCapacitacionObligatoriaAsync(Guid id, CancellationToken ct = default)
+    {
+        var obligatoria = await db.CapacitacionesObligatorias
+            .SingleOrDefaultAsync(c => c.Id == id && c.InstitucionId == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación obligatoria no existe en la institución.");
+
+        obligatoria.Desactivar();
+        await db.SaveChangesAsync(ct);
+    }
+
+    public async Task<List<CumplimientoCapacitacionObligatoriaDto>> ObtenerCumplimientoObligatoriasAsync(CancellationToken ct = default)
+    {
+        var obligatorias = await db.CapacitacionesObligatorias
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == InstitucionActual && c.Activo)
+            .OrderBy(c => c.Orden)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync(ct);
+
+        if (obligatorias.Count == 0)
+        {
+            return [];
+        }
+
+        var personas = await db.Personas
+            .AsNoTracking()
+            .Where(p => p.InstitucionId == InstitucionActual && p.Rol == RolUsuario.Usuario && p.AccesoHabilitado)
+            .ToListAsync(ct);
+
+        var personasIds = personas.Select(p => p.Id).ToList();
+        var capacitaciones = await db.Capacitaciones
+            .AsNoTracking()
+            .Where(c => personasIds.Contains(c.PersonaId) && c.CapacitacionObligatoriaId != null)
+            .ToListAsync(ct);
+
+        var tiposMap = await db.TiposFuncionario
+            .AsNoTracking()
+            .Where(t => t.InstitucionId == InstitucionActual)
+            .ToDictionaryAsync(t => t.Id, t => t.Nombre, ct);
+
+        var resultado = new List<CumplimientoCapacitacionObligatoriaDto>();
+
+        foreach (var ob in obligatorias)
+        {
+            var personasAplica = personas.Where(p => ob.AplicaA(p.TipoFuncionarioId)).ToList();
+            var pendientes = new List<PersonaPendienteCapacitacionDto>();
+            var cumplidas = 0;
+            var exentas = 0;
+
+            foreach (var persona in personasAplica)
+            {
+                var capacitacionVinculada = capacitaciones
+                    .FirstOrDefault(c => c.PersonaId == persona.Id && c.CapacitacionObligatoriaId == ob.Id);
+
+                if (capacitacionVinculada != null)
+                {
+                    cumplidas++;
+                }
+                else if (ob.EsExentoPorNuevoIngreso(persona.FechaIngresoInstitucion))
+                {
+                    exentas++;
+                }
+                else
+                {
+                    string? tipoNombre = persona.TipoFuncionarioId.HasValue && tiposMap.TryGetValue(persona.TipoFuncionarioId.Value, out var n)
+                        ? n
+                        : null;
+
+                    pendientes.Add(new PersonaPendienteCapacitacionDto(
+                        persona.Id,
+                        persona.Nombre ?? string.Empty,
+                        persona.Documento,
+                        tipoNombre,
+                        persona.FechaIngresoInstitucion));
+                }
+            }
+
+            resultado.Add(new CumplimientoCapacitacionObligatoriaDto(
+                ob.Id,
+                ob.Nombre,
+                personasAplica.Count,
+                cumplidas,
+                exentas,
+                pendientes.Count,
+                pendientes));
+        }
+
+        return resultado;
+    }
+
+    private static void ValidarCapacitacionObligatoria(GuardarCapacitacionObligatoriaRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Nombre) || request.Nombre.Trim().Length > 200)
+        {
+            throw new ReglaNegocioException("El nombre de la capacitación obligatoria es obligatorio y no puede superar 200 caracteres.");
+        }
+        if (request.HorasEsperadas is <= 0)
+        {
+            throw new ReglaNegocioException("Las horas esperadas deben ser mayores a 0.");
+        }
+    }
 }

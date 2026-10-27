@@ -32,4 +32,11 @@ public interface IServicioConfiguracionHojaDeVida
 
     /// <summary>Asigna o quita masivamente el tipo de funcionario a un conjunto de personas o a las personas sin tipo.</summary>
     Task<ResultadoAsignacionTipoMasivoDto> AsignarTipoFuncionarioMasivoAsync(AsignarTipoFuncionarioMasivoRequest request, CancellationToken ct = default);
+
+    Task<List<CapacitacionObligatoriaDto>> ListarCapacitacionesObligatoriasAsync(CancellationToken ct = default);
+    Task<CapacitacionObligatoriaDto> CrearCapacitacionObligatoriaAsync(GuardarCapacitacionObligatoriaRequest request, CancellationToken ct = default);
+    Task<CapacitacionObligatoriaDto> ActualizarCapacitacionObligatoriaAsync(Guid id, GuardarCapacitacionObligatoriaRequest request, CancellationToken ct = default);
+    /// <summary>Da de baja mediante Activo=false y conserva los vínculos existentes (RF-CAP-003).</summary>
+    Task EliminarCapacitacionObligatoriaAsync(Guid id, CancellationToken ct = default);
+    Task<List<CumplimientoCapacitacionObligatoriaDto>> ObtenerCumplimientoObligatoriasAsync(CancellationToken ct = default);
 }
