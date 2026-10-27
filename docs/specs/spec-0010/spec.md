@@ -1,8 +1,8 @@
 # Liberación de secciones de la hoja de vida por fases — Spec
 
 **ID:** spec-0010; prioritaria; relacionada con el issue #92  
-**Versión:** 0.1  
-**Estado:** Borrador para revisión funcional  
+**Versión:** 0.2  
+**Estado:** Borrador para aprobación (v0.2, decisiones del solicitante del 2026-10-27)  
 **Revisor funcional:** Por designar (el solicitante es Joseph Baño, quien definió las decisiones de «Decisiones del solicitante»)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
@@ -16,7 +16,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 ## Decisiones del solicitante (2026-10-27)
 
 1. El interruptor es **por institución**, no por campaña.
-2. Solo el `admin` de la institución abre y cierra secciones.
+2. Abre y cierra secciones el `admin` de la institución. El `superadmin` también puede, pero sus vistas actuales lo limitan y **no se trabajan en este cambio**.
 3. Se puede **cerrar** una sección previamente abierta.
 4. Abrir una sección nueva **no cambia** el estado de quien ya envió o fue aprobado: la sección nueva le aparece pendiente (misma lógica que RF-CAP-012 de spec-0008).
 
@@ -26,7 +26,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 |---|---|---|
 | Spec | `docs/specs/spec-0003/spec.md`, RF-HDV-009 | Lista de obligatorios para enviar. Esta spec la hace depender de las secciones abiertas. |
 | Spec | `docs/specs/spec-0001/spec.md`, RF-CAM-002, 003, 004; RF-FLU-005, 006 | Edición solo con campaña abierta; borrador no se envía solo; una sola versión aprobada; el supervisor no ve borradores. |
-| Spec | `docs/specs/spec-0001/spec.md`, RF-MUL-004 | El `superadmin` opera entre instituciones. Esta spec limita abrir y cerrar al `admin` (PD-SEC-03). |
+| Spec | `docs/specs/spec-0001/spec.md`, RF-MUL-004 | El `superadmin` opera entre instituciones. El `superadmin` puede abrir y cerrar por la API, sin pantalla nueva (PD-SEC-03). |
 | Spec relacionada | `docs/specs/spec-0008/spec.md` (v0.2) | Capacitaciones obligatorias: se entrega cerrada hasta que el `admin` la abra. |
 | ADR | ADR-0004, Vigente, `docs/decisiones/ADR-0004-multitenancia-esquema-unico.md` | Configuración aislada por institución. |
 | ADR | ADR-0010, Vigente, `docs/decisiones/ADR-0010-hoja-de-vida-estructurada.md` | Secciones de la hoja de vida y validación de completitud. |
@@ -56,6 +56,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 - Avisos o correos a las personas al abrir una sección.
 - Cambiar campos, reglas de validación o el contenido de cada sección.
 - Que el `supervisor` o la persona abran o cierren secciones.
+- Pantallas propias del `superadmin` para este interruptor.
 
 **Límites del proceso:** empieza cuando el `admin` abre o cierra una sección y termina cuando la persona la ve (o deja de verla) y el envío se valida con ese conjunto.
 
@@ -65,7 +66,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 |---|---|---|---|
 | RF-SEC-001 | Dado un `admin`, cuando abre la configuración de secciones, ve las siete secciones de la hoja de vida de **su institución** con su estado, abierta o cerrada. | Sin priorizar | Decisiones del solicitante 1 y 2 |
 | RF-SEC-002 | Dado un `admin`, cuando abre o cierra una sección, el sistema guarda el estado para su institución y lo aplica de inmediato. | Sin priorizar | Decisiones 1 y 3 |
-| RF-SEC-003 | Dado un `usuario`, `supervisor` o `superadmin`, cuando intenta abrir o cerrar una sección, el sistema lo rechaza. | Sin priorizar | Decisión 2; PD-SEC-03 |
+| RF-SEC-003 | Dado un `usuario` o `supervisor`, cuando intenta abrir o cerrar una sección, el sistema lo rechaza. El `superadmin` queda permitido por la API (RF-MUL-004), sin pantalla propia en esta versión. | Sin priorizar | Decisión 2; PD-SEC-03 |
 | RF-SEC-004 | Dada una persona, cuando abre su hoja de vida, el sistema muestra solo las secciones abiertas de su institución; las cerradas no aparecen. | Sin priorizar | Objetivo |
 | RF-SEC-005 | Dada una sección cerrada, cuando se intenta guardar un dato o subir un archivo en ella, el sistema lo rechaza, también por la API, con un mensaje que indica que la sección no está disponible. | Sin priorizar | RF-CAM-003 por analogía |
 | RF-SEC-006 | Dado un `usuario` que envía a revisión, cuando evalúa la completitud, el sistema exige solo lo obligatorio de las secciones abiertas y no menciona las cerradas. | Sin priorizar | RF-HDV-009 |
@@ -128,19 +129,21 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 | ID | Contradicción o dato faltante | Impacto | Quién decide |
 |---|---|---|---|
 | PD-SEC-01 | **Dónde se guarda el interruptor** (por ejemplo, una tabla por institución y sección, o un campo de configuración). No se escoge en esta spec. | Plan y migración. | ADR nuevo, a redactar antes de las tareas |
-| PD-SEC-02 | **Estado inicial** al aplicar el cambio. Propuesta: las instituciones existentes quedan con todas las secciones abiertas (sin cambio de comportamiento) y el `admin` cierra las que no quiera **antes de comunicar** a las personas; la ficha no se puede cerrar. Alternativa: dejar solo la ficha abierta desde el despliegue. | RF-SEC-009, 013; riesgo de que alguien llene secciones antes del cierre. | Revisor funcional |
-| PD-SEC-03 | **`superadmin`.** El solicitante dijo «solo admin», pero RF-MUL-004 de spec-0001 permite al `superadmin` operar en cualquier institución. Propuesta: el `superadmin` no abre ni cierra secciones. | RF-SEC-003 | Revisor funcional |
-| PD-SEC-04 | **Supervisor y exportación con secciones cerradas.** Propuesta: lo ya cargado en una sección cerrada sigue visible al `supervisor` en solo lectura y se exporta; el interruptor solo controla lo que la persona ve y escribe. | Revisión y exportación. | Revisor funcional |
+| PD-SEC-02 | **Estado inicial** al aplicar el cambio. | RF-SEC-009, 013 | **Resuelto (v0.2, 2026-10-27), según la propuesta (interpretación a confirmar):** las instituciones existentes quedan con todas las secciones abiertas, sin cambio de comportamiento; el `admin` cierra las que no quiera **antes de comunicar** a las personas; la ficha no se puede cerrar. |
+| PD-SEC-03 | **`superadmin`.** | RF-SEC-003 | **Resuelto (v0.2, 2026-10-27):** el `superadmin` sí puede (RF-MUL-004), pero sus vistas lo limitan y no se trabaja en este cambio. |
+| PD-SEC-04 | **Supervisor y exportación con secciones cerradas.** | Revisión y exportación | **Resuelto (v0.2, 2026-10-27):** lo ya cargado sigue visible al `supervisor` en solo lectura y se exporta; el interruptor controla solo lo que la persona ve y escribe. |
 | PD-SEC-05 | **Granularidad.** Propuesta: siete secciones como están hoy. La foto y el perfil van dentro de la ficha. | RF-SEC-001 | Revisor funcional |
 | PD-SEC-06 | **Cuenta bancaria.** Depende de lo que traiga la nómina. Propuesta: tratarla como una sección más, abierta o cerrada. | RF-SEC-001 | Revisor funcional |
 | PD-SEC-07 | **Datos en borrador al vencer la campaña.** Ver PD-CAP-10 de spec-0008: el `admin` ve lo cargado aunque no se haya enviado. Esta spec lo hereda para las secciones abiertas y cerradas. | RF-SEC-007 | Resuelto en spec-0008 (opción 1) |
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1  
+**Versión revisada:** 0.2  
 **Decisión:** Pendiente  
 **Aprobó:** Pendiente  
 **Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Pendiente
+**Ajustes solicitados:** Ninguno hasta ahora.
+
+**Cambios de 0.1 a 0.2:** PD-SEC-02, 03 y 04 resueltos; RF-SEC-003 permite al `superadmin` por la API; se excluyen pantallas propias del `superadmin`.
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
