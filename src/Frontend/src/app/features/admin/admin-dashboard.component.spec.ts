@@ -422,4 +422,182 @@ describe('AdminDashboardComponent', () => {
     expect(component.tabActiva()).toBe('configuracion');
     expect(compiled.querySelector('[data-testid="contenido-configuracion"]')).toBeTruthy();
   });
+
+  it('debe_aislar_el_panel_de_cuentas_bancarias_en_su_propia_pestana', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // En la pestaña inicial (campañas), el contenido de cuentas bancarias NO debe estar presente
+    expect(component.tabActiva()).toBe('campanas');
+    expect(compiled.querySelector('[data-testid="contenido-cuentas"]')).toBeNull();
+
+    // Al hacer clic en la pestaña de cuentas bancarias
+    const tabCuentasBtn = compiled.querySelector(
+      '[data-testid="tab-cuentas"]',
+    ) as HTMLButtonElement;
+    expect(tabCuentasBtn).toBeTruthy();
+
+    tabCuentasBtn.click();
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('cuentas');
+    expect(compiled.querySelector('[data-testid="contenido-cuentas"]')).toBeTruthy();
+  });
+
+  it('filtra_personas_por_texto_de_busqueda_en_documento_nombre_o_correo', () => {
+    const listaTest: PersonaDto[] = [
+      {
+        ...personasMock[0],
+        id: '1',
+        documento: '1711111111',
+        nombre: 'Carlos Perez',
+        correo: 'carlos@ejemplo.test',
+      },
+      {
+        ...personasMock[0],
+        id: '2',
+        documento: '1722222222',
+        nombre: 'Maria Gomez',
+        correo: 'maria@ejemplo.test',
+      },
+    ];
+    component.personas.set(listaTest);
+
+    // Búsqueda por documento
+    component.actualizarBusqueda('171111');
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].documento).toBe('1711111111');
+
+    // Búsqueda por nombre (insensible a mayúsculas)
+    component.actualizarBusqueda('MARIA');
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].nombre).toBe('Maria Gomez');
+
+    // Búsqueda sin coincidencia
+    component.actualizarBusqueda('inexistente');
+    expect(component.personasFiltradas().length).toBe(0);
+
+    // Limpiar búsqueda
+    component.actualizarBusqueda('');
+    expect(component.personasFiltradas().length).toBe(2);
+  });
+
+  it('filtra_personas_por_estado_de_acceso_habilitado_o_pendiente', () => {
+    const listaTest: PersonaDto[] = [
+      { ...personasMock[0], id: '1', accesoHabilitado: true },
+      { ...personasMock[0], id: '2', accesoHabilitado: false },
+      { ...personasMock[0], id: '3', accesoHabilitado: true },
+    ];
+    component.personas.set(listaTest);
+
+    component.actualizarFiltroEstado('habilitado');
+    expect(component.personasFiltradas().length).toBe(2);
+    expect(component.personasFiltradas().every((p) => p.accesoHabilitado)).toBe(true);
+
+    component.actualizarFiltroEstado('pendiente');
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas().every((p) => !p.accesoHabilitado)).toBe(true);
+
+    component.actualizarFiltroEstado('todos');
+    expect(component.personasFiltradas().length).toBe(3);
+  });
+
+  it('paginacion_de_personas_muestra_bloques_y_navega_entre_paginas', () => {
+    const lista30: PersonaDto[] = Array.from({ length: 30 }, (_, i) => ({
+      ...personasMock[0],
+      id: `id-${i + 1}`,
+      documento: `17000000${(i + 1).toString().padStart(2, '0')}`,
+      nombre: `Persona ${i + 1}`,
+    }));
+
+    component.personas.set(lista30);
+    component.cambiarFilasPorPagina(25);
+
+    expect(component.totalPaginas()).toBe(2);
+    expect(component.paginaActual()).toBe(1);
+    expect(component.personasPaginadas().length).toBe(25);
+    expect(component.indicePrimerElemento()).toBe(1);
+    expect(component.indiceUltimoElemento()).toBe(25);
+
+    component.paginaSiguiente();
+    expect(component.paginaActual()).toBe(2);
+    expect(component.personasPaginadas().length).toBe(5);
+    expect(component.indicePrimerElemento()).toBe(26);
+    expect(component.indiceUltimoElemento()).toBe(30);
+
+    // No avanzar más allá de la última página
+    component.paginaSiguiente();
+    expect(component.paginaActual()).toBe(2);
+
+    // Retroceder
+    component.paginaAnterior();
+    expect(component.paginaActual()).toBe(1);
+
+    // No retroceder antes de la primera
+    component.paginaAnterior();
+    expect(component.paginaActual()).toBe(1);
+
+    // Cambiar a 50 filas por página
+    component.cambiarFilasPorPagina(50);
+    expect(component.totalPaginas()).toBe(1);
+    expect(component.personasPaginadas().length).toBe(30);
+  });
+
+  it('la_tabla_de_personas_muestra_el_estado_de_la_ficha_cargada_o_sin_ficha', () => {
+    const listaTest: PersonaDto[] = [
+      { ...personasMock[0], id: '1', tieneFicha: true },
+      { ...personasMock[0], id: '2', tieneFicha: false },
+    ];
+    component.cambiarTab('personas');
+    component.personas.set(listaTest);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelectorAll('[data-testid="ficha-cargada"]').length).toBe(1);
+    expect(compiled.querySelectorAll('[data-testid="ficha-pendiente"]').length).toBe(1);
+  });
+
+  it('muestra_el_checklist_de_preparacion_institucional_en_campanas', () => {
+    component.cambiarTab('campanas');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const checklist = compiled.querySelector('[data-testid="checklist-preparacion"]');
+    expect(checklist).toBeTruthy();
+
+    const indicadorNomina = compiled.querySelector('[data-testid="indicador-nomina"]');
+    const indicadorCampana = compiled.querySelector('[data-testid="indicador-campana"]');
+    expect(indicadorNomina).toBeTruthy();
+    expect(indicadorCampana).toBeTruthy();
+  });
+
+  it('permite_navegar_desde_el_checklist_hacia_la_pestana_de_personas_si_no_hay_nomina', () => {
+    component.cambiarTab('campanas');
+    component.personas.set([]);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const linkIrPersonas = compiled.querySelector(
+      '[data-testid="link-ir-personas"]',
+    ) as HTMLButtonElement;
+    expect(linkIrPersonas).toBeTruthy();
+
+    linkIrPersonas.click();
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('personas');
+  });
+
+  it('permite_cambiar_de_pestana_mediante_el_selector_movil', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const selectMobile = compiled.querySelector(
+      '[data-testid="select-tab-admin-mobile"]',
+    ) as HTMLSelectElement;
+    expect(selectMobile).toBeTruthy();
+
+    selectMobile.value = 'cuentas';
+    selectMobile.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('cuentas');
+  });
 });
