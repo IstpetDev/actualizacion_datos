@@ -1,6 +1,6 @@
 # Capacitaciones obligatorias de la institución — Plan de implementación
 
-**Spec:** `spec.md` versión 0.1, **sin aprobar**. Este plan se adelantó sobre la v0.1 por indicación de quien desarrolla (2026-10-27); si la revisión funcional cambia el alcance, se rehace antes de ejecutar tareas.  
+**Spec:** `spec.md` versión 0.2, **sin aprobar**. Este plan se adelantó sobre la v0.1 y se actualizó a la v0.2 por indicación de quien desarrolla (2026-10-27); si la revisión funcional cambia el alcance, se rehace antes de ejecutar tareas.  
 **Objetivo:** el `admin` configura capacitaciones obligatorias; la persona las ve y sube su certificado; el envío se bloquea si falta una que le aplica; supervisor y admin ven el cumplimiento y se exporta.  
 **Áreas:** `src/Backend` y `src/Frontend`  
 **Tecnologías:** .NET 10 con Clean Architecture y EF Core con PostgreSQL, xUnit; Angular 22 con Vitest; cliente OpenAPI con NSwag (`openapi/v1.json`).
@@ -19,6 +19,8 @@
 | RF-CAP-011 | Hoja nueva y columnas en el Excel; el `.zip` ya incluye certificados por sección. | `.../Infrastructure/Servicios/ServicioExportacion.cs` | T-06 | V-05 |
 | RF-CAP-012 | No se toca el estado de ninguna actualización al crear o activar una obligatoria; el cumplimiento se calcula al leer. | `.../Infrastructure/Servicios/ServicioConfiguracionHojaDeVida.cs` | T-02 | V-02 |
 | RF-CAP-013 | Filtro por institución (ADR-0004) y verificación en cada consulta por id. | Todos los servicios anteriores | T-02 a T-06 | V-02 |
+| RF-CAP-016 | Consulta de solo lectura para el `admin` de actualizaciones en borrador de su institución, con marca «incompleto, no enviado», incluida en la exportación; cada lectura se audita. Requiere un permiso nuevo distinto del de la revisión del supervisor. | `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioRevision.cs`, `.../Servicios/ServicioExportacion.cs`, `.../Application/Servicios/IServicioAuditoria.cs` | T-10 | V-08 |
+| RF-CAP-017 | La regla de completitud y el bloque de la persona consultan si la sección «Capacitaciones» está abierta (spec-0010); si está cerrada, no exigen ni muestran. | `.../Infrastructure/Servicios/ValidadorCompletitudEnvio.cs` | T-04, T-07 | V-03 |
 | Escenarios 1 a 5 | Recorrido de punta a punta. | `docs/specs/spec-0008/test-e2e.md` (pendiente de aprobación de la spec) | T-09 | V-07 |
 
 Excepciones: ningún requisito queda sin tarea. `test-e2e.md` no se crea todavía (la guía de specs lo reserva a la aprobación).
@@ -89,6 +91,7 @@ Una migración nueva: tabla `capacitaciones_obligatorias` y columna nullable en 
 | PD-CAP-04: campaña | Vincular a campaña cambia el modelo | Revisor funcional |
 | Capacitación equivalente subida antes de crear la obligatoria | La persona la tendría que subir de nuevo o vincular | Punto abierto: decidir si se permite vincular una existente (nueva PD en la spec) |
 | `develop` avanza (PR #94 y #87 abiertos) | Conflictos en `ServicioHojaDeVida.cs` y en el cliente | Rebase frecuente; regenerar cliente al final |
+| spec-0010 (secciones por fases) aún sin aprobar | T-04 y T-07 dependen del interruptor; sin él, "Capacitaciones" quedaría siempre abierta | Implementar spec-0010 primero; hasta entonces T-04 y T-07 no se ejecutan | Revisor funcional |
 | Pantalla de admin en reorganización (#83) | Conflicto en `configuracion-requisitos.component.ts` | Mantener la sección acotada y comprobar #83 antes de T-08 |
 
 ## Comprobación del plan

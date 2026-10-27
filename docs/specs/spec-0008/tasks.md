@@ -1,7 +1,7 @@
 # Capacitaciones obligatorias de la institución — Tareas
 
-**Spec:** `spec.md` versión 0.1 (sin aprobar)  
-**Plan:** `plan.md` versión 0.1  
+**Spec:** `spec.md` versión 0.2 (sin aprobar)  
+**Plan:** `plan.md` versión 0.2  
 **Estado:** Borrador adelantado. **No ejecutar** hasta que la revisión funcional apruebe la spec; si cambia, se rehacen plan y tareas.
 
 Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API regenera `openapi/v1.json` y el cliente. Todas incluyen pruebas (criterio obligatorio del issue #92). Sin datos reales.
@@ -19,7 +19,8 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 | T-06 | RF-CAP-010, 011 | T-02 | T-03, T-04, T-05 | Por asignar |
 | T-07 | RF-CAP-004, 005, 009 | T-03, T-05 | T-08 | Por asignar |
 | T-08 | RF-CAP-001, 002, 003, 010 | T-02, T-06 | T-07 | Por asignar |
-| T-09 | Todos | T-01 a T-08 | Ninguna | Coordinador |
+| T-10 | RF-CAP-016 | T-02 | T-03 a T-06 | Por asignar |
+| T-09 | Todos | T-01 a T-08, T-10 | Ninguna | Coordinador |
 
 ## T-00 — Registrar la aprobación de la spec
 
@@ -173,6 +174,23 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 **Resultado registrado:** pendiente  
 **Bloqueos:** T-02, T-06.
+
+## T-10 — El admin ve los borradores incompletos al vencer la campaña
+
+**Objetivo:** consulta y exportación de solo lectura de borradores de su institución, marcados como incompletos y auditados.  
+**Área y rama:** Backend (y la lista del admin en Frontend); misma rama.  
+**Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioRevision.cs`, `.../Infrastructure/Servicios/ServicioExportacion.cs`, `.../WebApi/Endpoints/FlujoActualizacionEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/FlujoRevisionTests.cs`; coordinar con T-05 y T-06 que tocan los mismos servicios.  
+**Entrada/contrato:** RF-CAP-016, PD-CAP-10 opción 1.  
+**Salida para integración:** endpoint y Excel con la marca.  
+**Dependencias:** T-02. **ADR aplicable:** probablemente nuevo si cambia la política de visibilidad de borradores (RF-FLU-006); decidir antes de empezar.
+
+- [ ] Pruebas que fallen: tras el fin de la campaña el `admin` ve el borrador de su institución con la marca; el `supervisor` no; otra institución no; cada lectura queda en auditoría sin contenido; antes del fin de la campaña no se ve.
+- [ ] Implementar.
+- [ ] `dotnet test src/Backend`.
+- [ ] Revisar RF-CAP-016.
+
+**Resultado registrado:** pendiente  
+**Bloqueos:** T-02; posible ADR.
 
 ## T-09 — Verificación integral y PR
 
