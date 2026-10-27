@@ -1,6 +1,6 @@
 # Publicación de avisos de protección de datos
 
-El acceso requiere un aviso vigente aplicable a la institución y rol de la cuenta. Sin aviso, las cuentas pueden resolver el cambio obligatorio de contraseña y cerrar sesión, pero no consultar ni modificar datos de negocio. La aceptación se registra individualmente; publicar nunca acepta por una persona.
+El acceso de los roles institucionales (`Usuario`, `Supervisor`, `Admin`) requiere un aviso vigente aplicable a la institución y rol de la cuenta. Sin aviso, esas cuentas pueden resolver el cambio obligatorio de contraseña y cerrar sesión, pero no consultar ni modificar datos de negocio. El rol global `Superadmin` está exento del aviso institucional para poder aprovisionar y administrar instituciones desde el arranque de la plataforma ([ADR-0034](decisiones/ADR-0034-exencion-superadmin-aviso-proteccion-datos.md)). La aceptación se registra individualmente; publicar nunca acepta por una persona.
 
 ## Autorización y primera carga
 
@@ -18,7 +18,7 @@ El operador autorizado prepara un JSON fuera del repositorio. Este ejemplo es un
   "declaracionAceptacion": "Sustituir por la declaración explícita autorizada",
   "fuenteOficial": "https://institucion.ejemplo.test/aviso-autorizado",
   "evidenciaAprobacion": "Sustituir por la referencia de autorización institucional",
-  "rolesDestinatarios": ["Usuario", "Supervisor", "Admin", "Superadmin"],
+  "rolesDestinatarios": ["Usuario", "Supervisor", "Admin"],
   "vigenteDesdeUtc": "2026-10-27T00:00:00Z",
   "vigenteHastaUtc": null,
   "aprobacionInstitucionalConfirmada": false
@@ -51,6 +51,6 @@ Con una cuenta ficticia del ambiente de prueba, autenticar, cambiar la contrase�
 
 `POST /api/mis-datos/aceptar-tratamiento` recibe exclusivamente `avisoId` y `acepta: true`. No recibe una identidad para aceptar por terceros. Una petición sin versión, con confirmación falsa, documento arbitrario o aviso ajeno no registra aceptación. Repetir la misma aceptación devuelve su fecha inicial.
 
-Probar consulta/guardado/subida/descarga/envío mediante API antes y después de aceptar. Sin aceptación vigente, el código es `ACEPTACION_PROTECCION_DATOS_PENDIENTE`; sin aviso aplicable, su lectura devuelve `AVISO_PROTECCION_DATOS_NO_DISPONIBLE`. Fallos de lectura o persistencia mantienen el acceso restringido. Rechazar cierra sesión; no genera evidencia. Ver [spec-0011](specs/spec-0011/spec.md), [ADR-0030](decisiones/ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) y su matriz de pruebas.
+Probar consulta/guardado/subida/descarga/envío mediante API antes y después de aceptar. Sin aceptación vigente, el código es `ACEPTACION_PROTECCION_DATOS_PENDIENTE`; sin aviso aplicable, su lectura devuelve `AVISO_PROTECCION_DATOS_NO_DISPONIBLE`. Fallos de lectura o persistencia mantienen el acceso restringido. Rechazar cierra sesión; no genera evidencia. Ver [spec-0011](specs/spec-0011/spec.md), [ADR-0030](decisiones/ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md), [ADR-0034](decisiones/ADR-0034-exencion-superadmin-aviso-proteccion-datos.md) y su matriz de pruebas.
 
 La institución conserva la responsabilidad de autorizar el contenido específico y definir sus reglas de conservación y retiro. No se acredita esa autorización con el estado del código o con una prueba ficticia.
