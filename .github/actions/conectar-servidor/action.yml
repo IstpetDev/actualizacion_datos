@@ -28,3 +28,10 @@ runs:
         chmod 700 ~/.ssh
         echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
+        cat << 'EOF' > ~/.ssh/config
+Host *
+  StrictHostKeyChecking accept-new
+  IdentityFile ~/.ssh/id_rsa
+  IdentitiesOnly yes
+EOF
+        chmod 600 ~/.ssh/config
