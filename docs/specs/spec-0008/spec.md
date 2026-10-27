@@ -2,8 +2,8 @@
 
 **ID:** spec-0008; issue #92  
 **Versión:** 0.2  
-**Estado:** Borrador para aprobación (v0.2, con las decisiones del solicitante del 2026-10-27)  
-**Revisor funcional:** Joseph Baño (solicitante del issue #92); falta su aprobación explícita de esta versión  
+**Estado:** Aprobado (v0.2, 2026-10-27; ver «Revisión funcional»)  
+**Revisor funcional:** Joseph Baño (solicitante del issue #92)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
 
@@ -46,7 +46,8 @@ Este cambio **modifica una regla aprobada**: RF-HDV-009 de spec-0003 dice «Ning
 **Incluye:**
 - El `admin` define, edita, desactiva y consulta las capacitaciones obligatorias de su institución.
 - Definir a quién aplica cada una: a todas las personas o a un tipo de funcionario.
-- La persona ve las obligatorias que le aplican, su estado y sube el certificado.
+- La persona ve las obligatorias que le aplican, su estado y sube el certificado o vincula una capacitación que ya tiene.
+- Un `supervisor` o `admin` puede vincular por ayuda una capacitación existente de la persona (RF-CAP-018).
 - Bloqueo del envío a revisión mientras falte alguna obligatoria que le aplica, indicando cuál.
 - El `supervisor` ve el cumplimiento de cada obligatoria en la revisión y puede marcarla al devolver (RF-HDV-011).
 - El `admin` ve un resumen de cumplimiento por capacitación y por persona.
@@ -89,6 +90,7 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 | RF-CAP-015 | Dado un `usuario`, `supervisor` o `admin` sin permiso, cuando intenta crear, editar o desactivar una obligatoria, el sistema lo rechaza. Solo el `admin` (y el `superadmin`) las configura. | Sin priorizar | Roles de spec-0001 |
 | RF-CAP-016 | Dada una campaña cuya fecha de fin ha pasado, cuando una persona dejó su actualización en borrador (por ejemplo, sin subir todas las obligatorias), el `admin` puede ver y exportar lo que cargó, marcado como «incompleto, no enviado» y distinto de lo aprobado. Cada lectura de un borrador de otra persona queda en la auditoría. El `supervisor` sigue sin ver borradores. Esta regla es para toda la hoja de vida, no solo capacitaciones. | Sin priorizar | PD-CAP-10 (opción 1); RF-CAM-004, RF-FLU-006 de spec-0001 |
 | RF-CAP-017 | Dada una institución con la sección «Capacitaciones» cerrada (spec-0010), cuando una persona envía, el sistema no exige las obligatorias ni las muestra; al abrirse la sección, se exigen según RF-CAP-004 y 007. | Sin priorizar | spec-0010, RF-SEC-004 a 006 |
+| RF-CAP-018 | Dada una obligatoria sin cumplir de una persona, cuando un `supervisor` o `admin` de su institución lo hace por ayuda, puede **vincular** a ella una capacitación que esa persona ya tiene (con su certificado). Solo vincula: no crea ni edita la capacitación. Se permite con la actualización en borrador o enviada (en revisión), no aprobada; cada vínculo queda en la auditoría con quién lo hizo, y la persona lo ve como cargada. | Sin priorizar | Decisión del solicitante, 2026-10-27; PD-CAP-11 |
 
 ## Escenarios del proceso
 
@@ -152,6 +154,7 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 - [ ] Ninguna operación cruza instituciones ni se permite sin rol (RF-CAP-013, 015).
 - [ ] Con actualización enviada o aprobada, la API rechaza cambiar certificados de obligatorias (RF-CAP-014).
 - [ ] Vencida la campaña, el `admin` ve y exporta los borradores incompletos con su marca y auditoría; el supervisor no (RF-CAP-016).
+- [ ] Un `supervisor` o `admin` puede vincular una capacitación existente de la persona a una obligatoria pendiente, con auditoría, y no puede con la actualización aprobada ni de otra institución (RF-CAP-018).
 - [ ] Con «Capacitaciones» cerrada no se exige ni se muestra nada de esto (RF-CAP-017).
 - [ ] Las reglas actuales de envío de RF-HDV-009 y el guardado de borradores siguen funcionando; las pruebas existentes siguen en verde.
 - [ ] Pruebas nuevas en xUnit y Vitest; `openapi/v1.json` y el cliente regenerados; CI del PR en verde; prueba E2E del flujo completo (admin configura, persona sube, supervisor revisa, admin ve el cumplimiento).
@@ -170,7 +173,7 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 | PD-CAP-08 | ¿Qué cuenta como cumplida? | RF-CAP-005, 009, 010 | **Resuelto (v0.2, 2026-10-27):** basta el certificado subido; las horas esperadas son informativas. |
 | PD-CAP-09 | Edición de una obligatoria ya usada. | RF-CAP-001, 003 | **Resuelto (v0.2, 2026-10-27):** cambiar el nombre no afecta los certificados; cambiar el alcance solo cambia a quién se exige en adelante. |
 | PD-CAP-10 | **Persona que no completa las obligatorias al vencer la campaña.** Sus datos quedan en borrador y nadie de la institución los ve (RF-CAM-004, RF-FLU-006). | RF-CAP-016 | **Resuelto (v0.2, 2026-10-27), opción 1:** el `admin` ve y exporta lo cargado como «incompleto, no enviado», con auditoría. Descartada la opción 2 (envío parcial con motivo). |
-| PD-CAP-11 | **Capacitación equivalente subida antes de crear la obligatoria.** ¿Puede la persona vincularla en vez de subirla de nuevo? | RF-CAP-005 | Propuesta del desarrollador: sí, puede vincular una existente suya. Pendiente de confirmar. |
+| PD-CAP-11 | **Capacitación equivalente subida antes de crear la obligatoria.** ¿Puede vincularla en vez de subirla de nuevo? | RF-CAP-005, 018 | **Resuelto (v0.2, 2026-10-27):** sí; la persona la vincula, y además un `supervisor` o `admin` puede vincularla por ayuda (RF-CAP-018). |
 
 ## Pendiente futuro (no entra en esta versión)
 
@@ -186,11 +189,11 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 ## Revisión funcional
 
 **Versión revisada:** 0.2  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
+**Decisión:** Aprobado  
+**Aprobó:** Joseph Baño, solicitante y responsable funcional del issue #92  
+**Fecha y evidencia de aprobación:** 2026-10-27; mensaje en la conversación de trabajo del issue #92 («si apruebo … el spec08 v2»), con el cambio de RF-CAP-018  
 **Ajustes solicitados:** Ninguno hasta ahora; el solicitante aceptó las propuestas de PD-CAP-06, 08 y 09, eligió la opción 1 de PD-CAP-10 y pidió dejar la analítica como pendiente.
 
-**Cambios de 0.1 a 0.2:** PD-CAP-02 a 10 resueltos; se agrega PD-CAP-11; RF-CAP-016 (el `admin` ve borradores incompletos tras vencer la campaña) y RF-CAP-017 (depende de spec-0010); fuente spec-0010; sección «Pendiente futuro».
+**Cambios de 0.1 a 0.2:** PD-CAP-02 a 11 resueltos; RF-CAP-018 (vincular por ayuda); RF-CAP-016 (el `admin` ve borradores incompletos tras vencer la campaña) y RF-CAP-017 (depende de spec-0010); fuente spec-0010; sección «Pendiente futuro».
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.

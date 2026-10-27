@@ -1,8 +1,8 @@
 # Capacitaciones obligatorias de la institución — Tareas
 
-**Spec:** `spec.md` versión 0.2 (sin aprobar)  
+**Spec:** `spec.md` versión 0.2 (aprobada 2026-10-27)  
 **Plan:** `plan.md` versión 0.2  
-**Estado:** Borrador adelantado. **No ejecutar** hasta que la revisión funcional apruebe la spec; si cambia, se rehacen plan y tareas.
+**Estado:** Preparado para implementación, con T-04 y T-07 bloqueadas por el interruptor de spec-0010. Si la spec cambia, se rehacen plan y tareas.
 
 Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API regenera `openapi/v1.json` y el cliente. Todas incluyen pruebas (criterio obligatorio del issue #92). Sin datos reales.
 
@@ -29,13 +29,13 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `docs/specs/spec-0008/spec.md`, `plan.md`, `tasks.md`, `test-e2e.md`, `docs/specs/README.md`.  
 **Dependencias:** aprobación del revisor funcional. **ADR aplicable:** Ninguno.
 
-- [ ] Registrar versión, aprobador y evidencia en «Revisión funcional».
-- [ ] Resolver PD-CAP-02 a 09 y ajustar requisitos si cambian.
-- [ ] Rehacer plan y tareas si cambió el alcance.
-- [ ] Crear `test-e2e.md` con los cinco escenarios.
+- [x] Registrar versión, aprobador y evidencia en «Revisión funcional».
+- [x] Resolver PD-CAP-02 a 11 y ajustar requisitos.
+- [ ] Ajustar plan y tareas a RF-CAP-018 (vincular por ayuda), en T-03 y T-05.
+- [x] Crear `test-e2e.md`.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** aprobación funcional.
+**Resultado registrado:** aprobación y test-e2e hechos el 2026-10-27; falta ajustar plan y tareas a RF-CAP-018.  
+**Bloqueos:** Ninguno.
 
 ## T-01 — Dominio, persistencia y migración
 

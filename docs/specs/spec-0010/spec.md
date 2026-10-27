@@ -2,7 +2,7 @@
 
 **ID:** spec-0010; prioritaria; relacionada con el issue #92  
 **Versión:** 0.2  
-**Estado:** Borrador para aprobación (v0.2, decisiones del solicitante del 2026-10-27)  
+**Estado:** Aprobado (v0.2, 2026-10-27; ver «Revisión funcional»)  
 **Revisor funcional:** Por designar (el solicitante es Joseph Baño, quien definió las decisiones de «Decisiones del solicitante»)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
@@ -129,7 +129,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 | ID | Contradicción o dato faltante | Impacto | Quién decide |
 |---|---|---|---|
 | PD-SEC-01 | **Dónde se guarda el interruptor** (por ejemplo, una tabla por institución y sección, o un campo de configuración). No se escoge en esta spec. | Plan y migración. | ADR nuevo, a redactar antes de las tareas |
-| PD-SEC-02 | **Estado inicial** al aplicar el cambio. | RF-SEC-009, 013 | **Resuelto (v0.2, 2026-10-27), según la propuesta (interpretación a confirmar):** las instituciones existentes quedan con todas las secciones abiertas, sin cambio de comportamiento; el `admin` cierra las que no quiera **antes de comunicar** a las personas; la ficha no se puede cerrar. |
+| PD-SEC-02 | **Estado inicial** al aplicar el cambio. | RF-SEC-009, 013 | **Resuelto (v0.2, 2026-10-27), según la propuesta (estado inicial confirmado con «correcto»):** las instituciones existentes quedan con todas las secciones abiertas, sin cambio de comportamiento; el `admin` cierra las que no quiera **antes de comunicar** a las personas; la ficha no se puede cerrar. |
 | PD-SEC-03 | **`superadmin`.** | RF-SEC-003 | **Resuelto (v0.2, 2026-10-27):** el `superadmin` sí puede (RF-MUL-004), pero sus vistas lo limitan y no se trabaja en este cambio. |
 | PD-SEC-04 | **Supervisor y exportación con secciones cerradas.** | Revisión y exportación | **Resuelto (v0.2, 2026-10-27):** lo ya cargado sigue visible al `supervisor` en solo lectura y se exporta; el interruptor controla solo lo que la persona ve y escribe. |
 | PD-SEC-05 | **Granularidad.** Propuesta: siete secciones como están hoy. La foto y el perfil van dentro de la ficha. | RF-SEC-001 | Revisor funcional |
@@ -139,9 +139,9 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 ## Revisión funcional
 
 **Versión revisada:** 0.2  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
+**Decisión:** Aprobado  
+**Aprobó:** Joseph Baño, solicitante y responsable funcional  
+**Fecha y evidencia de aprobación:** 2026-10-27; mensaje en la conversación de trabajo del issue #92 («si apruebo el spec … v2»; se entendió spec-0010)  
 **Ajustes solicitados:** Ninguno hasta ahora.
 
 **Cambios de 0.1 a 0.2:** PD-SEC-02, 03 y 04 resueltos; RF-SEC-003 permite al `superadmin` por la API; se excluyen pantallas propias del `superadmin`.
