@@ -100,6 +100,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/configuracion/secciones',
+        canActivate: [roleGuard('admin')],
+        loadComponent: () =>
+          import('./features/admin/configuracion/secciones.component').then(
+            (m) => m.SeccionesComponent,
+          ),
+      },
+      {
         path: 'superadmin',
         canActivate: [roleGuard('superadmin')],
         loadComponent: () =>

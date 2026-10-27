@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -1006,6 +1007,10 @@ archivosGroup.MapPost("/subir", async (
 
         return Results.Ok(resultado);
     }
+    catch (SeccionNoDisponibleException ex)
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_DISPONIBLE"), statusCode: StatusCodes.Status409Conflict);
+    }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
     {
         return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
@@ -1020,6 +1025,7 @@ archivosGroup.MapPost("/subir", async (
 .Produces<ArchivoDto>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces<MensajeRespuesta>(StatusCodes.Status409Conflict)
 .Produces(StatusCodes.Status401Unauthorized);
 
 archivosGroup.MapGet("/{id:guid}/descargar", async (
@@ -1270,6 +1276,7 @@ app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
 app.MapProteccionDatos();
+app.MapSecciones();
 
 await app.RunAsync();
 

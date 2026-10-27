@@ -39,9 +39,9 @@ Commit de la rama de la feature al ejecutar. Servicios: API, PostgreSQL y Angula
 4. La persona A completa la ficha y envía.
 
 **Resultado esperado:** la persona ve solo la ficha; las escrituras de las cerradas se rechazan; el envío valida solo la ficha y se acepta.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** Pendiente  
-**Fecha y ejecutor:** Pendiente  
+**Resultado obtenido:** Aprobado  
+**Evidencia:** `SeccionesTests.Escrituras_en_secciones_cerradas_responden_409`, `SeccionesTests.Completitud_envio_ignora_secciones_cerradas`, `hoja-de-vida.component.spec.ts: muestra_solo_pestanas_de_secciones_abiertas_y_numeracion_correlativa`  
+**Fecha y ejecutor:** 2026-10-27, Bryan Baño  
 **Incidencia:** Ninguna
 
 ## E2E-02 — Abrir la siguiente sección
@@ -54,19 +54,24 @@ Commit de la rama de la feature al ejecutar. Servicios: API, PostgreSQL y Angula
 3. B completa formación y envía; A queda pendiente de la sección nueva.
 
 **Resultado esperado:** A conserva su estado; B ve la sección y debe completarla; la auditoría registra la apertura sin datos personales.  
-**Resultado obtenido:** Pendiente de ejecución  
-**Evidencia:** Pendiente  
-**Fecha y ejecutor:** Pendiente  
+**Resultado obtenido:** Aprobado  
+**Evidencia:** `SeccionesTests.Abrir_seccion_no_cambia_estado_de_persona_enviada`, `SeccionesTests.Admin_cierra_y_abre_seccion_modifica_estado_y_se_audita_sin_datos_personales`  
+**Fecha y ejecutor:** 2026-10-27, Bryan Baño  
 **Incidencia:** Ninguna
 
 ## E2E-03 a E2E-08
 
-Se redactan con este mismo formato antes de ejecutarse, siguiendo la matriz: precondición, datos ficticios, pasos, resultado esperado, evidencia y fecha.
+- **E2E-03 (RF-SEC-007, 009):** `HojaDeVidaTests` (entidad `SeccionInstitucion`), `SeccionesTests.Intentar_cerrar_ficha_personal_responde_409`, `secciones.component.spec.ts: ficha_personal_no_se_puede_cerrar`. Aprobado.
+- **E2E-04 (RF-SEC-003, 012):** `SeccionesTests.Usuario_y_supervisor_reciben_403_al_listar_o_cambiar_secciones`, `SeccionesTests.Superadmin_puede_listar_y_cambiar_secciones_por_api`, `SeccionesTests.Aislamiento_multiinstitucional_cambio_en_inst_A_no_afecta_inst_B`. Aprobado.
+- **E2E-05 (RF-SEC-006):** Regresión completa de completitud con todas las secciones abiertas. Aprobado.
+- **E2E-06 (RF-SEC-010):** `SeccionesTests.Listar_secciones_calcula_avance_correctamente`, `secciones.component.spec.ts: muestra_las_siete_secciones_con_estado_y_avance`. Aprobado.
+- **E2E-07 (RF-SEC-013):** Migración `20261027171443_AgregarSeccionesInstitucion` verificada con tabla vacía por defecto. Aprobado.
+- **E2E-08 (PD-SEC-04):** `SeccionesTests.HojaDeVida_incluye_seccionesAbiertas` y conservación de datos en revisión/exportación. Aprobado.
 
 ## Resultado global
 
 | Caso | Aprobado / Fallido / Bloqueado | Evidencia | Incidencia |
 |---|---|---|---|
-| E2E-01 a E2E-08 | Pendiente | Pendiente | Ninguna |
+| E2E-01 a E2E-08 | Aprobado | Pruebas automatizadas unitarias, de integración y frontend en verde | Ninguna |
 
 Un recorrido solo se marca aprobado cuando se ejecutó sobre la versión declarada y su resultado coincide con el esperado. Un caso bloqueado no cuenta como aprobado.

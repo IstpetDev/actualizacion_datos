@@ -8,6 +8,7 @@ import {
   CampanaDto,
   CampanasClient,
   ConfiguracionClient,
+  ConfiguracionSeccionesClient,
   PersonaDto,
   PersonasClient,
   RevisionClient,
@@ -112,6 +113,13 @@ describe('AdminDashboardComponent', () => {
             listarTiposFuncionario: () => of([]),
             listarTiposDocumento: () => of([]),
             listarRequisitosDocumento: () => of([]),
+          },
+        },
+        {
+          provide: ConfiguracionSeccionesClient,
+          useValue: {
+            listarSeccionesConfiguracion: () => of([]),
+            cambiarEstadoSeccion: () => of({}),
           },
         },
         { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },

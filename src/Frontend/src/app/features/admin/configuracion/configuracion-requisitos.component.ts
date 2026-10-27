@@ -1,5 +1,6 @@
 import { mensajeError } from '../../../core/auth/mensaje-error';
 import { DominiosCorreoComponent } from './dominios-correo.component';
+import { SeccionesComponent } from './secciones.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule, DominiosCorreoComponent],
+  imports: [CommonModule, FormsModule, DominiosCorreoComponent, SeccionesComponent],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -62,6 +63,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
         }
 
         <app-dominios-correo />
+        <app-secciones-configuracion />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button

@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 
 // Ayudas compartidas por los archivos de Endpoints/ (spec-0003, T-00). Repiten la resolución de actor
 // y de rol que usa Program.cs, para que cada grupo nuevo no dependa de funciones locales de ese archivo.
@@ -71,6 +72,14 @@ internal static class AccesoEndpoints
         catch (EnvioIncompletoException ex)
         {
             return Results.BadRequest(new EnvioIncompletoRespuesta(ex.Message, [.. ex.Faltantes]));
+        }
+        catch (SeccionNoDisponibleException ex)
+        {
+            return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_DISPONIBLE"), statusCode: StatusCodes.Status409Conflict);
+        }
+        catch (ReglaNegocioException ex) when (ex.Message.Contains("no puede cerrarse", StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_MODIFICABLE"), statusCode: StatusCodes.Status409Conflict);
         }
         catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
         {

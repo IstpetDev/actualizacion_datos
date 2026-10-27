@@ -9,17 +9,34 @@ using Microsoft.EntityFrameworkCore;
 public class ValidadorCompletitudEnvio : IValidadorCompletitudEnvio
 {
     private readonly IEnumerable<IReglaCompletitudEnvio> _reglas;
+    private readonly AplicacionDbContext _context;
+    private readonly IServicioSecciones _servicioSecciones;
 
-    public ValidadorCompletitudEnvio(IEnumerable<IReglaCompletitudEnvio> reglas)
+    public ValidadorCompletitudEnvio(
+        IEnumerable<IReglaCompletitudEnvio> reglas,
+        AplicacionDbContext context,
+        IServicioSecciones servicioSecciones)
     {
         _reglas = reglas;
+        _context = context;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<ResultadoValidacionEnvioDto> ValidarAsync(Guid personaId, CancellationToken ct = default)
     {
+        var persona = await _context.Personas.FirstOrDefaultAsync(p => p.Id == personaId, ct);
+        var abiertas = persona != null
+            ? await _servicioSecciones.ObtenerSeccionesAbiertasAsync(persona.InstitucionId, ct)
+            : CodigosSeccion.Todas.ToHashSet();
+
         var todos = new List<FaltanteEnvioDto>();
         foreach (var regla in _reglas)
         {
+            if (regla.Seccion.HasValue && !abiertas.Contains(regla.Seccion.Value))
+            {
+                continue;
+            }
+
             var faltantes = await regla.EvaluarAsync(personaId, ct);
             if (faltantes is { Count: > 0 })
             {
@@ -36,6 +53,7 @@ public class ValidadorCompletitudEnvio : IValidadorCompletitudEnvio
 /// </summary>
 public class ReglaFichaPersonalObligatoria : IReglaCompletitudEnvio
 {
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.FichaPersonal;
     private readonly AplicacionDbContext _context;
 
     public ReglaFichaPersonalObligatoria(AplicacionDbContext context)
@@ -108,6 +126,7 @@ public class ReglaFichaPersonalObligatoria : IReglaCompletitudEnvio
 /// </summary>
 public class ReglaFormacionAcademicaObligatoria : IReglaCompletitudEnvio
 {
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.FormacionAcademica;
     private readonly AplicacionDbContext _context;
 
     public ReglaFormacionAcademicaObligatoria(AplicacionDbContext context)
@@ -142,6 +161,7 @@ public class ReglaFormacionAcademicaObligatoria : IReglaCompletitudEnvio
 /// </summary>
 public class ReglaReferenciasPersonalesObligatorias : IReglaCompletitudEnvio
 {
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.Referencias;
     private readonly AplicacionDbContext _context;
 
     public ReglaReferenciasPersonalesObligatorias(AplicacionDbContext context)
@@ -166,50 +186,66 @@ public class ReglaReferenciasPersonalesObligatorias : IReglaCompletitudEnvio
 public class ReglaRespaldosItemsObligatorios : IReglaCompletitudEnvio
 {
     private readonly AplicacionDbContext _context;
+    private readonly IServicioSecciones _servicioSecciones;
 
-    public ReglaRespaldosItemsObligatorios(AplicacionDbContext context)
+    public ReglaRespaldosItemsObligatorios(AplicacionDbContext context, IServicioSecciones servicioSecciones)
     {
         _context = context;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<IReadOnlyList<FaltanteEnvioDto>> EvaluarAsync(Guid personaId, CancellationToken ct = default)
     {
+        var persona = await _context.Personas.FirstOrDefaultAsync(p => p.Id == personaId, ct);
+        var abiertas = persona != null
+            ? await _servicioSecciones.ObtenerSeccionesAbiertasAsync(persona.InstitucionId, ct)
+            : CodigosSeccion.Todas.ToHashSet();
+
         var faltantes = new List<FaltanteEnvioDto>();
 
-        var titulosSinRespaldo = await _context.TitulosAcademicos
-            .Where(t => t.PersonaId == personaId && t.ArchivoId == null)
-            .ToListAsync(ct);
-
-        foreach (var t in titulosSinRespaldo)
+        if (abiertas.Contains(SeccionHojaDeVida.FormacionAcademica))
         {
-            faltantes.Add(new FaltanteEnvioDto("titulos", "item.sin-respaldo", $"El título '{t.NombreTitulo}' no tiene archivo de respaldo adjunto.", t.Id));
+            var titulosSinRespaldo = await _context.TitulosAcademicos
+                .Where(t => t.PersonaId == personaId && t.ArchivoId == null)
+                .ToListAsync(ct);
+
+            foreach (var t in titulosSinRespaldo)
+            {
+                faltantes.Add(new FaltanteEnvioDto("titulos", "item.sin-respaldo", $"El título '{t.NombreTitulo}' no tiene archivo de respaldo adjunto.", t.Id));
+            }
+
+            var enCursoSinRespaldo = await _context.TitulosEnCurso
+                .Where(t => t.PersonaId == personaId && t.ArchivoId == null)
+                .ToListAsync(ct);
+
+            foreach (var t in enCursoSinRespaldo)
+            {
+                faltantes.Add(new FaltanteEnvioDto("titulos-en-curso", "item.sin-respaldo", $"El título en curso '{t.NombrePrograma}' no tiene archivo de respaldo adjunto.", t.Id));
+            }
         }
 
-        var enCursoSinRespaldo = await _context.TitulosEnCurso
-            .Where(t => t.PersonaId == personaId && t.ArchivoId == null)
-            .ToListAsync(ct);
-
-        foreach (var t in enCursoSinRespaldo)
+        if (abiertas.Contains(SeccionHojaDeVida.Capacitaciones))
         {
-            faltantes.Add(new FaltanteEnvioDto("titulos-en-curso", "item.sin-respaldo", $"El título en curso '{t.NombrePrograma}' no tiene archivo de respaldo adjunto.", t.Id));
+            var capsSinRespaldo = await _context.Capacitaciones
+                .Where(c => c.PersonaId == personaId && c.ArchivoId == null)
+                .ToListAsync(ct);
+
+            foreach (var c in capsSinRespaldo)
+            {
+                faltantes.Add(new FaltanteEnvioDto("capacitaciones", "item.sin-respaldo", $"La capacitación '{c.NombreEvento}' no tiene certificado de respaldo adjunto.", c.Id));
+            }
         }
 
-        var capsSinRespaldo = await _context.Capacitaciones
-            .Where(c => c.PersonaId == personaId && c.ArchivoId == null)
-            .ToListAsync(ct);
-
-        foreach (var c in capsSinRespaldo)
+        if (abiertas.Contains(SeccionHojaDeVida.ExperienciaLaboral))
         {
-            faltantes.Add(new FaltanteEnvioDto("capacitaciones", "item.sin-respaldo", $"La capacitación '{c.NombreEvento}' no tiene certificado de respaldo adjunto.", c.Id));
-        }
+            var expsSinRespaldo = await _context.ExperienciasLaborales
+                .Where(e => e.PersonaId == personaId && e.ArchivoId == null)
+                .ToListAsync(ct);
 
-        var expsSinRespaldo = await _context.ExperienciasLaborales
-            .Where(e => e.PersonaId == personaId && e.ArchivoId == null)
-            .ToListAsync(ct);
-
-        foreach (var e in expsSinRespaldo)
-        {
-            faltantes.Add(new FaltanteEnvioDto("experiencias", "item.sin-respaldo", $"La experiencia laboral en '{e.Empleador}' no tiene certificado de respaldo adjunto.", e.Id));
+            foreach (var e in expsSinRespaldo)
+            {
+                faltantes.Add(new FaltanteEnvioDto("experiencias", "item.sin-respaldo", $"La experiencia laboral en '{e.Empleador}' no tiene certificado de respaldo adjunto.", e.Id));
+            }
         }
 
         return faltantes;
@@ -221,6 +257,7 @@ public class ReglaRespaldosItemsObligatorios : IReglaCompletitudEnvio
 /// </summary>
 public class ReglaDocumentosPersonalesObligatorios : IReglaCompletitudEnvio
 {
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.DocumentosPersonales;
     private readonly AplicacionDbContext _context;
 
     public ReglaDocumentosPersonalesObligatorios(AplicacionDbContext context)

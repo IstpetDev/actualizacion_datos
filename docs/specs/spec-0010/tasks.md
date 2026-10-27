@@ -38,12 +38,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** entidad, `DbSet` y migración.  
 **Dependencias:** T-00. **ADR aplicable:** ADR-0028 (Vigente).
 
-- [ ] Prueba que falle: cerrar la ficha se rechaza; abrir y cerrar otras alterna; restricción única institución y sección.
-- [ ] Implementar y generar la migración; comprobar que la tabla queda vacía y no altera datos.
-- [ ] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
-- [ ] Revisar RF-SEC-009, 012, 013.
+- [x] Prueba que falle: cerrar la ficha se rechaza; abrir y cerrar otras alterna; restricción única institución y sección.
+- [x] Implementar y generar la migración; comprobar que la tabla queda vacía y no altera datos.
+- [x] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
+- [x] Revisar RF-SEC-009, 012, 013.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** Ninguno.
 
 ## T-02 — Servicio, endpoints y auditoría
@@ -55,12 +55,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** servicio inyectable y cliente.  
 **Dependencias:** T-01. **ADR aplicable:** ADR-0028, ADR-0004.
 
-- [ ] Pruebas que fallen: el `admin` lista y cambia solo su institución; `usuario` y `supervisor` reciben 403; el `superadmin` puede por la API; sección inexistente 404; cada cambio queda en la auditoría sin datos personales; **abrir una sección no cambia el estado de una persona enviada o aprobada**; cerrar conserva los datos.
-- [ ] Implementar.
-- [ ] Regenerar `openapi/v1.json` y el cliente; `dotnet test src/Backend`.
-- [ ] Revisar RF-SEC-001, 002, 003, 007, 008, 011, 012.
+- [x] Pruebas que fallen: el `admin` lista y cambia solo su institución; `usuario` y `supervisor` reciben 403; el `superadmin` puede por la API; sección inexistente 404; cada cambio queda en la auditoría sin datos personales; **abrir una sección no cambia el estado de una persona enviada o aprobada**; cerrar conserva los datos.
+- [x] Implementar.
+- [x] Regenerar `openapi/v1.json` y el cliente; `dotnet test src/Backend`.
+- [x] Revisar RF-SEC-001, 002, 003, 007, 008, 011, 012.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-01.
 
 ## T-03 — Las escrituras respetan el interruptor
@@ -72,12 +72,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** servicios actualizados.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0028.
 
-- [ ] Prueba que **recorre todas las rutas de escritura** (ficha, títulos, títulos en curso, capacitaciones, experiencia, referencias, documentos, cuenta bancaria y subida de archivos): con la sección cerrada, cada una responde 409; con todas abiertas, el comportamiento actual no cambia.
-- [ ] Implementar la consulta en una sola puerta de entrada.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-SEC-005, 007.
+- [x] Prueba que **recorre todas las rutas de escritura** (ficha, títulos, títulos en curso, capacitaciones, experiencia, referencias, documentos, cuenta bancaria y subida de archivos): con la sección cerrada, cada una responde 409; con todas abiertas, el comportamiento actual no cambia.
+- [x] Implementar la consulta en una sola puerta de entrada.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-SEC-005, 007.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-02.
 
 ## T-04 — Completitud según las secciones abiertas
@@ -89,12 +89,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** validador filtrado.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0010, ADR-0028.
 
-- [ ] Pruebas que fallen: con solo la ficha abierta, enviar exige solo la ficha y no menciona las cerradas; al abrir formación, se exige; con todas abiertas el envío existente **no cambia** (regresión completa de RF-HDV-009).
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-SEC-006.
+- [x] Pruebas que fallen: con solo la ficha abierta, enviar exige solo la ficha y no menciona las cerradas; al abrir formación, se exige; con todas abiertas el envío existente **no cambia** (regresión completa de RF-HDV-009).
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-SEC-006.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-02.
 
 ## T-05 — Lectura de la hoja de vida y no regresión de revisión y exportación
@@ -106,12 +106,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** DTO ampliado.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0028.
 
-- [ ] Pruebas que fallen: la hoja de vida lista solo las abiertas; el supervisor ve lo ya cargado de una sección cerrada en solo lectura; el Excel y el `.zip` lo incluyen (PD-SEC-04).
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-SEC-004 y PD-SEC-04.
+- [x] Pruebas que fallen: la hoja de vida lista solo las abiertas; el supervisor ve lo ya cargado de una sección cerrada en solo lectura; el Excel y el `.zip` lo incluyen (PD-SEC-04).
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-SEC-004 y PD-SEC-04.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-02.
 
 ## T-06 — Avance por sección
@@ -123,12 +123,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** campo de avance en el listado.  
 **Dependencias:** T-02, T-04. **ADR aplicable:** ADR-0028.
 
-- [ ] Pruebas que fallen: cuenta solo personas de la institución; una persona con faltantes no cuenta; resultados distintos por sección.
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-SEC-010.
+- [x] Pruebas que fallen: cuenta solo personas de la institución; una persona con faltantes no cuenta; resultados distintos por sección.
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-SEC-010.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-02, T-04.
 
 ## T-07 — Pestañas según las secciones abiertas
@@ -140,12 +140,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** componente.  
 **Dependencias:** T-05. **ADR aplicable:** Ninguno nuevo.
 
-- [ ] Pruebas Vitest que fallen: solo las pestañas abiertas; la numeración sigue correlativa; con una sola pestaña se ve igual de claro; no se pierde el aviso de cambios sin guardar (spec-0006).
-- [ ] Implementar.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Revisar RF-SEC-004.
+- [x] Pruebas Vitest que fallen: solo las pestañas abiertas; la numeración sigue correlativa; con una sola pestaña se ve igual de claro; no se pierde el aviso de cambios sin guardar (spec-0006).
+- [x] Implementar.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Revisar RF-SEC-004.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-05.
 
 ## T-08 — Pantalla de secciones del admin
@@ -157,12 +157,12 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Salida para integración:** componente.  
 **Dependencias:** T-02, T-06. **ADR aplicable:** ADR-0028.
 
-- [ ] Pruebas Vitest que fallen: muestra las siete secciones con estado y avance; abrir y cerrar; la ficha no se puede cerrar; confirmación antes de cerrar una con datos; error accesible.
-- [ ] Implementar; revisar el estado del issue #83 antes de empezar.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Revisar RF-SEC-001, 002, 010.
+- [x] Pruebas Vitest que fallen: muestra las siete secciones con estado y avance; abrir y cerrar; la ficha no se puede cerrar; confirmación antes de cerrar una con datos; error accesible.
+- [x] Implementar; revisar el estado del issue #83 antes de empezar.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Revisar RF-SEC-001, 002, 010.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-02, T-06.
 
 ## T-09 — Verificación integral y PR
@@ -172,13 +172,13 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Archivos exclusivos:** `docs/specs/spec-0010/test-e2e.md` (resultados), `tasks.md`.  
 **Dependencias:** T-01 a T-08.
 
-- [ ] `dotnet build src/Backend` y `dotnet test src/Backend` (con Docker para la integración).
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check`.
-- [ ] `openapi/v1.json` y cliente al día.
-- [ ] Ejecutar los escenarios de `test-e2e.md` con datos ficticios y registrar resultados.
-- [ ] Abrir PR a `develop` con título `feat: liberacion de secciones de la hoja de vida por fases` y la salida real de las pruebas.
+- [x] `dotnet build src/Backend` y `dotnet test src/Backend` (con Docker para la integración).
+- [x] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check`.
+- [x] `openapi/v1.json` y cliente al día.
+- [x] Ejecutar los escenarios de `test-e2e.md` con datos ficticios y registrar resultados.
+- [x] Abrir PR a `develop` con título `feat: liberacion de secciones de la hoja de vida por fases` y la salida real de las pruebas.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completada  
 **Bloqueos:** T-01 a T-08.
 
 ## Integración y cierre

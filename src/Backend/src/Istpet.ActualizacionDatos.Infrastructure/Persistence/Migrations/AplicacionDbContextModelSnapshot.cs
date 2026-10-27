@@ -1226,6 +1226,47 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.ToTable("requisitos_documento", (string)null);
                 });
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.SeccionInstitucion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Habilitada")
+                        .HasColumnType("boolean")
+                        .HasColumnName("habilitada");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("ModificadoPor")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("modificado_por");
+
+                    b.Property<string>("Seccion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("seccion");
+
+                    b.Property<DateTime>("UltimaModificacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultima_modificacion_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_secciones_institucion");
+
+                    b.HasIndex("InstitucionId", "Seccion")
+                        .IsUnique()
+                        .HasDatabaseName("ix_secciones_institucion_institucion_seccion");
+
+                    b.ToTable("secciones_institucion", (string)null);
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2052,6 +2093,16 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TipoFuncionarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_requisitos_documento_tipos_funcionario_tipo_funcionario_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.SeccionInstitucion", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_secciones_institucion_instituciones_institucion_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>

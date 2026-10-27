@@ -208,7 +208,8 @@ public sealed record HojaDeVidaDto(
     List<TituloEnCursoDto> TitulosEnCurso,
     List<CapacitacionDto> Capacitaciones,
     List<ExperienciaLaboralDto> Experiencias,
-    List<ReferenciaDto> Referencias);
+    List<ReferenciaDto> Referencias,
+    List<string>? SeccionesAbiertas = null);
 
 // --- Documentos personales (RF-HDV-007, 008, T-03) ---
 
