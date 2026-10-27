@@ -1092,6 +1092,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
         align-items: flex-start;
         gap: 0.5rem;
       }
+    }
     .resumen-asignaciones {
       display: flex;
       flex-wrap: wrap;

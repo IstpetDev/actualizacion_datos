@@ -320,6 +320,7 @@ describe('ConfiguracionRequisitosComponent', () => {
     const contenedorAcciones = celdaAcciones?.querySelector('.acciones-tabla');
     expect(contenedorAcciones).toBeTruthy();
     expect(contenedorAcciones?.querySelectorAll('button').length).toBe(2);
+  });
 
   it('debe mostrar contadores y destacar visualmente a las personas sin tipo asignado', () => {
     component.cambiarTab('asignaciones');

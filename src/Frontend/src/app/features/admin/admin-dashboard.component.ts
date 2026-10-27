@@ -634,7 +634,6 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                             }
                           </div>
                         </td>
-                        </td>
                         <td>
                           <span class="badge badge-warning">{{ per.estadoActualizacion }}</span>
                         </td>
@@ -1365,6 +1364,26 @@ export class AdminDashboardComponent implements OnInit {
   readonly personasSeleccionadas = signal<Set<string>>(new Set());
   readonly cambiandoAcceso = signal<boolean>(false);
 
+  readonly totalHabilitadas = computed(
+    () => this.personas().filter((p) => p.accesoHabilitado).length,
+  );
+  readonly totalPendientes = computed(
+    () => this.personas().filter((p) => !p.accesoHabilitado).length,
+  );
+
+  readonly listaParaCargar = signal<PersonaCargaItem[]>([]);
+  readonly resultadoCarga = signal<ResultadoCargaPersonasDto | null>(null);
+  filaDoc = '';
+  filaNom = '';
+  filaCor = '';
+  archivoParaCargar: File | null = null;
+  readonly cargandoArchivo = signal(false);
+
+  // Paginación y filtros de personas
+  readonly filtroBusqueda = signal<string>('');
+  readonly paginaActual = signal<number>(1);
+  readonly filasPorPagina = signal<number>(25);
+
   readonly personasFiltradas = computed(() => {
     const texto = this.filtroBusqueda().trim().toLowerCase();
     const filtro = this.filtroAcceso();
@@ -1382,6 +1401,17 @@ export class AdminDashboardComponent implements OnInit {
 
       return coincideTexto && coincideAcceso;
     });
+  });
+
+  readonly personasFiltradasSeleccionables = computed(() => {
+    return this.personasFiltradas().filter((p) => this.esUsuarioComun(p));
+  });
+
+  readonly todasSeleccionadas = computed(() => {
+    const seleccionables = this.personasFiltradasSeleccionables();
+    if (seleccionables.length === 0) return false;
+    const sel = this.personasSeleccionadas();
+    return seleccionables.every((p) => sel.has(p.id));
   });
 
   readonly totalPaginas = computed(() =>
@@ -1657,6 +1687,12 @@ export class AdminDashboardComponent implements OnInit {
           this.cambiandoAcceso.set(false);
         },
       });
+  }
+
+  actualizarFiltroEstado(estado: 'todos' | 'habilitados' | 'pendientes' | 'habilitado' | 'pendiente'): void {
+    const normalizado = estado === 'habilitado' ? 'habilitados' : estado === 'pendiente' ? 'pendientes' : 'todos';
+    this.cambiarFiltroAcceso(normalizado);
+  }
 
   agregarFilaPersona(): void {
     const doc = this.filaDoc.trim();
