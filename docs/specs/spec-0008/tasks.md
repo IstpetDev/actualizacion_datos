@@ -98,15 +98,15 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ValidadorCompletitudEnvio.cs`, `.../Infrastructure/RegistroDeInfraestructura.cs`, `src/Backend/tests/.../WebApi.Tests/CapacitacionesObligatoriasTests.cs` (casos de envío; coordinar con T-02).  
 **Entrada/contrato:** `FaltanteEnvioDto` con sección `capacitaciones` y clave `capacitaciones.obligatoria.<id>`.  
 **Salida para integración:** regla registrada en el validador.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0029.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0029, ADR-0032.
 
-- [ ] Pruebas que fallen: falta una que le aplica → no envía y nombra cuál; no le aplica → envía; persona sin tipo solo con las de «todas» (RF-CAP-008); con todas cumplidas envía; **las reglas actuales de RF-HDV-009 y el envío válido existente no se rompen**.
-- [ ] Implementar la regla y registrarla.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-007, 008.
+- [x] Pruebas que fallen: falta una que le aplica → no envía y nombra cuál; no le aplica → envía; persona sin tipo solo con las de «todas» (RF-CAP-008); con todas cumplidas envía; **las reglas actuales de RF-HDV-009 y el envío válido existente no se rompen**.
+- [x] Implementar la regla y registrarla.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-CAP-007, 008, 019, 020.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-02.
+**Resultado registrado:** completado el 2026-10-27; implementada `ReglaCapacitacionesObligatorias` con respeto a exención automática por fecha de ingreso y justificación manual; 16 pruebas específicas y suite unitaria en verde.  
+**Bloqueos:** Ninguno.
 
 ## T-05 — Revisión del supervisor
 

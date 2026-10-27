@@ -523,4 +523,88 @@ public sealed class CapacitacionesObligatoriasTests : IDisposable
         Assert.Equal("justificada-nuevo-ingreso", estadoOb.Estado);
         Assert.Equal("Ingresé a la institución recientemente y no alcancé a cursarla", estadoOb.JustificacionNuevoIngreso);
     }
+
+    [Fact]
+    public async Task Validador_completitud_bloquea_envio_si_falta_capacitacion_obligatoria_aplicable()
+    {
+        await AsegurarCampanaActivaAsync();
+        var usuarioId = await AutenticarAsync(RolUsuario.Usuario);
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Obligatorio de Inducción");
+        db.CapacitacionesObligatorias.Add(ob);
+        await db.SaveChangesAsync();
+
+        // 1. Consultar faltantes: debe incluir la obligatoria
+        var resFaltantes = await _cliente.GetAsync("/api/mis-datos/hoja-de-vida/faltantes");
+        Assert.Equal(HttpStatusCode.OK, resFaltantes.StatusCode);
+        var faltantesDto = await resFaltantes.Content.ReadFromJsonAsync<ResultadoValidacionEnvioDto>();
+        Assert.NotNull(faltantesDto);
+        Assert.False(faltantesDto.Completo);
+        Assert.Contains(faltantesDto.Faltantes, f => f.Codigo == $"capacitaciones.obligatoria.{ob.Id}" && f.Seccion == "capacitaciones");
+
+        // 2. Justificar por nuevo ingreso
+        var resJust = await _cliente.PostAsJsonAsync($"/api/mis-datos/capacitaciones-obligatorias/{ob.Id}/justificar-nuevo-ingreso",
+            new JustificarNuevoIngresoRequest("Recién ingresé"));
+        Assert.Equal(HttpStatusCode.OK, resJust.StatusCode);
+
+        // 3. Consultar faltantes de nuevo: ya NO debe estar en faltantes
+        var resFaltantes2 = await _cliente.GetAsync("/api/mis-datos/hoja-de-vida/faltantes");
+        Assert.Equal(HttpStatusCode.OK, resFaltantes2.StatusCode);
+        var faltantesDto2 = await resFaltantes2.Content.ReadFromJsonAsync<ResultadoValidacionEnvioDto>();
+        Assert.NotNull(faltantesDto2);
+        Assert.DoesNotContain(faltantesDto2.Faltantes, f => f.Codigo == $"capacitaciones.obligatoria.{ob.Id}");
+    }
+
+    [Fact]
+    public async Task Validador_completitud_exenta_automaticamente_por_fecha_de_ingreso()
+    {
+        await AsegurarCampanaActivaAsync();
+        var usuarioId = await AutenticarAsync(RolUsuario.Usuario);
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+
+        var fechaCurso = new DateOnly(2026, 2, 1);
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Pasado 2026", fechaRealizacion: fechaCurso);
+        db.CapacitacionesObligatorias.Add(ob);
+
+        // Asignar fecha de ingreso posterior al curso
+        var p = await db.Personas.IgnoreQueryFilters().SingleAsync(x => x.Id == usuarioId);
+        p.AsignarFechaIngreso(new DateOnly(2026, 3, 1));
+        await db.SaveChangesAsync();
+
+        // Consultar faltantes: no debe requerirla porque está exenta
+        var resFaltantes = await _cliente.GetAsync("/api/mis-datos/hoja-de-vida/faltantes");
+        Assert.Equal(HttpStatusCode.OK, resFaltantes.StatusCode);
+        var faltantesDto = await resFaltantes.Content.ReadFromJsonAsync<ResultadoValidacionEnvioDto>();
+        Assert.NotNull(faltantesDto);
+        Assert.DoesNotContain(faltantesDto.Faltantes, f => f.Codigo == $"capacitaciones.obligatoria.{ob.Id}");
+    }
+
+    [Fact]
+    public async Task Validador_completitud_no_exige_obligatorias_de_otro_tipo_funcionario()
+    {
+        await AsegurarCampanaActivaAsync();
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var tipoAdmin = new TipoFuncionario(Guid.NewGuid(), _institucion, "ADM2", "Administrativo 2");
+        db.TiposFuncionario.Add(tipoAdmin);
+
+        var obAdmin = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Solo Admin", tipoFuncionarioId: tipoAdmin.Id);
+        db.CapacitacionesObligatorias.Add(obAdmin);
+        await db.SaveChangesAsync();
+
+        // Autenticar usuario sin tipo de funcionario
+        await AutenticarAsync(RolUsuario.Usuario);
+
+        var resFaltantes = await _cliente.GetAsync("/api/mis-datos/hoja-de-vida/faltantes");
+        Assert.Equal(HttpStatusCode.OK, resFaltantes.StatusCode);
+        var faltantesDto = await resFaltantes.Content.ReadFromJsonAsync<ResultadoValidacionEnvioDto>();
+        Assert.NotNull(faltantesDto);
+        Assert.DoesNotContain(faltantesDto.Faltantes, f => f.Codigo == $"capacitaciones.obligatoria.{obAdmin.Id}");
+    }
 }

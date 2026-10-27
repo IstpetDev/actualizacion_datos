@@ -45,6 +45,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaReferenciasPersonalesObligatorias>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaRespaldosItemsObligatorios>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaDocumentosPersonalesObligatorios>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaCapacitacionesObligatorias>();
 
         // ADR-0013: el protector guarda las claves en memoria durante toda la vida del proceso.
         servicios.AddSingleton<IProtectorCuentaBancaria, ProtectorCuentaBancariaAesGcm>();
