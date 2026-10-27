@@ -34,6 +34,7 @@ public class AplicacionDbContext : DbContext
     public DbSet<ReferenciaPersonal> ReferenciasPersonales => Set<ReferenciaPersonal>();
     public DbSet<DocumentoPersonal> DocumentosPersonales => Set<DocumentoPersonal>();
     public DbSet<CuentaBancaria> CuentasBancarias => Set<CuentaBancaria>();
+    public DbSet<SeccionInstitucion> SeccionesInstitucion => Set<SeccionInstitucion>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,

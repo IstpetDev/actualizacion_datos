@@ -5,6 +5,7 @@ using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,17 +15,20 @@ public class ServicioArchivos : IServicioArchivos
     private readonly IAlmacenArchivos _almacenArchivos;
     private readonly IServicioCampanas _servicioCampanas;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IServicioSecciones _servicioSecciones;
 
     public ServicioArchivos(
         AplicacionDbContext context,
         IAlmacenArchivos almacenArchivos,
         IServicioCampanas servicioCampanas,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IServicioSecciones servicioSecciones)
     {
         _context = context;
         _almacenArchivos = almacenArchivos;
         _servicioCampanas = servicioCampanas;
         _contextoInstitucion = contextoInstitucion;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<ArchivoDto> SubirArchivoAsync(
@@ -54,6 +58,15 @@ public class ServicioArchivos : IServicioArchivos
             persona.EstadoActualizacion == EstadoActualizacion.Aprobado)
         {
             throw new ReglaNegocioException("No se permite subir archivos mientras la solicitud está en revisión o ya ha sido aprobada.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(claveDestino))
+        {
+            var seccion = MapearSeccionPorClaveDestino(claveDestino);
+            if (seccion.HasValue && !await _servicioSecciones.EstaAbiertaAsync(persona.InstitucionId, seccion.Value, ct))
+            {
+                throw new SeccionNoDisponibleException();
+            }
         }
 
         // ADR-0006: Validar extensión permitida
@@ -233,5 +246,36 @@ public class ServicioArchivos : IServicioArchivos
         _context.ArchivosAdjuntos.Remove(archivo);
 
         await _context.SaveChangesAsync(ct);
+    }
+
+    private static SeccionHojaDeVida? MapearSeccionPorClaveDestino(string claveDestino)
+    {
+        var clave = claveDestino.Trim().ToLowerInvariant();
+        if (clave.StartsWith("titulo:", StringComparison.OrdinalIgnoreCase) ||
+            clave.StartsWith("titulo-en-curso:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "formacion" || clave == "titulo" || clave == "titulos")
+            return SeccionHojaDeVida.FormacionAcademica;
+        if (clave.StartsWith("capacitacion:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "capacitacion" || clave == "capacitaciones")
+            return SeccionHojaDeVida.Capacitaciones;
+        if (clave.StartsWith("experiencia:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "experiencia" || clave == "experiencias")
+            return SeccionHojaDeVida.ExperienciaLaboral;
+        if (clave.StartsWith("referencia:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "referencia" || clave == "referencias")
+            return SeccionHojaDeVida.Referencias;
+        if (clave.StartsWith("documento:", StringComparison.OrdinalIgnoreCase) ||
+            clave.StartsWith("doc:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "documentos" || clave == "documento")
+            return SeccionHojaDeVida.DocumentosPersonales;
+        if (clave.StartsWith("cuenta:", StringComparison.OrdinalIgnoreCase) ||
+            clave.StartsWith("cuenta-bancaria:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "cuenta-bancaria" || clave == "cuenta_bancaria")
+            return SeccionHojaDeVida.CuentaBancaria;
+        if (clave.StartsWith("foto:", StringComparison.OrdinalIgnoreCase) ||
+            clave == "foto" || clave == "ficha")
+            return SeccionHojaDeVida.FichaPersonal;
+
+        return null;
     }
 }

@@ -15,15 +15,18 @@ public class ServicioCuentaBancaria : IServicioCuentaBancaria
     private readonly AplicacionDbContext _context;
     private readonly IProtectorCuentaBancaria _protector;
     private readonly IServicioCampanas _servicioCampanas;
+    private readonly IServicioSecciones _servicioSecciones;
 
     public ServicioCuentaBancaria(
         AplicacionDbContext context,
         IProtectorCuentaBancaria protector,
-        IServicioCampanas servicioCampanas)
+        IServicioCampanas servicioCampanas,
+        IServicioSecciones servicioSecciones)
     {
         _context = context;
         _protector = protector;
         _servicioCampanas = servicioCampanas;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<CuentaBancariaDto?> ObtenerMiaAsync(string documento, CancellationToken ct = default)
@@ -173,6 +176,12 @@ public class ServicioCuentaBancaria : IServicioCuentaBancaria
 
         var persona = await PersonaAsync(documento, ct);
         persona.AsegurarEdicionPermitida();
+
+        if (!await _servicioSecciones.EstaAbiertaAsync(persona.InstitucionId, SeccionHojaDeVida.CuentaBancaria, ct))
+        {
+            throw new SeccionNoDisponibleException();
+        }
+
         return persona;
     }
 
@@ -225,6 +234,7 @@ public class ServicioCuentaBancaria : IServicioCuentaBancaria
 // PD-HDV-17: la cuenta bancaria es obligatoria para enviar. Regla que ejecuta el validador de completitud (T-04).
 public class ReglaCuentaBancariaObligatoria : IReglaCompletitudEnvio
 {
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.CuentaBancaria;
     private readonly AplicacionDbContext _context;
 
     public ReglaCuentaBancariaObligatoria(AplicacionDbContext context)

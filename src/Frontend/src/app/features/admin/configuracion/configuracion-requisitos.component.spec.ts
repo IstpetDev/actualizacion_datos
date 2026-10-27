@@ -4,6 +4,7 @@ import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
   ConfiguracionClient,
+  ConfiguracionSeccionesClient,
   PersonaDto,
   PersonasClient,
   RequisitoDocumentoDto,
@@ -136,6 +137,13 @@ describe('ConfiguracionRequisitosComponent', () => {
         { provide: ConfiguracionClient, useValue: configClientMock },
         { provide: PersonasClient, useValue: personasClientMock },
         { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: ConfiguracionSeccionesClient,
+          useValue: {
+            listarSeccionesConfiguracion: vi.fn().mockReturnValue(of([])),
+            cambiarEstadoSeccion: vi.fn().mockReturnValue(of({})),
+          },
+        },
       ],
     }).compileComponents();
 

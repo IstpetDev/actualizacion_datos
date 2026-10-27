@@ -12,13 +12,16 @@ public class ServicioDocumentosPersonales : IServicioDocumentosPersonales
 {
     private readonly AplicacionDbContext _context;
     private readonly IServicioCampanas _servicioCampanas;
+    private readonly IServicioSecciones _servicioSecciones;
 
     public ServicioDocumentosPersonales(
         AplicacionDbContext context,
-        IServicioCampanas servicioCampanas)
+        IServicioCampanas servicioCampanas,
+        IServicioSecciones servicioSecciones)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<List<DocumentoRequeridoDto>> ListarAsync(string documento, CancellationToken ct = default)
@@ -74,6 +77,11 @@ public class ServicioDocumentosPersonales : IServicioDocumentosPersonales
             ?? throw new RecursoNoEncontradoException("La persona no existe en la institución.");
 
         persona.AsegurarEdicionPermitida();
+
+        if (!await _servicioSecciones.EstaAbiertaAsync(persona.InstitucionId, SeccionHojaDeVida.DocumentosPersonales, ct))
+        {
+            throw new SeccionNoDisponibleException();
+        }
 
         var tipoDoc = await _context.TiposDocumento
             .FirstOrDefaultAsync(td => td.Id == tipoDocumentoId && td.Activo, ct)

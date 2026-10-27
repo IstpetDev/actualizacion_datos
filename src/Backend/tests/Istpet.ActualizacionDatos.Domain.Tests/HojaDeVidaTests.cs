@@ -257,4 +257,35 @@ public class HojaDeVidaTests
             Assert.Throws<ReglaNegocioException>(persona.AsegurarEdicionPermitida);
         }
     }
+
+    [Fact]
+    public void Ficha_personal_no_puede_cerrarse_en_dominio()
+    {
+        var exCrear = Assert.Throws<ReglaNegocioException>(() =>
+            new SeccionInstitucion(Institucion, SeccionHojaDeVida.FichaPersonal, habilitada: false, "admin"));
+        Assert.Equal("La ficha personal no puede cerrarse.", exCrear.Message);
+
+        var seccion = new SeccionInstitucion(Institucion, SeccionHojaDeVida.FichaPersonal, habilitada: true, "admin");
+        var exModificar = Assert.Throws<ReglaNegocioException>(() =>
+            seccion.CambiarEstado(habilitada: false, "admin"));
+        Assert.Equal("La ficha personal no puede cerrarse.", exModificar.Message);
+    }
+
+    [Theory]
+    [InlineData(SeccionHojaDeVida.FormacionAcademica)]
+    [InlineData(SeccionHojaDeVida.Capacitaciones)]
+    [InlineData(SeccionHojaDeVida.ExperienciaLaboral)]
+    [InlineData(SeccionHojaDeVida.Referencias)]
+    [InlineData(SeccionHojaDeVida.DocumentosPersonales)]
+    [InlineData(SeccionHojaDeVida.CuentaBancaria)]
+    public void Otras_secciones_pueden_abrirse_y_cerrarse_correctamente(SeccionHojaDeVida seccionTipo)
+    {
+        var seccion = new SeccionInstitucion(Institucion, seccionTipo, habilitada: false, "admin_user");
+        Assert.False(seccion.Habilitada);
+        Assert.Equal("admin_user", seccion.ModificadoPor);
+
+        seccion.CambiarEstado(habilitada: true, "otro_admin");
+        Assert.True(seccion.Habilitada);
+        Assert.Equal("otro_admin", seccion.ModificadoPor);
+    }
 }

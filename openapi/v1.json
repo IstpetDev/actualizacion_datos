@@ -1797,6 +1797,16 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Unauthorized"
           }
@@ -4283,6 +4293,139 @@
           }
         }
       }
+    },
+    "/api/configuracion/secciones": {
+      "get": {
+        "tags": [
+          "ConfiguracionSecciones"
+        ],
+        "operationId": "ListarSeccionesConfiguracion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeccionConfiguracionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/secciones/{codigo}": {
+      "put": {
+        "tags": [
+          "ConfiguracionSecciones"
+        ],
+        "operationId": "CambiarEstadoSeccion",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarEstadoSeccionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeccionConfiguracionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4605,6 +4748,18 @@
             "type": "string"
           }
         }
+      },
+      "CambiarEstadoSeccionRequest": {
+        "required": [
+          "habilitada"
+        ],
+        "type": "object",
+        "properties": {
+          "habilitada": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
       },
       "CampanaDto": {
         "required": [
@@ -6416,6 +6571,15 @@
             "items": {
               "$ref": "#/components/schemas/ReferenciaDto"
             }
+          },
+          "seccionesAbiertas": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -7346,6 +7510,67 @@
           }
         }
       },
+      "SeccionConfiguracionDto": {
+        "required": [
+          "codigo",
+          "nombre",
+          "habilitada",
+          "personasCompletas",
+          "personasIncompletas",
+          "totalPersonas",
+          "ultimaModificacionUtc",
+          "modificadoPor"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "habilitada": {
+            "type": "boolean"
+          },
+          "personasCompletas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "personasIncompletas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPersonas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ultimaModificacionUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "modificadoPor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SesionUsuarioDto": {
         "required": [
           "id",
@@ -7746,6 +7971,9 @@
     },
     {
       "name": "CuentaBancaria"
+    },
+    {
+      "name": "ConfiguracionSecciones"
     }
   ]
 }

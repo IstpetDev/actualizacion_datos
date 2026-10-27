@@ -322,4 +322,80 @@ describe('HojaDeVidaComponent', () => {
     expect(resultado).not.toBe(true);
     expect(component.mostrarModalCambios()).toBe(true);
   });
+
+  it('muestra_solo_pestanas_de_secciones_abiertas_y_numeracion_correlativa', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'referencias'],
+    });
+    fixture.detectChanges();
+
+    const tabs = (fixture.nativeElement as HTMLElement).querySelectorAll('.seccion-tab-btn');
+    expect(tabs.length).toBe(2);
+
+    expect(tabs[0].querySelector('.tab-num')?.textContent?.trim()).toBe('1');
+    expect(tabs[0].querySelector('.tab-texto')?.textContent?.trim()).toBe('Ficha Personal');
+
+    expect(tabs[1].querySelector('.tab-num')?.textContent?.trim()).toBe('2');
+    expect(tabs[1].querySelector('.tab-texto')?.textContent?.trim()).toBe('Referencias');
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="tab-formacion-academica"]',
+      ),
+    ).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="tab-capacitaciones"]'),
+    ).toBeNull();
+  });
+
+  it('con_una_sola_pestana_abierta_se_muestra_correctamente_y_bloquea_cambio_a_cerradas', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+
+    const tabs = (fixture.nativeElement as HTMLElement).querySelectorAll('.seccion-tab-btn');
+    expect(tabs.length).toBe(1);
+    expect(tabs[0].querySelector('.tab-num')?.textContent?.trim()).toBe('1');
+
+    component.intentarCambiarTab('formacion');
+    expect(component.tabActiva()).toBe('ficha');
+  });
+
+  it('cuenta_bancaria_se_muestra_u_oculta_segun_seccionesAbiertas', () => {
+    // 1. Con cuenta-bancaria abierta
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'cuenta-bancaria'],
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('app-mi-cuenta-bancaria'),
+    ).toBeTruthy();
+
+    // 2. Con cuenta-bancaria cerrada
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('app-mi-cuenta-bancaria'),
+    ).toBeNull();
+  });
+
+  it('no_se_pierde_aviso_de_cambios_sin_guardar_con_pestanas_filtradas', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'referencias'],
+    });
+    stateMock.tieneCambiosSinGuardarSignal.set(true);
+    fixture.detectChanges();
+
+    const punto = (fixture.nativeElement as HTMLElement).querySelector('.tab-punto-cambios');
+    expect(punto).toBeTruthy();
+    expect(punto?.textContent).toBe('•');
+  });
 });
