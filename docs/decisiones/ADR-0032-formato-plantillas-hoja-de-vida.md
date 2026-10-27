@@ -1,7 +1,8 @@
 # ADR-0032 — Formato de las plantillas globales de hoja de vida
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-27
+- **Decidió:** Alexander Martínez (responsable de implementación), 2026-10-27; spec-0013 aprobada por Joseph Baño
 
 ## Contexto
 
@@ -26,23 +27,22 @@ El sistema actual solo producía un archivo HTML plano sin diseño dentro del ar
    - *Ventajas:* 100% deterministas, ejecución nativa en milisegundos, tipado estricto en tiempo de compilación, sin riesgos de inyección, y consumo mínimo de memoria RAM en contenedores Docker.
    - *Desventajas:* Agregar una nueva plantilla global requiere registrar una clase en el código backend.
 
-## Decisión propuesta
+## Decisión
 
-Se adopta la **Opción 3**, estructurada con un diseño completamente desacoplado:
+Se adopta una **variante híbrida de la opción 3** (decidida el 2026-10-27 por quien desarrolla):
 
-1. **Desacoplamiento de la Marca:** La plantilla no contiene elementos propios de una institución. Define únicamente la estructura de maquetación, tipografías y disposición de bloques. La institución provee dinámicamente sus atributos de marca (`ConfiguracionMarcaInstitucion`):
-   - Logotipo institucional (`logo_archivo_id`).
-   - Imagen de portada (`portada_archivo_id`).
-   - Paleta de colores (`ColorPrimario`, `ColorSecundario`).
-   - Lema institucional.
-   - Texto del compromiso institucional para firma.
-2. **Desacoplamiento del Modelo de Datos:** El motor de generación de PDF no consulta repositorios ni bases de datos; opera exclusivamente contra un contrato inmutable de aplicación: `DatosDocumentoHojaDeVida`. Si una sección no contiene registros o está deshabilitada en la institución, el renderizador la omite de manera limpia y sin errores.
-3. **Biblioteca Global:** Las plantillas son administradas a nivel global por el `superadmin`, asignando una plantilla predeterminada del sistema. Cada institución elige qué plantilla de la biblioteca utilizar.
+1. **Diseños base en código.** La maquetación (tipografía, disposición de bloques, portada, paginación) vive en C# como *diseños base* registrados con un código estable (el primero: `clasico`). Agregar un diseño base nuevo es un cambio de código revisado en PR.
+2. **La plantilla global es un dato.** El `superadmin` crea y publica plantillas (spec-0013, RF-PLA-001/002) como registros con nombre, descripción, el código del diseño base y una **configuración JSON** que define qué secciones aparecen, en qué orden, qué campos de cada sección y si una sección vacía se muestra. Esa configuración se valida contra el **catálogo cerrado de campos** (RF-PLA-005) al crear y al publicar; un campo o sección fuera del catálogo se rechaza.
+3. **Desacoplamiento de la marca.** La plantilla no contiene elementos de una institución. Cada institución aporta su marca (`MarcaDocumento`): nombre visible, logotipo, imagen de portada, color principal, color secundario, lema y texto del compromiso.
+4. **Desacoplamiento del modelo de datos.** El generador no consulta repositorios ni base de datos; recibe un contrato inmutable de aplicación, `DatosDocumentoHojaDeVida`. Una sección sin registros o deshabilitada (spec-0010) se omite sin errores.
+5. **Biblioteca global.** Hay una plantilla predeterminada; cada institución elige la suya y la versión publicada que usa (RF-PLA-018/019).
+
+Con esto se descarta la plantilla HTML/CSS convertida a PDF que proponía la v0.1 de la spec en PD-PLA-01: exige un navegador sin interfaz en el servidor (ver ADR-0033).
 
 ## Consecuencias
 
 - **Positivas:** Maquetación exacta sin desbordamientos gráficos; rendimiento óptimo en backend; se pueden ejecutar pruebas unitarias completas de generación en xUnit con datos ficticios sin requerir base de datos ni Docker.
-- **Negativas:** La creación de nuevas estructuras de plantilla base se realiza mediante componentes en el backend.
+- **Negativas:** Un diseño base nuevo (maquetación distinta) requiere un cambio de código; las variaciones de secciones, orden y campos no.
 - **Riesgos y mitigaciones:** Las imágenes institucionales y fotos de perfil deben ser validadas en dimensiones y formatos antes de incrustarse en el flujo de renderizado.
 
 ## ADR relacionados

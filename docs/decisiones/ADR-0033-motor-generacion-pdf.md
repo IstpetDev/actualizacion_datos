@@ -1,7 +1,8 @@
 # ADR-0033 — Motor de generación de PDF en .NET
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-27
+- **Decidió:** Alexander Martínez (responsable de implementación), 2026-10-27; la institución está dentro del umbral de la licencia Community
 
 ## Contexto
 
@@ -28,9 +29,9 @@ Es necesario seleccionar una dependencia técnica que cumpla con los siguientes 
    - *Ventajas:* Muy completo y maduro.
    - *Desventajas:* Licencia AGPLv3 estricta, lo que requeriría licenciar el sistema completo bajo AGPLv3 o adquirir una licencia comercial propietaria costosa.
 
-## Decisión propuesta
+## Decisión
 
-Se selecciona la **Opción 1: QuestPDF**.
+Se selecciona la **Opción 1: QuestPDF**, versión fija `2026.9.1` en `Directory.Packages.props` (las actualizaciones pasan por Dependabot y PR). En pruebas se usa `PdfPig` (Apache-2.0) solo para leer el texto y las páginas del PDF generado.
 
 Se incorpora el paquete NuGet `QuestPDF` en `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/` bajo versión fija. Se encapsula toda la interacción detrás de la interfaz de aplicación `IServicioGeneracionPdfHojaDeVida`, evitando que las capas de Dominio o Aplicación dependan de la librería.
 
