@@ -2,13 +2,14 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
   CapacitacionDto,
   ElementoCatalogoDto,
+  EstadoCapacitacionObligatoriaPersonaDto,
   GuardarCapacitacionRequest,
 } from '../../../../../api-client';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
@@ -51,6 +52,208 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           }
         </div>
       </header>
+
+      <!-- Bloque Obligatorias de la Institución (RF-CAP-004) -->
+      @if (obligatorias().length > 0) {
+        <div class="bloque-obligatorias" data-testid="bloque-capacitaciones-obligatorias">
+          <div class="bloque-obligatorias-header">
+            <h3 class="bloque-titulo">Capacitaciones Obligatorias de la Institución</h3>
+            <p class="bloque-desc">
+              La institución exige las siguientes capacitaciones. El envío a revisión se bloqueará
+              si tiene capacitaciones obligatorias pendientes (RF-CAP-004, RF-CAP-007).
+            </p>
+          </div>
+
+          <div class="lista-obligatorias">
+            @for (ob of obligatorias(); track ob.id) {
+              <div class="card-obligatoria" [attr.data-testid]="'card-obligatoria-' + ob.id">
+                <div class="obligatoria-info">
+                  <div class="obligatoria-titulo-fila">
+                    <strong class="obligatoria-nombre">{{ ob.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [ngClass]="{
+                        'badge-success': ob.estado === 'cargada',
+                        'badge-warning': ob.estado === 'observada',
+                        'badge-info':
+                          ob.estado === 'exento-nuevo-ingreso' ||
+                          ob.estado === 'justificada-nuevo-ingreso',
+                        'badge-danger': ob.estado === 'pendiente',
+                      }"
+                      [attr.data-testid]="'badge-estado-obligatoria-' + ob.id"
+                    >
+                      @switch (ob.estado) {
+                        @case ('cargada') {
+                          ✓ Cargada
+                        }
+                        @case ('observada') {
+                          ⚠️ Observada
+                        }
+                        @case ('exento-nuevo-ingreso') {
+                          ℹ Exento por nuevo ingreso
+                        }
+                        @case ('justificada-nuevo-ingreso') {
+                          ✓ Justificada
+                        }
+                        @default {
+                          ✕ Pendiente
+                        }
+                      }
+                    </span>
+                  </div>
+
+                  <p class="obligatoria-meta">
+                    @if (ob.institucionOrganizadora) {
+                      <span>Organizadora: {{ ob.institucionOrganizadora }}</span>
+                    }
+                    @if (ob.horasEsperadas) {
+                      <span> • Horas: {{ ob.horasEsperadas }}h</span>
+                    }
+                    @if (ob.fechaRealizacion) {
+                      <span> • Fecha: {{ ob.fechaRealizacion | date: 'dd/MM/yyyy' }}</span>
+                    }
+                  </p>
+
+                  @if (ob.justificacionNuevoIngreso) {
+                    <p class="obligatoria-justificacion text-muted text-sm">
+                      <em>Justificación: {{ ob.justificacionNuevoIngreso }}</em>
+                    </p>
+                  }
+                </div>
+
+                @if (puedeEditar()) {
+                  <div class="obligatoria-acciones">
+                    @if (ob.estado === 'pendiente' || ob.estado === 'observada') {
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        (click)="subirParaObligatoria(ob)"
+                        [attr.data-testid]="'btn-subir-obligatoria-' + ob.id"
+                      >
+                        Subir Certificado
+                      </button>
+
+                      @if (capacitacionesSinVincular().length > 0) {
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          (click)="abrirModalVincular(ob)"
+                          [attr.data-testid]="'btn-usar-existente-' + ob.id"
+                        >
+                          Usar una que ya tengo
+                        </button>
+                      }
+
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm"
+                        (click)="abrirModalJustificar(ob)"
+                        [attr.data-testid]="'btn-justificar-obligatoria-' + ob.id"
+                      >
+                        Justificar ingreso
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Modal Vincular Existente -->
+      @if (obligatoriaParaVincular()) {
+        <div class="modal-backdrop" data-testid="modal-vincular-existente">
+          <div class="modal-card">
+            <h4>Vincular capacitación existente</h4>
+            <p>
+              Seleccione una de sus capacitaciones registradas para cumplir con:
+              <strong>{{ obligatoriaParaVincular()!.nombre }}</strong>
+            </p>
+
+            <div class="form-group">
+              <label for="selectCapacitacion">Capacitación registrada</label>
+              <select
+                id="selectCapacitacion"
+                class="form-control"
+                [(ngModel)]="capacitacionSeleccionadaParaVincular"
+                data-testid="select-capacitacion-existente"
+              >
+                <option value="">-- Seleccione una capacitación --</option>
+                @for (c of capacitacionesSinVincular(); track c.id) {
+                  <option [value]="c.id">
+                    {{ c.nombreEvento }} ({{ c.institucionOrganizadora }} -
+                    {{ c.numeroHoras || 0 }}h)
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="modal-botones mt-3">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="cerrarModalVincular()"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                [disabled]="!capacitacionSeleccionadaParaVincular"
+                (click)="confirmarVincularExistente()"
+                data-testid="btn-confirmar-vincular"
+              >
+                Vincular
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Modal Justificar Nuevo Ingreso -->
+      @if (obligatoriaParaJustificar()) {
+        <div class="modal-backdrop" data-testid="modal-justificar-ingreso">
+          <div class="modal-card">
+            <h4>Justificar nuevo ingreso</h4>
+            <p>
+              Indique el motivo por el cual no cuenta con:
+              <strong>{{ obligatoriaParaJustificar()!.nombre }}</strong>
+            </p>
+
+            <div class="form-group">
+              <label for="textoJustificacion">Justificación</label>
+              <textarea
+                id="textoJustificacion"
+                class="form-control"
+                rows="3"
+                [(ngModel)]="textoJustificacion"
+                placeholder="Ej. Ingresé recientemente a la institución posterior a la fecha del curso..."
+                data-testid="textarea-justificacion"
+              ></textarea>
+            </div>
+
+            <div class="modal-botones mt-3">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="cerrarModalJustificar()"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                [disabled]="!textoJustificacion.trim()"
+                (click)="confirmarJustificar()"
+                data-testid="btn-confirmar-justificar"
+              >
+                Enviar Justificación
+              </button>
+            </div>
+          </div>
+        </div>
+      }
 
       <!-- Formulario Inline para Capacitación -->
       @if (mostrarFormulario()) {
@@ -541,6 +744,116 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         color: #94a3b8;
         padding: 1.5rem !important;
       }
+      .bloque-obligatorias {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--radius-md, 8px);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+      }
+      .bloque-obligatorias-header {
+        margin-bottom: 1rem;
+      }
+      .bloque-titulo {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.25rem 0;
+      }
+      .bloque-desc {
+        font-size: 0.8125rem;
+        color: #64748b;
+        margin: 0;
+      }
+      .lista-obligatorias {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .card-obligatoria {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 0.875rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .obligatoria-info {
+        flex: 1;
+        min-width: 250px;
+      }
+      .obligatoria-titulo-fila {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.25rem;
+      }
+      .obligatoria-nombre {
+        font-size: 0.9375rem;
+        color: #1e293b;
+      }
+      .obligatoria-meta {
+        font-size: 0.8125rem;
+        color: #64748b;
+        margin: 0;
+      }
+      .obligatoria-justificacion {
+        margin: 0.25rem 0 0 0;
+      }
+      .obligatoria-acciones {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .btn-outline {
+        background: transparent;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+      }
+      .btn-outline:hover {
+        background: #f1f5f9;
+      }
+      .badge-warning {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+      }
+      .modal-card {
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .modal-card h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        color: #0f172a;
+      }
+      .modal-card p {
+        font-size: 0.875rem;
+        color: #475569;
+        margin: 0 0 1rem 0;
+      }
+      .modal-botones {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+      }
     `,
   ],
 })
@@ -557,6 +870,71 @@ export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCam
   readonly puedeEditar = this.state.puedeEditar;
   readonly guardando = this.state.guardando;
   readonly capacitaciones = this.state.capacitaciones;
+  readonly obligatorias =
+    this.state.capacitacionesObligatorias ?? signal<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
+
+  readonly capacitacionesSinVincular = computed(() =>
+    this.capacitaciones().filter((c) => !c.capacitacionObligatoriaId),
+  );
+
+  readonly obligatoriaParaVincular = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
+  capacitacionSeleccionadaParaVincular = '';
+
+  readonly obligatoriaParaJustificar = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
+  textoJustificacion = '';
+
+  subirParaObligatoria(ob: EstadoCapacitacionObligatoriaPersonaDto): void {
+    this.abrirFormulario();
+    this.modelo.capacitacionObligatoriaId = ob.id;
+    this.modelo.nombreEvento = ob.nombre;
+    this.modelo.institucionOrganizadora = ob.institucionOrganizadora || '';
+    if (ob.horasEsperadas) {
+      this.modelo.numeroHoras = ob.horasEsperadas;
+    }
+  }
+
+  abrirModalVincular(ob: EstadoCapacitacionObligatoriaPersonaDto): void {
+    this.obligatoriaParaVincular.set(ob);
+    this.capacitacionSeleccionadaParaVincular = '';
+  }
+
+  cerrarModalVincular(): void {
+    this.obligatoriaParaVincular.set(null);
+    this.capacitacionSeleccionadaParaVincular = '';
+  }
+
+  confirmarVincularExistente(): void {
+    const ob = this.obligatoriaParaVincular();
+    if (!ob || !this.capacitacionSeleccionadaParaVincular) return;
+
+    this.state
+      .vincularCapacitacionObligatoria(ob.id, this.capacitacionSeleccionadaParaVincular)
+      .subscribe({
+        next: () => this.cerrarModalVincular(),
+        error: (err) =>
+          this.errorFormulario.set(mensajeError(err, 'Error al vincular la capacitación.')),
+      });
+  }
+
+  abrirModalJustificar(ob: EstadoCapacitacionObligatoriaPersonaDto): void {
+    this.obligatoriaParaJustificar.set(ob);
+    this.textoJustificacion = '';
+  }
+
+  cerrarModalJustificar(): void {
+    this.obligatoriaParaJustificar.set(null);
+    this.textoJustificacion = '';
+  }
+
+  confirmarJustificar(): void {
+    const ob = this.obligatoriaParaJustificar();
+    if (!ob || !this.textoJustificacion.trim()) return;
+
+    this.state.justificarNuevoIngreso(ob.id, this.textoJustificacion.trim()).subscribe({
+      next: () => this.cerrarModalJustificar(),
+      error: (err) => this.errorFormulario.set(mensajeError(err, 'Error al justificar.')),
+    });
+  }
 
   readonly tiposCapacitacion = signal<ElementoCatalogoDto[]>([]);
   readonly mostrarFormulario = signal(false);
@@ -642,6 +1020,7 @@ export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCam
       lugar: '',
       financiadaPorInstitucion: false,
       archivoId: undefined,
+      capacitacionObligatoriaId: undefined,
     };
     this.mostrarFormulario.set(true);
   }
@@ -660,6 +1039,7 @@ export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCam
       lugar: c.lugar,
       financiadaPorInstitucion: c.financiadaPorInstitucion,
       archivoId: c.archivoId,
+      capacitacionObligatoriaId: c.capacitacionObligatoriaId,
     };
     this.fechaInicioStr = c.fechaInicio ? new Date(c.fechaInicio).toISOString().split('T')[0] : '';
     this.fechaFinStr = c.fechaFin ? new Date(c.fechaFin).toISOString().split('T')[0] : '';

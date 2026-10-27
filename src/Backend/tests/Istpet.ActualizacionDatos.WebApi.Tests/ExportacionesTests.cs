@@ -2,7 +2,9 @@ namespace Istpet.ActualizacionDatos.WebApi.Tests;
 
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http.Json;
 using System.Text;
+using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
@@ -465,5 +467,189 @@ public sealed partial class ExportacionesTests : IDisposable
         var contenidoIndice = await reader.ReadToEndAsync();
         Assert.Contains("``reporte`con`backticks.pdf``", contenidoIndice, StringComparison.Ordinal);
         Assert.Contains("`nombre con saltos.pdf`", contenidoIndice, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Admin_exportar_excel_incluye_hoja_y_columna_de_capacitaciones_obligatorias_RF_CAP_011()
+    {
+        // Arrange
+        var (instId, pAprobada, _) = await InicializarDatosExportacionAsync();
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var ob = new Istpet.ActualizacionDatos.Domain.HojaDeVida.CapacitacionObligatoria(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Seguridad y Salud en el Trabajo 2026",
+                "ISTPET",
+                20,
+                new DateOnly(2026, 4, 10));
+
+            db.CapacitacionesObligatorias.Add(ob);
+
+            var cap = new Istpet.ActualizacionDatos.Domain.HojaDeVida.Capacitacion(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                pAprobada.Id,
+                new Istpet.ActualizacionDatos.Domain.HojaDeVida.DatosCapacitacion(
+                    "Seguridad y Salud en el Trabajo 2026",
+                    "ISTPET",
+                    NumeroHoras: 20,
+                    CapacitacionObligatoriaId: ob.Id));
+
+            db.Capacitaciones.Add(cap);
+            await db.SaveChangesAsync();
+        }
+
+        var request = CrearRequest(HttpMethod.Get, "/api/exportaciones/excel", instId, "admin@ejemplo.test", RolUsuario.Admin);
+
+        // Act
+        var response = await _cliente.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        using var ms = new MemoryStream(bytes);
+        using var zip = new ZipArchive(ms, ZipArchiveMode.Read);
+
+        // Validar hoja 1 y hoja 2
+        var sheet1 = zip.GetEntry("xl/worksheets/sheet1.xml");
+        Assert.NotNull(sheet1);
+        using (var reader = new StreamReader(sheet1.Open(), Encoding.UTF8))
+        {
+            var contenido = await reader.ReadToEndAsync();
+            Assert.Contains("Capacitaciones Obligatorias", contenido, StringComparison.Ordinal);
+            Assert.Contains(pAprobada.Documento, contenido, StringComparison.Ordinal);
+        }
+
+        var sheet2 = zip.GetEntry("xl/worksheets/sheet2.xml");
+        Assert.NotNull(sheet2);
+        using (var reader = new StreamReader(sheet2.Open(), Encoding.UTF8))
+        {
+            var contenido = await reader.ReadToEndAsync();
+            Assert.Contains("Seguridad y Salud en el Trabajo 2026", contenido, StringComparison.Ordinal);
+            Assert.Contains(pAprobada.Documento, contenido, StringComparison.Ordinal);
+            Assert.Contains("Aprobada", contenido, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task Admin_exportar_excel_incluye_borradores_incompletos_cuando_la_campana_vencio_RF_CAP_016()
+    {
+        // Arrange
+        Guid instId;
+        Persona pBorrador;
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            instId = Guid.NewGuid();
+            var inst = new Institucion(new InstitucionId(instId), "Instituto Campana Vencida");
+            db.Instituciones.Add(inst);
+
+            // Campaña vencida
+            var campana = new Campana(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Campaña 2025 Pasada",
+                DateTime.UtcNow.AddDays(-30),
+                DateTime.UtcNow.AddDays(-5),
+                activa: true);
+            db.Campanas.Add(campana);
+
+            pBorrador = new Persona(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "1700000095",
+                RolUsuario.Usuario,
+                "Docente Incompleto",
+                "docente.incompleto@ejemplo.test",
+                accesoHabilitado: true,
+                estadoActualizacion: EstadoActualizacion.Borrador);
+
+            db.Personas.Add(pBorrador);
+            await db.SaveChangesAsync();
+        }
+
+        var request = CrearRequest(HttpMethod.Get, "/api/exportaciones/excel", instId, "admin@ejemplo.test", RolUsuario.Admin);
+
+        // Act
+        var response = await _cliente.SendAsync(request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        using var ms = new MemoryStream(bytes);
+        using var zip = new ZipArchive(ms, ZipArchiveMode.Read);
+
+        var sheet1 = zip.GetEntry("xl/worksheets/sheet1.xml");
+        Assert.NotNull(sheet1);
+        using var reader = new StreamReader(sheet1.Open(), Encoding.UTF8);
+        var contenido = await reader.ReadToEndAsync();
+        Assert.Contains(pBorrador.Documento, contenido, StringComparison.Ordinal);
+        Assert.Contains("Incompleto, no enviado", contenido, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Admin_puede_ver_borrador_incompleto_post_campana_y_supervisor_recibe_error_RF_CAP_016()
+    {
+        // Arrange
+        Guid instId;
+        string documentoBorrador = "1700000096";
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            instId = Guid.NewGuid();
+            var inst = new Institucion(new InstitucionId(instId), "Instituto Revision Post Campana");
+            db.Instituciones.Add(inst);
+
+            var campana = new Campana(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Campaña Cerrada 2025",
+                DateTime.UtcNow.AddDays(-40),
+                DateTime.UtcNow.AddDays(-2),
+                activa: true);
+            db.Campanas.Add(campana);
+
+            var p = new Persona(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                documentoBorrador,
+                RolUsuario.Usuario,
+                "Usuario Borrador Post Campana",
+                "borrador.post@ejemplo.test",
+                accesoHabilitado: true,
+                estadoActualizacion: EstadoActualizacion.Borrador);
+
+            db.Personas.Add(p);
+            await db.SaveChangesAsync();
+        }
+
+        // 1. Supervisor intenta ver el borrador -> 400 Bad Request
+        var reqSupervisor = CrearRequest(HttpMethod.Get, $"/api/revision/{documentoBorrador}", instId, "supervisor@ejemplo.test", RolUsuario.Supervisor);
+        var resSupervisor = await _cliente.SendAsync(reqSupervisor);
+        Assert.Equal(HttpStatusCode.BadRequest, resSupervisor.StatusCode);
+
+        // 2. Admin intenta ver el borrador -> 200 OK con marca 'Incompleto, no enviado'
+        var reqAdmin = CrearRequest(HttpMethod.Get, $"/api/revision/{documentoBorrador}", instId, "admin@ejemplo.test", RolUsuario.Admin);
+        var resAdmin = await _cliente.SendAsync(reqAdmin);
+        Assert.Equal(HttpStatusCode.OK, resAdmin.StatusCode);
+
+        var dto = await resAdmin.Content.ReadFromJsonAsync<ExpedienteRevisionDto>();
+        Assert.NotNull(dto);
+        Assert.Equal(documentoBorrador, dto.Documento);
+        Assert.Equal("Incompleto, no enviado", dto.EstadoActualizacion);
+
+        // 3. Auditoría registrada
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var auditoria = await db.Auditorias.FirstOrDefaultAsync(a => a.Accion == "ConsultaBorradorIncompletoPostCampana");
+            Assert.NotNull(auditoria);
+            Assert.Equal("admin@ejemplo.test", auditoria.Actor);
+        }
     }
 }

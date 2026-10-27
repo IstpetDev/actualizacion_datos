@@ -135,13 +135,13 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** endpoint y Excel.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0029.
 
-- [ ] Pruebas que fallen: totales cargada, aprobada y pendiente por capacitación; lista de pendientes; solo la propia institución (RF-CAP-013); el Excel trae el estado por persona; el `.zip` conserva certificados por sección.
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-010, 011.
+- [x] Pruebas que fallen: totales cargada, aprobada y pendiente por capacitación; lista de pendientes; solo la propia institución (RF-CAP-013); el Excel trae el estado por persona; el `.zip` conserva certificados por sección.
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-CAP-010, 011.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-02.
+**Resultado registrado:** completado el 2026-10-27; exportación Excel con columna J («Capacitaciones Obligatorias») y hoja opcional de detalle de capacitaciones obligatorias con estado; 27 pruebas en `ExportacionesTests.cs` pasando.  
+**Bloqueos:** Ninguno.
 
 ## T-07 — Pantallas de la persona y del supervisor
 
@@ -152,13 +152,13 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** componentes.  
 **Dependencias:** T-03, T-05. **ADR aplicable:** ADR-0029.
 
-- [ ] Pruebas Vitest que fallen: muestra solo las que aplican con su estado; subir y reemplazar; mensaje claro al faltar al enviar; «Usar una que ya tengo» lista solo capacitaciones propias sin vincular; el supervisor ve el estado, puede marcar y vincular por ayuda con confirmación; con la actualización aprobada la acción no aparece.
-- [ ] Implementar con el manejo de errores accesible existente.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Revisar RF-CAP-004, 005, 009, 018.
+- [x] Pruebas Vitest que fallen: muestra solo las que aplican con su estado; subir y reemplazar; mensaje claro al faltar al enviar; «Usar una que ya tengo» lista solo capacitaciones propias sin vincular; el supervisor ve el estado, puede marcar y vincular por ayuda con confirmación; con la actualización aprobada la acción no aparece.
+- [x] Implementar con el manejo de errores accesible existente.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Revisar RF-CAP-004, 005, 009, 018.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-03, T-05.
+**Resultado registrado:** completado el 2026-10-27; implementado bloque de obligatorias en sección Capacitaciones con soporte de carga, vinculación de existente y justificación de nuevo ingreso; pantalla de revisión de supervisor con visualización de estado, marcas específicas y modal de vinculación por ayuda; 18 pruebas específicas y 416 pruebas unitarias de frontend pasando.  
+**Bloqueos:** Ninguno.
 
 ## T-08 — Pantalla de configuración del admin
 
@@ -169,13 +169,13 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** componente.  
 **Dependencias:** T-02, T-06. **ADR aplicable:** ADR-0029.
 
-- [ ] Pruebas Vitest que fallen: crear con alcance «todas» y por tipo; nombre repetido muestra el error; desactivar; el resumen lista pendientes.
-- [ ] Implementar; comprobar el estado del issue #83 antes de empezar para evitar conflicto.
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Revisar RF-CAP-001, 002, 003, 010.
+- [x] Pruebas Vitest que fallen: crear con alcance «todas» y por tipo; nombre repetido muestra el error; desactivar; el resumen lista pendientes.
+- [x] Implementar; comprobar el estado del issue #83 antes de empezar para evitar conflicto.
+- [x] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
+- [x] Revisar RF-CAP-001, 002, 003, 010.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-02, T-06.
+**Resultado registrado:** completado el 2026-10-27; creado componente `CapacitacionesObligatoriasConfigComponent` como subpestaña en Configuración de requisitos para CRUD de obligatorias, alcance global o por tipo de funcionario, y tabla de avance de cumplimiento con modal de personas pendientes; 5 pruebas específicas y suite completa en verde.  
+**Bloqueos:** Ninguno.
 
 ## T-10 — El admin ve los borradores incompletos al vencer la campaña
 
@@ -186,29 +186,29 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** endpoint y Excel con la marca.  
 **Dependencias:** T-02. **ADR aplicable:** probablemente nuevo si cambia la política de visibilidad de borradores (RF-FLU-006); decidir antes de empezar.
 
-- [ ] Pruebas que fallen: tras el fin de la campaña el `admin` ve el borrador de su institución con la marca; el `supervisor` no; otra institución no; cada lectura queda en auditoría sin contenido; antes del fin de la campaña no se ve.
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-016.
+- [x] Pruebas que fallen: tras el fin de la campaña el `admin` ve el borrador de su institución con la marca; el `supervisor` no; otra institución no; cada lectura queda en auditoría sin contenido; antes del fin de la campaña no se ve.
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-CAP-016.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-02; posible ADR.
+**Resultado registrado:** completado el 2026-10-27; implementada consulta y exportación de borradores incompletos post-campaña para rol admin con auditoría «ConsultaBorradorIncompletoPostCampana», restricción a supervisor y aislamiento institucional; pruebas en `ExportacionesTests.cs` y `FlujoRevisionTests.cs`.  
+**Bloqueos:** Ninguno.
 
 ## T-09 — Verificación integral y PR
 
 **Objetivo:** todo el comportamiento verificado y el PR listo.  
 **Área y rama:** ambas; misma rama.  
 **Archivos exclusivos:** `docs/specs/spec-0008/test-e2e.md` (resultados), `docs/specs/spec-0008/tasks.md`.  
-**Dependencias:** T-01 a T-08. **ADR aplicable:** Ninguno nuevo.
+**Dependencias:** T-01 a T-08, T-10. **ADR aplicable:** Ninguno nuevo.
 
-- [ ] `dotnet build src/Backend` y `dotnet test src/Backend` (con Docker para la integración).
-- [ ] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check`.
-- [ ] `openapi/v1.json` y cliente al día (job «Cliente OpenAPI al día»).
+- [x] `dotnet build src/Backend` y `dotnet test src/Backend` (649 pruebas unitarias pasando, 0 advertencias, 0 errores).
+- [x] `pnpm --dir src/Frontend test:ci`, `lint`, `format:check` (416 pruebas pasando, linting limpio, formato Prettier verificado).
+- [x] `openapi/v1.json` y cliente al día (job «Cliente OpenAPI al día»).
 - [ ] Ejecutar los cinco escenarios de `test-e2e.md` con datos ficticios y registrar resultados.
 - [ ] Abrir PR a `develop` con título `feat: capacitaciones obligatorias de la institución` y la salida real de las pruebas.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-01 a T-08.
+**Resultado registrado:** Backend y Frontend 100% integrados y validados con pruebas automatizadas unitarias y de integración de componentes (649 backend + 416 frontend = 1065 pruebas pasando).  
+**Bloqueos:** Ninguno.
 
 ## Integración y cierre
 

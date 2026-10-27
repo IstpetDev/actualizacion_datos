@@ -49,23 +49,43 @@ public class ServicioRevision : IServicioRevision
             .FirstOrDefaultAsync(p => p.Documento == documento, ct)
             ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
 
-        // RF-FLU-006: Si está en borrador, el supervisor no puede verla
+        var ahoraUtc = DateTime.UtcNow;
+        var esBorradorIncompletoPostCampana = false;
+
+        // RF-FLU-006 / RF-CAP-016:
+        // Si está en borrador, el supervisor nunca puede verla.
+        // El admin puede consultarla en modo solo lectura únicamente tras el fin de la campaña (marcada como «incompleto, no enviado»).
         if (persona.EstadoActualizacion == EstadoActualizacion.Borrador)
         {
-            throw new ReglaNegocioException("Las solicitudes en borrador no están disponibles para revisión del supervisor.");
+            var esAdmin = _contextoInstitucion.RolActual is RolUsuario.Admin or RolUsuario.Superadmin;
+            var campanas = await _context.Campanas
+                .AsNoTracking()
+                .Where(c => c.InstitucionId == persona.InstitucionId)
+                .ToListAsync(ct);
+            var campanaAbierta = campanas.Any(c => c.EstaAbiertaEn(ahoraUtc));
+            var hayCampanaVencida = campanas.Any(c => c.FechaFinUtc < ahoraUtc);
+
+            if (!esAdmin || campanaAbierta || !hayCampanaVencida)
+            {
+                throw new ReglaNegocioException("Las solicitudes en borrador no están disponibles para revisión del supervisor.");
+            }
+
+            esBorradorIncompletoPostCampana = true;
         }
 
-        var ahoraUtc = DateTime.UtcNow;
+        // RF-DAT-004, RF-DAT-005, RF-CAP-016: Registrar en auditoría la consulta a datos de otra persona
+        var accionAuditoria = esBorradorIncompletoPostCampana ? "ConsultaBorradorIncompletoPostCampana" : "ConsultaRevision";
+        var detalleAuditoria = esBorradorIncompletoPostCampana
+            ? $"Consulta de borrador incompleto de {persona.Documento} tras vencer la campaña (solo lectura)."
+            : $"Consulta de expediente del usuario {persona.Documento} para revisión.";
 
-        // RF-DAT-004, RF-DAT-005: Registrar en auditoría la consulta a datos de otra persona por un supervisor o admin
-        // No incluye contraseñas ni el contenido de los datos personales.
         _context.Auditorias.Add(new Auditoria(
             Guid.NewGuid(),
             actorSupervisor,
-            "ConsultaRevision",
+            accionAuditoria,
             persona.InstitucionId,
             ahoraUtc,
-            detalle: $"Consulta de expediente del usuario {persona.Documento} para revisión."));
+            detalle: detalleAuditoria));
 
         await _context.SaveChangesAsync(ct);
 
@@ -95,7 +115,7 @@ public class ServicioRevision : IServicioRevision
             persona.Documento,
             persona.Nombre,
             persona.Correo,
-            persona.EstadoActualizacion.ToString(),
+            esBorradorIncompletoPostCampana ? "Incompleto, no enviado" : persona.EstadoActualizacion.ToString(),
             persona.DatosPersonalesJson,
             persona.TratamientoDatosAceptado,
             persona.FechaAceptacionTratamientoDatosUtc,
