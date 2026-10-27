@@ -298,8 +298,11 @@ public sealed class CargaNominaAmpliadaTests : IDisposable
     }
 
     [Theory]
-    [InlineData("0900000000", true, false)] [InlineData("020000000", false, true)]
-    [InlineData("09000abc00", false, false)] [InlineData("0800000000", false, false)] [InlineData("09 00000000", false, false)]
+    [InlineData("0900000000", true, false)]
+    [InlineData("020000000", false, true)]
+    [InlineData("09000abc00", false, false)]
+    [InlineData("0800000000", false, false)]
+    [InlineData("09 00000000", false, false)]
     public async Task Importacion_no_reclasifica_telefonos_invalidos_y_advierte_sin_eco(string telefono, bool celular, bool convencional)
     {
         var institucion = InstitucionId.Nuevo();

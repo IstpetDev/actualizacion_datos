@@ -27,6 +27,8 @@ public sealed class ReglaFormatosHojaDeVida(AplicacionDbContext contexto) : IReg
         foreach (var e in await contexto.ExperienciasLaborales.Where(t => t.PersonaId == personaId).ToListAsync(ct)) Revisar(e, "experiencia", "experiencias", e.Id);
         foreach (var r in await contexto.ReferenciasPersonales.Where(t => t.PersonaId == personaId).ToListAsync(ct)) Revisar(r, "referencia", "referencias", r.Id);
         foreach (var d in await contexto.DocumentosPersonales.Where(t => t.PersonaId == personaId).ToListAsync(ct)) Revisar(d, "documento", "documentos", d.Id);
+        var cuenta = await contexto.CuentasBancarias.SingleOrDefaultAsync(c => c.PersonaId == personaId, ct);
+        if (cuenta is not null) Revisar(new { cuenta.NombreBancoOtro }, "cuenta", "cuenta-bancaria", cuenta.Id);
         return faltantes;
     }
 }

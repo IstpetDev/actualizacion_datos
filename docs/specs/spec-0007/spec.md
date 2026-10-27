@@ -1,6 +1,6 @@
 # Validación de hoja de vida, correo institucional y perfil automático — Spec
 
-**ID:** spec-0006; issue #88
+**ID:** spec-0007; issue #88
 
 **Versión:** 0.1
 
@@ -176,10 +176,10 @@ Los logs de validación no contienen cuerpo, nombres, teléfonos, correos, perfi
 
 **Aprobó:** Responsable solicitante en esta conversación.
 
-**Fecha y evidencia:** 2026-10-26; respuesta «si, continua» después de presentar y solicitar aprobación de spec-0006 v0.1.
+**Fecha y evidencia:** 2026-10-26; respuesta «si, continua» después de presentar y solicitar aprobación de spec-0007 v0.1.
 
 **Ajustes solicitados:** Ninguno.
 
 Solo tras aprobar esta versión se crean `plan.md`, `tasks.md` y `test-e2e.md`, se registran los ADR correspondientes y se implementa. La aprobación del merge y cierre ya está autorizada por la solicitud del usuario, condicionada a completar y probar todo el alcance.
 
-**Renumeración documental:** aprobada originalmente como spec-0005 v0.1; renumerada a spec-0006 después de integrarse el PR #95, que ocupó ese número. Se conserva el alcance y la aprobación funcional. Los ADR correspondientes pasan de 0023/0024 a 0024/0025.
+**Renumeración documental:** aprobada originalmente como spec-0005 v0.1; renumerada a spec-0007 después de integrarse los PR #95 y #96, que ocuparon los números 0005 y 0006. Se conserva el alcance y la aprobación funcional. Los ADR correspondientes pasan de 0023/0024 a 0024/0025.

@@ -5,7 +5,7 @@
 
 ## Contexto
 
-RF-HDV-020 de spec-0003 permitía perfil escrito por la persona. El responsable funcional solicita generación automática en #88, aprobada en spec-0006 v0.1 mediante «si, continua». La exportación actual no tiene CV individual.
+RF-HDV-020 de spec-0003 permitía perfil escrito por la persona. El responsable funcional solicita generación automática en #88, aprobada en spec-0007 v0.1 mediante «si, continua». La exportación actual no tiene CV individual.
 
 ## Opciones
 

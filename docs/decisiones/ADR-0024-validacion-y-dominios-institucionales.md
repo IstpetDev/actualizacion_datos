@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Spec-0006 v0.1 aprobada mediante «si, continua» define formatos, dominios, borradores y corrección de antiguos. El contrato de errores de #94 sigue en un PR ajeno abierto; se debe mantener compatibilidad sin copiar su middleware global.
+Spec-0007 v0.1 aprobada mediante «si, continua» define formatos, dominios, borradores y corrección de antiguos. El contrato de errores de #94 sigue en un PR ajeno abierto; se debe mantener compatibilidad sin copiar su middleware global.
 
 ## Opciones
 

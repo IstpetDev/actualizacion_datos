@@ -159,13 +159,11 @@ export class ValidacionHojaDeVidaService {
   }
   cargar(): void {
     this.errorCarga.set('');
-    this.cliente
-      .obtenerPoliticaValidacion()
-      .subscribe({
-        next: (politica) => this.politica.set(politica),
-        error: () =>
-          this.errorCarga.set('No se pudieron cargar las reglas de validación. Vuelva a intentar.'),
-      });
+    this.cliente.obtenerPoliticaValidacion().subscribe({
+      next: (politica) => this.politica.set(politica),
+      error: () =>
+        this.errorCarga.set('No se pudieron cargar las reglas de validación. Vuelva a intentar.'),
+    });
   }
   errores(datos: object, seccion: string): ErroresCampos {
     const politica = this.politica();

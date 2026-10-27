@@ -1,7 +1,4 @@
-import {
-  ValidacionHojaDeVidaService,
-  fechaPolitica,
-} from '../../servicios/validacion-hoja-de-vida.service';
+import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
@@ -964,7 +961,6 @@ export class FormacionAcademicaComponent implements OnInit {
       (this.mostrarFormEnCurso() && this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')),
     inject(DestroyRef),
   );
-  readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -1228,8 +1224,10 @@ export class FormacionAcademicaComponent implements OnInit {
 
     this.state.guardarTituloEnCurso(this.modeloEnCurso, this.idEnCursoEdicion()).subscribe({
       next: () => this.cancelarFormEnCurso(),
-      error: (err) =>
-        this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.'),
+      error: (err) => {
+        this.validacion.registrarError(err, this.modeloEnCurso);
+        this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.');
+      },
     });
   }
 

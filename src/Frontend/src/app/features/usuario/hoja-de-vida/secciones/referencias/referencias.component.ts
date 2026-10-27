@@ -1,7 +1,4 @@
-import {
-  ValidacionHojaDeVidaService,
-  fechaPolitica,
-} from '../../servicios/validacion-hoja-de-vida.service';
+import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -464,7 +461,6 @@ export class ReferenciasComponent {
     () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'referencia'),
     inject(DestroyRef),
   );
-  readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
 
   readonly puedeEditar = this.state.puedeEditar;

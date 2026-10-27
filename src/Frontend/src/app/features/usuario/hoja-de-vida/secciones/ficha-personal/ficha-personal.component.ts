@@ -507,33 +507,41 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         </fieldset>
 
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
-          <legend>Discapacidad (si corresponde)</legend>
-          <label for="porcentajeDiscapacidad">Porcentaje de discapacidad</label
-          ><input
-            id="porcentajeDiscapacidad"
-            name="porcentajeDiscapacidad"
-            type="number"
-            [(ngModel)]="modelo.porcentajeDiscapacidad"
-            min="0"
-            max="100"
-            step="1"
-            aria-describedby="error-porcentaje"
-          />
-          @if (validacion.mensaje(modelo, 'ficha', 'porcentajeDiscapacidad'); as mensaje) {
-            <small id="error-porcentaje" class="text-danger" role="alert">{{ mensaje }}</small>
-          }
-          <label for="numeroCarnetDiscapacidad">Número de carné</label
-          ><input
-            id="numeroCarnetDiscapacidad"
-            name="numeroCarnetDiscapacidad"
-            [(ngModel)]="modelo.numeroCarnetDiscapacidad"
-            aria-describedby="error-carnet"
-          />
-          @if (validacion.mensaje(modelo, 'ficha', 'numeroCarnetDiscapacidad'); as mensaje) {
-            <small id="error-carnet" class="text-danger" role="alert">{{ mensaje }}</small>
-          }
+          <legend class="grupo-titulo">Discapacidad (si corresponde)</legend>
+          <div class="grid-dos">
+            <div class="form-group">
+              <label for="porcentajeDiscapacidad">Porcentaje de discapacidad</label
+              ><input
+                class="form-control"
+                id="porcentajeDiscapacidad"
+                name="porcentajeDiscapacidad"
+                type="number"
+                [(ngModel)]="modelo.porcentajeDiscapacidad"
+                min="0"
+                max="100"
+                step="1"
+                aria-describedby="error-porcentaje"
+              />
+              @if (validacion.mensaje(modelo, 'ficha', 'porcentajeDiscapacidad'); as mensaje) {
+                <small id="error-porcentaje" class="text-danger" role="alert">{{ mensaje }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label for="numeroCarnetDiscapacidad">Número de carné</label
+              ><input
+                class="form-control"
+                id="numeroCarnetDiscapacidad"
+                name="numeroCarnetDiscapacidad"
+                [(ngModel)]="modelo.numeroCarnetDiscapacidad"
+                aria-describedby="error-carnet"
+              />
+              @if (validacion.mensaje(modelo, 'ficha', 'numeroCarnetDiscapacidad'); as mensaje) {
+                <small id="error-carnet" class="text-danger" role="alert">{{ mensaje }}</small>
+              }
+            </div>
+          </div>
         </fieldset>
-        <!-- 5. FOTOGRAFÍA (spec-0006) -->
+        <!-- 5. FOTOGRAFÍA (spec-0007) -->
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
           <legend class="grupo-titulo">Fotografía</legend>
 

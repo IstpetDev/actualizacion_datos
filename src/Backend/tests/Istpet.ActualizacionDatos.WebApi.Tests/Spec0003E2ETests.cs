@@ -239,7 +239,7 @@ public sealed class Spec0003E2ETests : IDisposable
             await db.SaveChangesAsync();
         }
 
-        // 1. RF-HDV-001: completar ficha; el perfil se genera según spec-0006.
+        // 1. RF-HDV-001: completar ficha; el perfil se genera según spec-0007.
         var reqFicha = new GuardarFichaPersonalRequest(
             PrimerNombre: "Nombre Ficticio",
             PrimerApellido: "Apellido Ficticio",

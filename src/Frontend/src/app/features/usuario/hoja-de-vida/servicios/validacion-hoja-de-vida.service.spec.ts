@@ -119,7 +119,16 @@ describe('Validación de hoja de vida', () => {
     expect(servicio.mensaje({ celular: '0900000001' }, 'ficha', 'celular')).toBe('');
   });
 
-  it.each([['Texto\nFicticio', true], ['Texto\r\nFicticio', true], ['Texto\rFicticio', false], ['Texto\tFicticio', false]])('valida controles de funciones %s', (funciones, valido) => {
-    expect(Object.keys(validarCampos({ funciones, trabajaActualmente: true }, 'experiencia', politicaFicticia)).length === 0).toBe(valido);
+  it.each([
+    ['Texto\nFicticio', true],
+    ['Texto\r\nFicticio', true],
+    ['Texto\rFicticio', false],
+    ['Texto\tFicticio', false],
+  ])('valida controles de funciones %s', (funciones, valido) => {
+    expect(
+      Object.keys(
+        validarCampos({ funciones, trabajaActualmente: true }, 'experiencia', politicaFicticia),
+      ).length === 0,
+    ).toBe(valido);
   });
 });

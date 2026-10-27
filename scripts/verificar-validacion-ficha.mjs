@@ -1,4 +1,4 @@
-// Spec-0006 v0.1: Docker + PostgreSQL + Angular + Chromium reales, solo datos ficticios.
+// Spec-0007 v0.1: Docker + PostgreSQL + Angular + Chromium reales, solo datos ficticios.
 // Requiere imagen backend construida y frontend compilado; Playwright se instala fuera del proyecto.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";

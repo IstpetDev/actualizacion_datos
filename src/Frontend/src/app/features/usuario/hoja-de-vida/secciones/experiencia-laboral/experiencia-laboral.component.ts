@@ -1,7 +1,4 @@
-import {
-  ValidacionHojaDeVidaService,
-  fechaPolitica,
-} from '../../servicios/validacion-hoja-de-vida.service';
+import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
@@ -524,7 +521,6 @@ export class ExperienciaLaboralComponent implements OnInit {
     () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'experiencia'),
     inject(DestroyRef),
   );
-  readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -633,8 +629,10 @@ export class ExperienciaLaboralComponent implements OnInit {
     if (this.validacion.invalido(this.modelo, 'experiencia')) return;
     this.state.guardarExperiencia(this.modelo, this.idEdicion()).subscribe({
       next: () => this.cancelarFormulario(),
-      error: (err) =>
-        this.errorFormulario.set(err?.message || 'Error al guardar la experiencia laboral.'),
+      error: (err) => {
+        this.validacion.registrarError(err, this.modelo);
+        this.errorFormulario.set(err?.message || 'Error al guardar la experiencia laboral.');
+      },
     });
   }
 
