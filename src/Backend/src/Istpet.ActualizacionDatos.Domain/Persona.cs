@@ -11,6 +11,7 @@ public class Persona : EntidadInstitucional
     public EstadoActualizacion EstadoActualizacion { get; private set; }
     public string? DatosPersonalesJson { get; private set; }
     public DateTime FechaCreacionUtc { get; private set; }
+    public DateOnly? FechaIngresoInstitucion { get; private set; }
 
     // ADR-0010: el tipo de funcionario define qué documentos personales se piden
     public Guid? TipoFuncionarioId { get; private set; }
@@ -50,7 +51,8 @@ public class Persona : EntidadInstitucional
         bool debeCambiarContrasena = true,
         bool correoVerificado = false,
         bool tratamientoDatosAceptado = false,
-        DateTime? fechaAceptacionTratamientoDatosUtc = null)
+        DateTime? fechaAceptacionTratamientoDatosUtc = null,
+        DateOnly? fechaIngresoInstitucion = null)
         : base(institucionId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(documento);
@@ -68,6 +70,7 @@ public class Persona : EntidadInstitucional
         CorreoVerificado = correoVerificado;
         TratamientoDatosAceptado = tratamientoDatosAceptado;
         FechaAceptacionTratamientoDatosUtc = fechaAceptacionTratamientoDatosUtc;
+        FechaIngresoInstitucion = fechaIngresoInstitucion;
     }
 
     public void HabilitarAcceso()
@@ -97,6 +100,11 @@ public class Persona : EntidadInstitucional
     public void AsignarTipoFuncionario(Guid? tipoFuncionarioId)
     {
         TipoFuncionarioId = tipoFuncionarioId;
+    }
+
+    public void AsignarFechaIngreso(DateOnly? fechaIngreso)
+    {
+        FechaIngresoInstitucion = fechaIngreso;
     }
 
     public void ActualizarBorrador(string datosJson)

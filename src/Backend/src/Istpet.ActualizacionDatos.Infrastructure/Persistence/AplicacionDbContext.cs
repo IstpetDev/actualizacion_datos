@@ -30,6 +30,7 @@ public class AplicacionDbContext : DbContext
     public DbSet<TituloAcademico> TitulosAcademicos => Set<TituloAcademico>();
     public DbSet<TituloEnCurso> TitulosEnCurso => Set<TituloEnCurso>();
     public DbSet<Capacitacion> Capacitaciones => Set<Capacitacion>();
+    public DbSet<CapacitacionObligatoria> CapacitacionesObligatorias => Set<CapacitacionObligatoria>();
     public DbSet<ExperienciaLaboral> ExperienciasLaborales => Set<ExperienciaLaboral>();
     public DbSet<ReferenciaPersonal> ReferenciasPersonales => Set<ReferenciaPersonal>();
     public DbSet<DocumentoPersonal> DocumentosPersonales => Set<DocumentoPersonal>();

@@ -163,6 +163,12 @@ public class ServicioPersonas : IServicioPersonas
                 accesoHabilitado: true, // ADR-0018: la carga por el admin de la institución habilita el acceso
                 estadoActualizacion: EstadoActualizacion.Borrador);
 
+            // Fecha de ingreso institucional (ADR-0032)
+            if (!string.IsNullOrWhiteSpace(item.FecIngreso) && TryParseFecha(item.FecIngreso.Trim(), out var parsedFecIngreso))
+            {
+                nuevaPersona.AsignarFechaIngreso(DateOnly.FromDateTime(parsedFecIngreso));
+            }
+
             // El código explícito tiene prioridad; si no coincide, la fila se carga sin tipo (ADR-0012).
             if (!string.IsNullOrWhiteSpace(item.TipoFuncionarioCodigo))
             {

@@ -56,6 +56,9 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
             .IsRequired()
             .HasColumnName("fecha_creacion_utc");
 
+        builder.Property(p => p.FechaIngresoInstitucion)
+            .HasColumnName("fecha_ingreso_institucion");
+
         // Autenticación según ADR-0007
         builder.Property(p => p.PasswordHash)
             .HasMaxLength(500)

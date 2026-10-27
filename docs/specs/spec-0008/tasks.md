@@ -46,14 +46,14 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** entidad, migración y `DbSet`.  
 **Dependencias:** T-00. **ADR aplicable:** ADR-0029.
 
-- [ ] Prueba de dominio que falle: nombre vacío, horas ≤ 0, `AplicaA` con alcance nulo, con tipo coincidente y distinto, y obligatoria inactiva.
-- [ ] Implementar entidad, vínculo y configuración EF con índice único parcial.
-- [ ] Generar la migración y comprobar que `capacitaciones` existentes quedan intactas.
-- [ ] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
-- [ ] Revisar RF-CAP-001, 002, 003, 005, 006, 008.
+- [x] Prueba de dominio que falle: nombre vacío, horas ≤ 0, `AplicaA` con alcance nulo, con tipo coincidente y distinto, y obligatoria inactiva (y exención por nuevo ingreso ADR-0032).
+- [x] Implementar entidad, vínculo y configuración EF con índice único parcial.
+- [x] Generar la migración y comprobar que `capacitaciones` existentes quedan intactas.
+- [x] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
+- [x] Revisar RF-CAP-001, 002, 003, 005, 006, 008, 019.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-00.
+**Resultado registrado:** completado el 2026-10-27; 117 pruebas de dominio y 566 unitarias pasando sin errores.  
+**Bloqueos:** Ninguno.
 
 ## T-02 — Contratos y configuración del admin
 
