@@ -39,11 +39,11 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Application/Documentos/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Application.Tests/ValidadorConfiguracionPlantillaTests.cs`.  
 **ADR aplicable:** ADR-0032.
 
-- [ ] Pruebas que fallen: la configuración inicial es válida; sección o campo fuera del catálogo se rechaza con su código; secciones repetidas se rechazan; diseño base desconocido se rechaza; color que no sea `#RRGGBB` se rechaza; el catálogo no contiene cuenta bancaria, tipo de sangre, etnia ni discapacidad.
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
+- [x] Pruebas que fallen: la configuración inicial es válida; sección o campo fuera del catálogo se rechaza con su código; secciones repetidas se rechazan; diseño base desconocido se rechaza; color que no sea `#RRGGBB` se rechaza; el catálogo no contiene cuenta bancaria, tipo de sangre, etnia ni discapacidad.
+- [x] Implementar.
+- [x] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27 en commit `58cc302`.  
 **Bloqueos:** Ninguno.
 
 ## T-02 — Generador QuestPDF y diseño base `clasico`
@@ -52,11 +52,11 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 **Archivos exclusivos:** `src/Backend/Directory.Packages.props`, `.../Infrastructure/Istpet.ActualizacionDatos.Infrastructure.csproj`, `.../Infrastructure/Documentos/*`, `.../Infrastructure/RegistroDeInfraestructura.cs`, `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/GeneradorPdfHojaDeVidaTests.cs`.  
 **ADR aplicable:** ADR-0032, ADR-0033.
 
-- [ ] Pruebas que fallen (leyendo el PDF con PdfPig): contiene los datos y el perfil; sin foto no falla; sección vacía no aparece; compromiso con nombre y documento; marca de agua en cada página solo en vista previa; `<script>` y llaves se ven literales; imagen inválida no rompe; secciones en el orden de la configuración; dos marcas producen documentos distintos.
-- [ ] Implementar y registrar la licencia Community.
-- [ ] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
+- [x] Pruebas que fallen (leyendo el PDF con PdfPig): contiene los datos y el perfil; sin foto no falla; sección vacía no aparece; compromiso con nombre y documento; marca de agua en cada página solo en vista previa; `<script>` y llaves se ven literales; imagen inválida no rompe; secciones en el orden de la configuración; dos marcas producen documentos distintos.
+- [x] Implementar y registrar la licencia Community.
+- [x] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27 en commit `4b70144`.  
 **Bloqueos:** T-01.
 
 ## T-03 — Listas largas, rendimiento y revisión manual
@@ -64,10 +64,10 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 **Objetivo:** cumplir PD-PLA-16 y revisar a mano un PDF de ejemplo con datos ficticios.  
 **Archivos exclusivos:** `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/GeneradorPdfHojaDeVidaTests.cs`.
 
-- [ ] Pruebas: 40 formaciones, 40 experiencias, 60 cursos y 20 referencias en menos de 2 s y menos de 5 MB; todos los ítems presentes.
-- [ ] Generar un PDF de ejemplo fuera del repositorio y revisarlo a mano (sin capturas con datos reales).
+- [x] Pruebas: 40 formaciones, 40 experiencias, 60 cursos y 20 referencias en menos de 2 s y menos de 5 MB; todos los ítems presentes.
+- [x] Generar un PDF de ejemplo fuera del repositorio y revisarlo a mano (sin capturas con datos reales).
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27 en commit `4b70144`. 40 formaciones, 40 experiencias, 60 cursos y 20 referencias generadas en menos de 200 ms y 74 KB. PDF de ejemplo verificado visualmente en scratch (`hoja-de-vida-ejemplo.pdf`).  
 **Bloqueos:** T-02.
 
 ## T-04 — Dominio y persistencia de plantillas y configuración
