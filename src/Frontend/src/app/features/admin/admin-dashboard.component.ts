@@ -325,7 +325,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
           aria-labelledby="tab-btn-personas"
           data-testid="contenido-personas"
         >
-          <div class="grid-dos-columnas">
+          <div class="grid-personas-layout">
             <!-- Formulario Carga de Personas -->
             <div class="card">
               <h2 class="card-title">Cargar / Habilitar Personas</h2>
@@ -594,7 +594,6 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                           <span class="badge badge-info">{{ per.rol }}</span>
                         </td>
                         <td>
-                        <td>
                           @if (per.tieneFicha) {
                             <span class="badge badge-success" data-testid="ficha-cargada"
                               >Cargada</span
@@ -804,6 +803,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       border-bottom: 2px solid #e2e8f0;
       margin-bottom: 1.5rem;
       overflow-x: auto;
+      overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
     }
@@ -875,13 +875,15 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
     }
     .fila-archivo {
       display: flex;
+      flex-direction: column;
       gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
+      align-items: stretch;
     }
     .fila-archivo .form-control {
-      flex: 1;
-      min-width: 200px;
+      width: 100%;
+    }
+    .fila-archivo .btn {
+      width: 100%;
     }
     .divisor-o {
       margin: 1.25rem 0;
@@ -893,6 +895,12 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
+    }
+    .grid-personas-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 360px) 1fr;
+      gap: 1.5rem;
+      align-items: start;
     }
     .mt-4 {
       margin-top: 1.5rem;
@@ -1055,17 +1063,17 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       margin: 0 0 0.5rem 0;
       font-size: 0.875rem;
     }
-    .text-success {
-      color: #16a34a;
-    }
     .text-muted {
       color: #64748b;
     }
     .table-container {
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
     }
     .data-table {
       width: 100%;
+      min-width: 680px;
       border-collapse: collapse;
       font-size: 0.8125rem;
     }
@@ -1260,6 +1268,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
+      min-width: 110px;
     }
     .btn-toggle-acceso {
       padding: 0.15rem 0.45rem;
@@ -1293,6 +1302,11 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       background: #dc2626;
       color: #ffffff;
     }
+    @media (max-width: 1024px) {
+      .grid-personas-layout {
+        grid-template-columns: 1fr;
+      }
+    }
     @media (max-width: 768px) {
       .grid-dos-columnas {
         grid-template-columns: 1fr;
@@ -1313,6 +1327,20 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       .filtro-select-grupo .form-control {
         flex: 1;
       }
+      .campana-fechas {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .barra-acciones-masivas {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .botones-masivos {
+        width: 100%;
+      }
+      .botones-masivos .btn {
+        flex: 1;
+      }
     }
     @media (max-width: 540px) {
       .paginacion-contenedor {
@@ -1329,6 +1357,11 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       }
       .acciones-exportacion .btn {
         width: 100%;
+      }
+    }
+    @media (max-width: 480px) {
+      .form-row {
+        flex-direction: column;
       }
     }
   `,
