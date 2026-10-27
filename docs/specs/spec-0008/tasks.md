@@ -117,13 +117,13 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Salida para integración:** DTO de revisión ampliado.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0008.
 
-- [ ] Pruebas que fallen: la revisión lista cada obligatoria que aplica con estado; marcar una vinculada y una pendiente; devolver sin observación general se rechaza (RF-FLU-003); un supervisor de otra institución no ve nada (RF-CAP-013).
-- [ ] Pruebas del vínculo por ayuda que fallen: un `supervisor` y un `admin` vinculan una capacitación existente de la persona a una obligatoria pendiente y la persona la ve como cargada; solo vincula (no cambia otros datos); con actualización aprobada 409; con la capacitación de otra persona o ya vinculada 409; persona de otra institución 404; un `usuario` no puede usar la operación; queda en la auditoría con quién la hizo y sin contenido personal.
-- [ ] Implementar.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-009 y 018.
+- [x] Pruebas que fallen: la revisión lista cada obligatoria que aplica con estado; marcar una vinculada y una pendiente; devolver sin observación general se rechaza (RF-FLU-003); un supervisor de otra institución no ve nada (RF-CAP-013).
+- [x] Pruebas del vínculo por ayuda que fallen: un `supervisor` y un `admin` vinculan una capacitación existente de la persona a una obligatoria pendiente y la persona la ve como cargada; solo vincula (no cambia otros datos); con actualización aprobada 409; con la capacitación de otra persona o ya vinculada 409; persona de otra institución 404; un `usuario` no puede usar la operación; queda en la auditoría con quién la hizo y sin contenido personal.
+- [x] Implementar.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-CAP-009 y 018.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** completado el 2026-10-27; revisión con obligatorias en expediente y hoja de vida, marcas por ítem sobre pendientes (`capacitaciones.obligatoria.<id>`) y vinculadas, vínculo por ayuda con auditoría, bloqueo de aprobada (409) y aislamiento institucional (404); 15 pruebas de revisión y ayuda en verde.  
 **Bloqueos:** T-02.
 
 ## T-06 — Cumplimiento y exportación

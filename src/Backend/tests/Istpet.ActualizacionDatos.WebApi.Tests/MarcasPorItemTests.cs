@@ -337,4 +337,140 @@ public sealed class MarcasPorItemTests : IDisposable
         var resDev = await _cliente.SendAsync(reqDevolverOtraInst);
         Assert.Equal(HttpStatusCode.BadRequest, resDev.StatusCode);
     }
+
+    [Fact]
+    public async Task RF_CAP_009_Supervisor_ve_capacitaciones_obligatorias_con_estado_en_expediente()
+    {
+        var (instId, p1, _, _, _, _, _, _) = await InicializarEscenarioAsync();
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var obligatoria = new CapacitacionObligatoria(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Inducción Docente Ficticia",
+                "ISTPET",
+                horasEsperadas: 10,
+                fechaRealizacion: new DateOnly(2026, 2, 1),
+                tipoFuncionarioId: null,
+                activo: true,
+                orden: 1);
+            db.CapacitacionesObligatorias.Add(obligatoria);
+            await db.SaveChangesAsync();
+        }
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/revision/{p1.Documento}");
+        req.Headers.Add("X-Institucion-Id", instId.ToString());
+        req.Headers.Add("X-Actor", "supervisor_01");
+        req.Headers.Add("X-Rol", "Supervisor");
+
+        var res = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var expediente = await res.Content.ReadFromJsonAsync<ExpedienteRevisionDto>();
+        Assert.NotNull(expediente);
+        Assert.NotNull(expediente.CapacitacionesObligatorias);
+        Assert.Single(expediente.CapacitacionesObligatorias);
+        Assert.Equal("pendiente", expediente.CapacitacionesObligatorias[0].Estado);
+    }
+
+    [Fact]
+    public async Task RF_CAP_009_Supervisor_puede_marcar_capacitacion_obligatoria_pendiente_y_vinculada()
+    {
+        var (instId, p1, _, _, cap, _, _, _) = await InicializarEscenarioAsync();
+
+        Guid obligatoriaPendienteId;
+        Guid obligatoriaVinculadaId;
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var obligatoria1 = new CapacitacionObligatoria(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Capacitación Pendiente Ficticia",
+                "ISTPET",
+                horasEsperadas: 10,
+                activo: true);
+            var obligatoria2 = new CapacitacionObligatoria(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                "Capacitación Vinculada Ficticia",
+                "ISTPET",
+                horasEsperadas: 20,
+                activo: true);
+            db.CapacitacionesObligatorias.AddRange(obligatoria1, obligatoria2);
+
+            var capEntity = await db.Capacitaciones.IgnoreQueryFilters().FirstAsync(c => c.Id == cap.Id);
+            capEntity.VincularCapacitacionObligatoria(obligatoria2.Id);
+
+            await db.SaveChangesAsync();
+            obligatoriaPendienteId = obligatoria1.Id;
+            obligatoriaVinculadaId = obligatoria2.Id;
+        }
+
+        var request = new DevolverActualizacionRequest(
+            "Se devuelven observaciones en capacitaciones obligatorias.",
+            new List<MarcaObservacionItem>
+            {
+                new("item", $"capacitacion:{cap.Id}", "El certificado vinculado no tiene código QR legible."),
+                new("item", $"capacitaciones.obligatoria.{obligatoriaPendienteId}", "Falta cargar el certificado obligatorio pendiente.")
+            });
+
+        var req = new HttpRequestMessage(HttpMethod.Post, $"/api/revision/{p1.Documento}/devolver")
+        {
+            Content = JsonContent.Create(request)
+        };
+        req.Headers.Add("X-Institucion-Id", instId.ToString());
+        req.Headers.Add("X-Actor", "supervisor_01");
+        req.Headers.Add("X-Rol", "Supervisor");
+
+        var res = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var marcas = await db.MarcasObservacion.IgnoreQueryFilters().ToListAsync();
+            Assert.Contains(marcas, m => m.ClaveDestino == $"capacitacion:{cap.Id}");
+            Assert.Contains(marcas, m => m.ClaveDestino == $"capacitaciones.obligatoria.{obligatoriaPendienteId}");
+        }
+    }
+
+    [Fact]
+    public async Task RF_FLU_003_Devolver_sin_observacion_general_se_rechaza()
+    {
+        var (instId, p1, _, _, _, _, _, _) = await InicializarEscenarioAsync();
+
+        var request = new DevolverActualizacionRequest(
+            string.Empty,
+            new List<MarcaObservacionItem>());
+
+        var req = new HttpRequestMessage(HttpMethod.Post, $"/api/revision/{p1.Documento}/devolver")
+        {
+            Content = JsonContent.Create(request)
+        };
+        req.Headers.Add("X-Institucion-Id", instId.ToString());
+        req.Headers.Add("X-Actor", "supervisor_01");
+        req.Headers.Add("X-Rol", "Supervisor");
+
+        var res = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.BadRequest, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task RF_CAP_013_Supervisor_otra_institucion_no_ve_capacitaciones_obligatorias()
+    {
+        var (instId, p1, _, _, _, _, _, _) = await InicializarEscenarioAsync();
+        var otraInstitucionId = Guid.NewGuid();
+
+        var req = new HttpRequestMessage(HttpMethod.Get, $"/api/revision/{p1.Documento}/capacitaciones-obligatorias");
+        req.Headers.Add("X-Institucion-Id", otraInstitucionId.ToString());
+        req.Headers.Add("X-Actor", "supervisor_ext");
+        req.Headers.Add("X-Rol", "Supervisor");
+
+        var res = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
 }

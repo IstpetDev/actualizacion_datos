@@ -84,7 +84,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             caps.Select(MapearCapacitacion).ToList(),
             exps.Select(MapearExperiencia).ToList(),
             refs.Select(MapearReferencia).ToList(),
-            abiertasCodigos);
+            abiertasCodigos,
+            await ListarCapacitacionesObligatoriasAsync(documento, ct));
     }
 
     public async Task<HojaDeVidaDto> ObtenerParaRevisionAsync(string documento, CancellationToken ct = default)

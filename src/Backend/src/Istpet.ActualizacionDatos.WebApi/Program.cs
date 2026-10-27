@@ -947,6 +947,74 @@ revision.MapPost("/{documento}/devolver", async (string documento, DevolverActua
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces(StatusCodes.Status403Forbidden);
 
+revision.MapPost("/{documento}/capacitaciones-obligatorias/{obligatoriaId:guid}/vincular", async (
+    string documento,
+    Guid obligatoriaId,
+    VincularCapacitacionObligatoriaRequest request,
+    HttpContext httpContext,
+    IServicioRevision servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var supervisor = ObtenerDocumentoActual(httpContext, contexto) ?? "supervisor";
+
+    try
+    {
+        await servicio.VincularCapacitacionObligatoriaPorAyudaAsync(documento, obligatoriaId, request, supervisor, ct);
+        return Results.Ok(new MensajeRespuesta("Capacitación vinculada por ayuda con éxito."));
+    }
+    catch (RecursoNoEncontradoException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+    catch (ConflictoEstadoException ex)
+    {
+        return Results.Conflict(new MensajeRespuesta(ex.Message));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("VincularCapacitacionObligatoriaPorAyuda")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces<MensajeRespuesta>(StatusCodes.Status409Conflict)
+.Produces(StatusCodes.Status403Forbidden);
+
+revision.MapGet("/{documento}/capacitaciones-obligatorias", async (
+    string documento,
+    HttpContext httpContext,
+    IServicioHojaDeVida servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var lista = await servicio.ListarCapacitacionesObligatoriasAsync(documento, ct);
+        return Results.Ok(lista);
+    }
+    catch (RecursoNoEncontradoException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ListarCapacitacionesObligatoriasRevision")
+.Produces<List<EstadoCapacitacionObligatoriaPersonaDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status403Forbidden);
+
 // --- Endpoints Auditoria (RF-DAT-004, RF-DAT-005) ---
 var auditoriaGroup = app.MapGroup("/api/auditoria").WithTags("Auditoria");
 
