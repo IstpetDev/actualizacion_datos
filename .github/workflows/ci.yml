@@ -342,6 +342,7 @@ jobs:
         run: |
           bash .github/scripts/pruebas/validar-rama.test.sh
           bash .github/scripts/pruebas/filtrar-rutas.test.sh
+          node scripts/pruebas/servidor-pruebas-e2e.test.mjs
 
   ci-ok:
     name: ci-ok
