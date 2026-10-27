@@ -22,13 +22,14 @@ public sealed class Spec0001E2ETests : IDisposable
     private readonly SqliteConnection _conexion;
     private readonly WebApplicationFactory<Program> _fabrica;
     private readonly HttpClient _cliente;
+    private readonly BuzonFicticio _buzon = new();
 
     public Spec0001E2ETests()
     {
         _conexion = new SqliteConnection("DataSource=:memory:");
         _conexion.Open();
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -38,6 +39,7 @@ public sealed class Spec0001E2ETests : IDisposable
                     services.Remove(descriptor);
                 }
 
+                services.AddSingleton<IEnviadorCorreo>(_buzon);
                 services.AddDbContext<AplicacionDbContext>((_, options) =>
                 {
                     options.UseSqlite(_conexion);
@@ -64,7 +66,7 @@ public sealed class Spec0001E2ETests : IDisposable
         _conexion.Dispose();
     }
 
-    private static async Task AgregarHojaDeVidaCompletaAsync(AplicacionDbContext db, Guid institucionId, Guid personaId, string correo)
+    internal static async Task AgregarHojaDeVidaCompletaAsync(AplicacionDbContext db, Guid institucionId, Guid personaId, string correo)
     {
         if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 903))
         {
@@ -85,8 +87,8 @@ public sealed class Spec0001E2ETests : IDisposable
             EstadoCivilId: 11,
             PaisNacionalidadId: 903,
             ParroquiaResidenciaId: 905,
-            CallePrincipal: "Av. Principal",
-            Celular: "0991234567",
+            CallePrincipal: "Calle Ficticia",
+            Celular: "0900000000",
             CorreoInstitucional: correo));
         db.FichasPersonales.Add(ficha);
 
@@ -107,9 +109,9 @@ public sealed class Spec0001E2ETests : IDisposable
         db.TitulosAcademicos.Add(titulo);
 
         db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), personaId,
-            new DatosReferencia(TipoReferencia.Personal, "Ref Uno", "0991111111")));
+            new DatosReferencia(TipoReferencia.Personal, "Referencia Ficticia Uno", "0900000001")));
         db.ReferenciasPersonales.Add(new ReferenciaPersonal(Guid.NewGuid(), new InstitucionId(institucionId), personaId,
-            new DatosReferencia(TipoReferencia.Personal, "Ref Dos", "0992222222")));
+            new DatosReferencia(TipoReferencia.Personal, "Referencia Ficticia Dos", "0900000002")));
 
         db.CuentasBancarias.Add(CuentaBancaria.RegistradaPorPersona(
             Guid.NewGuid(),
@@ -193,6 +195,7 @@ public sealed class Spec0001E2ETests : IDisposable
         // 5. RF-ACC-005: Enviar y verificar código de confirmación de correo
         var respEnvioCodigo = await _cliente.PostAsJsonAsync("/api/auth/enviar-codigo-correo", new EnviarCodigoCorreoRequest("docente1@ejemplo.test"));
         Assert.Equal(HttpStatusCode.OK, respEnvioCodigo.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await _cliente.PostAsJsonAsync("/api/auth/verificar-codigo-correo", new VerificarCodigoCorreoRequest(_buzon.Codigo!))).StatusCode);
 
         // 6. RF-CAM-002: Campaña abierta permite editar datos
         var reqGuardarBorrador = CrearRequest(
@@ -222,7 +225,8 @@ public sealed class Spec0001E2ETests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, respEnvioSinConsentimiento.StatusCode);
 
         // 9. RF-DAT-001: Aceptar explícitamente el tratamiento de datos y verificar registro de fecha
-        var reqAceptarTratamiento = CrearRequest(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001", instId, "1700000001", RolUsuario.Usuario);
+        var reqAceptarTratamiento = CrearRequest(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento", instId, "1700000001", RolUsuario.Usuario);
+        reqAceptarTratamiento.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         var respAceptar = await _cliente.SendAsync(reqAceptarTratamiento);
         Assert.Equal(HttpStatusCode.OK, respAceptar.StatusCode);
 
@@ -268,7 +272,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente Alpha",
                 "docente.alpha@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             p1.ActualizarBorrador("{\"telefono\":\"0990000000\"}");
             p1.AceptarTratamientoDatos(DateTime.UtcNow);
             p1.EnviarARevision(DateTime.UtcNow);
@@ -280,7 +284,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Supervisor,
                 "Supervisor Alpha",
                 "supervisor.alpha@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
 
             var supervisorB = new Persona(
                 Guid.NewGuid(),
@@ -289,7 +293,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Supervisor,
                 "Supervisor Beta",
                 "supervisor.beta@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(p1, supervisorA, supervisorB);
             await AgregarHojaDeVidaCompletaAsync(db, instId, persona1Id, "docente.alpha@ejemplo.test");
@@ -409,7 +413,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Perez Gomez Juan Carlos",
                 "juan.perez@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             pAprobada.ActualizarBorrador("{\"telefono\":\"0991112233\"}");
             pAprobada.AceptarTratamientoDatos(DateTime.UtcNow);
             pAprobada.EnviarARevision(DateTime.UtcNow);
@@ -422,7 +426,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente Beta Foráneo",
                 "beta@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             pBeta.ActualizarBorrador("{\"telefono\":\"0987654321\"}");
             pBeta.AceptarTratamientoDatos(DateTime.UtcNow);
             pBeta.EnviarARevision(DateTime.UtcNow);
@@ -514,6 +518,8 @@ public sealed class Spec0001E2ETests : IDisposable
                     new("1700000099", "Admin Nacional", "admin@nacional.ejemplo.test")
                 }))
         };
+        reqCrearInstAlpha.Headers.Add("X-Actor", "superadmin-ficticio");
+        reqCrearInstAlpha.Headers.Add("X-Rol", "Superadmin");
         var respCrearInst = await _cliente.SendAsync(reqCrearInstAlpha);
         Assert.Equal(HttpStatusCode.Created, respCrearInst.StatusCode);
         var instCreada = await respCrearInst.Content.ReadFromJsonAsync<InstitucionDto>();
@@ -573,6 +579,8 @@ public sealed class Spec0001E2ETests : IDisposable
         {
             Content = JsonContent.Create(new HabilitarPersonasRequest(Documentos: new List<string> { "1710000001" }))
         };
+        reqHabilitar.Headers.Add("X-Actor", "superadmin-ficticio");
+        reqHabilitar.Headers.Add("X-Rol", "Superadmin");
         var respHabilitar = await _cliente.SendAsync(reqHabilitar);
         Assert.Equal(HttpStatusCode.OK, respHabilitar.StatusCode);
 
@@ -602,6 +610,8 @@ public sealed class Spec0001E2ETests : IDisposable
                 "Instituto Recarga",
                 new List<AdminInicialRequest> { new("1700000098", "Admin Recarga", "admin@recarga.ejemplo.test") }))
         };
+        reqCrearInst.Headers.Add("X-Actor", "superadmin-ficticio");
+        reqCrearInst.Headers.Add("X-Rol", "Superadmin");
         var respInst = await _cliente.SendAsync(reqCrearInst);
         Assert.Equal(HttpStatusCode.Created, respInst.StatusCode);
         var instId = (await respInst.Content.ReadFromJsonAsync<InstitucionDto>())!.Id;
@@ -650,7 +660,7 @@ public sealed class Spec0001E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente Campana",
                 "docente.campana@ejemplo.test",
-                accesoHabilitado: true));
+                accesoHabilitado: true, correoVerificado: true));
             await db.SaveChangesAsync();
         }
 
@@ -699,4 +709,14 @@ public sealed class Spec0001E2ETests : IDisposable
         Assert.Equal("Borrador", estadoDto.EstadoActualizacion);
         Assert.False(estadoDto.PuedeEditar);
     }
+    private sealed class BuzonFicticio : IEnviadorCorreo
+    {
+        public string? Codigo { get; private set; }
+        public Task EnviarCodigoVerificacionAsync(string correoDestino, string codigo, CancellationToken ct = default)
+        {
+            Codigo = codigo;
+            return Task.CompletedTask;
+        }
+    }
+
 }

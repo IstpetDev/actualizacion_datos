@@ -52,6 +52,8 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0005](spec-0005/spec.md) | Habilitación y deshabilitación del acceso de personas | Borrador (2026-10-26) |
 | [spec-0006](spec-0006/spec.md) | Advertencia y protección ante cambios sin guardar en la Hoja de Vida, issue #90 | Aprobado (2026-10-26) |
 | [spec-0007](spec-0007/spec.md) | Validación, correo institucional y perfil automático, issue #88 | Aprobada v0.1 (2026-10-26) |
-| [spec-0008](spec-0008/spec.md) | Capacitaciones obligatorias de la institución, issue #92 | Borrador v0.1 (2026-10-27) |
+| [spec-0008](spec-0008/spec.md) | Capacitaciones obligatorias de la institución, issue #92 | Aprobado v0.2 (2026-10-27) |
 | [spec-0009](spec-0009/spec.md) | Mensajes de error al usuario y manejo uniforme, issue #89 | Aprobado (2026-10-26) |
-| [spec-0011](spec-0011/spec.md) | Documento de hoja de vida desde plantillas globales | Borrador v0.1 (2026-10-27) |
+| [spec-0010](spec-0010/spec.md) | Liberación de secciones de la hoja de vida por fases, prioritaria | Aprobado v0.2 (2026-10-27) |
+| [spec-0011](spec-0011/spec.md) | Aceptación de protección de datos al iniciar sesión, issue #99 | v0.2 aprobada; autorización rectoral confirmada por el solicitante (2026-10-27) |
+| [spec-0012](spec-0012/spec.md) | Documento de hoja de vida desde plantillas globales, issue #101 | Borrador v0.1 (2026-10-27) |

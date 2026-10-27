@@ -25,7 +25,7 @@ public sealed class CatalogosTests : IDisposable
     public CatalogosTests()
     {
         _conexion.Open();
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(servicios =>
             {

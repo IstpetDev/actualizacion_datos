@@ -26,7 +26,7 @@ while IFS= read -r archivo || [ -n "$archivo" ]; do
     src/Frontend/*) frontend=true ;;
     openapi/*) openapi=true ;;
     .editorconfig) backend=true; frontend=true ;;
-    .github/*) workflows=true ;;
+    .github/* | scripts/*) workflows=true ;;
   esac
   case "$archivo" in
     docs/* | *.md) docs=true ;;

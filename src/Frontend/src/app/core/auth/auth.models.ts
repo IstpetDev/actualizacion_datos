@@ -23,6 +23,14 @@ export interface SesionUsuario {
   readonly debeCambiarContrasena?: boolean;
   readonly correo?: string;
   readonly correoVerificado?: boolean;
+  readonly requiereAceptarProteccionDatos?: boolean;
+}
+
+/** El servidor decide el paso pendiente; una respuesta antigua no habilita el acceso. */
+export function rutaDeAcceso(sesion: SesionUsuario): string {
+  if (sesion.debeCambiarContrasena) return '/cambiar-clave';
+  if (sesion.requiereAceptarProteccionDatos !== false) return '/proteccion-datos';
+  return `/${sesion.rol}`;
 }
 
 /**

@@ -14,6 +14,7 @@ const respuesta: ResultadoLoginDto = {
   correo: undefined,
   rol: 'Usuario',
   debeCambiarContrasena: false,
+  requiereAceptarProteccionDatos: false,
   correoVerificado: false,
 };
 

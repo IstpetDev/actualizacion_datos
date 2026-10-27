@@ -6,7 +6,7 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, from, map, mergeMap, of, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /** Gestiona la expiración de la cookie sin fabricar credenciales en el navegador. */
@@ -25,12 +25,34 @@ export const authInterceptor: HttpInterceptorFn = (
             void router.navigate(['/login']);
           }
         } else if (error.status === 403) {
-          if (auth.sesion()?.debeCambiarContrasena) {
-            void router.navigate(['/cambiar-clave']);
-          } else if (!(req.method !== 'GET' && /\/api\/(mis-datos|archivos)(\/|$)/.test(req.url))) {
-            void router.navigate(['/no-autorizado']);
-          }
-          // Los rechazos de campaña al guardar/subir se muestran sin destruir el borrador.
+          const cuerpo =
+            error.error instanceof Blob ? from(error.error.text()) : of(error.error as unknown);
+          return cuerpo.pipe(
+            map((valor: unknown) => {
+              try {
+                const objeto =
+                  typeof valor === 'string'
+                    ? (JSON.parse(valor) as { codigo?: string })
+                    : (valor as { codigo?: string } | null);
+                return objeto?.codigo;
+              } catch {
+                return undefined;
+              }
+            }),
+            mergeMap((codigo) => {
+              if (codigo === 'ACEPTACION_PROTECCION_DATOS_PENDIENTE') {
+                auth.marcarProteccionPendiente();
+                void router.navigate(['/proteccion-datos']);
+              } else if (auth.sesion()?.debeCambiarContrasena) {
+                void router.navigate(['/cambiar-clave']);
+              } else if (!(
+                req.method !== 'GET' && /\/api\/(mis-datos|archivos)(\/|$)/.test(req.url)
+              )) {
+                void router.navigate(['/no-autorizado']);
+              }
+              return throwError(() => error);
+            }),
+          );
         }
       }
       return throwError(() => error);

@@ -1,9 +1,9 @@
 # Capacitaciones obligatorias de la institución — Spec
 
 **ID:** spec-0008; issue #92  
-**Versión:** 0.1  
-**Estado:** Borrador para revisión funcional  
-**Revisor funcional:** Por designar (responsable funcional del issue #92)  
+**Versión:** 0.2  
+**Estado:** Aprobado (v0.2, 2026-10-27; ver «Revisión funcional»)  
+**Revisor funcional:** Joseph Baño (solicitante del issue #92)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
 
@@ -34,6 +34,7 @@ Este cambio **modifica una regla aprobada**: RF-HDV-009 de spec-0003 dice «Ning
 | Comportamiento existente | `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/RequisitoDocumento.cs` | Mecanismo parecido para documentos: requisito por tipo de funcionario o para todos, obligatorio o no, activo o no. |
 | Comportamiento existente | `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ValidadorCompletitudEnvio.cs` | El envío se valida con reglas independientes (`IReglaCompletitudEnvio`); una regla nueva se agrega sin tocar las demás. |
 | Comportamiento existente | `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioPersonas.cs` (líneas 177 a 193) | El `Cargo de Trabajo` de la nómina solo sirve, al cargar, para proponer el tipo de funcionario por coincidencia de nombre. **No se encontró un cargo persistido** en la persona (búsqueda en `Domain/`). |
+| Spec relacionada | `docs/specs/spec-0010/spec.md` (v0.1, prioritaria) | Liberación de secciones por fases: «Capacitaciones» se entrega **cerrada** hasta que el `admin` la abra. |
 | Dependencia | [#76](https://github.com/IstpetDev/actualizacion_datos/issues/76) (cerrado) y spec-0004 | El tipo de funcionario de cada persona ya se asigna y persiste; es la base para saber a quién aplica. |
 
 **Confirmado en el código:** lo que dice la columna «Comportamiento existente». **Inferido, por confirmar:** que el `supervisor` pueda marcar una capacitación obligatoria con el mecanismo de RF-HDV-011, y que la exportación pueda incluir el cumplimiento sin cambiar su estructura.
@@ -45,16 +46,20 @@ Este cambio **modifica una regla aprobada**: RF-HDV-009 de spec-0003 dice «Ning
 **Incluye:**
 - El `admin` define, edita, desactiva y consulta las capacitaciones obligatorias de su institución.
 - Definir a quién aplica cada una: a todas las personas o a un tipo de funcionario.
-- La persona ve las obligatorias que le aplican, su estado y sube el certificado.
+- La persona ve las obligatorias que le aplican, su estado y sube el certificado o vincula una capacitación que ya tiene.
+- Un `supervisor` o `admin` puede vincular por ayuda una capacitación existente de la persona (RF-CAP-018).
 - Bloqueo del envío a revisión mientras falte alguna obligatoria que le aplica, indicando cuál.
 - El `supervisor` ve el cumplimiento de cada obligatoria en la revisión y puede marcarla al devolver (RF-HDV-011).
 - El `admin` ve un resumen de cumplimiento por capacitación y por persona.
 - Inclusión del cumplimiento en la exportación (RF-HDV-016).
+- Al vencer la campaña, el `admin` ve y exporta lo cargado aunque esté en borrador, marcado como incompleto (RF-CAP-016, PD-CAP-10).
+- La exigencia depende de que la sección «Capacitaciones» esté abierta (spec-0010, RF-CAP-017).
 
 **Excluye:**
-- Aplicar la obligatoriedad por **cargo** como texto libre de la nómina (ver PD-CAP-02): el cargo no está persistido.
-- Recordatorios o avisos por correo a quien no ha subido la capacitación (PD-CAP-07).
-- Exoneraciones por persona (PD-CAP-05), salvo que el revisor las incluya.
+- Aplicar la obligatoriedad por **cargo** como texto aparte del tipo de funcionario: para el solicitante cargo y tipo de funcionario son lo mismo (PD-CAP-02).
+- Recordatorios o avisos por correo a quien no ha subido la capacitación (PD-CAP-07, decidido).
+- Exoneraciones por persona (PD-CAP-05, decidido).
+- Analítica histórica anónima entre campañas (ver «Pendiente futuro»).
 - Validar que el certificado sea auténtico o que las horas del certificado alcancen las esperadas.
 - Cambiar las capacitaciones personales y opcionales, y los demás requisitos de envío de RF-HDV-009.
 - Un catálogo de eventos de capacitación con inscripción, fechas de oferta o cupos.
@@ -79,10 +84,13 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 | RF-CAP-009 | Dado un `supervisor`, cuando revisa una actualización enviada, ve para cada obligatoria que aplica a la persona su estado y el certificado, y al devolver puede marcarla con un texto obligatorio (RF-HDV-011). | Sin priorizar | Issue #92 punto 4; RF-HDV-011; ADR-0008 |
 | RF-CAP-010 | Dado un `admin`, cuando consulta el cumplimiento, el sistema muestra por capacitación obligatoria cuántas personas la tienen cargada, aprobada y pendiente, y permite ver la lista de personas pendientes, solo de su institución. | Sin priorizar | Issue #92 punto 5; RF-HDV-015 |
 | RF-CAP-011 | Dado un `admin`, cuando exporta, el Excel incluye por persona el estado de cada capacitación obligatoria que le aplica, y el `.zip` conserva el certificado ordenado por sección. | Sin priorizar | Issue #92 punto 5; RF-HDV-016 |
-| RF-CAP-012 | Dada una capacitación obligatoria creada o activada **después** de que una persona envió o fue aprobada, cuando el `admin` la guarda, el sistema no cambia el estado de esa actualización ni la devuelve; la obligatoria aparece como pendiente para esa persona y se le exige en su siguiente envío o en la siguiente campaña (propuesta, PD-CAP-06). | Sin priorizar | Propuesta; RF-HDV-010, RF-FLU-005 |
+| RF-CAP-012 | Dada una capacitación obligatoria creada o activada **después** de que una persona envió o fue aprobada, cuando el `admin` la guarda, el sistema no cambia el estado de esa actualización ni la devuelve; la obligatoria aparece como pendiente para esa persona y se le exige en su siguiente envío o en la siguiente campaña (PD-CAP-06, decidido). | Sin priorizar | Propuesta; RF-HDV-010, RF-FLU-005 |
 | RF-CAP-013 | Dado un `usuario`, `supervisor` o `admin`, cuando consulta o modifica obligatorias o sus certificados, el sistema solo opera sobre las de su institución aunque conozca identificadores de otra. | Sin priorizar | RF-HDV-015; ADR-0004 |
 | RF-CAP-014 | Dada una actualización enviada o aprobada, cuando el `usuario` intenta subir, cambiar o quitar el certificado de una obligatoria, el sistema lo rechaza, también por la API. | Sin priorizar | RF-HDV-010 |
 | RF-CAP-015 | Dado un `usuario`, `supervisor` o `admin` sin permiso, cuando intenta crear, editar o desactivar una obligatoria, el sistema lo rechaza. Solo el `admin` (y el `superadmin`) las configura. | Sin priorizar | Roles de spec-0001 |
+| RF-CAP-016 | Dada una campaña cuya fecha de fin ha pasado, cuando una persona dejó su actualización en borrador (por ejemplo, sin subir todas las obligatorias), el `admin` puede ver y exportar lo que cargó, marcado como «incompleto, no enviado» y distinto de lo aprobado. Cada lectura de un borrador de otra persona queda en la auditoría. El `supervisor` sigue sin ver borradores. Esta regla es para toda la hoja de vida, no solo capacitaciones. | Sin priorizar | PD-CAP-10 (opción 1); RF-CAM-004, RF-FLU-006 de spec-0001 |
+| RF-CAP-017 | Dada una institución con la sección «Capacitaciones» cerrada (spec-0010), cuando una persona envía, el sistema no exige las obligatorias ni las muestra; al abrirse la sección, se exigen según RF-CAP-004 y 007. | Sin priorizar | spec-0010, RF-SEC-004 a 006 |
+| RF-CAP-018 | Dada una obligatoria sin cumplir de una persona, cuando un `supervisor` o `admin` de su institución lo hace por ayuda, puede **vincular** a ella una capacitación que esa persona ya tiene (con su certificado). Solo vincula: no crea ni edita la capacitación. Se permite con la actualización en borrador o enviada (en revisión), no aprobada; cada vínculo queda en la auditoría con quién lo hizo, y la persona lo ve como cargada. | Sin priorizar | Decisión del solicitante, 2026-10-27; PD-CAP-11 |
 
 ## Escenarios del proceso
 
@@ -145,6 +153,9 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 - [ ] Una obligatoria nueva no cambia el estado de actualizaciones enviadas o aprobadas (RF-CAP-012; escenario 5).
 - [ ] Ninguna operación cruza instituciones ni se permite sin rol (RF-CAP-013, 015).
 - [ ] Con actualización enviada o aprobada, la API rechaza cambiar certificados de obligatorias (RF-CAP-014).
+- [ ] Vencida la campaña, el `admin` ve y exporta los borradores incompletos con su marca y auditoría; el supervisor no (RF-CAP-016).
+- [ ] Un `supervisor` o `admin` puede vincular una capacitación existente de la persona a una obligatoria pendiente, con auditoría, y no puede con la actualización aprobada ni de otra institución (RF-CAP-018).
+- [ ] Con «Capacitaciones» cerrada no se exige ni se muestra nada de esto (RF-CAP-017).
 - [ ] Las reglas actuales de envío de RF-HDV-009 y el guardado de borradores siguen funcionando; las pruebas existentes siguen en verde.
 - [ ] Pruebas nuevas en xUnit y Vitest; `openapi/v1.json` y el cliente regenerados; CI del PR en verde; prueba E2E del flujo completo (admin configura, persona sube, supervisor revisa, admin ve el cumplimiento).
 
@@ -153,14 +164,20 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 | ID | Contradicción o dato faltante | Impacto | Quién decide |
 |---|---|---|---|
 | PD-CAP-01 | **Modelo.** El issue plantea tres opciones: (A) reutilizar `tipos_documento` y `requisitos_documento`, (B) entidad propia vinculada a cada `Capacitacion`, (C) híbrido. Esta spec redacta los requisitos para el comportamiento descrito en el issue (horas, fechas y vigencia propias en «Capacitaciones»), sin escoger la opción técnica. | No puede diseñarse el plan ni las migraciones. | ADR nuevo, a redactar antes de las tareas; lo cierra quien desarrolla (AGENTS.md) |
-| PD-CAP-02 | **¿Por tipo de funcionario, por cargo o por ambos?** El cargo de la nómina no está persistido: solo propone el tipo al cargar. Aplicarlo por cargo exigiría guardarlo. Propuesta de esta spec: **solo por tipo de funcionario o «todas»**, que es lo que ya existe. | RF-CAP-002, 008; si el revisor quiere cargo, hay que agregar el campo y cambiar la carga de nómina. | Revisor funcional |
-| PD-CAP-03 | **¿«Todas las personas» sin excepción?** Propuesta: sí, incluye a quien no tiene tipo asignado (RF-CAP-008). | RF-CAP-002, 008 | Revisor funcional |
-| PD-CAP-04 | **¿Por campaña o permanente?** Una capacitación de 2026 no es la de 2027. Propuesta: permanente mientras esté activa, y el `admin` la desactiva o crea otra; sin vínculo con campañas en esta versión. | Si es por campaña, hay que relacionarla con las campañas de spec-0001. | Revisor funcional |
-| PD-CAP-05 | **Exoneraciones** (persona de licencia, ingreso reciente). Propuesta: fuera de alcance de la v0.1; no hay exoneración por persona. | Sin exoneraciones, nadie puede enviar si falta una obligatoria que le aplica. | Revisor funcional |
-| PD-CAP-06 | **¿Qué pasa si se agrega una obligatoria después de que alguien ya envió o fue aprobado?** Propuesta (RF-CAP-012): no se devuelve ni se cambia el estado; queda como pendiente y se exige en el siguiente envío. | Estado de las actualizaciones existentes. | Revisor funcional |
-| PD-CAP-07 | **Recordatorios o avisos** a quien no ha subido la obligatoria. Propuesta: excluidos; el `admin` consulta la lista de pendientes. | Requeriría un canal de aviso que hoy no existe. | Revisor funcional |
-| PD-CAP-08 | **Qué cuenta como cumplida:** solo el certificado subido, un mínimo de horas o la aprobación del supervisor. Propuesta: basta el certificado subido; el supervisor puede devolver con marca si no lo acepta; las horas esperadas son informativas. | RF-CAP-005, 009, 010 | Revisor funcional |
-| PD-CAP-09 | **Edición de una obligatoria ya usada.** Si el `admin` cambia el nombre o el alcance de una obligatoria con certificados subidos, ¿qué ocurre con los vinculados? Propuesta: el cambio de nombre no afecta los certificados; cambiar el alcance solo cambia a quién se exige en adelante. | RF-CAP-001, 003 | Revisor funcional |
+| PD-CAP-02 | ¿Por tipo de funcionario, por cargo o por ambos? | RF-CAP-002, 008 | **Resuelto (v0.2, Joseph Baño, 2026-10-27):** cargo y tipo de funcionario son lo mismo; solo por tipo de funcionario o «todas». |
+| PD-CAP-03 | ¿«Todas las personas» incluye a quien no tiene tipo? | RF-CAP-002, 008 | **Resuelto (v0.2, 2026-10-27):** sí. |
+| PD-CAP-04 | ¿Por campaña o permanente? | Modelo | **Resuelto (v0.2, 2026-10-27):** permanente mientras esté activa; sin ligarse a campañas. |
+| PD-CAP-05 | Exoneraciones. | Alcance | **Resuelto (v0.2, 2026-10-27):** no hay; decisión de alcance. |
+| PD-CAP-06 | ¿Qué pasa si se agrega una obligatoria con personas que ya enviaron o fueron aprobadas? | RF-CAP-012 | **Resuelto (v0.2, 2026-10-27):** no se devuelve ni cambia estado; queda pendiente y se exige en su siguiente envío. |
+| PD-CAP-07 | Recordatorios o avisos. | Alcance | **Resuelto (v0.2, 2026-10-27):** no hay; decisión de alcance. |
+| PD-CAP-08 | ¿Qué cuenta como cumplida? | RF-CAP-005, 009, 010 | **Resuelto (v0.2, 2026-10-27):** basta el certificado subido; las horas esperadas son informativas. |
+| PD-CAP-09 | Edición de una obligatoria ya usada. | RF-CAP-001, 003 | **Resuelto (v0.2, 2026-10-27):** cambiar el nombre no afecta los certificados; cambiar el alcance solo cambia a quién se exige en adelante. |
+| PD-CAP-10 | **Persona que no completa las obligatorias al vencer la campaña.** Sus datos quedan en borrador y nadie de la institución los ve (RF-CAM-004, RF-FLU-006). | RF-CAP-016 | **Resuelto (v0.2, 2026-10-27), opción 1:** el `admin` ve y exporta lo cargado como «incompleto, no enviado», con auditoría. Descartada la opción 2 (envío parcial con motivo). |
+| PD-CAP-11 | **Capacitación equivalente subida antes de crear la obligatoria.** ¿Puede vincularla en vez de subirla de nuevo? | RF-CAP-005, 018 | **Resuelto (v0.2, 2026-10-27):** sí; la persona la vincula, y además un `supervisor` o `admin` puede vincularla por ayuda (RF-CAP-018). |
+
+## Pendiente futuro (no entra en esta versión)
+
+**Analítica histórica anónima entre campañas.** El solicitante quiere poder comparar campañas (por ejemplo, más cursos o cambio de domicilio) sin guardar datos sensibles. Hoy no es posible: solo se conserva la última versión aprobada (RF-FLU-005) y la auditoría no guarda contenido (RF-DAT-005), de modo que hay que empezar a guardar algo en cada cierre de campaña. Dos niveles posibles: (1) solo totales y categorías por campaña, sin identificar personas, recomendado como primera fase; (2) cambios por persona con un seudónimo, que sigue siendo dato personal y exige base legal y un ADR de seguridad. Requiere un cierre explícito de campaña y un umbral mínimo de grupo. Será una spec propia (spec-0011), después de spec-0008 y spec-0010. Se anota aquí para no perder la idea; no genera requisitos.
 
 ## Qué no cambia
 
@@ -171,10 +188,12 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Pendiente
+**Versión revisada:** 0.2  
+**Decisión:** Aprobado  
+**Aprobó:** Joseph Baño, solicitante y responsable funcional del issue #92  
+**Fecha y evidencia de aprobación:** 2026-10-27; mensaje en la conversación de trabajo del issue #92 («si apruebo … el spec08 v2»), con el cambio de RF-CAP-018  
+**Ajustes solicitados:** Ninguno hasta ahora; el solicitante aceptó las propuestas de PD-CAP-06, 08 y 09, eligió la opción 1 de PD-CAP-10 y pidió dejar la analítica como pendiente.
+
+**Cambios de 0.1 a 0.2:** PD-CAP-02 a 11 resueltos; RF-CAP-018 (vincular por ayuda); RF-CAP-016 (el `admin` ve borradores incompletos tras vencer la campaña) y RF-CAP-017 (depende de spec-0010); fuente spec-0010; sección «Pendiente futuro».
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.

@@ -2,7 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize, forkJoin, Observable, of, switchMap } from 'rxjs';
+import { finalize, forkJoin, Observable, switchMap } from 'rxjs';
 import {
   API_BASE_URL,
   ArchivoDto,
@@ -51,7 +51,6 @@ export class UsuarioDashboardComponent implements OnInit {
   correo = '';
   codigo = '';
   correoDestino = '';
-  aceptaTratamiento = false;
   claveDocumento = '';
   readonly archivoSeleccionado = signal<File | null>(null);
   readonly avisoArchivo = signal('');
@@ -80,7 +79,6 @@ export class UsuarioDashboardComponent implements OnInit {
           this.estado.set(estado);
           this.archivos.set(archivos);
           this.correo = datos.correo ?? '';
-          this.aceptaTratamiento = datos.tratamientoDatosAceptado;
           try {
             const contenido: unknown = JSON.parse(datos.datosPersonalesJson || '{}');
             if (!contenido || typeof contenido !== 'object' || Array.isArray(contenido))
@@ -127,16 +125,13 @@ export class UsuarioDashboardComponent implements OnInit {
 
   enviar(): void {
     if (!this.disponible()) return;
-    if (!this.aceptaTratamiento || !this.correoConfirmado) {
-      this.error.set('Verifica tu correo y acepta el tratamiento de datos antes de enviar.');
+    if (!this.datos()?.tratamientoDatosAceptado || !this.correoConfirmado) {
+      this.error.set(
+        'Verifica tu correo y completa la aceptación del aviso vigente antes de enviar.',
+      );
       return;
     }
-    const envio = this.guardarDatos().pipe(
-      switchMap(() =>
-        this.datos()?.tratamientoDatosAceptado ? of(null) : this.cliente.aceptarTratamientoDatos(),
-      ),
-      switchMap(() => this.cliente.enviarMisDatosARevision()),
-    );
+    const envio = this.guardarDatos().pipe(switchMap(() => this.cliente.enviarMisDatosARevision()));
     this.realizar(envio, () => {
       this.datos.update((datos) =>
         datos

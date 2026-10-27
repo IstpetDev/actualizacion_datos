@@ -26,7 +26,7 @@ public sealed class MarcasPorItemTests : IDisposable
         _conexion = new SqliteConnection("DataSource=:memory:");
         _conexion.Open();
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
