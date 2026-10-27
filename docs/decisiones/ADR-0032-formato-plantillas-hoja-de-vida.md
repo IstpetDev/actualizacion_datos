@@ -1,11 +1,11 @@
-# ADR-0031 — Formato de las plantillas globales de hoja de vida
+# ADR-0032 — Formato de las plantillas globales de hoja de vida
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-10-27
 
 ## Contexto
 
-El sistema de actualización de datos debe generar el documento de hoja de vida en PDF con la identidad y marca institucional (spec-0012, issue #101). El documento de referencia institucional consta de 5 páginas:
+El sistema de actualización de datos debe generar el documento de hoja de vida en PDF con la identidad y marca institucional (spec-0013, issue #101). El documento de referencia institucional consta de 5 páginas:
 1. Portada institucional con imagen de portada, logotipo, título y lema.
 2. Datos personales con fotografía del funcionario, datos de contacto, perfil profesional generado deterministamente (ADR-0025) y bloque de compromiso con firma.
 3. Formación académica registrada.
@@ -50,4 +50,4 @@ Se adopta la **Opción 3**, estructurada con un diseño completamente desacoplad
 - ADR-0004 — Multitenancy: esquema único con `institucion_id`.
 - ADR-0006 — Almacenamiento de archivos.
 - ADR-0025 — Perfil profesional generado.
-- ADR-0032 — Motor de generación de PDF en .NET.
+- ADR-0033 — Motor de generación de PDF en .NET.

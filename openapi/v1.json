@@ -6840,6 +6840,10 @@
             "type": "string",
             "format": "date-time"
           },
+          "tieneFicha": {
+            "type": "boolean",
+            "default": false
+          },
           "tipoFuncionarioId": {
             "type": [
               "null",

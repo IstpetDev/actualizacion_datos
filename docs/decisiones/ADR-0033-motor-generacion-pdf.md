@@ -1,11 +1,11 @@
-# ADR-0032 — Motor de generación de PDF en .NET
+# ADR-0033 — Motor de generación de PDF en .NET
 
 - **Estado:** Propuesto
 - **Fecha:** 2026-10-27
 
 ## Contexto
 
-El backend .NET 10 (`src/Backend`) no posee dependencias para generar archivos PDF. En el ADR-0025 («Perfil profesional generado») se decidió explícitamente no incorporar librerías de PDF para la exportación simple en HTML. La spec-0012 (issue #101) requiere generar el documento de hoja de vida en PDF con alta calidad gráfica, portadas y encabezados.
+El backend .NET 10 (`src/Backend`) no posee dependencias para generar archivos PDF. En el ADR-0025 («Perfil profesional generado») se decidió explícitamente no incorporar librerías de PDF para la exportación simple en HTML. La spec-0013 (issue #101) requiere generar el documento de hoja de vida en PDF con alta calidad gráfica, portadas y encabezados.
 
 Es necesario seleccionar una dependencia técnica que cumpla con los siguientes criterios:
 1. Compatibilidad nativa con .NET 10 en entornos Linux y contenedores Docker (`mcr.microsoft.com/dotnet/aspnet:10.0-preview` o runtime oficial).
@@ -47,4 +47,4 @@ El servicio genera el documento en memoria retornando un flujo `Stream` o arregl
 - ADR-0001 — Clean Architecture en el backend.
 - ADR-0011 — Despliegue automático a producción.
 - ADR-0025 — Perfil profesional generado.
-- ADR-0031 — Formato de las plantillas globales de hoja de vida.
+- ADR-0032 — Formato de las plantillas globales de hoja de vida.

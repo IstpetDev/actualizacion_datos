@@ -1,15 +1,81 @@
+// Servidor HTTP efímero unificado y seguro para pruebas E2E (ADR-0031).
+// Sirve archivos estáticos del frontend y reenvía /api/ y /health al backend
+// en 127.0.0.1 garantizando un único origen sin vulnerabilidades de SSRF.
+
 import assert from "node:assert/strict";
 import { createServer, request } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 
 /**
- * Crea un servidor HTTP de pruebas E2E que combina:
- * 1. Proxy inverso seguro hacia el backend local (solo rutas /api/ y /health).
- * 2. Servicio de archivos estáticos del SPA con fallback a index.html.
+ * Valida si una URL entrante corresponde a una ruta permitida para el proxy de la API.
+ * Bloquea intentos de manipulación de host (SSRF), URLs absolutas hacia terceros,
+ * rutas relativas de protocolo (//) y secuencias de escape o path traversal.
  *
- * Diseñado con destino fijo (loopback) y validación estricta de rutas para evitar
- * cualquier riesgo de Server-Side Request Forgery (CWE-918).
+ * @param {string} urlEntrante - URL relativa de la petición entrante (peticion.url)
+ * @returns {{ esValida: boolean, pathname?: string, search?: string, motivo?: string }}
+ */
+export function validarRutaProxy(urlEntrante) {
+  if (!urlEntrante || typeof urlEntrante !== "string") {
+    return { esValida: false, motivo: "URL no provista o tipo inválido" };
+  }
+
+  // Rechazar esquemas absolutos o rutas de protocolo relativo
+  if (urlEntrante.startsWith("//") || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(urlEntrante)) {
+    return { esValida: false, motivo: "Esquema absoluto o relativo de protocolo no permitido" };
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(urlEntrante, "http://127.0.0.1");
+  } catch {
+    return { esValida: false, motivo: "Formato de URL inválido" };
+  }
+
+  // El origen resuelto debe coincidir estrictamente con el host base local
+  if (parsed.origin !== "http://127.0.0.1") {
+    return { esValida: false, motivo: "Origen modificado respecto al origen local" };
+  }
+
+  const pathname = parsed.pathname;
+
+  // Comprobar path traversal o caracteres peligrosos en la ruta
+  if (pathname.includes("..") || /%(?:2e|2f|5c)/i.test(urlEntrante)) {
+    return { esValida: false, motivo: "Secuencia de escape o directory traversal detectada" };
+  }
+
+  // Permitir únicamente rutas bajo /api/ o el endpoint exacto /health
+  const esRutaPermitida = pathname === "/health" || pathname.startsWith("/api/");
+  if (!esRutaPermitida) {
+    return { esValida: false, motivo: "Ruta no permitida para el proxy de API" };
+  }
+
+  return {
+    esValida: true,
+    pathname,
+    search: parsed.search || "",
+  };
+}
+
+const TIPOS_MIME = {
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".html": "text/html",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".json": "application/json",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+};
+
+/**
+ * Crea y configura una instancia de servidor HTTP para pruebas E2E.
+ *
+ * @param {object} opciones
+ * @param {string} opciones.backend - URL del backend local (ej. http://127.0.0.1:8080)
+ * @param {string} opciones.dist - Ruta al directorio dist del frontend SPA
+ * @returns {import("node:http").Server}
  */
 export function crearServidorPruebas({ backend, dist }) {
   assert(backend, "Se requiere la URL del backend");
@@ -21,40 +87,39 @@ export function crearServidorPruebas({ backend, dist }) {
     throw new Error("El backend de pruebas debe residir en loopback (127.0.0.1 o localhost)");
   }
 
-  const tipos = {
-    ".js": "text/javascript",
-    ".css": "text/css",
-    ".html": "text/html",
-    ".svg": "image/svg+xml",
-    ".png": "image/png",
-  };
+  const rutaDist = resolve(dist);
 
   return createServer((peticion, respuesta) => {
-    const rawUrl = peticion.url;
+    const urlEntrante = peticion.url || "/";
 
     // Rechazar peticiones sin URL válida o con esquemas/protocolos absolutos
-    if (typeof rawUrl !== "string" || !rawUrl.startsWith("/") || rawUrl.startsWith("//")) {
+    if (typeof urlEntrante !== "string" || !urlEntrante.startsWith("/") || urlEntrante.startsWith("//")) {
       respuesta.writeHead(400);
       respuesta.end("Ruta invalida");
       return;
     }
 
-    // Parsear ruta de forma segura con base fija local
-    const urlSegura = new URL(rawUrl, "http://127.0.0.1");
-    const { pathname, search } = urlSegura;
+    // 1. Si coincide con prefijo /api/ o /health, evaluar proxy
+    if (urlEntrante.startsWith("/api/") || urlEntrante === "/health" || urlEntrante.startsWith("/health?")) {
+      const validacion = validarRutaProxy(urlEntrante);
+      if (!validacion.esValida) {
+        respuesta.writeHead(400, { "Content-Type": "application/json" });
+        respuesta.end(JSON.stringify({ error: "Petición no permitida", detalle: validacion.motivo }));
+        return;
+      }
 
-    // Proxy hacia el backend si corresponde a la API o salud
-    if (pathname.startsWith("/api/") || pathname === "/health") {
+      const rutaDestino = `${validacion.pathname}${validacion.search}`;
+      const cabecerasProxy = { ...peticion.headers };
+      cabecerasProxy.host = backendUrl.host;
+
+      // Configuración de destino con host fijo en loopback (prevención SSRF)
       const opcionesProxy = {
         protocol: backendUrl.protocol,
         hostname: backendUrl.hostname,
         port: backendUrl.port,
-        path: pathname + search,
+        path: rutaDestino,
         method: peticion.method,
-        headers: {
-          ...peticion.headers,
-          host: backendUrl.host,
-        },
+        headers: cabecerasProxy,
       };
 
       const proxy = request(opcionesProxy, (remota) => {
@@ -63,46 +128,63 @@ export function crearServidorPruebas({ backend, dist }) {
       });
 
       proxy.on("error", () => {
-        respuesta.writeHead(502);
-        respuesta.end();
+        if (!respuesta.headersSent) {
+          respuesta.writeHead(502, { "Content-Type": "application/json" });
+          respuesta.end(JSON.stringify({ error: "Error de conexión con el backend local" }));
+        }
       });
 
       peticion.pipe(proxy);
       return;
     }
 
-    // Servir archivos estáticos del frontend
-    if (rawUrl.includes("..") || rawUrl.includes("%2e") || rawUrl.includes("%2E")) {
+    // 2. Servir estáticos del frontend
+    if (urlEntrante.includes("..") || /%(?:2e|2f|5c)/i.test(urlEntrante)) {
       respuesta.writeHead(403);
       respuesta.end("Acceso denegado");
       return;
     }
 
-    let ruta;
+    let pathnameLimpio = "/";
     try {
-      ruta = resolve(dist, `.${decodeURIComponent(pathname)}`);
+      pathnameLimpio = decodeURIComponent(new URL(urlEntrante, "http://127.0.0.1").pathname);
     } catch {
       respuesta.writeHead(400);
-      respuesta.end("Ruta malformada");
+      respuesta.end("Ruta inválida");
       return;
     }
 
-    if (!ruta.startsWith(dist + sep) && ruta !== dist) {
+    const ruta = resolve(rutaDist, `.${pathnameLimpio}`);
+    if (!ruta.startsWith(rutaDist + sep) && ruta !== rutaDist) {
       respuesta.writeHead(403);
-      respuesta.end();
+      respuesta.end("Acceso denegado");
       return;
     }
 
     try {
-      const archivo = existsSync(ruta) && extname(ruta) ? ruta : `${dist}/index.html`;
-      respuesta.setHeader(
-        "Content-Type",
-        tipos[extname(archivo)] || "application/octet-stream",
-      );
+      const archivo = existsSync(ruta) && extname(ruta) ? ruta : `${rutaDist}/index.html`;
+      if (!existsSync(archivo)) {
+        respuesta.writeHead(404);
+        respuesta.end("Archivo no encontrado");
+        return;
+      }
+      const tipo = TIPOS_MIME[extname(archivo)] || "application/octet-stream";
+      respuesta.setHeader("Content-Type", tipo);
       respuesta.end(readFileSync(archivo));
     } catch {
-      respuesta.writeHead(404);
-      respuesta.end();
+      if (!respuesta.headersSent) {
+        respuesta.writeHead(404);
+        respuesta.end();
+      }
     }
   });
+}
+
+/**
+ * Variante con firma alternativa para compatibilidad.
+ */
+export function crearServidorPruebasE2E({ puertoBackend, rutaDist, backend, dist }) {
+  const b = backend || `http://127.0.0.1:${puertoBackend}`;
+  const d = dist || rutaDist;
+  return crearServidorPruebas({ backend: b, dist: d });
 }
