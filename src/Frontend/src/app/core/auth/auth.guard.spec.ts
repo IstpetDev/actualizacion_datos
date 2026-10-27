@@ -10,7 +10,9 @@ describe('guards de sesión del servidor', () => {
   const ruta = {} as ActivatedRouteSnapshot;
   beforeEach(() => {
     vi.clearAllMocks();
-    auth.verificarSesion.mockReturnValue(of({ rol: 'usuario', debeCambiarContrasena: false }));
+    auth.verificarSesion.mockReturnValue(
+      of({ rol: 'usuario', debeCambiarContrasena: false, requiereAceptarProteccionDatos: false }),
+    );
     TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: auth }] });
   });
   async function comprobar(guardia: typeof authGuard, url = '/usuario') {
@@ -45,5 +47,24 @@ describe('guards de sesión del servidor', () => {
   it('permite_login_sin_cookie_valida', async () => {
     auth.verificarSesion.mockReturnValue(throwError(() => new Error()));
     expect(await comprobar(publicGuard)).toBe(true);
+  });
+  it('restringe_navegacion_directa_y_login_al_aviso_pendiente', async () => {
+    auth.verificarSesion.mockReturnValue(
+      of({ rol: 'usuario', requiereAceptarProteccionDatos: true }),
+    );
+    expect(await comprobar(authGuard, '/usuario')).toBe('/proteccion-datos');
+    expect(await comprobar(authGuard, '/no-autorizado')).toBe('/proteccion-datos');
+    expect(await comprobar(authGuard, '/proteccion-datos')).toBe(true);
+    expect(await comprobar(publicGuard)).toBe('/proteccion-datos');
+  });
+  it('una_respuesta_sin_estado_de_aceptacion_no_habilita_el_acceso', async () => {
+    auth.verificarSesion.mockReturnValue(of({ rol: 'usuario' }));
+    expect(await comprobar(authGuard)).toBe('/proteccion-datos');
+  });
+  it('al_fallar_el_estado_dirige_al_aviso_con_reintento_y_logout', async () => {
+    auth.verificarSesion.mockReturnValue(throwError(() => ({ status: 503 })));
+    expect(await comprobar(authGuard)).toBe('/proteccion-datos');
+    expect(await comprobar(authGuard, '/proteccion-datos')).toBe(true);
+    expect(auth.cerrarSesion).not.toHaveBeenCalled();
   });
 });

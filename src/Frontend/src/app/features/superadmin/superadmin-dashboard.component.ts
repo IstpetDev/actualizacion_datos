@@ -1,3 +1,4 @@
+import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -331,7 +332,7 @@ export class SuperadminDashboardComponent implements OnInit {
   cargarInstituciones(): void {
     this.institucionesClient.listarInstituciones().subscribe({
       next: (lista) => this.instituciones.set(lista),
-      error: (err) => this.error.set(err?.message || 'Error al listar instituciones.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al listar instituciones.')),
     });
   }
 
@@ -369,7 +370,7 @@ export class SuperadminDashboardComponent implements OnInit {
         this.cargarInstituciones();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al registrar la institución.');
+        this.error.set(mensajeError(err, 'Error al registrar la institución.'));
         this.guardando.set(false);
       },
     });

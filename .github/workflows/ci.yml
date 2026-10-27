@@ -313,7 +313,12 @@ jobs:
       - name: Construir sin publicar
         env:
           APP: ${{ matrix.app }}
-        run: docker build --pull --tag "actualizacion-datos-${APP,,}:ci" "src/$APP"
+        run: |
+          if [ "$APP" = "Backend" ]; then
+            docker build --pull -f src/Backend/Dockerfile --tag actualizacion-datos-backend:ci .
+          else
+            docker build --pull --tag actualizacion-datos-frontend:ci src/Frontend
+          fi
 
   workflows:
     name: Workflows y scripts
@@ -337,6 +342,7 @@ jobs:
         run: |
           bash .github/scripts/pruebas/validar-rama.test.sh
           bash .github/scripts/pruebas/filtrar-rutas.test.sh
+          node scripts/pruebas/servidor-pruebas-e2e.test.mjs
 
   ci-ok:
     name: ci-ok

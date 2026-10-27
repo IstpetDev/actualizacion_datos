@@ -1,4 +1,4 @@
-# Reversión manual a una versión previa en producción (ADR-0011).
+# Reversión manual a una versión previa en producción (ADR-0011, ADR-0031).
 name: Reversión en producción
 
 on:
@@ -24,19 +24,16 @@ jobs:
     environment: produccion
 
     steps:
-      - name: Conectar a Tailscale
-        uses: tailscale/github-action@99a8333667fff04fdd6cffb46dfd409f8329a7bf # v4
+      - name: Descargar código fuente
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          sparse-checkout: .github/actions
 
-      - name: Configurar cliente SSH
-        env:
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+      - name: Conectar al servidor
+        uses: ./.github/actions/conectar-servidor
+        with:
+          tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Comprobar existencia de imágenes
         env:
@@ -45,7 +42,7 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           echo "Comprobando existencia de las imágenes con etiqueta ${TAG} en el servidor..."
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "docker image inspect actualizacion-datos-backend:${TAG} >nul && docker image inspect actualizacion-datos-frontend:${TAG} >nul"
 
       - name: Aplicar reversión y recrear contenedores
@@ -56,15 +53,16 @@ jobs:
           DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
         run: |
           echo "Reescribiendo contenedores con la versión ${TAG}..."
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${TAG}&& docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
       - name: Verificación de salud (Smoke Tests)
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
+          DIR: ${{ vars.DEPLOY_DIR || 'C:/actualizacion_datos' }}
         run: |
-          echo "Esperando 10 segundos..."
+          echo "Esperando a que los servicios se estabilicen..."
           sleep 10
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa "${USER}@${HOST}" \
-            "curl.exe -f -s http://127.0.0.1:8088/health"
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "powershell -NoProfile -Command \"\$puerto = (Get-Content '${DIR}/.env' -ErrorAction SilentlyContinue | Select-String '^PUERTO_PUBLICO=(\d+)' | ForEach-Object { \$_.Matches.Groups[1].Value }) | Select-Object -First 1; if (-not \$puerto) { \$puerto = if (\$env:PUERTO_PUBLICO) { \$env:PUERTO_PUBLICO } else { '8088' } }; Write-Host ('Comprobando API /health en puerto ' + \$puerto + '...'); curl.exe -f -s http://127.0.0.1:\$puerto/health | Out-Null; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo /health'; exit 1 }; Write-Host 'API /health responde OK.'; Write-Host ('Comprobando Frontend SPA / en puerto ' + \$puerto + '...'); curl.exe -f -s -o NUL http://127.0.0.1:\$puerto/; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo Frontend'; exit 1 }; Write-Host 'Frontend responde OK.'; cd /d '${DIR}'; docker compose -f docker-compose.prod.yml ps\""

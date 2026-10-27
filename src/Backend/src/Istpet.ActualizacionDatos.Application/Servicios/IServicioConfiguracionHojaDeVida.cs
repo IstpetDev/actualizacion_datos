@@ -1,11 +1,14 @@
 namespace Istpet.ActualizacionDatos.Application.Servicios;
 
 using Istpet.ActualizacionDatos.Application.Modelos;
+using Istpet.ActualizacionDatos.Application.Validacion;
 
 // RF-HDV-012, 013, 015. Implementa T-05 (#31). Solo admin de la institución.
 // El código es único dentro de la institución y se guarda en mayúsculas.
 public interface IServicioConfiguracionHojaDeVida
 {
+    Task<PoliticaValidacionDto> ObtenerPoliticaValidacionAsync(CancellationToken ct = default);
+    Task<PoliticaValidacionDto> GuardarDominiosCorreoAsync(GuardarDominiosCorreoRequest request, CancellationToken ct = default);
     Task<List<TipoFuncionarioDto>> ListarTiposFuncionarioAsync(CancellationToken ct = default);
     Task<TipoFuncionarioDto> CrearTipoFuncionarioAsync(GuardarTipoFuncionarioRequest request, CancellationToken ct = default);
     Task<TipoFuncionarioDto> ActualizarTipoFuncionarioAsync(Guid id, GuardarTipoFuncionarioRequest request, CancellationToken ct = default);
@@ -26,4 +29,7 @@ public interface IServicioConfiguracionHojaDeVida
 
     /// <summary>Asigna o quita (nulo) el tipo de funcionario; el tipo debe ser de la misma institución.</summary>
     Task AsignarTipoFuncionarioAsync(Guid personaId, AsignarTipoFuncionarioRequest request, CancellationToken ct = default);
+
+    /// <summary>Asigna o quita masivamente el tipo de funcionario a un conjunto de personas o a las personas sin tipo.</summary>
+    Task<ResultadoAsignacionTipoMasivoDto> AsignarTipoFuncionarioMasivoAsync(AsignarTipoFuncionarioMasivoRequest request, CancellationToken ct = default);
 }

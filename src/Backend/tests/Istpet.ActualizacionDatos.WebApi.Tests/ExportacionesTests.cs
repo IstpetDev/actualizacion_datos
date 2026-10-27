@@ -14,7 +14,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class ExportacionesTests : IDisposable
+public sealed partial class ExportacionesTests : IDisposable
 {
     private readonly SqliteConnection _conexion;
     private readonly WebApplicationFactory<Program> _fabrica;
@@ -25,7 +25,7 @@ public sealed class ExportacionesTests : IDisposable
         _conexion = new SqliteConnection("DataSource=:memory:");
         _conexion.Open();
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -430,7 +430,7 @@ public sealed class ExportacionesTests : IDisposable
         var carpetaRaiz = indexEntry.FullName[..^"/index.md".Length];
         var prefijoPersonaEsperado = $"{carpetaRaiz}/1700000099/";
 
-        var entradasArchivos = archive.Entries.Where(e => e != indexEntry).ToList();
+        var entradasArchivos = archive.Entries.Where(e => e != indexEntry && !e.FullName.EndsWith("/hoja-de-vida.html", StringComparison.Ordinal)).ToList();
         Assert.Equal(9, entradasArchivos.Count);
 
         foreach (var entry in archive.Entries)

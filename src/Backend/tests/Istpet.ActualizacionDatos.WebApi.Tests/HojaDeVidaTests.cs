@@ -13,8 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 // Issue #30 (T-02, T-03, T-04 de spec-0003):
 // Secciones de la hoja de vida, respaldos, documentos personales y validación de completitud al enviar.
-public sealed class HojaDeVidaTests : IDisposable
+public sealed partial class HojaDeVidaTests : IDisposable
 {
+    private static readonly string[] NombresReferenciaFicticios = ["Cero", "Uno", "Dos", "Tres", "Cuatro", "Cinco", "Seis"];
+
     private const string Documento = "0000000040";
     private const string DocumentoAjeno = "0000000041";
     private const string Supervisor = "0000000049";
@@ -44,7 +46,7 @@ public sealed class HojaDeVidaTests : IDisposable
     }
 
     private static WebApplicationFactory<Program> CrearFabrica(SqliteConnection conexion) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("CuentaBancaria:PermitirClavesTemporales", "true");
             builder.ConfigureServices(services =>
@@ -85,7 +87,7 @@ public sealed class HojaDeVidaTests : IDisposable
             RolUsuario.Usuario,
             "Docente Ficticio",
             "docente@ejemplo.test",
-            accesoHabilitado: true,
+            accesoHabilitado: true, correoVerificado: true,
             estadoActualizacion: estado,
             tratamientoDatosAceptado: true);
 
@@ -96,7 +98,7 @@ public sealed class HojaDeVidaTests : IDisposable
             RolUsuario.Usuario,
             "Otro Docente",
             "otro@ejemplo.test",
-            accesoHabilitado: true,
+            accesoHabilitado: true, correoVerificado: true,
             estadoActualizacion: EstadoActualizacion.Borrador,
             tratamientoDatosAceptado: true);
 
@@ -107,7 +109,7 @@ public sealed class HojaDeVidaTests : IDisposable
             RolUsuario.Supervisor,
             "Supervisor Evaluador",
             "sup@ejemplo.test",
-            accesoHabilitado: true);
+            accesoHabilitado: true, correoVerificado: true);
 
         var campana = new Campana(
             Guid.NewGuid(),
@@ -355,7 +357,7 @@ public sealed class HojaDeVidaTests : IDisposable
         {
             var req = new GuardarReferenciaRequest(
                 Tipo: "personal",
-                NombresApellidos: $"Referencia Personal {i}",
+                NombresApellidos: "Referencia Personal " + NombresReferenciaFicticios[i],
                 Telefono: $"099111222{i}");
 
             var res = await EnviarAsync(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, Documento, cuerpo: req);
@@ -376,7 +378,7 @@ public sealed class HojaDeVidaTests : IDisposable
         // Pero sí debe permitir una de tipo Familiar (hasta 5)
         var reqFamiliar = new GuardarReferenciaRequest(
             Tipo: "familiar",
-            NombresApellidos: "Referencia Familiar 1",
+            NombresApellidos: "Referencia Familiar Uno",
             Telefono: "0998887771");
 
         var resFam = await EnviarAsync(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, Documento, cuerpo: reqFamiliar);
@@ -528,8 +530,8 @@ public sealed class HojaDeVidaTests : IDisposable
         Assert.Equal(HttpStatusCode.Created, resTitulo.StatusCode);
 
         // 3. Registrar al menos dos referencias personales
-        var ref1 = new GuardarReferenciaRequest("personal", "Ref 1", "0991111111");
-        var ref2 = new GuardarReferenciaRequest("personal", "Ref 2", "0992222222");
+        var ref1 = new GuardarReferenciaRequest("personal", "Referencia Uno", "0991111111");
+        var ref2 = new GuardarReferenciaRequest("personal", "Referencia Dos", "0992222222");
         await EnviarAsync(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, Documento, cuerpo: ref1);
         await EnviarAsync(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, Documento, cuerpo: ref2);
 

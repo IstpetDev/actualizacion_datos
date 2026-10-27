@@ -1,0 +1,19 @@
+# Contexto de construcción del backend: solo fuentes y catálogos versionados.
+**
+!src/
+!src/Backend/
+!src/Backend/**
+!data/
+!data/catalogos/
+!data/catalogos/*.csv
+!data/catalogos/fuentes.json
+src/Backend/**/bin/
+src/Backend/**/obj/
+src/Backend/**/TestResults/
+src/Backend/**/.vs/
+src/Backend/**/.vscode/
+src/Backend/**/.env*
+src/Backend/**/appsettings.Development.json
+src/Backend/**/appsettings.*.Local.json
+src/Backend/**/appsettings.Local.json
+src/Backend/**/*.user

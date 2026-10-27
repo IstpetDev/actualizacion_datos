@@ -27,6 +27,7 @@ export class AuthService {
       debeCambiarContrasena: datos.debeCambiarContrasena,
       correo: datos.correo,
       correoVerificado: datos.correoVerificado,
+      requiereAceptarProteccionDatos: datos.requiereAceptarProteccionDatos !== false,
     };
     this.iniciarSesion(sesion);
     return sesion;
@@ -67,6 +68,19 @@ export class AuthService {
   cerrarSesion(): void {
     this._sesion.set(null);
     this.guardarEnStorage(null);
+  }
+
+  marcarProteccionPendiente(): void {
+    const sesion = this._sesion();
+    if (sesion)
+      this.iniciarSesion({
+        ...sesion,
+        cedula: '',
+        nombre: 'Usuario',
+        correo: undefined,
+        correoVerificado: false,
+        requiereAceptarProteccionDatos: true,
+      });
   }
 
   /**

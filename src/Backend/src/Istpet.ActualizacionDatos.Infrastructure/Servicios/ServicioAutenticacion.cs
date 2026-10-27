@@ -15,14 +15,20 @@ public class ServicioAutenticacion : IServicioAutenticacion
 {
     private readonly AplicacionDbContext _context;
     private readonly IEnviadorCorreo _enviadorCorreo;
+    private readonly IContextoInstitucion _contexto;
+    private readonly IServicioProteccionDatos _proteccion;
     private readonly PasswordHasher<Persona> _passwordHasher = new();
 
     public ServicioAutenticacion(
         AplicacionDbContext context,
-        IEnviadorCorreo enviadorCorreo)
+        IEnviadorCorreo enviadorCorreo,
+        IContextoInstitucion contexto,
+        IServicioProteccionDatos proteccion)
     {
         _context = context;
         _enviadorCorreo = enviadorCorreo;
+        _contexto = contexto;
+        _proteccion = proteccion;
     }
 
     public async Task<ResultadoLoginDto> IniciarSesionAsync(LoginRequest request, CancellationToken ct = default)
@@ -37,10 +43,11 @@ public class ServicioAutenticacion : IServicioAutenticacion
 
         if (request.InstitucionId.HasValue)
         {
-            query = query.Where(p => p.InstitucionId.Valor == request.InstitucionId.Value);
+            query = query.Where(p => p.InstitucionId == new InstitucionId(request.InstitucionId.Value));
         }
 
-        var persona = await query.FirstOrDefaultAsync(ct);
+        var candidatas = await query.Take(2).ToListAsync(ct);
+        var persona = candidatas.Count == 1 ? candidatas[0] : null;
 
         // RF-ACC-004: Respuesta genérica sin revelar existencia
         if (persona == null)
@@ -138,6 +145,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
 
         await _context.SaveChangesAsync(ct);
 
+        var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
         return new ResultadoLoginDto(
             persona.Id,
             persona.InstitucionId.Valor,
@@ -146,7 +154,8 @@ public class ServicioAutenticacion : IServicioAutenticacion
             persona.Correo,
             persona.Rol.ToString(),
             persona.DebeCambiarContrasena,
-            persona.CorreoVerificado);
+            persona.CorreoVerificado,
+            !proteccion.Aceptado);
     }
 
     public async Task CambiarContrasenaAsync(string documento, CambiarContrasenaRequest request, CancellationToken ct = default)
@@ -154,7 +163,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
         ArgumentException.ThrowIfNullOrWhiteSpace(documento);
 
         var persona = await _context.Personas.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Documento == documento.Trim(), ct)
+            .FirstOrDefaultAsync(p => p.Documento == documento.Trim() && p.InstitucionId == _contexto.InstitucionId, ct)
             ?? throw new ReglaNegocioException("Usuario no encontrado.");
 
         if (string.IsNullOrWhiteSpace(request.NuevaContrasena) || request.NuevaContrasena.Length < 8)
@@ -217,7 +226,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
         }
 
         var persona = await _context.Personas.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Documento == documento.Trim(), ct)
+            .FirstOrDefaultAsync(p => p.Documento == documento.Trim() && p.InstitucionId == _contexto.InstitucionId, ct)
             ?? throw new ReglaNegocioException("Usuario no encontrado.");
 
         // ADR-0007: Código numérico de 6 dígitos, válido 15 minutos, máximo 5 intentos
@@ -249,7 +258,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
         }
 
         var persona = await _context.Personas.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Documento == documento.Trim(), ct)
+            .FirstOrDefaultAsync(p => p.Documento == documento.Trim() && p.InstitucionId == _contexto.InstitucionId, ct)
             ?? throw new ReglaNegocioException("Usuario no encontrado.");
 
         var codigoHash = CalcularHashSha256(request.Codigo.Trim());
@@ -289,22 +298,25 @@ public class ServicioAutenticacion : IServicioAutenticacion
         }
 
         var persona = await _context.Personas.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Documento == documento.Trim(), ct);
+            .FirstOrDefaultAsync(p => p.Documento == documento.Trim() && p.InstitucionId == _contexto.InstitucionId, ct);
 
-        if (persona == null)
+        if (persona == null || !persona.AccesoHabilitado)
         {
             return null;
         }
 
+        var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
+        var restringida = persona.DebeCambiarContrasena || !proteccion.Aceptado;
         return new SesionUsuarioDto(
             persona.Id,
             persona.InstitucionId.Valor,
-            persona.Documento,
-            persona.Nombre,
-            persona.Correo,
+            restringida ? "" : persona.Documento,
+            restringida ? null : persona.Nombre,
+            restringida ? null : persona.Correo,
             persona.Rol.ToString(),
             persona.DebeCambiarContrasena,
-            persona.CorreoVerificado);
+            !restringida && persona.CorreoVerificado,
+            !proteccion.Aceptado);
     }
 
     private static string CalcularHashSha256(string texto)

@@ -27,6 +27,8 @@ using Xunit;
 /// </summary>
 public sealed class Spec0003E2ETests : IDisposable
 {
+    private static readonly string[] NombresReferenciaFicticios = ["Cero", "Uno", "Dos", "Tres", "Cuatro", "Cinco", "Seis"];
+
     private const string DocumentoDocenteA1 = "0000000001";
     private const string CorreoDocenteA1 = "usuario@ejemplo.test";
     private const string DocumentoDocenteA2 = "0000000002";
@@ -47,7 +49,7 @@ public sealed class Spec0003E2ETests : IDisposable
         _conexion.Open();
         _almacenTemporal = Path.Combine(Path.GetTempPath(), "istpet-hdv-e2e-" + Guid.NewGuid().ToString("N"));
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("Almacenamiento:RutaRaiz", _almacenTemporal);
             builder.UseSetting("CuentaBancaria:PermitirClavesTemporales", "true");
@@ -221,7 +223,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Nombre Ficticio Apellido Ficticio",
                 CorreoDocenteA1,
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.AsignarTipoFuncionario(tipoDocenteId);
             db.Personas.Add(docente);
@@ -237,7 +239,7 @@ public sealed class Spec0003E2ETests : IDisposable
             await db.SaveChangesAsync();
         }
 
-        // 1. RF-HDV-001, RF-HDV-020: Completar ficha con perfil
+        // 1. RF-HDV-001: completar ficha; el perfil se genera según spec-0007.
         var reqFicha = new GuardarFichaPersonalRequest(
             PrimerNombre: "Nombre Ficticio",
             PrimerApellido: "Apellido Ficticio",
@@ -250,8 +252,7 @@ public sealed class Spec0003E2ETests : IDisposable
             ParroquiaResidenciaId: 1004,
             CallePrincipal: "Av. Principal 123",
             Celular: "0990000000",
-            CorreoInstitucional: CorreoDocenteA1,
-            Perfil: "Perfil breve docente de prueba");
+            CorreoInstitucional: CorreoDocenteA1);
 
         var respFicha = await _cliente.SendAsync(CrearRequest(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", instId, DocumentoDocenteA1, RolUsuario.Usuario, reqFicha));
         Assert.Equal(HttpStatusCode.OK, respFicha.StatusCode);
@@ -281,15 +282,15 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // 3. RF-HDV-017, RF-HDV-018: Dos referencias personales y una familiar
         var respRef1 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Referencia Uno", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Uno", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef1.StatusCode);
 
         var respRef2 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Referencia Dos", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Dos", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef2.StatusCode);
 
         var respRef3 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("familiar", "Referencia Familiar", "0000000000")));
+            new GuardarReferenciaRequest("familiar", "Referencia Familiar", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef3.StatusCode);
 
         // 4. RF-HDV-007, RF-HDV-008: Subir los 5 documentos obligatorios
@@ -351,7 +352,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente A2 Ficticio",
                 "docente2@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.AsignarTipoFuncionario(tipoDocenteId);
             db.Personas.Add(docente);
@@ -385,9 +386,9 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // Solo 1 referencia personal y 1 familiar (falta 1 personal)
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref Personal 1", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Personal Uno", "0900000000")));
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("familiar", "Ref Familiar 1", "0000000000")));
+            new GuardarReferenciaRequest("familiar", "Referencia Familiar Uno", "0900000000")));
 
         // 1 experiencia SIN certificado (falta respaldo)
         var respExpSinRespaldo = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/experiencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
@@ -422,7 +423,7 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // 2. Agregar segunda referencia personal
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref Personal 2", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Personal Dos", "0900000000")));
 
         // 3. Adjuntar certificado a la experiencia
         var archExp = await CrearArchivoFisicoAsync(instId, docenteId, "certificado_exp.pdf");
@@ -464,14 +465,14 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto B"));
 
-            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             pA.AceptarTratamientoDatos(DateTime.UtcNow);
             pA.EnviarARevision(DateTime.UtcNow);
 
-            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente B", "docente.b@ejemplo.test", accesoHabilitado: true);
+            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente B", "docente.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             pB.AceptarTratamientoDatos(DateTime.UtcNow);
 
-            var supA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var supA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(pA, pB, supA);
 
@@ -499,7 +500,7 @@ public sealed class Spec0003E2ETests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, respModTitulo.StatusCode);
 
         var respModRef = await _cliente.SendAsync(CrearRequest(HttpMethod.Put, $"/api/mis-datos/hoja-de-vida/referencias/{refAId}", instAId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Mod", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Mod", "0900000000")));
         Assert.Equal(HttpStatusCode.BadRequest, respModRef.StatusCode);
 
         // 2. Supervisor A aprueba la actualización
@@ -531,7 +532,7 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             db.Personas.Add(docente);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
             await db.SaveChangesAsync();
@@ -574,11 +575,11 @@ public sealed class Spec0003E2ETests : IDisposable
         for (int i = 1; i <= 5; i++)
         {
             var respR = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-                new GuardarReferenciaRequest("personal", $"Ref {i}", "0000000000")));
+                new GuardarReferenciaRequest("personal", "Referencia " + NombresReferenciaFicticios[i], "0900000000")));
             Assert.Equal(HttpStatusCode.Created, respR.StatusCode);
         }
         var respSexta = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref 6 Invalida", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Sexta Inválida", "0900000000")));
         Assert.Equal(HttpStatusCode.BadRequest, respSexta.StatusCode);
 
         // 7. RF-HDV-020: Foto de ficha rechaza archivo PDF (solo imagen PNG/JPG)
@@ -605,11 +606,11 @@ public sealed class Spec0003E2ETests : IDisposable
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
 
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.EnviarARevision(DateTime.UtcNow);
 
-            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(docente, sup);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
@@ -664,15 +665,15 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto B"));
 
-            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true);
+            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             adminA.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(adminA, ClaveComun), debeCambiarContrasena: false);
 
-            var adminB = new Persona(Guid.NewGuid(), new InstitucionId(instBId), DocumentoAdminB, RolUsuario.Admin, "Admin B", "admin.b@ejemplo.test", accesoHabilitado: true);
+            var adminB = new Persona(Guid.NewGuid(), new InstitucionId(instBId), DocumentoAdminB, RolUsuario.Admin, "Admin B", "admin.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             adminB.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(adminB, ClaveComun), debeCambiarContrasena: false);
 
-            var docA1 = new Persona(docenteA1Id, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A1", CorreoDocenteA1, accesoHabilitado: true);
+            var docA1 = new Persona(docenteA1Id, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A1", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docA1.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(docA1, ClaveComun), debeCambiarContrasena: false);
-            var docA2 = new Persona(docenteA2Id, new InstitucionId(instAId), DocumentoDocenteA2, RolUsuario.Usuario, "Docente A2", "docente.a2@ejemplo.test", accesoHabilitado: true);
+            var docA2 = new Persona(docenteA2Id, new InstitucionId(instAId), DocumentoDocenteA2, RolUsuario.Usuario, "Docente A2", "docente.a2@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(adminA, adminB, docA1, docA2);
             await db.SaveChangesAsync();
@@ -752,7 +753,7 @@ public sealed class Spec0003E2ETests : IDisposable
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
             // Persona previamente existente en la institución
-            db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(instId), "0000000050", RolUsuario.Usuario, "Persona Previa", "previa@ejemplo.test", accesoHabilitado: true));
+            db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(instId), "0000000050", RolUsuario.Usuario, "Persona Previa", "previa@ejemplo.test", accesoHabilitado: true, correoVerificado: true));
             await db.SaveChangesAsync();
         }
 
@@ -816,8 +817,8 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
-            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
+            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             db.Personas.AddRange(docente, sup);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
             await db.SaveChangesAsync();
@@ -872,7 +873,7 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docente.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(docente, ClaveComun), debeCambiarContrasena: false);
             db.Personas.Add(docente);
             await db.SaveChangesAsync();
@@ -921,7 +922,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente A",
                 CorreoDocenteA1,
-                accesoHabilitado: true,
+                accesoHabilitado: true, correoVerificado: true,
                 estadoActualizacion: EstadoActualizacion.Aprobado,
                 tratamientoDatosAceptado: true);
             db.Personas.Add(docente);
@@ -990,9 +991,9 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto Ficticio A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto Ficticio B"));
 
-            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente Aprobado A", CorreoDocenteA1, accesoHabilitado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
-            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente Aprobado B", "doc.b@ejemplo.test", accesoHabilitado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
-            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true);
+            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente Aprobado A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
+            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente Aprobado B", "doc.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
+            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(pA, pB, adminA);
 

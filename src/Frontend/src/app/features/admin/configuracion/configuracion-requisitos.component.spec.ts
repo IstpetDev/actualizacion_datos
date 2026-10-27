@@ -1,5 +1,6 @@
+import politicaPrueba from '../../usuario/hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
   ConfiguracionClient,
@@ -16,6 +17,7 @@ describe('ConfiguracionRequisitosComponent', () => {
   let component: ConfiguracionRequisitosComponent;
   let fixture: ComponentFixture<ConfiguracionRequisitosComponent>;
   let configClientMock: {
+    obtenerPoliticaValidacion: Mock;
     listarTiposFuncionario: Mock;
     crearTipoFuncionario: Mock;
     actualizarTipoFuncionario: Mock;
@@ -32,6 +34,7 @@ describe('ConfiguracionRequisitosComponent', () => {
   let personasClientMock: {
     listarPersonas: Mock;
     asignarTipoFuncionario: Mock;
+    asignarTipoFuncionarioMasivo: Mock;
   };
   let authServiceMock: {
     rolActual: Mock;
@@ -80,11 +83,25 @@ describe('ConfiguracionRequisitosComponent', () => {
       accesoHabilitado: true,
       estadoActualizacion: 'Borrador',
       fechaCreacionUtc: new Date(),
+      tipoFuncionarioId: 'tf-001',
+    },
+    {
+      id: 'per-002',
+      institucionId: 'inst-1',
+      documento: '1700000001',
+      nombre: 'Administrativo de Prueba',
+      correo: 'admin.persona@ejemplo.test',
+      rol: 'usuario',
+      accesoHabilitado: true,
+      estadoActualizacion: 'Borrador',
+      fechaCreacionUtc: new Date(),
+      tipoFuncionarioId: undefined,
     },
   ];
 
   beforeEach(async () => {
     configClientMock = {
+      obtenerPoliticaValidacion: vi.fn().mockReturnValue(of(politicaPrueba)),
       listarTiposFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario)),
       crearTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),
       actualizarTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),
@@ -102,6 +119,11 @@ describe('ConfiguracionRequisitosComponent', () => {
     personasClientMock = {
       listarPersonas: vi.fn().mockReturnValue(of(mockPersonas)),
       asignarTipoFuncionario: vi.fn().mockReturnValue(of({ mensaje: 'Asignado' })),
+      asignarTipoFuncionarioMasivo: vi
+        .fn()
+        .mockReturnValue(
+          of({ totalModificados: 1, totalConTipo: 2, totalSinTipo: 0, mensaje: 'Asignado masivo' }),
+        ),
     };
 
     authServiceMock = {
@@ -162,6 +184,76 @@ describe('ConfiguracionRequisitosComponent', () => {
     });
   });
 
+  it('oculta el control docente y conserva el atributo al editar y desactivar', () => {
+    const pantalla = fixture.nativeElement as HTMLElement;
+    expect(pantalla.querySelector('[data-testid="input-tf-esdocente"]')).toBeNull();
+    expect(
+      Array.from(pantalla.querySelectorAll('th')).map((celda) => celda.textContent?.trim()),
+    ).not.toContain('Docente');
+
+    component.iniciarEdicionFuncionario(mockTiposFuncionario[0]);
+    component.formTfNombre = 'Nombre ficticio editado';
+    component.guardarTipoFuncionario();
+    expect(configClientMock.actualizarTipoFuncionario).toHaveBeenCalledWith('tf-001', {
+      codigo: 'DOCENTE',
+      nombre: 'Nombre ficticio editado',
+      esDocente: true,
+      activo: true,
+    });
+    component.alternarActivoFuncionario(mockTiposFuncionario[0]);
+    expect(configClientMock.actualizarTipoFuncionario).toHaveBeenLastCalledWith('tf-001', {
+      codigo: 'DOCENTE',
+      nombre: 'Docente titular',
+      esDocente: true,
+      activo: false,
+    });
+  });
+
+  it('sugiere el máximo más uno incluyendo inactivos y conserva el orden al editar', () => {
+    const documentos = [1, 4, 7].map((orden) => ({
+      ...mockTiposDocumento[0],
+      id: `td-${orden}`,
+      orden,
+      activo: orden !== 7,
+    }));
+    configClientMock.listarTiposDocumento.mockReturnValue(of(documentos));
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(8);
+    component.iniciarEdicionDocumento(documentos[1]);
+    expect(component.formTdOrden).toBe(4);
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(4);
+    component.cancelarEdicionDocumento();
+    expect(component.formTdOrden).toBe(8);
+
+    configClientMock.listarTiposDocumento.mockReturnValue(of([]));
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(1);
+  });
+
+  it('recalcula el siguiente orden después de recibir la recarga asíncrona de cada alta', () => {
+    expect(component.formTdOrden).toBe(2);
+    const recarga = new Subject<TipoDocumentoDto[]>();
+    configClientMock.listarTiposDocumento.mockReturnValue(recarga);
+    component.formTdCodigo = 'DOCUMENTO_FICTICIO';
+    component.formTdNombre = 'Documento ficticio';
+    component.guardarTipoDocumento();
+    expect(configClientMock.crearTipoDocumento).toHaveBeenCalledWith(
+      expect.objectContaining({ orden: 2 }),
+    );
+    recarga.next([...mockTiposDocumento, { ...mockTiposDocumento[0], id: 'td-002', orden: 2 }]);
+    expect(component.formTdOrden).toBe(3);
+    component.formTdCodigo = 'OTRO_DOCUMENTO_FICTICIO';
+    component.formTdNombre = 'Otro documento ficticio';
+    component.guardarTipoDocumento();
+    expect(configClientMock.crearTipoDocumento).toHaveBeenLastCalledWith(
+      expect.objectContaining({ orden: 3 }),
+    );
+    recarga.next([...mockTiposDocumento, { ...mockTiposDocumento[0], id: 'td-003', orden: 3 }]);
+    expect(component.formTdOrden).toBe(4);
+    recarga.complete();
+  });
+
   it('debe permitir crear un nuevo tipo de documento (RF-HDV-012)', () => {
     component.cambiarTab('documentos');
     fixture.detectChanges();
@@ -215,5 +307,112 @@ describe('ConfiguracionRequisitosComponent', () => {
     expect(personasClientMock.asignarTipoFuncionario).toHaveBeenCalledWith('per-001', {
       tipoFuncionarioId: 'tf-001',
     });
+  });
+
+  it('renderiza_los_botones_de_accion_dentro_del_contenedor_responsivo_acciones_tabla', () => {
+    component.cambiarTab('funcionarios');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const celdaAcciones = compiled.querySelector('[data-testid="fila-tf-DOCENTE"] td.text-right');
+    expect(celdaAcciones).toBeTruthy();
+
+    const contenedorAcciones = celdaAcciones?.querySelector('.acciones-tabla');
+    expect(contenedorAcciones).toBeTruthy();
+    expect(contenedorAcciones?.querySelectorAll('button').length).toBe(2);
+  });
+
+  it('debe mostrar contadores y destacar visualmente a las personas sin tipo asignado', () => {
+    component.cambiarTab('asignaciones');
+    fixture.detectChanges();
+
+    expect(component.totalPersonasConTipo()).toBe(1);
+    expect(component.totalPersonasSinTipo()).toBe(1);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const sinTipoBadge = compiled.querySelector('[data-testid="badge-sin-tipo"]');
+    expect(sinTipoBadge).not.toBeNull();
+    expect(sinTipoBadge?.textContent).toContain('Sin tipo');
+
+    const contadorSinTipo = compiled.querySelector('[data-testid="contador-sin-tipo"]');
+    expect(contadorSinTipo?.textContent).toContain('1 persona sin tipo');
+  });
+
+  it('debe filtrar personas por texto de búsqueda y por estado de tipo de funcionario', () => {
+    component.cambiarTab('asignaciones');
+    fixture.detectChanges();
+
+    // Filtro por texto
+    component.onBusquedaChange('1700000001');
+    fixture.detectChanges();
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].documento).toBe('1700000001');
+
+    // Filtro por estado sin tipo
+    component.onBusquedaChange('');
+    component.onFiltroEstadoChange('sin-tipo');
+    fixture.detectChanges();
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].id).toBe('per-002');
+
+    // Filtro por estado con tipo
+    component.onFiltroEstadoChange('con-tipo');
+    fixture.detectChanges();
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].id).toBe('per-001');
+  });
+
+  it('debe permitir seleccionar personas y ejecutar la asignación masiva', () => {
+    component.cambiarTab('asignaciones');
+    fixture.detectChanges();
+
+    component.tipoParaAsignacionMasiva.set('tf-001');
+    component.toggleSeleccion('per-002');
+    fixture.detectChanges();
+
+    expect(component.personasSeleccionadas().has('per-002')).toBe(true);
+
+    component.asignarMasivoSeleccionadas();
+    fixture.detectChanges();
+
+    expect(personasClientMock.asignarTipoFuncionarioMasivo).toHaveBeenCalledWith({
+      tipoFuncionarioId: 'tf-001',
+      personaIds: ['per-002'],
+      soloSinTipo: false,
+    });
+    expect(component.personasSeleccionadas().size).toBe(0);
+  });
+
+  it('debe permitir asignar tipo masivamente a todas las personas sin tipo asignado', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component.cambiarTab('asignaciones');
+    fixture.detectChanges();
+
+    component.tipoParaAsignacionMasiva.set('tf-001');
+    fixture.detectChanges();
+
+    component.asignarMasivoSinTipo();
+    fixture.detectChanges();
+
+    expect(personasClientMock.asignarTipoFuncionarioMasivo).toHaveBeenCalledWith({
+      tipoFuncionarioId: 'tf-001',
+      soloSinTipo: true,
+    });
+  });
+
+  it('debe paginar la lista de personas y permitir cambiar de página', () => {
+    component.cambiarTab('asignaciones');
+    component.onTamanoPaginaChange(1);
+    fixture.detectChanges();
+
+    expect(component.totalPaginasPersonas()).toBe(2);
+    expect(component.personasPaginadas().length).toBe(1);
+    expect(component.personasPaginadas()[0].id).toBe('per-001');
+
+    component.cambiarPagina(2);
+    fixture.detectChanges();
+
+    expect(component.paginaPersonas()).toBe(2);
+    expect(component.personasPaginadas()[0].id).toBe('per-002');
   });
 });

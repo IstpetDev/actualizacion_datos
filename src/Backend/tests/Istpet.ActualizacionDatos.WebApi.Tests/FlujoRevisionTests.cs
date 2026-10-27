@@ -23,7 +23,7 @@ public sealed class FlujoRevisionTests : IDisposable
         _conexion = new SqliteConnection("DataSource=:memory:");
         _conexion.Open();
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -75,7 +75,7 @@ public sealed class FlujoRevisionTests : IDisposable
             RolUsuario.Usuario,
             "Usuario Uno",
             "usuario1@ejemplo.test",
-            accesoHabilitado: true);
+            accesoHabilitado: true, correoVerificado: true);
 
         var p2 = new Persona(
             Guid.NewGuid(),
@@ -84,7 +84,7 @@ public sealed class FlujoRevisionTests : IDisposable
             RolUsuario.Usuario,
             "Usuario Dos",
             "usuario2@ejemplo.test",
-            accesoHabilitado: true);
+            accesoHabilitado: true, correoVerificado: true);
 
         var campana = new Campana(
             Guid.NewGuid(),
@@ -171,7 +171,8 @@ public sealed class FlujoRevisionTests : IDisposable
         Assert.Contains("tratamiento de datos", contenidoError, StringComparison.OrdinalIgnoreCase);
 
         // 2. Registrar la aceptación del tratamiento de datos
-        var requestAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var requestAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        requestAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         requestAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         requestAceptar.Headers.Add("X-Actor", "1700000001");
         requestAceptar.Headers.Add("X-Rol", "Usuario");
@@ -253,7 +254,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // Aceptar tratamiento
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");
@@ -304,7 +306,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // Enviar a revisión
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");
@@ -344,7 +347,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // Enviar a revisión
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");
@@ -402,7 +406,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // 1. Aceptar tratamiento y enviar
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");
@@ -448,7 +453,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // 1. Guardar versión 1, aceptar y enviar
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");
@@ -528,7 +534,8 @@ public sealed class FlujoRevisionTests : IDisposable
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
         // Ejecutar acción de aceptar tratamiento y enviar
-        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento?documento=1700000001");
+        var reqAceptar = new HttpRequestMessage(HttpMethod.Post, "/api/mis-datos/aceptar-tratamiento");
+        reqAceptar.Content = JsonContent.Create(new AceptarAvisoRequest(FabricaPruebas.AvisoFicticioId, true));
         reqAceptar.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqAceptar.Headers.Add("X-Actor", "1700000001");
         reqAceptar.Headers.Add("X-Rol", "Usuario");

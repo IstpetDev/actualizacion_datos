@@ -40,9 +40,33 @@
       "nombre": "CES Autofinanciadas",
       "url": "https://www.ces.gob.ec/?page_id=1540",
       "sha256_recurso": "42ad05d9299d180977e8d634d9252012a4d90b5e8aba3d8f17b9247a07a61644"
+    },
+    {
+      "nombre": "bancos",
+      "url": "https://www.superbancos.gob.ec/bancos/catastro-publico/",
+      "fecha_consulta": "2026-10-26",
+      "sha256_recurso": "f14ecf613378a617d05bb75409e511019db48e27d682fb8ffc41c43d932f6962"
+    },
+    {
+      "nombre": "institutos-publicos",
+      "url": "https://www.ces.gob.ec/?page_id=1543",
+      "fecha_consulta": "2026-10-26",
+      "sha256_recurso": "e92818b2f5860c12e6fd3093cb8bcad2487eb6906fb9df2e656204db2db24bc5"
+    },
+    {
+      "nombre": "institutos-particulares",
+      "url": "https://www.ces.gob.ec/?page_id=5058",
+      "fecha_consulta": "2026-10-26",
+      "sha256_recurso": "e3d442e30c1b4057efcd4ccb454912e0634218a21de8f06884efd3d67dc10ae9"
     }
   ],
   "archivos": [
+    {
+      "archivo": "Banco.csv",
+      "filas": 28,
+      "fecha_consulta": "2026-10-26",
+      "sha256": "70adc8d0ba59783577a35d1468e58672b2ca66d64369b2fdbee04913b32f7339"
+    },
     {
       "archivo": "CampoAmplioUnesco.csv",
       "filas": 10,
@@ -84,6 +108,12 @@
       "sha256": "510319b664d0cbeeb2dc1a7b57b94b32b2b39e46245569ddce0a33f782869e55"
     },
     {
+      "archivo": "InstitutosSuperiores.csv",
+      "filas": 216,
+      "fecha_consulta": "2026-10-26",
+      "sha256": "63c7cd2c3952bb84a2e416b63d5e5c05d47e540e331a2058f2bd701fdfa539c0"
+    },
+    {
       "archivo": "NacionalidadIndigena.csv",
       "filas": 34,
       "sha256": "a505a2e296fc71562d7b769be09afb89d8b3eee470abeee83b43bb448a972ca7"
@@ -118,5 +148,6 @@
       "filas": 64,
       "sha256": "304dd914cd2b5bd5178d33433c59065dd1bbe6fbfbbb33dc6c7a3b0e02b5ddeb"
     }
-  ]
+  ],
+  "fecha_ampliacion": "2026-10-26"
 }

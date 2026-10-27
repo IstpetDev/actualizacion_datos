@@ -3,6 +3,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -15,6 +16,23 @@ public sealed class ServicioConfiguracionHojaDeVida(
 {
     private InstitucionId InstitucionActual => contexto.InstitucionId
         ?? throw new ReglaNegocioException("Se requiere una institución activa para configurar la hoja de vida.");
+
+    public async Task<PoliticaValidacionDto> ObtenerPoliticaValidacionAsync(CancellationToken ct = default)
+    {
+        var institucion = await db.Instituciones.AsNoTracking().SingleOrDefaultAsync(i => i.Id == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La institución no existe.");
+        return ValidacionHojaDeVida.Politica(institucion.Id.Valor, institucion.ObtenerDominiosCorreo());
+    }
+
+    public async Task<PoliticaValidacionDto> GuardarDominiosCorreoAsync(GuardarDominiosCorreoRequest request, CancellationToken ct = default)
+    {
+        var dominios = ValidacionHojaDeVida.NormalizarDominios(request.DominiosCorreoPermitidos);
+        var institucion = await db.Instituciones.SingleOrDefaultAsync(i => i.Id == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La institución no existe.");
+        institucion.ConfigurarDominiosCorreo(dominios);
+        await db.SaveChangesAsync(ct);
+        return ValidacionHojaDeVida.Politica(institucion.Id.Valor, dominios);
+    }
 
     // El filtro explícito también limita al superadmin a la institución seleccionada.
     private IQueryable<TipoFuncionario> TiposFuncionario => db.TiposFuncionario.Where(t => t.InstitucionId == InstitucionActual);
@@ -140,6 +158,51 @@ public sealed class ServicioConfiguracionHojaDeVida(
         }
         persona.AsignarTipoFuncionario(request.TipoFuncionarioId);
         await GuardarAsync(ct);
+    }
+
+    public async Task<ResultadoAsignacionTipoMasivoDto> AsignarTipoFuncionarioMasivoAsync(AsignarTipoFuncionarioMasivoRequest request, CancellationToken ct = default)
+    {
+        if ((request.PersonaIds == null || request.PersonaIds.Count == 0) && !request.SoloSinTipo)
+        {
+            throw new ReglaNegocioException("Debe seleccionar al menos una persona o indicar que aplica a personas sin tipo asignado.");
+        }
+
+        var institucion = InstitucionActual;
+        if (request.TipoFuncionarioId is Guid tipoId)
+        {
+            var tipo = await ObtenerTipoFuncionarioAsync(tipoId, ct);
+            if (!tipo.Activo)
+            {
+                throw new ReglaNegocioException("El tipo de funcionario está inactivo.");
+            }
+        }
+
+        var query = db.Personas.Where(p => p.InstitucionId == institucion);
+        if (request.PersonaIds is { Count: > 0 } ids)
+        {
+            query = query.Where(p => ids.Contains(p.Id));
+        }
+        if (request.SoloSinTipo)
+        {
+            query = query.Where(p => p.TipoFuncionarioId == null);
+        }
+
+        var personasAfectadas = await query.ToListAsync(ct);
+        foreach (var persona in personasAfectadas)
+        {
+            persona.AsignarTipoFuncionario(request.TipoFuncionarioId);
+        }
+
+        await GuardarAsync(ct);
+
+        var totalConTipo = await db.Personas.CountAsync(p => p.InstitucionId == institucion && p.TipoFuncionarioId != null, ct);
+        var totalSinTipo = await db.Personas.CountAsync(p => p.InstitucionId == institucion && p.TipoFuncionarioId == null, ct);
+
+        return new ResultadoAsignacionTipoMasivoDto(
+            personasAfectadas.Count,
+            totalConTipo,
+            totalSinTipo,
+            $"Tipo de funcionario actualizado para {personasAfectadas.Count} personas.");
     }
 
     private async Task<TipoFuncionario> ObtenerTipoFuncionarioAsync(Guid id, CancellationToken ct) =>

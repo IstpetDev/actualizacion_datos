@@ -50,5 +50,16 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0016](ADR-0016-interfaz-de-prueba-de-la-api.md) | Interfaz para probar la API en desarrollo (Scalar) | Propuesto |
 | [ADR-0017](ADR-0017-acceso-a-postgres-por-tunel-ssh.md) | Acceso a PostgreSQL de producción por túnel SSH | Vigente |
 | [ADR-0018](ADR-0018-la-carga-de-nomina-habilita-el-acceso.md) | La carga de nómina habilita el acceso de las personas | Vigente |
-
-<!-- prueba del ci: este comentario se puede borrar -->
+| [ADR-0019](ADR-0019-semillas-de-tipos-institucionales.md) | Semillas de tipos institucionales | Vigente |
+| [ADR-0020](ADR-0020-retirada-del-control-docente.md) | Retirada del control de clasificación docente | Vigente |
+| [ADR-0021](ADR-0021-carga-de-catalogos-en-produccion.md) | Carga de catálogos en producción | Vigente |
+| [ADR-0022](ADR-0022-bancos-e-instituciones-superiores.md) | Bancos e instituciones de educación superior | Vigente |
+| [ADR-0023](ADR-0023-habilitar-y-deshabilitar-acceso-de-personas.md) | Habilitación y deshabilitación del acceso de personas por el administrador | Vigente |
+| [ADR-0024](ADR-0024-validacion-y-dominios-institucionales.md) | Validación y dominios institucionales | Vigente |
+| [ADR-0025](ADR-0025-perfil-profesional-generado.md) | Perfil profesional generado | Vigente |
+| [ADR-0026](ADR-0026-manejo-global-de-errores-y-contrato-uniforme.md) | Manejo global de errores y contrato uniforme | Vigente |
+| [ADR-0027](ADR-0027-asignacion-masiva-y-persistencia-tipo-funcionario.md) | Asignación masiva y persistencia de tipo de funcionario | Vigente |
+| [ADR-0028](ADR-0028-secciones-habilitadas-por-institucion.md) | Almacenamiento de las secciones habilitadas por institución | Vigente |
+| [ADR-0029](ADR-0029-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Vigente |
+| [ADR-0030](ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) | Avisos versionados y aceptación como condición de acceso | Vigente |
+| [ADR-0031](ADR-0031-auditoria-infraestructura-y-seguridad-en-despliegue.md) | Seguridad en origen, auditoría de infraestructura y verificación de despliegue | Vigente |

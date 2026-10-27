@@ -1,5 +1,7 @@
+import { mensajeError } from '../../../../core/auth/mensaje-error';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, forkJoin, map, Observable, of, tap } from 'rxjs';
+import { SeccionConCambios } from './seccion-con-cambios';
 import {
   CapacitacionDto,
   DocumentoPersonalDto,
@@ -41,6 +43,33 @@ export class HojaDeVidaStateService {
   readonly marcasObservacion = signal<MarcaObservacionDto[]>([]);
   readonly estadoEdicion = signal<EstadoEdicionDto | null>(null);
   readonly observaciones = signal<ObservacionDto[]>([]);
+
+  readonly seccionActiva = signal<SeccionConCambios | null>(null);
+  readonly tieneCambiosSinGuardarSignal = signal<boolean>(false);
+
+  registrarSeccion(seccion: SeccionConCambios): void {
+    this.seccionActiva.set(seccion);
+    this.actualizarEstadoCambios();
+  }
+
+  desregistrarSeccion(seccion: SeccionConCambios): void {
+    if (this.seccionActiva() === seccion) {
+      this.seccionActiva.set(null);
+      this.tieneCambiosSinGuardarSignal.set(false);
+    }
+  }
+
+  actualizarEstadoCambios(): void {
+    const s = this.seccionActiva();
+    this.tieneCambiosSinGuardarSignal.set(!!s && s.tieneCambios());
+  }
+
+  tieneCambiosSinGuardar(): boolean {
+    const s = this.seccionActiva();
+    const hay = !!s && s.tieneCambios();
+    this.tieneCambiosSinGuardarSignal.set(hay);
+    return hay;
+  }
 
   readonly cargando = signal<boolean>(false);
   readonly guardando = signal<boolean>(false);
@@ -119,7 +148,7 @@ export class HojaDeVidaStateService {
         this.observaciones.set(obs ?? []);
       }),
       catchError((err) => {
-        const msg = err?.message || 'No fue posible cargar la información de la hoja de vida.';
+        const msg = mensajeError(err, 'No fue posible cargar la información de la hoja de vida.');
         this.error.set(msg);
         return of(null);
       }),
@@ -143,7 +172,7 @@ export class HojaDeVidaStateService {
         this.documentos.set(docs ?? []);
       }),
       catchError((err) => {
-        const msg = err?.message || 'No fue posible cargar la información de la hoja de vida.';
+        const msg = mensajeError(err, 'No fue posible cargar la información de la hoja de vida.');
         this.error.set(msg);
         throw err;
       }),
@@ -200,7 +229,7 @@ export class HojaDeVidaStateService {
         this.mensajeExito.set('Ficha personal guardada exitosamente.');
       }),
       catchError((err) => {
-        this.error.set(err?.message || 'Error al guardar la ficha personal.');
+        this.error.set(mensajeError(err, 'Error al guardar la ficha personal.'));
         throw err;
       }),
       finalize(() => this.guardando.set(false)),

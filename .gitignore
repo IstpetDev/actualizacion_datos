@@ -58,6 +58,9 @@ junit.xml
 .nuget/
 
 # Angular / Node
+.npmrc
+src/Frontend/.npmrc
+scripts/node-compat.cjs
 src/Frontend/dist/
 src/Frontend/tmp/
 src/Frontend/out-tsc/
@@ -94,3 +97,8 @@ Desktop.ini
 
 # Salida de gitleaks en local
 gitleaks.sarif
+
+catalogos_*.sql
+seed_*.sql
+seed_*.zip
+*.sql.gz

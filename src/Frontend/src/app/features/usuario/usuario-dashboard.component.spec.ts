@@ -1,3 +1,5 @@
+import { ConfiguracionClient } from '../../api-client';
+import politicaPrueba from './hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -25,7 +27,7 @@ const ficha: MisDatosDto = {
   correoVerificado: true,
   estadoActualizacion: 'Borrador',
   datosPersonalesJson: '{"telefono":"0000000000","adicional":{"conservar":true}}',
-  tratamientoDatosAceptado: false,
+  tratamientoDatosAceptado: true,
   fechaAceptacionTratamientoDatosUtc: undefined,
   puedeEditar: true,
   mensajeEstado: 'Campaña abierta',
@@ -48,7 +50,6 @@ describe('panel de usuario', () => {
     obtenerMisDatos: vi.fn(),
     obtenerEstadoEdicion: vi.fn(),
     actualizarMisDatos: vi.fn(),
-    aceptarTratamientoDatos: vi.fn(),
     enviarMisDatosARevision: vi.fn(),
     iniciarNuevaActualizacion: vi.fn(),
   };
@@ -70,7 +71,6 @@ describe('panel de usuario', () => {
     );
     for (const metodo of [
       datos.actualizarMisDatos,
-      datos.aceptarTratamientoDatos,
       datos.enviarMisDatosARevision,
       datos.iniciarNuevaActualizacion,
       archivos.eliminarArchivo,
@@ -83,6 +83,10 @@ describe('panel de usuario', () => {
     TestBed.configureTestingModule({
       imports: [UsuarioDashboardComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: '' },
@@ -122,7 +126,7 @@ describe('panel de usuario', () => {
     expect(archivos.listarMisArchivos).toHaveBeenCalledWith();
     expect(fixture.nativeElement.textContent).toContain('Campaña de ejemplo');
     expect(fixture.nativeElement.textContent).toContain('documento-ejemplo.pdf');
-    expect(fixture.componentInstance.aceptaTratamiento).toBe(false);
+    expect(fixture.nativeElement.querySelector('#tratamiento')).toBeNull();
   });
   it('guarda_campos_sin_perder_propiedades_adicionales', () => {
     const componente = preparar().componentInstance;
@@ -145,29 +149,26 @@ describe('panel de usuario', () => {
   });
   it('requiere_aceptacion_explicita_y_correo_verificado', () => {
     const componente = preparar().componentInstance;
+    componente.datos.set({ ...ficha, tratamientoDatosAceptado: false });
     componente.enviar();
     expect(datos.actualizarMisDatos).not.toHaveBeenCalled();
-    componente.aceptaTratamiento = true;
     componente.datos.set({ ...ficha, correoVerificado: false });
     componente.enviar();
     expect(datos.enviarMisDatosARevision).not.toHaveBeenCalled();
   });
-  it('guarda_acepta_y_envia_en_orden_y_bloquea_la_edicion', () => {
+  it('guarda_y_envia_en_orden_sin_segunda_aceptacion_y_bloquea_edicion', () => {
     const pendiente = new Subject<unknown>();
     datos.actualizarMisDatos.mockReturnValue(pendiente);
     const fixture = preparar();
     const componente = fixture.componentInstance;
-    componente.aceptaTratamiento = true;
     componente.enviar();
-    expect(datos.aceptarTratamientoDatos).not.toHaveBeenCalled();
     expect(datos.enviarMisDatosARevision).not.toHaveBeenCalled();
     componente.enviar();
     expect(datos.actualizarMisDatos).toHaveBeenCalledTimes(1);
     pendiente.next({});
     pendiente.complete();
-    expect(datos.aceptarTratamientoDatos).toHaveBeenCalledWith();
     expect(datos.enviarMisDatosARevision).toHaveBeenCalledWith();
-    expect(datos.aceptarTratamientoDatos.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(datos.actualizarMisDatos.mock.invocationCallOrder[0]).toBeLessThan(
       datos.enviarMisDatosARevision.mock.invocationCallOrder[0],
     );
     expect(componente.puedeEditar()).toBe(false);
@@ -175,14 +176,12 @@ describe('panel de usuario', () => {
     expect(fixture.nativeElement.querySelector('#telefono').matches(':disabled')).toBe(true);
     expect(fixture.nativeElement.querySelector('[data-testid=estado]').textContent).toBe('Enviado');
   });
-  it.each(['guardar', 'aceptar', 'enviar'])('conserva_borrador_si_falla_%s', (paso) => {
+  it.each(['guardar', 'enviar'])('conserva_borrador_si_falla_%s', (paso) => {
     const falla = throwError(() => new Error('Fallo de red'));
     if (paso === 'guardar') datos.actualizarMisDatos.mockReturnValue(falla);
-    if (paso === 'aceptar') datos.aceptarTratamientoDatos.mockReturnValue(falla);
     if (paso === 'enviar') datos.enviarMisDatosARevision.mockReturnValue(falla);
     const componente = preparar().componentInstance;
     componente.contacto['ciudad'] = 'Ciudad ficticia';
-    componente.aceptaTratamiento = true;
     componente.enviar();
     expect(componente.contacto['ciudad']).toBe('Ciudad ficticia');
     expect(componente.puedeEditar()).toBe(true);
@@ -203,7 +202,6 @@ describe('panel de usuario', () => {
   it('no_repite_aceptacion_ya_registrada', () => {
     datos.obtenerMisDatos.mockReturnValue(of({ ...ficha, tratamientoDatosAceptado: true }));
     preparar().componentInstance.enviar();
-    expect(datos.aceptarTratamientoDatos).not.toHaveBeenCalled();
     expect(datos.enviarMisDatosARevision).toHaveBeenCalled();
   });
   it.each(['Enviado', 'Aprobado', 'Sin campaña'])('bloquea_mutaciones_en_%s', (estado) => {
@@ -212,7 +210,6 @@ describe('panel de usuario', () => {
     );
     const fixture = preparar();
     const componente = fixture.componentInstance;
-    componente.aceptaTratamiento = true;
     componente.guardar();
     componente.enviar();
     componente.eliminarArchivo(archivo);

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AutenticacionClient } from '../../api-client';
-import { AuthService } from '../../core/auth';
+import { AuthService, rutaDeAcceso } from '../../core/auth';
 
 @Component({
   selector: 'app-login',
@@ -115,9 +115,7 @@ export class LoginComponent {
         next: (datos) => {
           try {
             const sesion = this.auth.recibirSesion(datos);
-            void this.router.navigate([
-              sesion.debeCambiarContrasena ? '/cambiar-clave' : `/${sesion.rol}`,
-            ]);
+            void this.router.navigate([rutaDeAcceso(sesion)]);
           } catch {
             this.auth.cerrarSesion();
             this.error.set('No se pudo validar la sesión. Intenta nuevamente.');

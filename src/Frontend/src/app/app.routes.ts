@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard, AuthService, publicGuard, roleGuard } from './core/auth';
+import { cambiosSinGuardarGuard } from './features/usuario/hoja-de-vida/servicios/cambios-sin-guardar.guard';
 import { AuthLayoutComponent } from './layout/auth-layout/auth-layout.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 
@@ -19,9 +20,19 @@ export const routes: Routes = [
     ],
   },
 
+  {
+    path: 'proteccion-datos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/aviso-proteccion-datos.component').then(
+        (m) => m.AvisoProteccionDatosComponent,
+      ),
+  },
+
   // Vista de acceso denegado (HTTP 403 visual)
   {
     path: 'no-autorizado',
+    canActivate: [authGuard],
     component: MainLayoutComponent,
     children: [
       {
@@ -58,6 +69,7 @@ export const routes: Routes = [
       {
         path: 'usuario',
         canActivate: [roleGuard('usuario')],
+        canDeactivate: [cambiosSinGuardarGuard],
         loadComponent: () =>
           import('./features/usuario/hoja-de-vida/hoja-de-vida.component').then(
             (m) => m.HojaDeVidaComponent,
