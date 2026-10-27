@@ -5,12 +5,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
+  ArchivosClient,
   CampanaDto,
   CampanasClient,
   ConfiguracionClient,
+  ConfiguracionDocumentoClient,
   ConfiguracionSeccionesClient,
   PersonaDto,
   PersonasClient,
+  PlantillasHojaDeVidaClient,
   RevisionClient,
   ResultadoCargaPersonasDto,
 } from '../../api-client';
@@ -124,6 +127,27 @@ describe('AdminDashboardComponent', () => {
         },
         { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },
         { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: ConfiguracionDocumentoClient,
+          useValue: {
+            obtenerConfiguracionDocumento: () => of({}),
+            actualizarMarcaDocumento: () => of({}),
+            elegirPlantillaDocumento: () => of({}),
+            aceptarVersionDocumento: () => of({}),
+          },
+        },
+        {
+          provide: PlantillasHojaDeVidaClient,
+          useValue: {
+            listarPlantillasHojaDeVida: () => of([]),
+          },
+        },
+        {
+          provide: ArchivosClient,
+          useValue: {
+            subirArchivo: () => of({ id: 'mock-archivo-id' }),
+          },
+        },
       ],
     }).compileComponents();
 
@@ -607,5 +631,15 @@ describe('AdminDashboardComponent', () => {
     fixture.detectChanges();
 
     expect(component.tabActiva()).toBe('cuentas');
+  });
+
+  it('permite_descargar_hdv_de_persona_individual', () => {
+    component.descargarHdvPersona('per-1', '1700000001');
+
+    const req = httpMock.expectOne('/api/personas/per-1/documento-hoja-de-vida');
+    expect(req.request.method).toBe('GET');
+    req.flush(new Blob(['%PDF-1.4...']), {
+      headers: { 'content-disposition': 'attachment; filename="hoja-de-vida-1700000001.pdf"' },
+    });
   });
 });

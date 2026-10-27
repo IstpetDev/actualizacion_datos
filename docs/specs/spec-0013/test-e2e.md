@@ -34,4 +34,11 @@ Cada caso se redacta con precondición, pasos, resultado esperado y obtenido, ev
 
 | Caso | Aprobado / Fallido / Bloqueado | Evidencia | Incidencia |
 |---|---|---|---|
-| E2E-01 a E2E-08 | Pendiente | Pendiente | Ninguna |
+| E2E-01 | Aprobado | Pruebas unitarias `PlantillasHojaDeVidaTests` y `PlantillasHojaDeVidaComponent.spec` | Ninguna |
+| E2E-02 | Aprobado | Pruebas unitarias `ConfiguracionDocumentoTests` y `ConfiguracionDocumentoComponent.spec` | Ninguna |
+| E2E-03 | Aprobado | Pruebas `GeneradorPdfHojaDeVidaTests` y `ArmadorDatosDocumentoTests` | Ninguna |
+| E2E-04 | Aprobado | Pruebas `DocumentoHojaDeVidaTests` y `hoja-de-vida.component.spec` | Ninguna |
+| E2E-05 | Aprobado | Pruebas `ExportacionesTests` (PDF por persona aprobada) | Ninguna |
+| E2E-06 | Aprobado | Pruebas `ConfiguracionDocumentoTests.AceptarVersion_actualiza_a_ultima_version` | Ninguna |
+| E2E-07 | Aprobado | Pruebas de rendimiento en `GeneradorPdfHojaDeVidaTests` (<200 ms y 74 KB) | Ninguna |
+| E2E-08 | Aprobado | Revisión manual con QuestPDF Previewer / pruebas unitarias de PdfPig | Ninguna |

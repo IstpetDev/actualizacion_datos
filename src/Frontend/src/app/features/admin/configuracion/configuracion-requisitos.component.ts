@@ -16,13 +16,20 @@ import {
   TipoFuncionarioDto,
 } from '../../../api-client';
 import { AuthService } from '../../../core/auth';
+import { ConfiguracionDocumentoComponent } from './configuracion-documento.component';
 
-type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones';
+type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones' | 'documento';
 
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule, DominiosCorreoComponent, SeccionesComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DominiosCorreoComponent,
+    SeccionesComponent,
+    ConfiguracionDocumentoComponent,
+  ],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -101,6 +108,15 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
             data-testid="tab-asignaciones"
           >
             4. Asignación a Personas ({{ personas().length }})
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'documento'"
+            (click)="cambiarTab('documento')"
+            data-testid="tab-formato-documento"
+          >
+            5. Plantilla y Marca (PDF)
           </button>
         </nav>
 
@@ -830,6 +846,13 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                 </div>
               }
             </div>
+          </div>
+        }
+
+        <!-- SUBTAB 5: FORMATO Y MARCA DE HOJA DE VIDA (RF-PLA-003, RF-PLA-004) -->
+        @if (tabActiva() === 'documento') {
+          <div class="subtab-panel" data-testid="panel-plantilla-documento">
+            <app-configuracion-documento />
           </div>
         }
       }

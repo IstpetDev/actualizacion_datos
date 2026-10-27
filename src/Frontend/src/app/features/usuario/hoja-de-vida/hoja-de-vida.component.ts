@@ -1,10 +1,11 @@
 import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ModalCambiosSinGuardarComponent } from './componentes/modal-cambios-sin-guardar.component';
 import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
-import { FaltanteEnvioDto } from '../../../api-client';
+import { API_BASE_URL, FaltanteEnvioDto } from '../../../api-client';
 import { ModalFaltantesEnvioComponent } from './componentes/modal-faltantes-envio.component';
 import { CapacitacionesComponent } from './secciones/capacitaciones/capacitaciones.component';
 import { DocumentosPersonalesComponent } from './secciones/documentos-personales/documentos-personales.component';
@@ -13,6 +14,8 @@ import { FichaPersonalComponent } from './secciones/ficha-personal/ficha-persona
 import { FormacionAcademicaComponent } from './secciones/formacion-academica/formacion-academica.component';
 import { ReferenciasComponent } from './secciones/referencias/referencias.component';
 import { HojaDeVidaStateService } from './servicios/hoja-de-vida-state.service';
+import { descargarBlob, extraerNombreArchivo } from '../../../core/util/descarga-archivo.util';
+import { mensajeError } from '../../../core/auth/mensaje-error';
 
 export type TabSeccionHojaVida =
   'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
@@ -67,6 +70,15 @@ export type TabSeccionHojaVida =
 
         <!-- Botón de Envío Superior (siempre visible para comodidad) -->
         <div class="header-acciones">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="descargarVistaPreviaPdf()"
+            [disabled]="descargandoPdf() || cargando()"
+            data-testid="btn-descargar-vista-previa-pdf"
+          >
+            {{ descargandoPdf() ? 'Generando PDF...' : 'Descargar vista previa (PDF)' }}
+          </button>
           @if (puedeEditar()) {
             <button
               type="button"
@@ -127,6 +139,12 @@ export type TabSeccionHojaVida =
       @if (error()) {
         <div class="alert alert-danger" role="alert">
           {{ error() }}
+        </div>
+      }
+
+      @if (errorDescargaPdf()) {
+        <div class="alert alert-danger" role="alert" data-testid="error-descarga-pdf">
+          {{ errorDescargaPdf() }}
         </div>
       }
 
@@ -498,6 +516,12 @@ export type TabSeccionHojaVida =
 export class HojaDeVidaComponent implements OnInit {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+
+  readonly descargandoPdf = signal<boolean>(false);
+  readonly errorDescargaPdf = signal<string | null>(null);
+
   readonly tieneCambios = this.state.tieneCambiosSinGuardarSignal ?? signal(false);
   readonly mostrarModalCambios = signal(false);
   readonly errorCambios = signal('');
@@ -703,5 +727,37 @@ export class HojaDeVidaComponent implements OnInit {
         }
       },
     });
+  }
+
+  descargarVistaPreviaPdf(): void {
+    if (this.descargandoPdf()) return;
+
+    this.descargandoPdf.set(true);
+    this.errorDescargaPdf.set(null);
+
+    const url = `${this.baseUrl}/api/mis-datos/documento-hoja-de-vida`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) {
+            this.errorDescargaPdf.set('No se recibió el documento PDF.');
+            this.descargandoPdf.set(false);
+            return;
+          }
+          const nombreArchivo =
+            extraerNombreArchivo(res.headers.get('content-disposition')) || 'hoja-de-vida.pdf';
+          descargarBlob(blob, nombreArchivo);
+          this.descargandoPdf.set(false);
+        },
+        error: (err) => {
+          this.errorDescargaPdf.set(mensajeError(err, 'Error al generar la vista previa en PDF.'));
+          this.descargandoPdf.set(false);
+        },
+      });
   }
 }
