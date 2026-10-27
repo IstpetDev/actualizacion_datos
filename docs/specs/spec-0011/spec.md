@@ -3,7 +3,8 @@
 **ID:** spec-0011  
 **Versión:** 0.1  
 **Estado:** Borrador para revisión funcional  
-**Revisor funcional:** Por designar (el solicitante es Joseph Baño)  
+**Revisor funcional:** Joseph Baño (también solicitante)  
+**Responsable de implementación:** Alexander Martínez (`AlexanderMartinez0410`)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
 
