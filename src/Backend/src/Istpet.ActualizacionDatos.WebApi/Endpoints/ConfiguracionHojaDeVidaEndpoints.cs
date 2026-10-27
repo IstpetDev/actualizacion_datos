@@ -46,6 +46,21 @@ internal static class ConfiguracionHojaDeVidaEndpoints
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
             .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound);
+
+        app.MapPost("/api/personas/asignar-tipo-masivo", (AsignarTipoFuncionarioMasivoRequest request, HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
+                EnInstitucion(http, contexto, async () =>
+                {
+                    var resultado = await servicio.AsignarTipoFuncionarioMasivoAsync(request, ct);
+                    return Results.Ok(resultado);
+                }))
+            .RequireAuthorization(politica => politica.RequireRole(nameof(RolUsuario.Admin), nameof(RolUsuario.Superadmin)))
+            .WithTags("Personas")
+            .WithName("AsignarTipoFuncionarioMasivo")
+            .Produces<ResultadoAsignacionTipoMasivoDto>()
+            .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound);
     }
 
     private static void MapRecurso<TRequest, TDto>(RouteGroupBuilder grupo, string ruta, string plural, string singular,

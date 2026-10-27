@@ -160,6 +160,51 @@ public sealed class ServicioConfiguracionHojaDeVida(
         await GuardarAsync(ct);
     }
 
+    public async Task<ResultadoAsignacionTipoMasivoDto> AsignarTipoFuncionarioMasivoAsync(AsignarTipoFuncionarioMasivoRequest request, CancellationToken ct = default)
+    {
+        if ((request.PersonaIds == null || request.PersonaIds.Count == 0) && !request.SoloSinTipo)
+        {
+            throw new ReglaNegocioException("Debe seleccionar al menos una persona o indicar que aplica a personas sin tipo asignado.");
+        }
+
+        var institucion = InstitucionActual;
+        if (request.TipoFuncionarioId is Guid tipoId)
+        {
+            var tipo = await ObtenerTipoFuncionarioAsync(tipoId, ct);
+            if (!tipo.Activo)
+            {
+                throw new ReglaNegocioException("El tipo de funcionario está inactivo.");
+            }
+        }
+
+        var query = db.Personas.Where(p => p.InstitucionId == institucion);
+        if (request.PersonaIds is { Count: > 0 } ids)
+        {
+            query = query.Where(p => ids.Contains(p.Id));
+        }
+        if (request.SoloSinTipo)
+        {
+            query = query.Where(p => p.TipoFuncionarioId == null);
+        }
+
+        var personasAfectadas = await query.ToListAsync(ct);
+        foreach (var persona in personasAfectadas)
+        {
+            persona.AsignarTipoFuncionario(request.TipoFuncionarioId);
+        }
+
+        await GuardarAsync(ct);
+
+        var totalConTipo = await db.Personas.CountAsync(p => p.InstitucionId == institucion && p.TipoFuncionarioId != null, ct);
+        var totalSinTipo = await db.Personas.CountAsync(p => p.InstitucionId == institucion && p.TipoFuncionarioId == null, ct);
+
+        return new ResultadoAsignacionTipoMasivoDto(
+            personasAfectadas.Count,
+            totalConTipo,
+            totalSinTipo,
+            $"Tipo de funcionario actualizado para {personasAfectadas.Count} personas.");
+    }
+
     private async Task<TipoFuncionario> ObtenerTipoFuncionarioAsync(Guid id, CancellationToken ct) =>
         await TiposFuncionario.SingleOrDefaultAsync(t => t.Id == id, ct)
             ?? throw new RecursoNoEncontradoException("El tipo de funcionario no existe en la institución.");
