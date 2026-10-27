@@ -586,4 +586,18 @@ describe('AdminDashboardComponent', () => {
 
     expect(component.tabActiva()).toBe('personas');
   });
+
+  it('permite_cambiar_de_pestana_mediante_el_selector_movil', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const selectMobile = compiled.querySelector(
+      '[data-testid="select-tab-admin-mobile"]',
+    ) as HTMLSelectElement;
+    expect(selectMobile).toBeTruthy();
+
+    selectMobile.value = 'cuentas';
+    selectMobile.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(component.tabActiva()).toBe('cuentas');
+  });
 });

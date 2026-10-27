@@ -42,6 +42,24 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
         </div>
       </header>
 
+      <!-- Selector de Pestañas en Móvil -->
+      <div class="admin-tabs-mobile">
+        <label for="selectTabAdmin" class="admin-tabs-mobile-label">Sección activa:</label>
+        <select
+          id="selectTabAdmin"
+          class="form-control admin-tabs-select"
+          [ngModel]="tabActiva()"
+          (ngModelChange)="cambiarTab($event)"
+          data-testid="select-tab-admin-mobile"
+        >
+          <option value="campanas">Gestión de Campañas</option>
+          <option value="personas">Carga de Personas (Nómina)</option>
+          <option value="exportacion">Exportación de Datos</option>
+          <option value="configuracion">Configuración de Requisitos</option>
+          <option value="cuentas">Cuentas Bancarias</option>
+        </select>
+      </div>
+
       <!-- Pestañas de Navegación -->
       <nav class="admin-tabs" role="tablist" aria-label="Secciones del panel de administración">
         <button
@@ -800,6 +818,25 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       color: #64748b;
       margin: 0;
     }
+    .admin-tabs-mobile {
+      display: none;
+      margin-bottom: 1.25rem;
+    }
+    .admin-tabs-mobile-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.35rem;
+    }
+    .admin-tabs-select {
+      font-weight: 600;
+      color: #1e3a8a;
+      background-color: #f8fafc;
+      border: 1.5px solid #93c5fd;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+    }
     .admin-tabs {
       display: flex;
       gap: 0.5rem;
@@ -1324,6 +1361,12 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       }
     }
     @media (max-width: 768px) {
+      .admin-tabs {
+        display: none;
+      }
+      .admin-tabs-mobile {
+        display: block;
+      }
       .grid-dos-columnas {
         grid-template-columns: minmax(0, 1fr);
         gap: 1rem;
