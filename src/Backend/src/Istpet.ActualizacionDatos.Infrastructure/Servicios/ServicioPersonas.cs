@@ -736,7 +736,8 @@ public class ServicioPersonas : IServicioPersonas
             p.Rol.ToString(),
             p.AccesoHabilitado,
             p.EstadoActualizacion.ToString(),
-            p.FechaCreacionUtc)).ToList();
+            p.FechaCreacionUtc,
+            p.TipoFuncionarioId)).ToList();
     }
 
     public async Task<ResultadoCambioAccesoDto> CambiarAccesoAsync(CambiarAccesoPersonasRequest request, CancellationToken ct = default)

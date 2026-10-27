@@ -29,4 +29,7 @@ public interface IServicioConfiguracionHojaDeVida
 
     /// <summary>Asigna o quita (nulo) el tipo de funcionario; el tipo debe ser de la misma institución.</summary>
     Task AsignarTipoFuncionarioAsync(Guid personaId, AsignarTipoFuncionarioRequest request, CancellationToken ct = default);
+
+    /// <summary>Asigna o quita masivamente el tipo de funcionario a un conjunto de personas o a las personas sin tipo.</summary>
+    Task<ResultadoAsignacionTipoMasivoDto> AsignarTipoFuncionarioMasivoAsync(AsignarTipoFuncionarioMasivoRequest request, CancellationToken ct = default);
 }

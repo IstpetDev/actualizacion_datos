@@ -1,4 +1,4 @@
-# ADR-0026 — Modelo de las capacitaciones obligatorias de la institución
+# ADR-0029 — Modelo de las capacitaciones obligatorias de la institución
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-27

@@ -56,4 +56,4 @@ Las tareas T-01 a T-06 y T-08 de la spec-0010, antes bloqueadas por este ADR, qu
 - ADR-0004 — Multitenencia con esquema único.
 - ADR-0009 — Campos configurables por institución (Propuesto; no se cierra).
 - ADR-0010 — Hoja de vida estructurada y catálogos.
-- ADR-0026 — Capacitaciones obligatorias (su exigencia depende de este interruptor).
+- ADR-0029 — Capacitaciones obligatorias (su exigencia depende de este interruptor).

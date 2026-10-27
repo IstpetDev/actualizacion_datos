@@ -51,7 +51,7 @@ Excepciones: ningún requisito queda sin tarea. `test-e2e.md` no se crea todaví
 
 | Decisión | ADR | Estado | Tareas condicionadas |
 |---|---|---|---|
-| Modelo de capacitaciones obligatorias (opción B) | `docs/decisiones/ADR-0026-capacitaciones-obligatorias.md` | Vigente | T-01 a T-08 |
+| Modelo de capacitaciones obligatorias (opción B) | `docs/decisiones/ADR-0029-capacitaciones-obligatorias.md` | Vigente | T-01 a T-08 |
 | Aislamiento por institución | `docs/decisiones/ADR-0004-multitenancia-esquema-unico.md` | Vigente | T-01 a T-06 |
 | Archivos de respaldo | `docs/decisiones/ADR-0006-almacenamiento-de-archivos.md` | Vigente | T-03 |
 | Marcas por ítem | `docs/decisiones/ADR-0008-granularidad-del-rechazo.md` | Vigente | T-05 |
@@ -63,7 +63,7 @@ No hace falta ADR adicional salvo que PD-CAP-02 (cargo) o PD-CAP-04 (campaña) s
 
 | Área | Crear o modificar | Responsabilidad | Depende de |
 |---|---|---|---|
-| Backend Domain | `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/CapacitacionObligatoria.cs` (crear) | Entidad y `AplicaA` | ADR-0026 |
+| Backend Domain | `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/CapacitacionObligatoria.cs` (crear) | Entidad y `AplicaA` | ADR-0029 |
 | Backend Domain | `.../Domain/HojaDeVida/Capacitacion.cs` | Vínculo opcional | Entidad |
 | Backend Infra | `.../Infrastructure/Persistence/Configuraciones/HojaDeVida/CapacitacionObligatoriaConfiguracion.cs` (crear), `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*` (nueva) | Mapeo, índices, migración | Entidad |
 | Backend Application | `.../Application/Modelos/ModelosHojaDeVida.cs`, `.../Application/Servicios/IServicioConfiguracionHojaDeVida.cs`, `.../IServicioHojaDeVida.cs` | DTO y contratos | Entidad |
@@ -102,7 +102,7 @@ Una migración nueva: tabla `capacitaciones_obligatorias` y columna nullable en 
 ## Comprobación del plan
 
 - [x] Las rutas y tecnologías se verificaron contra el árbol actual (`ConfiguracionHojaDeVidaEndpoints.cs`, `ServicioHojaDeVida.cs`, `ValidadorCompletitudEnvio.cs`, componentes de `features/`).
-- [x] ADR-0026 está Vigente; los demás se respetan.
+- [x] ADR-0029 está Vigente; los demás se respetan.
 - [x] Cada requisito de la v0.1 tiene tarea.
 - [x] Las tareas tienen dependencias y límites de edición.
 - [ ] Revisar con quien desarrolla los nombres de endpoints (provisionales) antes de T-02.

@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../core/auth/mensaje-error';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, forkJoin, map, Observable, of, tap } from 'rxjs';
 import { SeccionConCambios } from './seccion-con-cambios';
@@ -147,7 +148,7 @@ export class HojaDeVidaStateService {
         this.observaciones.set(obs ?? []);
       }),
       catchError((err) => {
-        const msg = err?.message || 'No fue posible cargar la información de la hoja de vida.';
+        const msg = mensajeError(err, 'No fue posible cargar la información de la hoja de vida.');
         this.error.set(msg);
         return of(null);
       }),
@@ -171,7 +172,7 @@ export class HojaDeVidaStateService {
         this.documentos.set(docs ?? []);
       }),
       catchError((err) => {
-        const msg = err?.message || 'No fue posible cargar la información de la hoja de vida.';
+        const msg = mensajeError(err, 'No fue posible cargar la información de la hoja de vida.');
         this.error.set(msg);
         throw err;
       }),
@@ -228,7 +229,7 @@ export class HojaDeVidaStateService {
         this.mensajeExito.set('Ficha personal guardada exitosamente.');
       }),
       catchError((err) => {
-        this.error.set(err?.message || 'Error al guardar la ficha personal.');
+        this.error.set(mensajeError(err, 'Error al guardar la ficha personal.'));
         throw err;
       }),
       finalize(() => this.guardando.set(false)),

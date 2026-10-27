@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -234,7 +235,7 @@ export class DocumentosPersonalesComponent {
 
     this.state.guardarDocumentoPersonal(req.tipoDocumentoId, request).subscribe({
       error: (err) =>
-        this.errorMensaje.set(err?.message || 'Error al registrar el documento personal.'),
+        this.errorMensaje.set(mensajeError(err, 'Error al registrar el documento personal.')),
     });
   }
 

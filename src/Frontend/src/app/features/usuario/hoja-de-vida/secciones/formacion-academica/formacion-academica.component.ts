@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
@@ -1266,7 +1267,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       }),
       catchError((err) => {
         this.validacion.registrarError(err, this.modeloTitulo);
-        this.errorFormulario.set(err?.message || 'Error al guardar el título.');
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar el título.'));
         return of(false);
       }),
     );
@@ -1355,7 +1356,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       }),
       catchError((err) => {
         this.validacion.registrarError(err, this.modeloEnCurso);
-        this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.');
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar el estudio en curso.'));
         return of(false);
       }),
     );

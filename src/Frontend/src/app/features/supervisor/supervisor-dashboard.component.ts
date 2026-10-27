@@ -1,3 +1,4 @@
+import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -835,7 +836,7 @@ export class SupervisorDashboardComponent implements OnInit {
         this.cargando.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al cargar la lista de solicitudes pendientes.');
+        this.error.set(mensajeError(err, 'Error al cargar la lista de solicitudes pendientes.'));
         this.cargando.set(false);
       },
     });
@@ -878,7 +879,7 @@ export class SupervisorDashboardComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al obtener el expediente para revisión.');
+        this.error.set(mensajeError(err, 'Error al obtener el expediente para revisión.'));
         this.cargandoExpediente.set(false);
       },
     });
@@ -913,7 +914,7 @@ export class SupervisorDashboardComponent implements OnInit {
         this.cargarPendientes();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al aprobar la actualización.');
+        this.error.set(mensajeError(err, 'Error al aprobar la actualización.'));
         this.procesando.set(false);
       },
     });
@@ -975,7 +976,7 @@ export class SupervisorDashboardComponent implements OnInit {
         this.cargarPendientes();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al devolver la actualización.');
+        this.error.set(mensajeError(err, 'Error al devolver la actualización.'));
         this.procesando.set(false);
       },
     });
@@ -1001,7 +1002,7 @@ export class SupervisorDashboardComponent implements OnInit {
         window.URL.revokeObjectURL(url);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al descargar el archivo.');
+        this.error.set(mensajeError(err, 'Error al descargar el archivo.'));
       },
     });
   }

@@ -44,7 +44,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/CapacitacionObligatoria.cs`, `.../Domain/HojaDeVida/Capacitacion.cs`, `.../Infrastructure/Persistence/Configuraciones/HojaDeVida/CapacitacionObligatoriaConfiguracion.cs`, `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** campos del plan, sección «Diseño y contratos».  
 **Salida para integración:** entidad, migración y `DbSet`.  
-**Dependencias:** T-00. **ADR aplicable:** ADR-0026.
+**Dependencias:** T-00. **ADR aplicable:** ADR-0029.
 
 - [ ] Prueba de dominio que falle: nombre vacío, horas ≤ 0, `AplicaA` con alcance nulo, con tipo coincidente y distinto, y obligatoria inactiva.
 - [ ] Implementar entidad, vínculo y configuración EF con índice único parcial.
@@ -62,7 +62,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Application/Modelos/ModelosHojaDeVida.cs`, `.../Application/Servicios/IServicioConfiguracionHojaDeVida.cs`, `.../Infrastructure/Servicios/ServicioConfiguracionHojaDeVida.cs`, `.../WebApi/Endpoints/ConfiguracionHojaDeVidaEndpoints.cs`, `openapi/v1.json`, `src/Frontend/src/app/api-client/index.ts`, `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/CapacitacionesObligatoriasTests.cs`.  
 **Entrada/contrato:** rutas provisionales del plan, a confirmar al inicio.  
 **Salida para integración:** endpoints y cliente que consumen T-03 a T-08.  
-**Dependencias:** T-01. **ADR aplicable:** ADR-0026, ADR-0004.
+**Dependencias:** T-01. **ADR aplicable:** ADR-0029, ADR-0004.
 
 - [ ] Pruebas que fallen: crear, editar, nombre repetido (409), tipo de funcionario de otra institución (404), desactivar conserva certificados (RF-CAP-003), rol sin permiso (RF-CAP-015), aislamiento entre instituciones (RF-CAP-013) y que crear no cambie el estado de actualizaciones enviadas o aprobadas (RF-CAP-012).
 - [ ] Implementar servicio y endpoints reutilizando `MapRecurso`.
@@ -80,7 +80,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioHojaDeVida.cs`, `.../Application/Servicios/IServicioHojaDeVida.cs`, `.../WebApi/Endpoints/HojaDeVidaEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** `GuardarCapacitacionRequest.capacitacionObligatoriaId` y endpoint de lectura del plan.  
 **Salida para integración:** endpoints y estados `pendiente`, `cargada`, `observada`.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0026.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0029.
 
 - [ ] Pruebas que fallen: ve solo las que le aplican (RF-CAP-004, 008); vincular una que no le aplica o de otra institución (404, RF-CAP-013); una segunda vinculada reemplaza (RF-CAP-006); cambiar con actualización enviada o aprobada se rechaza por la API (RF-CAP-014); archivo no admitido se rechaza.
 - [ ] Pruebas que fallen del vínculo propio: la persona vincula una capacitación suya sin obligatoria; no una ya vinculada a otra, ni de otra persona o institución; con actualización enviada o aprobada se rechaza.
@@ -98,7 +98,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ValidadorCompletitudEnvio.cs`, `.../Infrastructure/RegistroDeInfraestructura.cs`, `src/Backend/tests/.../WebApi.Tests/CapacitacionesObligatoriasTests.cs` (casos de envío; coordinar con T-02).  
 **Entrada/contrato:** `FaltanteEnvioDto` con sección `capacitaciones` y clave `capacitaciones.obligatoria.<id>`.  
 **Salida para integración:** regla registrada en el validador.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0026.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0029.
 
 - [ ] Pruebas que fallen: falta una que le aplica → no envía y nombra cuál; no le aplica → envía; persona sin tipo solo con las de «todas» (RF-CAP-008); con todas cumplidas envía; **las reglas actuales de RF-HDV-009 y el envío válido existente no se rompen**.
 - [ ] Implementar la regla y registrarla.
@@ -133,7 +133,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioExportacion.cs`, `src/Backend/tests/.../WebApi.Tests/ExportacionesTests.cs`; el endpoint de cumplimiento va en `ServicioConfiguracionHojaDeVida.cs` (coordinar con T-02, que ya lo dejó fijado).  
 **Entrada/contrato:** DTO de cumplimiento del plan.  
 **Salida para integración:** endpoint y Excel.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0026.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0029.
 
 - [ ] Pruebas que fallen: totales cargada, aprobada y pendiente por capacitación; lista de pendientes; solo la propia institución (RF-CAP-013); el Excel trae el estado por persona; el `.zip` conserva certificados por sección.
 - [ ] Implementar.
@@ -150,7 +150,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `src/Frontend/src/app/features/usuario/hoja-de-vida/secciones/capacitaciones/capacitaciones.component.ts` y `.spec.ts`; `.../usuario/hoja-de-vida/servicios/hoja-de-vida-state.service.ts`; `src/Frontend/src/app/features/supervisor/revision/expediente-secciones.component.ts` y `.spec.ts`.  
 **Entrada/contrato:** cliente regenerado en T-02, T-03 y T-05.  
 **Salida para integración:** componentes.  
-**Dependencias:** T-03, T-05. **ADR aplicable:** ADR-0026.
+**Dependencias:** T-03, T-05. **ADR aplicable:** ADR-0029.
 
 - [ ] Pruebas Vitest que fallen: muestra solo las que aplican con su estado; subir y reemplazar; mensaje claro al faltar al enviar; «Usar una que ya tengo» lista solo capacitaciones propias sin vincular; el supervisor ve el estado, puede marcar y vincular por ayuda con confirmación; con la actualización aprobada la acción no aparece.
 - [ ] Implementar con el manejo de errores accesible existente.
@@ -167,7 +167,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `src/Frontend/src/app/features/admin/configuracion/configuracion-requisitos.component.ts` y `.spec.ts`, o un componente hijo nuevo en la misma carpeta si el archivo ya es grande.  
 **Entrada/contrato:** cliente regenerado en T-02 y T-06.  
 **Salida para integración:** componente.  
-**Dependencias:** T-02, T-06. **ADR aplicable:** ADR-0026.
+**Dependencias:** T-02, T-06. **ADR aplicable:** ADR-0029.
 
 - [ ] Pruebas Vitest que fallen: crear con alcance «todas» y por tipo; nombre repetido muestra el error; desactivar; el resumen lista pendientes.
 - [ ] Implementar; comprobar el estado del issue #83 antes de empezar para evitar conflicto.
