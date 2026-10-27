@@ -13,17 +13,20 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
     private readonly IServicioCampanas _servicioCampanas;
     private readonly IContextoInstitucion _contextoInstitucion;
     private readonly IValidadorCompletitudEnvio _validadorCompletitud;
+    private readonly IServicioProteccionDatos _proteccion;
 
     public ServicioDatosUsuario(
         AplicacionDbContext context,
         IServicioCampanas servicioCampanas,
         IContextoInstitucion contextoInstitucion,
-        IValidadorCompletitudEnvio validadorCompletitud)
+        IValidadorCompletitudEnvio validadorCompletitud,
+        IServicioProteccionDatos proteccion)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
         _contextoInstitucion = contextoInstitucion;
         _validadorCompletitud = validadorCompletitud;
+        _proteccion = proteccion;
     }
 
     public async Task<MisDatosDto> ObtenerMisDatosAsync(string documento, CancellationToken ct = default)
@@ -52,6 +55,7 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
                 m.ClaveDestino,
                 m.Texto)).ToList())).ToList();
 
+        var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
         return new MisDatosDto(
             persona.Id,
             persona.InstitucionId.Valor,
@@ -61,32 +65,11 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
             persona.CorreoVerificado,
             persona.EstadoActualizacion.ToString(),
             persona.DatosPersonalesJson,
-            persona.TratamientoDatosAceptado,
-            persona.FechaAceptacionTratamientoDatosUtc,
+            proteccion.Aceptado,
+            proteccion.FechaAceptacionUtc,
             estadoEdicion.PuedeEditar,
             estadoEdicion.Mensaje,
             observacionesDto);
-    }
-
-    public async Task AceptarTratamientoDatosAsync(string documento, CancellationToken ct = default)
-    {
-        var persona = await _context.Personas
-            .FirstOrDefaultAsync(p => p.Documento == documento, ct)
-            ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
-
-        var ahoraUtc = DateTime.UtcNow;
-        persona.AceptarTratamientoDatos(ahoraUtc);
-
-        // RF-DAT-004, RF-DAT-005: Registrar en auditoría sin incluir contraseñas ni contenido de datos personales
-        _context.Auditorias.Add(new Auditoria(
-            Guid.NewGuid(),
-            persona.Documento,
-            "AceptarTratamientoDatos",
-            persona.InstitucionId,
-            ahoraUtc,
-            detalle: "Aceptación de tratamiento de datos personales registrada."));
-
-        await _context.SaveChangesAsync(ct);
     }
 
     public async Task EnviarARevisionAsync(string documento, CancellationToken ct = default)
@@ -102,6 +85,10 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
             ?? throw new ReglaNegocioException($"No se encontró la persona con documento {documento}.");
 
         var ahoraUtc = DateTime.UtcNow;
+
+        var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
+        if (!proteccion.Aceptado)
+            throw new ProteccionDatosException("Debe aceptar el aviso vigente de protección de datos antes de enviar a revisión.", "ACEPTACION_PROTECCION_DATOS_PENDIENTE");
 
         // Precondiciones básicas de la persona antes de validar completitud de la hoja de vida
         if (!persona.TratamientoDatosAceptado)
@@ -119,6 +106,9 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
         {
             persona.EnviarARevision(ahoraUtc);
         }
+
+        if (!persona.CorreoVerificado)
+            throw new ReglaNegocioException("Debe verificar su correo antes de enviar a revisión.");
 
         // RF-HDV-009, T-04: Validar completitud antes de enviar a revisión
         var validacion = await _validadorCompletitud.ValidarAsync(persona.Id, ct);

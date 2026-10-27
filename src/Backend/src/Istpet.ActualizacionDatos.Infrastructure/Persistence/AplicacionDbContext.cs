@@ -18,6 +18,8 @@ public class AplicacionDbContext : DbContext
     public DbSet<Observacion> Observaciones => Set<Observacion>();
     public DbSet<MarcaObservacion> MarcasObservacion => Set<MarcaObservacion>();
     public DbSet<ArchivoAdjunto> ArchivosAdjuntos => Set<ArchivoAdjunto>();
+    public DbSet<AvisoProteccionDatos> AvisosProteccionDatos => Set<AvisoProteccionDatos>();
+    public DbSet<AceptacionProteccionDatos> AceptacionesProteccionDatos => Set<AceptacionProteccionDatos>();
 
     // Hoja de vida (ADR-0010)
     public DbSet<ElementoCatalogo> ElementosCatalogo => Set<ElementoCatalogo>();
@@ -46,6 +48,26 @@ public class AplicacionDbContext : DbContext
         base.ConfigureConventions(configurationBuilder);
         configurationBuilder.Properties<InstitucionId>()
             .HaveConversion<InstitucionIdConverter>();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidarHistoriaProteccionDatos();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        ValidarHistoriaProteccionDatos();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ValidarHistoriaProteccionDatos()
+    {
+        if (ChangeTracker.Entries<AceptacionProteccionDatos>().Any(e => e.State is EntityState.Modified or EntityState.Deleted) ||
+            ChangeTracker.Entries<AvisoProteccionDatos>().Any(e => e.State == EntityState.Deleted ||
+                (e.State == EntityState.Modified && e.Properties.Any(p => p.IsModified && p.Metadata.Name != nameof(AvisoProteccionDatos.VigenteHastaUtc)))))
+            throw new InvalidOperationException("El contenido de un aviso publicado y su evidencia de aceptación son inmutables.");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

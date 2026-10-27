@@ -67,6 +67,16 @@ describe('AuthService', () => {
     expect(service.rolActual()).toBeNull();
     expect(window.sessionStorage.getItem(CLAVE_STORAGE_SESION)).toBeNull();
   });
+  it('aviso_nuevo_retira_datos_del_estado_y_storage_hasta_revalidar', () => {
+    const service = TestBed.inject(AuthService);
+    service.iniciarSesion(sesionMock);
+    service.marcarProteccionPendiente();
+    expect(service.sesion()?.requiereAceptarProteccionDatos).toBe(true);
+    expect(service.sesion()?.cedula).toBe('');
+    expect(service.sesion()?.correo).toBeUndefined();
+    expect(window.sessionStorage.getItem(CLAVE_STORAGE_SESION)).not.toContain(sesionMock.nombre);
+    expect(window.sessionStorage.getItem(CLAVE_STORAGE_SESION)).not.toContain(sesionMock.cedula);
+  });
 
   it('tieneRol_retorna_true_si_coincide_con_rol_unico_o_lista', () => {
     const service = TestBed.inject(AuthService);

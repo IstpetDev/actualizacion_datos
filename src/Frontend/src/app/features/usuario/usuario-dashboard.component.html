@@ -241,17 +241,6 @@
         Al enviar se guardan tus datos y se bloquea la edición hasta que la institución termine la
         revisión o devuelva la actualización con observaciones.
       </p>
-      <label class="consentimiento" for="tratamiento">
-        <input
-          id="tratamiento"
-          name="tratamiento"
-          type="checkbox"
-          [(ngModel)]="aceptaTratamiento"
-          [disabled]="!puedeEditar() || ocupado() || ficha.tratamientoDatosAceptado"
-        />
-        Acepto el tratamiento de mis datos personales y documentos para la actualización de
-        información institucional.
-      </label>
       @if (ficha.tratamientoDatosAceptado) {
         <p>
           Aceptación registrada
@@ -263,7 +252,9 @@
       }
       <button
         type="button"
-        [disabled]="!puedeEditar() || ocupado() || !aceptaTratamiento || !correoConfirmado"
+        [disabled]="
+          !puedeEditar() || ocupado() || !ficha.tratamientoDatosAceptado || !correoConfirmado
+        "
         (click)="enviar()"
       >
         {{ ocupado() ? 'Procesando…' : 'Enviar actualización a revisión' }}

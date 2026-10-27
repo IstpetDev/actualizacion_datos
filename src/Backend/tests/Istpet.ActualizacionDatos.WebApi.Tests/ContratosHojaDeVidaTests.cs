@@ -10,14 +10,14 @@ using Microsoft.AspNetCore.Mvc.Testing;
 // spec-0003, T-00 (#42): los grupos de endpoints existen, aplican el rol que fija plan.md y responden 501
 // hasta que cada tarea los implemente. Cuando una tarea implementa su grupo, cambia su fila de 501
 // por las pruebas de comportamiento de su servicio.
-public sealed class ContratosHojaDeVidaTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ContratosHojaDeVidaTests : IClassFixture<FabricaPruebas>
 {
     private const string DocumentoUsuario = "0000000000";
     private const string Id = "00000000-0000-0000-0000-000000000001";
 
     private readonly WebApplicationFactory<Program> _fabrica;
 
-    public ContratosHojaDeVidaTests(WebApplicationFactory<Program> fabrica)
+    public ContratosHojaDeVidaTests(FabricaPruebas fabrica)
     {
         _fabrica = fabrica;
     }

@@ -35,7 +35,7 @@ public sealed class SegundaCampanaYArchivosTests : IDisposable
         _conexion.Open();
         _almacen = Path.Combine(Path.GetTempPath(), "istpet-pruebas-" + Guid.NewGuid().ToString("N"));
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("Almacenamiento:RutaRaiz", _almacen);
             builder.ConfigureServices(services =>
@@ -250,9 +250,9 @@ public sealed class SegundaCampanaYArchivosTests : IDisposable
         var inst = Guid.NewGuid();
         db.Instituciones.Add(new Institucion(new InstitucionId(inst), "Institución ficticia " + inst.ToString("N")[..6]));
         db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(inst), Documento, RolUsuario.Usuario, "Persona Ficticia",
-            "usuario20@ejemplo.test", accesoHabilitado: true, estadoActualizacion: estado, tratamientoDatosAceptado: true));
+            "usuario20@ejemplo.test", accesoHabilitado: true, correoVerificado: true, estadoActualizacion: estado, tratamientoDatosAceptado: true));
         db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(inst), Supervisor, RolUsuario.Supervisor, "Supervisor Ficticio",
-            "supervisor@ejemplo.test", accesoHabilitado: true));
+            "supervisor@ejemplo.test", accesoHabilitado: true, correoVerificado: true));
         db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(inst), "Campaña ficticia",
             campanaAbierta ? DateTime.UtcNow.AddDays(-1) : DateTime.UtcNow.AddDays(-30),
             campanaAbierta ? DateTime.UtcNow.AddDays(10) : DateTime.UtcNow.AddDays(-20),
@@ -266,7 +266,7 @@ public sealed class SegundaCampanaYArchivosTests : IDisposable
         using var scope = _fabrica.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
         db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(inst), documento, RolUsuario.Usuario, "Otra Persona Ficticia",
-            "usuario21@ejemplo.test", accesoHabilitado: true, estadoActualizacion: estado, tratamientoDatosAceptado: true));
+            "usuario21@ejemplo.test", accesoHabilitado: true, correoVerificado: true, estadoActualizacion: estado, tratamientoDatosAceptado: true));
         await db.SaveChangesAsync();
     }
 

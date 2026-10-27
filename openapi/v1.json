@@ -321,6 +321,122 @@
         }
       }
     },
+    "/api/proteccion-datos/aviso": {
+      "get": {
+        "tags": [
+          "ProteccionDatos"
+        ],
+        "operationId": "ObtenerAvisoProteccionDatos",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoProteccionDatosDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/aceptar-tratamiento": {
+      "post": {
+        "tags": [
+          "ProteccionDatos"
+        ],
+        "operationId": "AceptarTratamientoDatos",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AceptarAvisoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadoProteccionDatosDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -1118,58 +1234,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/EstadoEdicionDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/api/mis-datos/aceptar-tratamiento": {
-      "post": {
-        "tags": [
-          "MisDatos"
-        ],
-        "operationId": "AceptarTratamientoDatos",
-        "parameters": [
-          {
-            "name": "documento",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MensajeRespuesta"
                 }
               }
             }
@@ -4160,6 +4224,22 @@
   },
   "components": {
     "schemas": {
+      "AceptarAvisoRequest": {
+        "required": [
+          "avisoId",
+          "acepta"
+        ],
+        "type": "object",
+        "properties": {
+          "avisoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acepta": {
+            "type": "boolean"
+          }
+        }
+      },
       "ActualizarDatosRequest": {
         "required": [
           "datosJson"
@@ -4339,6 +4419,55 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AvisoProteccionDatosDto": {
+        "required": [
+          "id",
+          "version",
+          "titulo",
+          "responsable",
+          "contenido",
+          "declaracionAceptacion",
+          "fuenteOficial",
+          "vigenteDesdeUtc",
+          "vigenteHastaUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "responsable": {
+            "type": "string"
+          },
+          "contenido": {
+            "type": "string"
+          },
+          "declaracionAceptacion": {
+            "type": "string"
+          },
+          "fuenteOficial": {
+            "type": "string"
+          },
+          "vigenteDesdeUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vigenteHastaUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -4928,6 +5057,42 @@
           "puedeIniciarNuevaActualizacion": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "EstadoProteccionDatosDto": {
+        "required": [
+          "aceptado",
+          "aviso",
+          "fechaAceptacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "aceptado": {
+            "type": "boolean"
+          },
+          "aviso": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AvisoProteccionDatosDto"
+              }
+            ]
+          },
+          "fechaAceptacionUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "mensaje": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6976,6 +7141,10 @@
           },
           "correoVerificado": {
             "type": "boolean"
+          },
+          "requiereAceptarProteccionDatos": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -7080,6 +7249,10 @@
           },
           "correoVerificado": {
             "type": "boolean"
+          },
+          "requiereAceptarProteccionDatos": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -7399,6 +7572,9 @@
     },
     {
       "name": "Personas"
+    },
+    {
+      "name": "ProteccionDatos"
     },
     {
       "name": "Autenticacion"

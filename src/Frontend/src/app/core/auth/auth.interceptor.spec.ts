@@ -7,7 +7,7 @@ import { authInterceptor } from './auth.interceptor';
 import { AuthService } from './auth.service';
 
 describe('interceptor de sesión por cookie', () => {
-  const auth = { sesion: vi.fn(), cerrarSesion: vi.fn() };
+  const auth = { sesion: vi.fn(), cerrarSesion: vi.fn(), marcarProteccionPendiente: vi.fn() };
   const router = { navigate: vi.fn() };
   let http: HttpClient;
   let controlador: HttpTestingController;
@@ -57,5 +57,16 @@ describe('interceptor de sesión por cookie', () => {
     http.get('/api/prueba').subscribe({ error: () => undefined });
     controlador.expectOne('/api/prueba').flush({}, { status: 403, statusText: 'Error' });
     expect(router.navigate).toHaveBeenCalledWith(['/cambiar-clave']);
+  });
+  it('version_nueva_en_sesion_abierta_lleva_al_aviso_incluso_al_guardar', () => {
+    http.put('/api/mis-datos/hoja-de-vida/ficha', {}).subscribe({ error: () => undefined });
+    controlador
+      .expectOne('/api/mis-datos/hoja-de-vida/ficha')
+      .flush(
+        { codigo: 'ACEPTACION_PROTECCION_DATOS_PENDIENTE' },
+        { status: 403, statusText: 'Forbidden' },
+      );
+    expect(auth.marcarProteccionPendiente).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/proteccion-datos']);
   });
 });

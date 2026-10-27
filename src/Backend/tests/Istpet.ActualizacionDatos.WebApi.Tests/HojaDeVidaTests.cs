@@ -46,7 +46,7 @@ public sealed partial class HojaDeVidaTests : IDisposable
     }
 
     private static WebApplicationFactory<Program> CrearFabrica(SqliteConnection conexion) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("CuentaBancaria:PermitirClavesTemporales", "true");
             builder.ConfigureServices(services =>
@@ -87,7 +87,7 @@ public sealed partial class HojaDeVidaTests : IDisposable
             RolUsuario.Usuario,
             "Docente Ficticio",
             "docente@ejemplo.test",
-            accesoHabilitado: true,
+            accesoHabilitado: true, correoVerificado: true,
             estadoActualizacion: estado,
             tratamientoDatosAceptado: true);
 
@@ -98,7 +98,7 @@ public sealed partial class HojaDeVidaTests : IDisposable
             RolUsuario.Usuario,
             "Otro Docente",
             "otro@ejemplo.test",
-            accesoHabilitado: true,
+            accesoHabilitado: true, correoVerificado: true,
             estadoActualizacion: EstadoActualizacion.Borrador,
             tratamientoDatosAceptado: true);
 
@@ -109,7 +109,7 @@ public sealed partial class HojaDeVidaTests : IDisposable
             RolUsuario.Supervisor,
             "Supervisor Evaluador",
             "sup@ejemplo.test",
-            accesoHabilitado: true);
+            accesoHabilitado: true, correoVerificado: true);
 
         var campana = new Campana(
             Guid.NewGuid(),

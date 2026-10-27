@@ -15,6 +15,7 @@ const sesion = {
   correo: 'usuario@ejemplo.test',
   rol: 'Usuario',
   debeCambiarContrasena: false,
+  requiereAceptarProteccionDatos: false,
   correoVerificado: true,
 };
 

@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
@@ -30,27 +32,29 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
         options.Events.OnValidatePrincipal = async ctx =>
         {
-            var rol = ctx.Principal?.FindFirst(ClaimTypes.Role)?.Value;
-            if (string.Equals(rol, nameof(RolUsuario.Superadmin), StringComparison.OrdinalIgnoreCase))
-            {
-                return;
-            }
-
             var idStr = ctx.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(idStr, out var personaId))
+            var institucionStr = ctx.Principal?.FindFirst("institucion_id")?.Value;
+            if (Guid.TryParse(idStr, out var personaId) && Guid.TryParse(institucionStr, out var institucionId))
             {
                 var db = ctx.HttpContext.RequestServices.GetService<AplicacionDbContext>();
                 if (db != null)
                 {
                     var persona = await db.Personas.IgnoreQueryFilters()
-                        .Where(p => p.Id == personaId)
-                        .Select(p => new { p.AccesoHabilitado })
+                        .Where(p => p.Id == personaId && p.InstitucionId == new InstitucionId(institucionId))
+                        .Select(p => new { p.AccesoHabilitado, p.Rol, p.DebeCambiarContrasena })
                         .FirstOrDefaultAsync();
 
                     if (persona == null || !persona.AccesoHabilitado)
                     {
                         ctx.RejectPrincipal();
                         await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    }
+                    else
+                    {
+                        var claims = ctx.Principal!.Claims.Where(c => c.Type != ClaimTypes.Role && c.Type != "debe_cambiar_contrasena").ToList();
+                        claims.Add(new(ClaimTypes.Role, persona.Rol.ToString()));
+                        claims.Add(new("debe_cambiar_contrasena", persona.DebeCambiarContrasena ? "true" : "false"));
+                        ctx.ReplacePrincipal(new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
                     }
                 }
             }
@@ -104,63 +108,33 @@ app.UseStatusCodePages(async statusCodeContext =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Middleware: Contexto institucional a partir de headers o sesión autenticada
+// La cookie autenticada es la autoridad. Las cabeceras nunca crean identidad ni cambian su institución.
 app.Use(async (context, next) =>
 {
     var contexto = context.RequestServices.GetRequiredService<ContextoInstitucion>();
-
-    if (context.Request.Headers.TryGetValue("X-Institucion-Id", out var instVal) &&
-        Guid.TryParse(instVal, out var instGuid))
-    {
-        contexto.InstitucionId = new InstitucionId(instGuid);
-    }
-
-    if (context.Request.Headers.TryGetValue("X-Actor", out var actorVal))
-    {
-        contexto.ActorActual = actorVal.ToString();
-    }
-
-    if (context.Request.Headers.TryGetValue("X-Rol", out var rolVal) &&
-        Enum.TryParse<RolUsuario>(rolVal, ignoreCase: true, out var rol))
-    {
-        contexto.RolActual = rol;
-        if (rol == RolUsuario.Superadmin)
-        {
-            contexto.EsSuperadmin = true;
-        }
-    }
-
-    // Si no vino por header pero el usuario está autenticado por cookie
     if (context.User.Identity?.IsAuthenticated == true)
     {
-        if (string.IsNullOrWhiteSpace(contexto.ActorActual))
+        var actor = context.User.FindFirst(ClaimTypes.Name)?.Value;
+        var rolTexto = context.User.FindFirst(ClaimTypes.Role)?.Value;
+        var institucion = context.User.FindFirst("institucion_id")?.Value;
+        var cabeceras = new[] { ("X-Actor", actor), ("X-Rol", rolTexto), ("X-Institucion-Id", institucion) };
+        if (!context.Request.Path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) &&
+            !context.Request.Path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase) &&
+            cabeceras.Any(c => context.Request.Headers.TryGetValue(c.Item1, out var valor) &&
+            !string.Equals(valor.ToString(), c.Item2, StringComparison.OrdinalIgnoreCase)))
         {
-            contexto.ActorActual = context.User.FindFirst(ClaimTypes.Name)?.Value;
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El contexto solicitado no corresponde a la sesión autenticada.", "CONTEXTO_NO_AUTORIZADO"));
+            return;
         }
-
-        if (contexto.RolActual == null)
+        contexto.ActorActual = actor;
+        if (Guid.TryParse(institucion, out var institucionId)) contexto.InstitucionId = new(institucionId);
+        if (Enum.TryParse<RolUsuario>(rolTexto, out var rol))
         {
-            var claimRol = context.User.FindFirst(ClaimTypes.Role)?.Value;
-            if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
-            {
-                contexto.RolActual = r;
-                if (r == RolUsuario.Superadmin)
-                {
-                    contexto.EsSuperadmin = true;
-                }
-            }
-        }
-
-        if (contexto.InstitucionId == null)
-        {
-            var claimInst = context.User.FindFirst("institucion_id")?.Value;
-            if (!string.IsNullOrEmpty(claimInst) && Guid.TryParse(claimInst, out var instG))
-            {
-                contexto.InstitucionId = new InstitucionId(instG);
-            }
+            contexto.RolActual = rol;
+            contexto.EsSuperadmin = rol == RolUsuario.Superadmin;
         }
     }
-
     await next();
 });
 
@@ -193,12 +167,28 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseMiddleware<ProteccionDatosMiddleware>();
+
 var connectionString = builder.Configuration.GetConnectionString("Default");
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
     await db.Database.MigrateAsync();
+}
+
+if (Array.IndexOf(args, "--publicar-aviso") is var indiceAviso && indiceAviso >= 0)
+{
+    if (indiceAviso + 1 >= args.Length)
+        throw new ArgumentException("Debe indicar el archivo JSON del aviso autorizado.");
+    var opciones = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    opciones.Converters.Add(new JsonStringEnumConverter());
+    var solicitud = JsonSerializer.Deserialize<PublicarAvisoRequest>(await File.ReadAllTextAsync(args[indiceAviso + 1]), opciones)
+        ?? throw new ArgumentException("El archivo del aviso no es válido.");
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<IServicioProteccionDatos>().PublicarAsync(solicitud);
+    Console.WriteLine("Aviso institucional publicado. No se registraron aceptaciones por representación.");
+    return;
 }
 
 if (args.Contains("--cargar-catalogos"))
@@ -258,13 +248,16 @@ auth.MapPost("/login", async (LoginRequest request, HttpContext httpContext, ISe
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
 
-        return Results.Ok(resultado);
+        return Results.Ok(resultado.DebeCambiarContrasena || resultado.RequiereAceptarProteccionDatos
+            ? resultado with { Documento = "", Nombre = null, Correo = null, CorreoVerificado = false }
+            : resultado);
     }
     catch (ReglaNegocioException ex)
     {
         return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status401Unauthorized);
     }
 })
+.WithMetadata(new PasoAccesoProteccionDatos())
 .WithName("IniciarSesion")
 .Produces<ResultadoLoginDto>()
 .Produces<MensajeRespuesta>(StatusCodes.Status401Unauthorized)
@@ -275,6 +268,7 @@ auth.MapPost("/logout", async (HttpContext httpContext) =>
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Ok(new MensajeRespuesta("Sesión cerrada correctamente."));
 })
+.WithMetadata(new PasoAccesoProteccionDatos())
 .WithName("CerrarSesion")
 .Produces<MensajeRespuesta>()
 .RequireAuthorization();
@@ -290,6 +284,7 @@ auth.MapGet("/sesion", async (HttpContext httpContext, IServicioAutenticacion se
     var sesion = await servicio.ObtenerSesionActualAsync(documento, ct);
     return sesion != null ? Results.Ok(sesion) : Results.Unauthorized();
 })
+.WithMetadata(new PasoAccesoProteccionDatos())
 .WithName("ObtenerSesionActual")
 .Produces<SesionUsuarioDto>()
 .Produces(StatusCodes.Status401Unauthorized)
@@ -325,6 +320,7 @@ auth.MapPost("/cambiar-clave", async (CambiarContrasenaRequest request, HttpCont
         return Results.BadRequest(new MensajeRespuesta(ex.Message));
     }
 })
+.WithMetadata(new PasoAccesoProteccionDatos())
 .WithName("CambiarContrasena")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
@@ -742,37 +738,6 @@ misDatos.MapPut("/", async (string? documento, ActualizarDatosRequest request, H
     }
 })
 .WithName("ActualizarMisDatos")
-.Produces<MensajeRespuesta>()
-.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
-.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
-.Produces(StatusCodes.Status401Unauthorized);
-
-misDatos.MapPost("/aceptar-tratamiento", async (string? documento, HttpContext httpContext, IServicioDatosUsuario servicio, IContextoInstitucion contexto, CancellationToken ct) =>
-{
-    var docActual = ObtenerDocumentoActual(httpContext, contexto);
-    var docEfectivo = !string.IsNullOrWhiteSpace(documento) ? documento : docActual;
-
-    if (string.IsNullOrWhiteSpace(docEfectivo))
-    {
-        return Results.Unauthorized();
-    }
-
-    if (!ValidarAccesoMisDatos(documento, docActual, httpContext, contexto))
-    {
-        return Results.Json(new MensajeRespuesta("No tiene permisos para modificar los datos de otra persona."), statusCode: StatusCodes.Status403Forbidden);
-    }
-
-    try
-    {
-        await servicio.AceptarTratamientoDatosAsync(docEfectivo, ct);
-        return Results.Ok(new MensajeRespuesta("Aceptación del tratamiento de datos personales registrada con éxito."));
-    }
-    catch (ReglaNegocioException ex)
-    {
-        return Results.BadRequest(new MensajeRespuesta(ex.Message));
-    }
-})
-.WithName("AceptarTratamientoDatos")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
@@ -1288,6 +1253,7 @@ app.MapDocumentosPersonales();
 app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
+app.MapProteccionDatos();
 
 await app.RunAsync();
 

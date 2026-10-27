@@ -76,6 +76,10 @@ public sealed partial class ManejadorGlobalExcepciones(
     {
         return exception switch
         {
+            ProteccionDatosException ex => (
+                ex.Codigo == "AVISO_PROTECCION_DATOS_NO_DISPONIBLE" ? StatusCodes.Status503ServiceUnavailable :
+                ex.Codigo == "VERSION_AVISO_CAMBIADA" ? StatusCodes.Status409Conflict : StatusCodes.Status403Forbidden,
+                ex.Message, ex.Codigo, null),
             RecursoNoEncontradoException ex => (
                 StatusCodes.Status404NotFound,
                 ex.Message,
