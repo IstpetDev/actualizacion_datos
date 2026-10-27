@@ -15,9 +15,9 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 | T-02 | RF-CAP-001, 003, 012, 013, 015 | T-01 | Ninguna | Coordinador |
 | T-03 | RF-CAP-004, 005, 006, 013, 014 | T-02 | T-04, T-05, T-06 | Por asignar |
 | T-04 | RF-CAP-007, 008 | T-02 | T-03, T-05, T-06 | Por asignar |
-| T-05 | RF-CAP-009 | T-02 | T-03, T-04, T-06 | Por asignar |
+| T-05 | RF-CAP-009, 018 | T-02 | T-03, T-04, T-06 | Por asignar |
 | T-06 | RF-CAP-010, 011 | T-02 | T-03, T-04, T-05 | Por asignar |
-| T-07 | RF-CAP-004, 005, 009 | T-03, T-05 | T-08 | Por asignar |
+| T-07 | RF-CAP-004, 005, 009, 018 | T-03, T-05 | T-08 | Por asignar |
 | T-08 | RF-CAP-001, 002, 003, 010 | T-02, T-06 | T-07 | Por asignar |
 | T-10 | RF-CAP-016 | T-02 | T-03 a T-06 | Por asignar |
 | T-09 | Todos | T-01 a T-08, T-10 | Ninguna | Coordinador |
@@ -31,10 +31,10 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 - [x] Registrar versión, aprobador y evidencia en «Revisión funcional».
 - [x] Resolver PD-CAP-02 a 11 y ajustar requisitos.
-- [ ] Ajustar plan y tareas a RF-CAP-018 (vincular por ayuda), en T-03 y T-05.
+- [x] Ajustar plan y tareas a RF-CAP-018 (vincular por ayuda), en T-03, T-05 y T-07.
 - [x] Crear `test-e2e.md`.
 
-**Resultado registrado:** aprobación y test-e2e hechos el 2026-10-27; falta ajustar plan y tareas a RF-CAP-018.  
+**Resultado registrado:** aprobación, test-e2e y ajuste de plan y tareas a RF-CAP-018 hechos el 2026-10-27.  
 **Bloqueos:** Ninguno.
 
 ## T-01 — Dominio, persistencia y migración
@@ -75,7 +75,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 ## T-03 — La persona ve y sube sus obligatorias
 
-**Objetivo:** lectura de obligatorias con estado y guardado de capacitaciones vinculadas.  
+**Objetivo:** lectura de obligatorias con estado, guardado de capacitaciones vinculadas y vínculo de una capacitación existente de la propia persona (PD-CAP-11).  
 **Área y rama:** Backend; misma rama.  
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioHojaDeVida.cs`, `.../Application/Servicios/IServicioHojaDeVida.cs`, `.../WebApi/Endpoints/HojaDeVidaEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** `GuardarCapacitacionRequest.capacitacionObligatoriaId` y endpoint de lectura del plan.  
@@ -83,9 +83,10 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0026.
 
 - [ ] Pruebas que fallen: ve solo las que le aplican (RF-CAP-004, 008); vincular una que no le aplica o de otra institución (404, RF-CAP-013); una segunda vinculada reemplaza (RF-CAP-006); cambiar con actualización enviada o aprobada se rechaza por la API (RF-CAP-014); archivo no admitido se rechaza.
-- [ ] Implementar lectura y vínculo en el guardado.
+- [ ] Pruebas que fallen del vínculo propio: la persona vincula una capacitación suya sin obligatoria; no una ya vinculada a otra, ni de otra persona o institución; con actualización enviada o aprobada se rechaza.
+- [ ] Implementar lectura y vínculo en el guardado, y la lista de capacitaciones propias sin vincular.
 - [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-004, 005, 006, 013, 014.
+- [ ] Revisar RF-CAP-004, 005, 006, 013, 014 y el vínculo propio de RF-CAP-005.
 
 **Resultado registrado:** pendiente  
 **Bloqueos:** T-02.
@@ -109,17 +110,18 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 ## T-05 — Revisión del supervisor
 
-**Objetivo:** cumplimiento visible en la revisión y marcas sobre obligatorias.  
+**Objetivo:** cumplimiento visible en la revisión, marcas sobre obligatorias y vínculo por ayuda de un `supervisor` o `admin` (RF-CAP-018).  
 **Área y rama:** Backend; misma rama.  
-**Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioRevision.cs`, `.../Application/Modelos/ModelosRevision.cs`, `src/Backend/tests/.../WebApi.Tests/MarcasPorItemTests.cs`.  
+**Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioRevision.cs`, `.../Application/Modelos/ModelosRevision.cs`, `.../WebApi/Endpoints/FlujoActualizacionEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/MarcasPorItemTests.cs`, `src/Backend/tests/.../WebApi.Tests/VinculoPorAyudaTests.cs`.  
 **Entrada/contrato:** clave de ítem de la `Capacitacion` vinculada; clave estable `capacitaciones.obligatoria.<id>` para la pendiente.  
 **Salida para integración:** DTO de revisión ampliado.  
 **Dependencias:** T-02. **ADR aplicable:** ADR-0008.
 
 - [ ] Pruebas que fallen: la revisión lista cada obligatoria que aplica con estado; marcar una vinculada y una pendiente; devolver sin observación general se rechaza (RF-FLU-003); un supervisor de otra institución no ve nada (RF-CAP-013).
+- [ ] Pruebas del vínculo por ayuda que fallen: un `supervisor` y un `admin` vinculan una capacitación existente de la persona a una obligatoria pendiente y la persona la ve como cargada; solo vincula (no cambia otros datos); con actualización aprobada 409; con la capacitación de otra persona o ya vinculada 409; persona de otra institución 404; un `usuario` no puede usar la operación; queda en la auditoría con quién la hizo y sin contenido personal.
 - [ ] Implementar.
 - [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-009.
+- [ ] Revisar RF-CAP-009 y 018.
 
 **Resultado registrado:** pendiente  
 **Bloqueos:** T-02.
@@ -143,17 +145,17 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 ## T-07 — Pantallas de la persona y del supervisor
 
-**Objetivo:** bloque «Obligatorias de la institución» y cumplimiento en la revisión.  
+**Objetivo:** bloque «Obligatorias de la institución» con «Usar una que ya tengo», y cumplimiento en la revisión con la acción de vincular por ayuda.  
 **Área y rama:** Frontend; misma rama.  
 **Archivos exclusivos:** `src/Frontend/src/app/features/usuario/hoja-de-vida/secciones/capacitaciones/capacitaciones.component.ts` y `.spec.ts`; `.../usuario/hoja-de-vida/servicios/hoja-de-vida-state.service.ts`; `src/Frontend/src/app/features/supervisor/revision/expediente-secciones.component.ts` y `.spec.ts`.  
 **Entrada/contrato:** cliente regenerado en T-02, T-03 y T-05.  
 **Salida para integración:** componentes.  
 **Dependencias:** T-03, T-05. **ADR aplicable:** ADR-0026.
 
-- [ ] Pruebas Vitest que fallen: muestra solo las que aplican con su estado; subir y reemplazar; mensaje claro al faltar al enviar; el supervisor ve el estado y puede marcar.
+- [ ] Pruebas Vitest que fallen: muestra solo las que aplican con su estado; subir y reemplazar; mensaje claro al faltar al enviar; «Usar una que ya tengo» lista solo capacitaciones propias sin vincular; el supervisor ve el estado, puede marcar y vincular por ayuda con confirmación; con la actualización aprobada la acción no aparece.
 - [ ] Implementar con el manejo de errores accesible existente.
 - [ ] `pnpm --dir src/Frontend test:ci`, `lint` y `format:check`.
-- [ ] Revisar RF-CAP-004, 005, 009.
+- [ ] Revisar RF-CAP-004, 005, 009, 018.
 
 **Resultado registrado:** pendiente  
 **Bloqueos:** T-03, T-05.
