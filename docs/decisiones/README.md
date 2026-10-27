@@ -65,3 +65,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0031](ADR-0031-auditoria-infraestructura-y-seguridad-en-despliegue.md) | Seguridad en origen, auditoría de infraestructura y verificación de despliegue | Vigente |
 | [ADR-0032](ADR-0032-formato-plantillas-hoja-de-vida.md) | Formato de las plantillas globales de hoja de vida | Vigente |
 | [ADR-0033](ADR-0033-motor-generacion-pdf.md) | Motor de generación de PDF en .NET | Vigente |
+| [ADR-0034](ADR-0034-exencion-superadmin-aviso-proteccion-datos.md) | Exención del aviso institucional de protección de datos para superadmin | Vigente |

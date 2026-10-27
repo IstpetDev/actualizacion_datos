@@ -12,9 +12,12 @@ public sealed class ServicioProteccionDatos(AplicacionDbContext db, TimeProvider
     public async Task<EstadoProteccionDatosDto> ObtenerEstadoAsync(Guid personaId, InstitucionId institucionId,
         RolUsuario rol, CancellationToken ct = default)
     {
+        // ADR-0034: Superadmin es un rol global de plataforma y no requiere aviso institucional.
+        if (rol == RolUsuario.Superadmin)
+            return new(true, null, null);
+
         var ahora = reloj.GetUtcNow().UtcDateTime;
         var mascara = AvisoProteccionDatos.MascaraRol(rol);
-        // Incluso el superadmin consulta aquí solo el aviso de su propia institución.
         var avisos = await db.AvisosProteccionDatos.IgnoreQueryFilters().AsNoTracking()
             .Where(a => a.InstitucionId == institucionId && (a.RolesDestinatarios & mascara) != 0 &&
                 a.VigenteDesdeUtc <= ahora && (a.VigenteHastaUtc == null || ahora < a.VigenteHastaUtc))
@@ -46,7 +49,7 @@ public sealed class ServicioProteccionDatos(AplicacionDbContext db, TimeProvider
 
         var estado = await ObtenerEstadoAsync(personaId, institucionId, rol, ct);
         if (estado.Aviso == null)
-            throw new ProteccionDatosException(estado.Mensaje!, "AVISO_PROTECCION_DATOS_NO_DISPONIBLE");
+            throw new ProteccionDatosException(estado.Mensaje ?? "No hay un aviso de protección de datos aplicable a su acceso.", "AVISO_PROTECCION_DATOS_NO_DISPONIBLE");
         if (estado.Aviso.Id != solicitud.AvisoId)
             throw new ProteccionDatosException("El aviso cambió. Lea y acepte la versión vigente para continuar.", "VERSION_AVISO_CAMBIADA");
         if (!estado.Aceptado)
