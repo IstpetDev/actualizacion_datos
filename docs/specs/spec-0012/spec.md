@@ -1,6 +1,6 @@
 # Documento de hoja de vida desde plantillas globales — Spec
 
-**ID:** spec-0011  
+**ID:** spec-0012  
 **Versión:** 0.1  
 **Estado:** Borrador para revisión funcional  
 **Revisor funcional:** Joseph Baño (también solicitante)  
