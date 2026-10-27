@@ -91,7 +91,7 @@ describe('DocumentosPersonalesComponent', () => {
 
   it('muestra_mensaje_de_error_si_falla_guardado', () => {
     stateMock.guardarDocumentoPersonal.mockReturnValue(
-      throwError(() => new Error('Error de conexión con el servidor.')),
+      throwError(() => ({ mensaje: 'Error de conexión con el servidor.' })),
     );
 
     component.guardarArchivo(mockDocs[1], 'nuevo-arch-id');

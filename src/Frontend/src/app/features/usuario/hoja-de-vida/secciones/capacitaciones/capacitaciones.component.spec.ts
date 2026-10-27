@@ -2,7 +2,7 @@ import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../../../api-client';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { ArchivosClient, CapacitacionDto, ElementoCatalogoDto } from '../../../../../api-client';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -152,6 +152,44 @@ describe('CapacitacionesComponent', () => {
     expect(compiled.querySelector('[data-testid="btn-nueva-capacitacion"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-editar-capacitacion"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-eliminar-capacitacion"]')).toBeNull();
+  });
+  it('rechaza_guardado_si_fecha_fin_es_anterior_a_fecha_inicio', () => {
+    component.abrirFormulario();
+    component.modelo.nombreEvento = 'Taller de Liderazgo';
+    component.modelo.institucionOrganizadora = 'ISTPET';
+    component.onFechaInicioChange('2024-05-10');
+    component.onFechaFinChange('2024-05-01');
+
+    component.guardar();
+
+    expect(component.errorFormulario()).toBe(
+      'La fecha de fin no puede ser anterior a la fecha de inicio.',
+    );
+    expect(stateMock.guardarCapacitacion).not.toHaveBeenCalled();
+  });
+
+  it('muestra_mensaje_del_servidor_cuando_falla_guardado', () => {
+    stateMock.guardarCapacitacion.mockReturnValue(
+      throwError(() => ({
+        mensaje: 'La fecha de fin no puede ser anterior a la fecha de inicio.',
+        codigo: 'REGLA_NEGOCIO',
+      })),
+    );
+
+    component.abrirFormulario();
+    component.modelo.nombreEvento = 'Taller de Liderazgo';
+    component.modelo.institucionOrganizadora = 'ISTPET';
+    component.guardar();
+    fixture.detectChanges();
+
+    expect(component.errorFormulario()).toBe(
+      'La fecha de fin no puede ser anterior a la fecha de inicio.',
+    );
+    const alerta = fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alerta).toBeTruthy();
+    expect(alerta.textContent).toContain(
+      'La fecha de fin no puede ser anterior a la fecha de inicio.',
+    );
   });
 
   it('muestra_error_de_formato_y_bloquea_guardar_hasta_corregir', async () => {

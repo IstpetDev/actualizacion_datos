@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, input, output, signal } from '@angular/core';
 import { finalize } from 'rxjs';
@@ -262,7 +263,7 @@ export class UploaderRespaldoComponent {
           }
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al subir el archivo.');
+          this.error.set(mensajeError(err, 'Error al subir el archivo.'));
         },
       });
   }

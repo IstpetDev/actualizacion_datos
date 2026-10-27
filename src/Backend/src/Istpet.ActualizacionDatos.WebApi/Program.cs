@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
@@ -7,6 +8,7 @@ using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Istpet.ActualizacionDatos.WebApi.Endpoints;
+using Istpet.ActualizacionDatos.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -70,11 +72,35 @@ builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.Configure<RouteHandlerOptions>(opciones => opciones.ThrowOnBadRequest = true);
 builder.Services.AddExceptionHandler<Istpet.ActualizacionDatos.WebApi.ValidacionJsonHandler>();
+builder.Services.AddExceptionHandler<ManejadorGlobalExcepciones>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var httpContext = statusCodeContext.HttpContext;
+    if (httpContext.Response.HasStarted || !string.IsNullOrEmpty(httpContext.Response.ContentType))
+    {
+        return;
+    }
+
+    var code = httpContext.Response.StatusCode;
+    var mensaje = code switch
+    {
+        StatusCodes.Status401Unauthorized => "Debe iniciar sesión para acceder a este recurso.",
+        StatusCodes.Status403Forbidden => "No tiene permisos para realizar esta operación.",
+        StatusCodes.Status404NotFound => "El recurso solicitado no fue encontrado.",
+        StatusCodes.Status405MethodNotAllowed => "El método HTTP no está permitido para esta ruta.",
+        StatusCodes.Status415UnsupportedMediaType => "El tipo de medio no es soportado.",
+        _ => $"La petición respondió con código de estado {code}."
+    };
+
+    httpContext.Response.ContentType = "application/json";
+    var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+    await httpContext.Response.WriteAsJsonAsync(new MensajeRespuesta(mensaje, $"HTTP_{code}", null, traceId));
+});
 app.UseAuthentication();
 app.UseAuthorization();
 

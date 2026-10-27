@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
@@ -670,7 +671,7 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
       }),
       catchError((err) => {
         this.validacion.registrarError(err, this.modelo);
-        this.errorFormulario.set(err?.message || 'Error al guardar la experiencia laboral.');
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la experiencia laboral.'));
         return of(false);
       }),
     );
