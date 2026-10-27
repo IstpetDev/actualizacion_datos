@@ -172,6 +172,10 @@ public sealed partial class ExportacionesTests : IDisposable
         var archivoDoc = archive.Entries.FirstOrDefault(e => e.FullName.Contains($"/{pAprobada.Documento}/titulo_profesional.pdf", StringComparison.OrdinalIgnoreCase));
         Assert.NotNull(archivoDoc);
 
+        // RF-PLA-013: Verificar que el PDF de hoja de vida de la persona aprobada fue incluido en el ZIP
+        var pdfDoc = archive.Entries.FirstOrDefault(e => e.FullName.Contains($"/{pAprobada.Documento}/hoja-de-vida.pdf", StringComparison.OrdinalIgnoreCase));
+        Assert.NotNull(pdfDoc);
+
         // Verificar que la persona pendiente no tiene archivos en el zip
         var archivosPendiente = archive.Entries.Where(e => e.FullName.Contains($"/{pPendiente.Documento}/", StringComparison.OrdinalIgnoreCase));
         Assert.Empty(archivosPendiente);
@@ -430,7 +434,7 @@ public sealed partial class ExportacionesTests : IDisposable
         var carpetaRaiz = indexEntry.FullName[..^"/index.md".Length];
         var prefijoPersonaEsperado = $"{carpetaRaiz}/1700000099/";
 
-        var entradasArchivos = archive.Entries.Where(e => e != indexEntry && !e.FullName.EndsWith("/hoja-de-vida.html", StringComparison.Ordinal)).ToList();
+        var entradasArchivos = archive.Entries.Where(e => e != indexEntry && !e.FullName.EndsWith("/hoja-de-vida.html", StringComparison.Ordinal) && !e.FullName.EndsWith("/hoja-de-vida.pdf", StringComparison.Ordinal)).ToList();
         Assert.Equal(9, entradasArchivos.Count);
 
         foreach (var entry in archive.Entries)

@@ -1279,6 +1279,7 @@ app.MapProteccionDatos();
 app.MapSecciones();
 app.MapConfiguracionDocumento();
 app.MapPlantillasHojaDeVida();
+app.MapDocumentoHojaDeVida();
 
 await app.RunAsync();
 
