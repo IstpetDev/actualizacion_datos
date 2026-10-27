@@ -550,7 +550,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                 </div>
               }
               <div class="table-container">
-                <table class="data-table" data-testid="tabla-personas">
+                <table class="data-table tabla-personas" data-testid="tabla-personas">
                   <thead>
                     <tr>
                       <th class="col-checkbox">
@@ -780,6 +780,9 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
       padding: 1.5rem;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
     .section-header {
       margin-bottom: 1.5rem;
@@ -849,6 +852,10 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       border: 1px solid #e2e8f0;
       border-radius: 0.375rem;
       padding: 1.25rem;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .card-destacada {
       background: #eff6ff;
@@ -893,14 +900,16 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
     }
     .grid-dos-columnas {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 1.5rem;
+      min-width: 0;
     }
     .grid-personas-layout {
       display: grid;
-      grid-template-columns: minmax(320px, 360px) 1fr;
+      grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
       gap: 1.5rem;
       align-items: start;
+      min-width: 0;
     }
     .mt-4 {
       margin-top: 1.5rem;
@@ -1012,9 +1021,11 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
     .form-row {
       display: flex;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
     .col {
-      flex: 1;
+      flex: 1 1 180px;
+      min-width: 0;
     }
     .fila-builder {
       background: #ffffff;
@@ -1067,15 +1078,20 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       color: #64748b;
     }
     .table-container {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       border-radius: 0.375rem;
     }
     .data-table {
       width: 100%;
-      min-width: 680px;
       border-collapse: collapse;
       font-size: 0.8125rem;
+    }
+    .data-table.tabla-personas {
+      min-width: 680px;
     }
     .data-table th,
     .data-table td {
@@ -1304,15 +1320,22 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
     }
     @media (max-width: 1024px) {
       .grid-personas-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
     }
     @media (max-width: 768px) {
       .grid-dos-columnas {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
       }
     }
     @media (max-width: 640px) {
+      .dashboard-section {
+        padding: 0.75rem;
+      }
+      .card {
+        padding: 0.875rem;
+      }
       .filtros-tabla-personas {
         flex-direction: column;
         align-items: stretch;
