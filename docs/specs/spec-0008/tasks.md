@@ -1,7 +1,7 @@
 # Capacitaciones obligatorias de la institución — Tareas
 
-**Spec:** `spec.md` versión 0.2 (aprobada 2026-10-27)  
-**Plan:** `plan.md` versión 0.2  
+**Spec:** `spec.md` versión 0.3 (aprobada 2026-10-27)  
+**Plan:** `plan.md` versión 0.3  
 **Estado:** Preparado para implementación, con T-04 y T-07 bloqueadas por el interruptor de spec-0010. Si la spec cambia, se rehacen plan y tareas.
 
 Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API regenera `openapi/v1.json` y el cliente. Todas incluyen pruebas (criterio obligatorio del issue #92). Sin datos reales.
@@ -39,7 +39,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 ## T-01 — Dominio, persistencia y migración
 
-**Objetivo:** entidad `CapacitacionObligatoria` con `AplicaA`, vínculo en `Capacitacion` y esquema migrado.  
+**Objetivo:** entidad `CapacitacionObligatoria` con `FechaRealizacion` y `AplicaA`, `FechaIngresoInstitucion` en `Persona` (persistida desde nómina), vínculo en `Capacitacion` y esquema migrado (ADR-0032).  
 **Área y rama:** Backend; `feature/92-capacitaciones-obligatorias`.  
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/CapacitacionObligatoria.cs`, `.../Domain/HojaDeVida/Capacitacion.cs`, `.../Infrastructure/Persistence/Configuraciones/HojaDeVida/CapacitacionObligatoriaConfiguracion.cs`, `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** campos del plan, sección «Diseño y contratos».  
