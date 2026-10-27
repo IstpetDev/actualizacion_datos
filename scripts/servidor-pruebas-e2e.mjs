@@ -2,8 +2,9 @@
 // Sirve archivos estáticos del frontend y reenvía /api/ y /health al backend
 // en 127.0.0.1 garantizando un único origen sin vulnerabilidades de SSRF.
 
+import assert from "node:assert/strict";
 import { createServer, request } from "node:http";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve, extname, sep } from "node:path";
 
 /**
@@ -72,20 +73,31 @@ const TIPOS_MIME = {
  * Crea y configura una instancia de servidor HTTP para pruebas E2E.
  *
  * @param {object} opciones
- * @param {number|string} opciones.puertoBackend - Puerto numérico donde escucha la API backend en 127.0.0.1
- * @param {string} [opciones.rutaDist] - Ruta al directorio dist del frontend SPA
+ * @param {string} opciones.backend - URL del backend local (ej. http://127.0.0.1:8080)
+ * @param {string} opciones.dist - Ruta al directorio dist del frontend SPA
  * @returns {import("node:http").Server}
  */
-export function crearServidorPruebasE2E({ puertoBackend, rutaDist }) {
-  const puertoNum = Number(puertoBackend);
-  if (!puertoNum || puertoNum <= 0 || puertoNum > 65535) {
-    throw new Error(`Puerto de backend inválido: ${puertoBackend}`);
+export function crearServidorPruebas({ backend, dist }) {
+  assert(backend, "Se requiere la URL del backend");
+  assert(dist, "Se requiere la ruta del directorio dist");
+  assert(existsSync(`${dist}/index.html`), "Compile el frontend primero");
+
+  const backendUrl = new URL(backend);
+  if (backendUrl.hostname !== "127.0.0.1" && backendUrl.hostname !== "localhost") {
+    throw new Error("El backend de pruebas debe residir en loopback (127.0.0.1 o localhost)");
   }
 
-  const dist = rutaDist ? resolve(rutaDist) : resolve("src/Frontend/dist/Frontend/browser");
+  const rutaDist = resolve(dist);
 
   return createServer((peticion, respuesta) => {
     const urlEntrante = peticion.url || "/";
+
+    // Rechazar peticiones sin URL válida o con esquemas/protocolos absolutos
+    if (typeof urlEntrante !== "string" || !urlEntrante.startsWith("/") || urlEntrante.startsWith("//")) {
+      respuesta.writeHead(400);
+      respuesta.end("Ruta invalida");
+      return;
+    }
 
     // 1. Si coincide con prefijo /api/ o /health, evaluar proxy
     if (urlEntrante.startsWith("/api/") || urlEntrante === "/health" || urlEntrante.startsWith("/health?")) {
@@ -98,12 +110,13 @@ export function crearServidorPruebasE2E({ puertoBackend, rutaDist }) {
 
       const rutaDestino = `${validacion.pathname}${validacion.search}`;
       const cabecerasProxy = { ...peticion.headers };
-      cabecerasProxy.host = `127.0.0.1:${puertoNum}`;
+      cabecerasProxy.host = backendUrl.host;
 
       // Configuración de destino con host fijo en loopback (prevención SSRF)
       const opcionesProxy = {
-        hostname: "127.0.0.1",
-        port: puertoNum,
+        protocol: backendUrl.protocol,
+        hostname: backendUrl.hostname,
+        port: backendUrl.port,
         path: rutaDestino,
         method: peticion.method,
         headers: cabecerasProxy,
@@ -141,15 +154,15 @@ export function crearServidorPruebasE2E({ puertoBackend, rutaDist }) {
       return;
     }
 
-    const ruta = resolve(dist, `.${pathnameLimpio}`);
-    if (!ruta.startsWith(dist + sep) && ruta !== dist) {
+    const ruta = resolve(rutaDist, `.${pathnameLimpio}`);
+    if (!ruta.startsWith(rutaDist + sep) && ruta !== rutaDist) {
       respuesta.writeHead(403);
       respuesta.end("Acceso denegado");
       return;
     }
 
     try {
-      const archivo = existsSync(ruta) && extname(ruta) ? ruta : `${dist}/index.html`;
+      const archivo = existsSync(ruta) && extname(ruta) ? ruta : `${rutaDist}/index.html`;
       if (!existsSync(archivo)) {
         respuesta.writeHead(404);
         respuesta.end("Archivo no encontrado");
@@ -165,4 +178,13 @@ export function crearServidorPruebasE2E({ puertoBackend, rutaDist }) {
       }
     }
   });
+}
+
+/**
+ * Variante con firma alternativa para compatibilidad.
+ */
+export function crearServidorPruebasE2E({ puertoBackend, rutaDist, backend, dist }) {
+  const b = backend || `http://127.0.0.1:${puertoBackend}`;
+  const d = dist || rutaDist;
+  return crearServidorPruebas({ backend: b, dist: d });
 }

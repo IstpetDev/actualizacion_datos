@@ -91,7 +91,7 @@ jobs:
           for archivo in imagen-backend.tar.gz imagen-frontend.tar.gz; do
             echo "Transfiriendo ${archivo}..."
             gunzip -c "${archivo}" \
-              | ssh "${USER}@${HOST}" "docker load"
+              | ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load"
           done
 
       - name: Sincronizar archivos de orquestación
@@ -99,9 +99,9 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh "${USER}@${HOST}" "powershell -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
-          scp docker-compose.prod.yml "${USER}@${HOST}:${DIR}/docker-compose.prod.yml"
-          scp deploy/nginx/default.conf "${USER}@${HOST}:${DIR}/deploy/nginx/default.conf"
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "powershell -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
+          scp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa docker-compose.prod.yml "${USER}@${HOST}:${DIR}/docker-compose.prod.yml"
+          scp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa deploy/nginx/default.conf "${USER}@${HOST}:${DIR}/deploy/nginx/default.conf"
 
   migrar:
     name: Migrar base de datos
@@ -129,7 +129,7 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           echo "Ejecutando migraciones con flag explícito --migrar..."
-          ssh "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml run --rm backend --migrar"
 
       - name: Cargar y verificar catálogos versionados
@@ -139,7 +139,7 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           echo "Cargando catálogos versionados..."
-          ssh "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml run --rm backend --cargar-catalogos"
 
   desplegar:
@@ -168,11 +168,11 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           echo "Levantando versión ${SHA}..."
-          ssh "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
   verificar:
-    name: Verificación de salud (Smoke Tests)
+    name: Comprobar salud de los servicios
     needs: desplegar
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -197,8 +197,8 @@ jobs:
         run: |
           echo "Esperando a que los servicios se estabilicen..."
           sleep 10
-          ssh "${USER}@${HOST}" \
-            "powershell -Command \"\$puerto = (Get-Content '${DIR}/.env' -ErrorAction SilentlyContinue | Select-String '^PUERTO_PUBLICO=(\d+)' | ForEach-Object { \$_.Matches.Groups[1].Value }) | Select-Object -First 1; if (-not \$puerto) { \$puerto = '8088' }; Write-Host ('Comprobando API /health en puerto ' + \$puerto + '...'); curl.exe -f -s http://127.0.0.1:\$puerto/health | Out-Null; Write-Host 'API /health responde OK.'; Write-Host ('Comprobando Frontend SPA / en puerto ' + \$puerto + '...'); curl.exe -f -s http://127.0.0.1:\$puerto/ | Out-Null; Write-Host 'Frontend responde OK.'; cd /d '${DIR}'; docker compose -f docker-compose.prod.yml ps\""
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "powershell -NoProfile -Command \"\$puerto = (Get-Content '${DIR}/.env' -ErrorAction SilentlyContinue | Select-String '^PUERTO_PUBLICO=(\d+)' | ForEach-Object { \$_.Matches.Groups[1].Value }) | Select-Object -First 1; if (-not \$puerto) { \$puerto = if (\$env:PUERTO_PUBLICO) { \$env:PUERTO_PUBLICO } else { '8088' } }; Write-Host ('Comprobando API /health en puerto ' + \$puerto + '...'); curl.exe -f -s http://127.0.0.1:\$puerto/health | Out-Null; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo /health'; exit 1 }; Write-Host 'API /health responde OK.'; Write-Host ('Comprobando Frontend SPA / en puerto ' + \$puerto + '...'); curl.exe -f -s -o NUL http://127.0.0.1:\$puerto/; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo Frontend'; exit 1 }; Write-Host 'Frontend responde OK.'; cd /d '${DIR}'; docker compose -f docker-compose.prod.yml ps\""
 
   limpiar:
     name: Limpiar imágenes antiguas
@@ -226,5 +226,5 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh "${USER}@${HOST}" \
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "docker image prune -f"

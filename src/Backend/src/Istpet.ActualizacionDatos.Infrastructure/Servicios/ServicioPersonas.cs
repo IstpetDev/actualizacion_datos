@@ -727,6 +727,11 @@ public class ServicioPersonas : IServicioPersonas
             .OrderBy(p => p.Documento)
             .ToListAsync(ct);
 
+        var idsPersonasConFicha = (await _context.FichasPersonales
+            .Select(f => f.PersonaId)
+            .ToListAsync(ct))
+            .ToHashSet();
+
         return personas.Select(p => new PersonaDto(
             p.Id,
             p.InstitucionId.Valor,
@@ -737,6 +742,7 @@ public class ServicioPersonas : IServicioPersonas
             p.AccesoHabilitado,
             p.EstadoActualizacion.ToString(),
             p.FechaCreacionUtc,
+            idsPersonasConFicha.Contains(p.Id),
             p.TipoFuncionarioId)).ToList();
     }
 

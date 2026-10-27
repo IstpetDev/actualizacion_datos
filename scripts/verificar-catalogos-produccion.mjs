@@ -2,11 +2,11 @@
 // Requiere imagen backend construida y frontend compilado; Playwright se instala fuera del proyecto.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, mkdirSync, existsSync } from "node:fs";
+import { mkdirSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
-import { resolve, extname, sep } from "node:path";
+import { resolve } from "node:path";
 import { setTimeout as esperar } from "node:timers/promises";
-import { crearServidorPruebasE2E } from "./servidor-pruebas-e2e.mjs";
+import { crearServidorPruebas } from "./servidor-pruebas-e2e.mjs";
 
 const { chromium, expect } = createRequire(import.meta.url)(
   process.env.PLAYWRIGHT_MODULO || "playwright/test",
@@ -148,8 +148,7 @@ try {
     await esperar(250);
   }
   const dist = resolve("src/Frontend/dist/Frontend/browser");
-  assert(existsSync(`${dist}/index.html`), "Compile el frontend primero");
-  servidor = crearServidorPruebasE2E({ puertoBackend: puerto, rutaDist: dist });
+  servidor = crearServidorPruebas({ backend, dist });
   await new Promise((listo) => servidor.listen(0, "127.0.0.1", listo));
   const base = `http://127.0.0.1:${servidor.address().port}`;
   navegador = await chromium.launch({

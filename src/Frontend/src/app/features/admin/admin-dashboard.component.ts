@@ -1,7 +1,7 @@
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   API_BASE_URL,
@@ -19,7 +19,7 @@ import { EstadoCuentasBancariasComponent } from '../cuenta-bancaria/estado-cuent
 import { ConfiguracionRequisitosComponent } from './configuracion/configuracion-requisitos.component';
 import { InformeNominaComponent } from './nomina/informe-nomina.component';
 
-type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
+type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cuentas';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -42,11 +42,33 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
         </div>
       </header>
 
+      <!-- Selector de Pestañas en Móvil -->
+      <div class="admin-tabs-mobile">
+        <label for="selectTabAdmin" class="admin-tabs-mobile-label">Sección activa:</label>
+        <select
+          id="selectTabAdmin"
+          class="form-control admin-tabs-select"
+          [ngModel]="tabActiva()"
+          (ngModelChange)="cambiarTab($event)"
+          data-testid="select-tab-admin-mobile"
+        >
+          <option value="campanas">Gestión de Campañas</option>
+          <option value="personas">Carga de Personas (Nómina)</option>
+          <option value="exportacion">Exportación de Datos</option>
+          <option value="configuracion">Configuración de Requisitos</option>
+          <option value="cuentas">Cuentas Bancarias</option>
+        </select>
+      </div>
+
       <!-- Pestañas de Navegación -->
-      <nav class="admin-tabs" role="tablist">
+      <nav class="admin-tabs" role="tablist" aria-label="Secciones del panel de administración">
         <button
           type="button"
           class="tab-btn"
+          role="tab"
+          id="tab-btn-campanas"
+          aria-controls="panel-campanas"
+          [attr.aria-selected]="tabActiva() === 'campanas'"
           [class.active]="tabActiva() === 'campanas'"
           (click)="cambiarTab('campanas')"
           data-testid="tab-campanas"
@@ -56,6 +78,10 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
         <button
           type="button"
           class="tab-btn"
+          role="tab"
+          id="tab-btn-personas"
+          aria-controls="panel-personas"
+          [attr.aria-selected]="tabActiva() === 'personas'"
           [class.active]="tabActiva() === 'personas'"
           (click)="cambiarTab('personas')"
           data-testid="tab-personas"
@@ -65,6 +91,10 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
         <button
           type="button"
           class="tab-btn"
+          role="tab"
+          id="tab-btn-exportacion"
+          aria-controls="panel-exportacion"
+          [attr.aria-selected]="tabActiva() === 'exportacion'"
           [class.active]="tabActiva() === 'exportacion'"
           (click)="cambiarTab('exportacion')"
           data-testid="tab-exportacion"
@@ -74,11 +104,28 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
         <button
           type="button"
           class="tab-btn"
+          role="tab"
+          id="tab-btn-configuracion"
+          aria-controls="panel-configuracion"
+          [attr.aria-selected]="tabActiva() === 'configuracion'"
           [class.active]="tabActiva() === 'configuracion'"
           (click)="cambiarTab('configuracion')"
           data-testid="tab-configuracion"
         >
           Configuración de Requisitos
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          role="tab"
+          id="tab-btn-cuentas"
+          aria-controls="panel-cuentas"
+          [attr.aria-selected]="tabActiva() === 'cuentas'"
+          [class.active]="tabActiva() === 'cuentas'"
+          (click)="cambiarTab('cuentas')"
+          data-testid="tab-cuentas"
+        >
+          Cuentas Bancarias
         </button>
       </nav>
 
@@ -96,7 +143,64 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
       <!-- PESTAÑA 1: GESTIÓN DE CAMPAÑAS (RF-CAM-001, PD-07) -->
       @if (tabActiva() === 'campanas') {
-        <div class="tab-content" data-testid="contenido-campanas">
+        <div
+          class="tab-content"
+          role="tabpanel"
+          id="panel-campanas"
+          aria-labelledby="tab-btn-campanas"
+          data-testid="contenido-campanas"
+        >
+          <!-- Estado de Preparación Institucional (Checklist del Flujo) -->
+          <div class="card card-checklist mb-4" data-testid="checklist-preparacion">
+            <h2 class="card-title">Estado de Preparación Institucional</h2>
+            <div class="checklist-items">
+              <div class="checklist-item">
+                <span
+                  class="checklist-indicador"
+                  [class.listo]="personas().length > 0"
+                  data-testid="indicador-nomina"
+                >
+                  {{ personas().length > 0 ? '✓' : '—' }}
+                </span>
+                <div class="checklist-detalle">
+                  <strong>Nómina Institucional:</strong>
+                  @if (personas().length > 0) {
+                    <span>{{ personas().length }} personas registradas en nómina.</span>
+                  } @else {
+                    <span class="text-warning">Sin nómina cargada. </span>
+                    <button
+                      type="button"
+                      class="btn-link"
+                      (click)="cambiarTab('personas')"
+                      data-testid="link-ir-personas"
+                    >
+                      Ir a cargar nómina →
+                    </button>
+                  }
+                </div>
+              </div>
+              <div class="checklist-item">
+                <span
+                  class="checklist-indicador"
+                  [class.listo]="campanaActiva()?.estaAbierta"
+                  data-testid="indicador-campana"
+                >
+                  {{ campanaActiva()?.estaAbierta ? '✓' : '—' }}
+                </span>
+                <div class="checklist-detalle">
+                  <strong>Período de Actualización:</strong>
+                  @if (campanaActiva()?.estaAbierta) {
+                    <span class="text-success"
+                      >Campaña activa en curso para recepción de datos.</span
+                    >
+                  } @else {
+                    <span class="text-muted">Sin campaña abierta en este momento.</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Campaña Activa Actual -->
           <div class="card card-destacada">
             <h2 class="card-title">Campaña Activa</h2>
@@ -232,8 +336,14 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
       <!-- PESTAÑA 2: CARGA DE PERSONAS (RF-ACC-001, PD-09) -->
       @if (tabActiva() === 'personas') {
-        <div class="tab-content" data-testid="contenido-personas">
-          <div class="grid-dos-columnas">
+        <div
+          class="tab-content"
+          role="tabpanel"
+          id="panel-personas"
+          aria-labelledby="tab-btn-personas"
+          data-testid="contenido-personas"
+        >
+          <div class="grid-personas-layout">
             <!-- Formulario Carga de Personas -->
             <div class="card">
               <h2 class="card-title">Cargar / Habilitar Personas</h2>
@@ -366,25 +476,59 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
             <!-- Listado de Personas Registradas -->
             <div class="card">
-              <h2 class="card-title">Personas de la Institución</h2>
+              <div class="card-header-flexible">
+                <h2 class="card-title">Personas de la Institución</h2>
+                <span class="metrica-total-personas" data-testid="total-personas-badge">
+                  Total: {{ personas().length }} personas
+                </span>
+              </div>
+              <p class="texto-aclaratorio-guardado">
+                La importación de nómina persiste automáticamente a las personas y sus datos en la
+                base de datos al finalizar. No requiere pulsar ningún botón adicional de guardado.
+              </p>
 
-              <!-- Filtro de Acceso -->
-              <div class="tabla-filtros-acceso">
-                <label for="filtroAccesoSelect"><strong>Filtrar por acceso:</strong></label>
-                <select
-                  id="filtroAccesoSelect"
-                  class="form-control"
-                  style="max-width: 280px; padding: 0.25rem 0.5rem;"
-                  [ngModel]="filtroAcceso()"
-                  (ngModelChange)="cambiarFiltroAcceso($event)"
-                  data-testid="filtro-acceso"
-                >
-                  <option value="todos">Todas las personas ({{ personas().length }})</option>
-                  <option value="habilitados">Acceso Habilitado ({{ totalHabilitadas() }})</option>
-                  <option value="pendientes">
-                    Acceso Pendiente / Deshabilitado ({{ totalPendientes() }})
-                  </option>
-                </select>
+              <!-- Barra de Búsqueda y Filtros -->
+              <div class="filtros-tabla-personas">
+                <div class="filtro-busqueda-input">
+                  <label for="buscarPersonaInput" class="visually-hidden">Buscar persona</label>
+                  <input
+                    id="buscarPersonaInput"
+                    type="search"
+                    class="form-control"
+                    placeholder="Buscar por cédula o nombre…"
+                    [ngModel]="filtroBusqueda()"
+                    (ngModelChange)="actualizarBusqueda($event)"
+                    data-testid="input-buscar-persona"
+                  />
+                </div>
+                <div class="filtro-select-grupo">
+                  <label for="filtroAccesoSelect" class="filtro-label">Acceso:</label>
+                  <select
+                    id="filtroAccesoSelect"
+                    class="form-control"
+                    [ngModel]="filtroAcceso()"
+                    (ngModelChange)="cambiarFiltroAcceso($event)"
+                    data-testid="filtro-acceso"
+                  >
+                    <option value="todos">Todos los accesos ({{ personas().length }})</option>
+                    <option value="habilitados">Habilitados ({{ totalHabilitadas() }})</option>
+                    <option value="pendientes">Pendientes ({{ totalPendientes() }})</option>
+                  </select>
+                </div>
+                <div class="filtro-select-grupo">
+                  <label for="filasPorPaginaSelect" class="filtro-label">Filas:</label>
+                  <select
+                    id="filasPorPaginaSelect"
+                    class="form-control"
+                    [ngModel]="filasPorPagina()"
+                    (ngModelChange)="cambiarFilasPorPagina($event)"
+                    data-testid="select-filas-por-pagina"
+                  >
+                    <option [ngValue]="25">25 por pág.</option>
+                    <option [ngValue]="50">50 por pág.</option>
+                    <option [ngValue]="100">100 por pág.</option>
+                  </select>
+                </div>
               </div>
 
               <!-- Barra de Acciones Masivas -->
@@ -423,9 +567,8 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                   </div>
                 </div>
               }
-
               <div class="table-container">
-                <table class="data-table" data-testid="tabla-personas">
+                <table class="data-table tabla-personas" data-testid="tabla-personas">
                   <thead>
                     <tr>
                       <th class="col-checkbox">
@@ -442,12 +585,13 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                       <th>Nombre</th>
                       <th>Correo</th>
                       <th>Rol</th>
+                      <th>Ficha</th>
                       <th>Acceso</th>
                       <th>Estado</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (per of personasFiltradas(); track per.id) {
+                    @for (per of personasPaginadas(); track per.id) {
                       <tr>
                         <td class="col-checkbox">
                           @if (esUsuarioComun(per)) {
@@ -466,6 +610,17 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                         <td>{{ per.correo || '—' }}</td>
                         <td>
                           <span class="badge badge-info">{{ per.rol }}</span>
+                        </td>
+                        <td>
+                          @if (per.tieneFicha) {
+                            <span class="badge badge-success" data-testid="ficha-cargada"
+                              >Cargada</span
+                            >
+                          } @else {
+                            <span class="badge badge-secondary" data-testid="ficha-pendiente"
+                              >Sin ficha</span
+                            >
+                          }
                         </td>
                         <td>
                           <div class="acceso-celda">
@@ -502,14 +657,55 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="7" class="text-center empty-state">
-                          No hay personas registradas en la institución.
+                        <td
+                          colspan="8"
+                          class="text-center empty-state"
+                          data-testid="estado-personas-vacio"
+                        >
+                          @if (personas().length === 0) {
+                            No hay personas registradas en la institución.
+                          } @else {
+                            No se encontraron personas que coincidan con el filtro aplicado.
+                          }
                         </td>
                       </tr>
                     }
                   </tbody>
                 </table>
               </div>
+
+              <!-- Controles de Paginación -->
+              @if (personasFiltradas().length > 0) {
+                <div class="paginacion-contenedor" data-testid="paginacion-personas">
+                  <div class="paginacion-info">
+                    Mostrando {{ indicePrimerElemento() }} - {{ indiceUltimoElemento() }} de
+                    {{ personasFiltradas().length }} personas
+                  </div>
+                  <div class="paginacion-botones">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="paginaAnterior()"
+                      [disabled]="paginaActual() <= 1"
+                      data-testid="btn-pagina-anterior"
+                    >
+                      ← Anterior
+                    </button>
+                    <span class="paginacion-indicador" data-testid="indicador-pagina-actual">
+                      Página {{ paginaActual() }} de {{ totalPaginas() }}
+                    </span>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="paginaSiguiente()"
+                      [disabled]="paginaActual() >= totalPaginas()"
+                      data-testid="btn-pagina-siguiente"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -517,7 +713,13 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
       <!-- PESTAÑA 3: EXPORTACIÓN DE DATOS (EXCLUSIVO ADMIN / SUPERADMIN) -->
       @if (tabActiva() === 'exportacion') {
-        <div class="tab-content" data-testid="contenido-exportacion">
+        <div
+          class="tab-content"
+          role="tabpanel"
+          id="panel-exportacion"
+          aria-labelledby="tab-btn-exportacion"
+          data-testid="contenido-exportacion"
+        >
           <div class="card">
             <h2 class="card-title">Exportación de Datos y Archivos Institucionales</h2>
             <p class="card-desc">
@@ -560,11 +762,29 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
 
       <!-- PESTAÑA 4: CONFIGURACIÓN DE REQUISITOS (RF-HDV-012, RF-HDV-013, T-12) -->
       @if (tabActiva() === 'configuracion') {
-        <div class="tab-content" data-testid="contenido-configuracion">
+        <div
+          class="tab-content"
+          role="tabpanel"
+          id="panel-configuracion"
+          aria-labelledby="tab-btn-configuracion"
+          data-testid="contenido-configuracion"
+        >
           <app-configuracion-requisitos />
         </div>
       }
-      <app-estado-cuentas-bancarias />
+
+      <!-- PESTAÑA 5: MONITOREO DE CUENTAS BANCARIAS (RF-HDV-027, ADR-0013, Issue #83) -->
+      @if (tabActiva() === 'cuentas') {
+        <div
+          class="tab-content"
+          role="tabpanel"
+          id="panel-cuentas"
+          aria-labelledby="tab-btn-cuentas"
+          data-testid="contenido-cuentas"
+        >
+          <app-estado-cuentas-bancarias #panelCuentas />
+        </div>
+      }
     </section>
   `,
   styles: `
@@ -578,6 +798,9 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
       padding: 1.5rem;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
     .section-header {
       margin-bottom: 1.5rem;
@@ -595,11 +818,34 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       color: #64748b;
       margin: 0;
     }
+    .admin-tabs-mobile {
+      display: none;
+      margin-bottom: 1.25rem;
+    }
+    .admin-tabs-mobile-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 0.35rem;
+    }
+    .admin-tabs-select {
+      font-weight: 600;
+      color: #1e3a8a;
+      background-color: #f8fafc;
+      border: 1.5px solid #93c5fd;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+    }
     .admin-tabs {
       display: flex;
       gap: 0.5rem;
       border-bottom: 2px solid #e2e8f0;
       margin-bottom: 1.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
     }
     .tab-btn {
       padding: 0.75rem 1.25rem;
@@ -612,6 +858,8 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       border-bottom: 2px solid transparent;
       margin-bottom: -2px;
       transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .tab-btn:hover {
       color: #0f172a;
@@ -641,6 +889,10 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       border: 1px solid #e2e8f0;
       border-radius: 0.375rem;
       padding: 1.25rem;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .card-destacada {
       background: #eff6ff;
@@ -667,13 +919,15 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
     }
     .fila-archivo {
       display: flex;
+      flex-direction: column;
       gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
+      align-items: stretch;
     }
     .fila-archivo .form-control {
-      flex: 1;
-      min-width: 200px;
+      width: 100%;
+    }
+    .fila-archivo .btn {
+      width: 100%;
     }
     .divisor-o {
       margin: 1.25rem 0;
@@ -683,14 +937,84 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
     }
     .grid-dos-columnas {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 1.5rem;
+      min-width: 0;
+    }
+    .grid-personas-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+      gap: 1.5rem;
+      align-items: start;
+      min-width: 0;
     }
     .mt-4 {
       margin-top: 1.5rem;
     }
     .mt-2 {
       margin-top: 0.5rem;
+    }
+    .mb-4 {
+      margin-bottom: 1.5rem;
+    }
+    .card-checklist {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+    }
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+    }
+    .checklist-indicador {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 9999px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      border: 1px solid #cbd5e1;
+      flex-shrink: 0;
+    }
+    .checklist-indicador.listo {
+      background: #dcfce7;
+      color: #15803d;
+      border-color: #86efac;
+    }
+    .checklist-detalle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-link {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .btn-link:hover {
+      color: #1d4ed8;
+    }
+    .text-warning {
+      color: #b45309;
+    }
+    .text-success {
+      color: #15803d;
     }
     .campana-activa-info {
       display: flex;
@@ -734,9 +1058,11 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
     .form-row {
       display: flex;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
     .col {
-      flex: 1;
+      flex: 1 1 180px;
+      min-width: 0;
     }
     .fila-builder {
       background: #ffffff;
@@ -785,19 +1111,24 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       margin: 0 0 0.5rem 0;
       font-size: 0.875rem;
     }
-    .text-success {
-      color: #16a34a;
-    }
     .text-muted {
       color: #64748b;
     }
     .table-container {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.375rem;
     }
     .data-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8125rem;
+    }
+    .data-table.tabla-personas {
+      min-width: 680px;
     }
     .data-table th,
     .data-table td {
@@ -876,6 +1207,84 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       display: flex;
       flex-direction: column;
     }
+    .card-header-flexible {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+    .metrica-total-personas {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #1e3a8a;
+      background: #eff6ff;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      border: 1px solid #bfdbfe;
+    }
+    .texto-aclaratorio-guardado {
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin: 0 0 1rem 0;
+    }
+    .filtros-tabla-personas {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .filtro-busqueda-input {
+      flex: 1;
+      min-width: 220px;
+    }
+    .filtro-select-grupo {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .filtro-label {
+      font-size: 0.8125rem;
+      color: #475569;
+      font-weight: 500;
+    }
+    .paginacion-contenedor {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .paginacion-info {
+      font-size: 0.8125rem;
+      color: #64748b;
+    }
+    .paginacion-botones {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .paginacion-indicador {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #334155;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .tabla-filtros-acceso {
       display: flex;
       align-items: center;
@@ -912,6 +1321,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       align-items: center;
       gap: 0.5rem;
       flex-wrap: wrap;
+      min-width: 110px;
     }
     .btn-toggle-acceso {
       padding: 0.15rem 0.45rem;
@@ -945,9 +1355,79 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       background: #dc2626;
       color: #ffffff;
     }
+    @media (max-width: 1024px) {
+      .grid-personas-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
     @media (max-width: 768px) {
+      .admin-tabs {
+        display: none;
+      }
+      .admin-tabs-mobile {
+        display: block;
+      }
       .grid-dos-columnas {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+      }
+    }
+    @media (max-width: 640px) {
+      .dashboard-section {
+        padding: 0.75rem;
+      }
+      .card {
+        padding: 0.875rem;
+      }
+      .filtros-tabla-personas {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filtro-busqueda-input {
+        min-width: 100%;
+      }
+      .filtro-select-grupo {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .filtro-select-grupo .form-control {
+        flex: 1;
+      }
+      .campana-fechas {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .barra-acciones-masivas {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .botones-masivos {
+        width: 100%;
+      }
+      .botones-masivos .btn {
+        flex: 1;
+      }
+    }
+    @media (max-width: 540px) {
+      .paginacion-contenedor {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .paginacion-info {
+        text-align: center;
+      }
+      .paginacion-botones {
+        width: 100%;
+        justify-content: center;
+      }
+      .acciones-exportacion .btn {
+        width: 100%;
+      }
+    }
+    @media (max-width: 480px) {
+      .form-row {
+        flex-direction: column;
       }
     }
   `,
@@ -983,24 +1463,44 @@ export class AdminDashboardComponent implements OnInit {
   readonly personasSeleccionadas = signal<Set<string>>(new Set());
   readonly cambiandoAcceso = signal<boolean>(false);
 
-  readonly personasFiltradas = computed(() => {
-    const lista = this.personas();
-    const filtro = this.filtroAcceso();
-    if (filtro === 'habilitados') {
-      return lista.filter((p) => p.accesoHabilitado);
-    }
-    if (filtro === 'pendientes') {
-      return lista.filter((p) => !p.accesoHabilitado);
-    }
-    return lista;
-  });
-
   readonly totalHabilitadas = computed(
     () => this.personas().filter((p) => p.accesoHabilitado).length,
   );
   readonly totalPendientes = computed(
     () => this.personas().filter((p) => !p.accesoHabilitado).length,
   );
+
+  readonly listaParaCargar = signal<PersonaCargaItem[]>([]);
+  readonly resultadoCarga = signal<ResultadoCargaPersonasDto | null>(null);
+  filaDoc = '';
+  filaNom = '';
+  filaCor = '';
+  archivoParaCargar: File | null = null;
+  readonly cargandoArchivo = signal(false);
+
+  // Paginación y filtros de personas
+  readonly filtroBusqueda = signal<string>('');
+  readonly paginaActual = signal<number>(1);
+  readonly filasPorPagina = signal<number>(25);
+
+  readonly personasFiltradas = computed(() => {
+    const texto = this.filtroBusqueda().trim().toLowerCase();
+    const filtro = this.filtroAcceso();
+    return this.personas().filter((p) => {
+      const coincideTexto =
+        !texto ||
+        (p.documento && p.documento.toLowerCase().includes(texto)) ||
+        (p.nombre && p.nombre.toLowerCase().includes(texto)) ||
+        (p.correo && p.correo.toLowerCase().includes(texto));
+
+      const coincideAcceso =
+        filtro === 'todos' ||
+        (filtro === 'habilitados' && p.accesoHabilitado) ||
+        (filtro === 'pendientes' && !p.accesoHabilitado);
+
+      return coincideTexto && coincideAcceso;
+    });
+  });
 
   readonly personasFiltradasSeleccionables = computed(() => {
     return this.personasFiltradas().filter((p) => this.esUsuarioComun(p));
@@ -1012,13 +1512,26 @@ export class AdminDashboardComponent implements OnInit {
     const sel = this.personasSeleccionadas();
     return seleccionables.every((p) => sel.has(p.id));
   });
-  readonly listaParaCargar = signal<PersonaCargaItem[]>([]);
-  readonly resultadoCarga = signal<ResultadoCargaPersonasDto | null>(null);
-  filaDoc = '';
-  filaNom = '';
-  filaCor = '';
-  archivoParaCargar: File | null = null;
-  readonly cargandoArchivo = signal(false);
+
+  readonly totalPaginas = computed(() =>
+    Math.max(1, Math.ceil(this.personasFiltradas().length / this.filasPorPagina())),
+  );
+
+  readonly personasPaginadas = computed(() => {
+    const inicio = (this.paginaActual() - 1) * this.filasPorPagina();
+    return this.personasFiltradas().slice(inicio, inicio + this.filasPorPagina());
+  });
+
+  readonly indicePrimerElemento = computed(() => {
+    if (this.personasFiltradas().length === 0) return 0;
+    return (this.paginaActual() - 1) * this.filasPorPagina() + 1;
+  });
+
+  readonly indiceUltimoElemento = computed(() =>
+    Math.min(this.paginaActual() * this.filasPorPagina(), this.personasFiltradas().length),
+  );
+
+  @ViewChild('panelCuentas') panelCuentas?: EstadoCuentasBancariasComponent;
 
   ngOnInit(): void {
     this.cargarDatosCampanas();
@@ -1029,6 +1542,9 @@ export class AdminDashboardComponent implements OnInit {
     this.tabActiva.set(tab);
     this.error.set(null);
     this.mensajeExito.set(null);
+    if (tab === 'cuentas') {
+      this.panelCuentas?.cargar();
+    }
   }
 
   cargarDatosCampanas(): void {
@@ -1121,6 +1637,7 @@ export class AdminDashboardComponent implements OnInit {
         }
         this.cargandoArchivo.set(false);
         this.cargarDatosPersonas();
+        this.panelCuentas?.cargar();
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al procesar el archivo de nómina.'));
@@ -1131,9 +1648,34 @@ export class AdminDashboardComponent implements OnInit {
 
   cargarDatosPersonas(): void {
     this.personasClient.listarPersonas().subscribe({
-      next: (lista) => this.personas.set(lista),
+      next: (lista) => {
+        this.personas.set(lista);
+        this.paginaActual.set(1);
+      },
       error: (err) => this.error.set(mensajeError(err, 'Error al listar personas.')),
     });
+  }
+
+  actualizarBusqueda(texto: string): void {
+    this.filtroBusqueda.set(texto);
+    this.paginaActual.set(1);
+  }
+
+  cambiarFilasPorPagina(filas: number): void {
+    this.filasPorPagina.set(Number(filas));
+    this.paginaActual.set(1);
+  }
+
+  paginaAnterior(): void {
+    if (this.paginaActual() > 1) {
+      this.paginaActual.update((p) => p - 1);
+    }
+  }
+
+  paginaSiguiente(): void {
+    if (this.paginaActual() < this.totalPaginas()) {
+      this.paginaActual.update((p) => p + 1);
+    }
   }
 
   esUsuarioComun(per: PersonaDto): boolean {
@@ -1142,6 +1684,7 @@ export class AdminDashboardComponent implements OnInit {
 
   cambiarFiltroAcceso(filtro: 'todos' | 'habilitados' | 'pendientes'): void {
     this.filtroAcceso.set(filtro);
+    this.paginaActual.set(1);
     this.limpiarSeleccion();
   }
 
@@ -1204,7 +1747,7 @@ export class AdminDashboardComponent implements OnInit {
           this.cargarDatosPersonas();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al cambiar el acceso de la persona.');
+          this.error.set(mensajeError(err, 'Error al cambiar el acceso de la persona.'));
           this.cambiandoAcceso.set(false);
         },
       });
@@ -1239,10 +1782,18 @@ export class AdminDashboardComponent implements OnInit {
           this.cargarDatosPersonas();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al procesar la actualización masiva de acceso.');
+          this.error.set(mensajeError(err, 'Error al procesar la actualización masiva de acceso.'));
           this.cambiandoAcceso.set(false);
         },
       });
+  }
+
+  actualizarFiltroEstado(
+    estado: 'todos' | 'habilitados' | 'pendientes' | 'habilitado' | 'pendiente',
+  ): void {
+    const normalizado =
+      estado === 'habilitado' ? 'habilitados' : estado === 'pendiente' ? 'pendientes' : 'todos';
+    this.cambiarFiltroAcceso(normalizado);
   }
 
   agregarFilaPersona(): void {
@@ -1282,6 +1833,7 @@ export class AdminDashboardComponent implements OnInit {
         this.listaParaCargar.set([]);
         this.cargandoPersonas.set(false);
         this.cargarDatosPersonas();
+        this.panelCuentas?.cargar();
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al procesar la carga de personas.'));

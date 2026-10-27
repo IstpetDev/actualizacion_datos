@@ -96,6 +96,7 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>
 {
@@ -120,7 +121,6 @@ app.UseStatusCodePages(async statusCodeContext =>
     var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
     await httpContext.Response.WriteAsJsonAsync(new MensajeRespuesta(mensaje, $"HTTP_{code}", null, traceId));
 });
-app.UseForwardedHeaders();
 app.UseAuthentication();
 app.UseAuthorization();
 

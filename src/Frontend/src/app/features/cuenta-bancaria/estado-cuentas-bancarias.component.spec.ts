@@ -68,6 +68,34 @@ describe('revisión de cuentas bancarias', () => {
     );
   });
 
+  it('muestra_mensaje_cuando_no_hay_personas_o_nomina_cargada', () => {
+    revision.listarEstadosCuentasBancarias.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(EstadoCuentasBancariasComponent);
+    fixture.detectChanges();
+    const html: HTMLElement = fixture.nativeElement;
+    expect(html.querySelector('[data-testid="estado-cuentas-vacio"]')?.textContent).toContain(
+      'No hay personas registradas en la institución o la nómina aún no ha sido cargada.',
+    );
+  });
+
+  it('permite_refrescar_la_lista_manualmente_con_el_boton', () => {
+    revision.listarEstadosCuentasBancarias.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(EstadoCuentasBancariasComponent);
+    fixture.detectChanges();
+
+    expect(revision.listarEstadosCuentasBancarias).toHaveBeenCalledTimes(1);
+
+    const botonRefrescar = fixture.nativeElement.querySelector(
+      '[data-testid="btn-refrescar-cuentas"]',
+    ) as HTMLButtonElement;
+    expect(botonRefrescar).toBeTruthy();
+
+    botonRefrescar.click();
+    fixture.detectChanges();
+
+    expect(revision.listarEstadosCuentasBancarias).toHaveBeenCalledTimes(2);
+  });
+
   it('si_la_api_rechaza_muestra_el_motivo', () => {
     revision.listarEstadosCuentasBancarias.mockReturnValue(
       throwError(() => ({
