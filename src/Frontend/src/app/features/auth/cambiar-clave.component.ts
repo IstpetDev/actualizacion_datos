@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize, switchMap } from 'rxjs';
 import { AutenticacionClient } from '../../api-client';
-import { AuthService } from '../../core/auth';
+import { AuthService, rutaDeAcceso } from '../../core/auth';
 import { mensajeError } from '../../core/auth/mensaje-error';
 
 @Component({
@@ -368,7 +368,7 @@ export class CambiarClaveComponent {
       )
       .subscribe({
         next: (sesion) => {
-          void this.router.navigate([`/${sesion.rol}`]);
+          void this.router.navigate([rutaDeAcceso(sesion)]);
         },
         error: (error: unknown) =>
           this.error.set(

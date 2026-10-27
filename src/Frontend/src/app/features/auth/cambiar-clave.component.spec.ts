@@ -15,7 +15,9 @@ describe('cambio de clave', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     cliente.cambiarContrasena.mockReturnValue(of({ mensaje: 'Actualizada' }));
-    auth.verificarSesion.mockReturnValue(of({ rol: 'usuario' }));
+    auth.verificarSesion.mockReturnValue(
+      of({ rol: 'usuario', requiereAceptarProteccionDatos: false }),
+    );
     TestBed.configureTestingModule({
       imports: [CambiarClaveComponent],
       providers: [

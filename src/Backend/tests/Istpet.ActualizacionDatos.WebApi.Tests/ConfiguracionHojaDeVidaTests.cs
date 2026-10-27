@@ -22,7 +22,7 @@ public sealed partial class ConfiguracionHojaDeVidaTests : IDisposable
     public ConfiguracionHojaDeVidaTests()
     {
         _conexion.Open();
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
             builder.ConfigureServices(servicios =>
             {
                 servicios.Remove(servicios.Single(d => d.ServiceType == typeof(DbContextOptions<AplicacionDbContext>)));

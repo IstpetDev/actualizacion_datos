@@ -22,6 +22,36 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.AceptacionProteccionDatos", b =>
+                {
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<Guid>("PersonaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("persona_id");
+
+                    b.Property<Guid>("AvisoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("aviso_id");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_utc");
+
+                    b.HasKey("InstitucionId", "PersonaId", "AvisoId")
+                        .HasName("pk_aceptaciones_proteccion_datos");
+
+                    b.HasIndex("AvisoId", "InstitucionId")
+                        .HasDatabaseName("ix_aceptaciones_proteccion_datos_aviso_id_institucion_id");
+
+                    b.HasIndex("PersonaId", "InstitucionId")
+                        .HasDatabaseName("ix_aceptaciones_proteccion_datos_persona_id_institucion_id");
+
+                    b.ToTable("aceptaciones_proteccion_datos", (string)null);
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -125,6 +155,89 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_auditorias_institucion_id");
 
                     b.ToTable("auditorias", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.AvisoProteccionDatos", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasMaxLength(100000)
+                        .HasColumnType("character varying(100000)")
+                        .HasColumnName("contenido");
+
+                    b.Property<string>("DeclaracionAceptacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("declaracion_aceptacion");
+
+                    b.Property<string>("EvidenciaAprobacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("evidencia_aprobacion");
+
+                    b.Property<string>("FuenteOficial")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasColumnName("fuente_oficial");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("Responsable")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("responsable");
+
+                    b.Property<int>("RolesDestinatarios")
+                        .HasColumnType("integer")
+                        .HasColumnName("roles_destinatarios");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("titulo");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("version");
+
+                    b.Property<DateTime>("VigenteDesdeUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("vigente_desde_utc");
+
+                    b.Property<DateTime?>("VigenteHastaUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("vigente_hasta_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_avisos_proteccion_datos");
+
+                    b.HasAlternateKey("Id", "InstitucionId")
+                        .HasName("ak_avisos_proteccion_datos_id_institucion_id");
+
+                    b.HasIndex("InstitucionId", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_avisos_proteccion_datos_institucion_id_version");
+
+                    b.ToTable("avisos_proteccion_datos", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_aviso_roles", "roles_destinatarios BETWEEN 1 AND 15");
+
+                            t.HasCheckConstraint("ck_aviso_vigencia", "vigente_hasta_utc IS NULL OR vigente_hasta_utc > vigente_desde_utc");
+                        });
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Campana", b =>
@@ -1616,6 +1729,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_personas");
 
+                    b.HasAlternateKey("Id", "InstitucionId")
+                        .HasName("ak_personas_id_institucion_id");
+
                     b.HasIndex("TipoFuncionarioId")
                         .HasDatabaseName("ix_personas_tipo_funcionario_id");
 
@@ -1624,6 +1740,25 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_personas_institucion_id_documento");
 
                     b.ToTable("personas", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.AceptacionProteccionDatos", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.AvisoProteccionDatos", null)
+                        .WithMany()
+                        .HasForeignKey("AvisoId", "InstitucionId")
+                        .HasPrincipalKey("Id", "InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aceptaciones_proteccion_datos_avisos_proteccion_datos_aviso");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Persona", null)
+                        .WithMany()
+                        .HasForeignKey("PersonaId", "InstitucionId")
+                        .HasPrincipalKey("Id", "InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_aceptaciones_proteccion_datos_personas_persona_id_instituci");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", b =>
@@ -1641,6 +1776,16 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_archivos_adjuntos_personas_persona_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.AvisoProteccionDatos", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_avisos_proteccion_datos_instituciones_institucion_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Campana", b =>
