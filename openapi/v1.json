@@ -4426,6 +4426,568 @@
           }
         }
       }
+    },
+    "/api/configuracion/documento-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ObtenerConfiguracionDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/marca": {
+      "put": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ActualizarMarcaDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarMarcaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/plantilla": {
+      "put": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ElegirPlantillaDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElegirPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/aceptar-version": {
+      "post": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "AceptarVersionDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ListarPlantillasHojaDeVida",
+        "parameters": [
+          {
+            "name": "soloPublicadas",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlantillaResumenDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "CrearPlantillaHojaDeVida",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}": {
+      "get": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ObtenerPlantillaHojaDeVida",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ActualizarPlantillaHojaDeVida",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}/publicar": {
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "PublicarVersionPlantilla",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicarVersionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPlantillaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}/predeterminada": {
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "MarcarPlantillaPredeterminada",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4454,6 +5016,84 @@
         "properties": {
           "datosJson": {
             "type": "string"
+          }
+        }
+      },
+      "ActualizarMarcaDto": {
+        "required": [
+          "nombreVisible",
+          "logoArchivoId",
+          "portadaArchivoId",
+          "colorPrimario",
+          "colorSecundario",
+          "lema",
+          "textoCompromiso"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreVisible": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "portadaArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "colorPrimario": {
+            "type": "string"
+          },
+          "colorSecundario": {
+            "type": "string"
+          },
+          "lema": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "textoCompromiso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ActualizarPlantillaDto": {
+        "required": [
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "configuracion"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
           }
         }
       },
@@ -4898,6 +5538,140 @@
           }
         }
       },
+      "ConfiguracionDocumentoDto": {
+        "required": [
+          "institucionId",
+          "plantillaId",
+          "versionPlantillaId",
+          "nombrePlantilla",
+          "numeroVersion",
+          "nombreVisible",
+          "logoArchivoId",
+          "portadaArchivoId",
+          "colorPrimario",
+          "colorSecundario",
+          "lema",
+          "textoCompromiso",
+          "tieneConfiguracionPropia",
+          "hayNuevaVersionDisponible",
+          "ultimaVersionDisponibleId",
+          "ultimoNumeroVersionDisponible"
+        ],
+        "type": "object",
+        "properties": {
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "versionPlantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "nombrePlantilla": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numeroVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreVisible": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "portadaArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "colorPrimario": {
+            "type": "string"
+          },
+          "colorSecundario": {
+            "type": "string"
+          },
+          "lema": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "textoCompromiso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tieneConfiguracionPropia": {
+            "type": "boolean"
+          },
+          "hayNuevaVersionDisponible": {
+            "type": "boolean"
+          },
+          "ultimaVersionDisponibleId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ultimoNumeroVersionDisponible": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ConfiguracionPlantilla": {
+        "required": [
+          "disenoBase",
+          "secciones"
+        ],
+        "type": "object",
+        "properties": {
+          "disenoBase": {
+            "type": "string"
+          },
+          "secciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeccionPlantillaConfig"
+            }
+          }
+        }
+      },
       "CrearCampanaRequest": {
         "required": [
           "nombre",
@@ -4936,6 +5710,32 @@
             "items": {
               "$ref": "#/components/schemas/AdminInicialRequest"
             }
+          }
+        }
+      },
+      "CrearPlantillaDto": {
+        "required": [
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "configuracion"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
           }
         }
       },
@@ -5138,6 +5938,25 @@
                 "$ref": "#/components/schemas/DocumentoPersonalDto"
               }
             ]
+          }
+        }
+      },
+      "ElegirPlantillaDto": {
+        "required": [
+          "plantillaId"
+        ],
+        "type": "object",
+        "properties": {
+          "plantillaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionPlantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -7017,6 +7836,118 @@
           }
         }
       },
+      "PlantillaDetalleDto": {
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "esPredeterminada",
+          "configuracionBorrador",
+          "fechaCreacionUtc",
+          "fechaActualizacionUtc",
+          "versiones"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "esPredeterminada": {
+            "type": "boolean"
+          },
+          "configuracionBorrador": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionPlantillaDto"
+            }
+          }
+        }
+      },
+      "PlantillaResumenDto": {
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "esPredeterminada",
+          "totalVersiones",
+          "ultimaVersionPublicada",
+          "fechaCreacionUtc",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "esPredeterminada": {
+            "type": "boolean"
+          },
+          "totalVersiones": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ultimaVersionPublicada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PoliticaValidacionDto": {
         "required": [
           "institucionId",
@@ -7053,6 +7984,20 @@
                 "$ref": "#/components/schemas/ReglaCampoDto"
               }
             }
+          }
+        }
+      },
+      "PublicarVersionDto": {
+        "required": [
+          "descripcionCambio"
+        ],
+        "type": "object",
+        "properties": {
+          "descripcionCambio": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7571,6 +8516,28 @@
           }
         }
       },
+      "SeccionPlantillaConfig": {
+        "required": [
+          "codigoSeccion",
+          "campos"
+        ],
+        "type": "object",
+        "properties": {
+          "codigoSeccion": {
+            "type": "string"
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mostrarSiVacia": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "SesionUsuarioDto": {
         "required": [
           "id",
@@ -7920,6 +8887,52 @@
             "type": "string"
           }
         }
+      },
+      "VersionPlantillaDto": {
+        "required": [
+          "id",
+          "plantillaId",
+          "numeroVersion",
+          "disenoBase",
+          "configuracion",
+          "descripcionCambio",
+          "fechaPublicacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plantillaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
+          },
+          "descripcionCambio": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaPublicacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     }
   },
@@ -7974,6 +8987,12 @@
     },
     {
       "name": "ConfiguracionSecciones"
+    },
+    {
+      "name": "ConfiguracionDocumento"
+    },
+    {
+      "name": "PlantillasHojaDeVida"
     }
   ]
 }

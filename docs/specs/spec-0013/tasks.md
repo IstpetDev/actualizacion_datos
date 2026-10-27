@@ -75,30 +75,30 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 **Archivos exclusivos:** `.../Domain/Documentos/*`, `.../Infrastructure/Persistence/Configuraciones/Documentos/*`, `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/DocumentosTests.cs`.  
 **ADR aplicable:** ADR-0004, ADR-0032.
 
-- [ ] Pruebas: la versión publicada es inmutable; publicar incrementa el número; una sola predeterminada; la configuración de institución valida colores.
-- [ ] Implementar y generar la migración (tablas vacías salvo la plantilla inicial `clasico` publicada como predeterminada).
+- [x] Pruebas: la versión publicada es inmutable; publicar incrementa el número; una sola predeterminada; la configuración de institución valida colores.
+- [x] Implementar y generar la migración (tablas vacías salvo la plantilla inicial `clasico` publicada como predeterminada).
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27 en commit `9b2ceab`. Entidades `PlantillaHojaDeVida`, `VersionPlantillaHojaDeVida`, `ConfiguracionDocumentoInstitucion`, migraciones y 106 pruebas de dominio en verde.  
 **Bloqueos:** T-01.
 
 ## T-05 — Configuración del documento por institución (admin)
 
 **Archivos exclusivos:** `.../Application/Servicios/IServicioConfiguracionDocumento.cs`, `.../Infrastructure/Servicios/ServicioConfiguracionDocumento.cs`, `.../WebApi/Endpoints/ConfiguracionDocumentoEndpoints.cs`, pruebas `ConfiguracionDocumentoTests.cs`.
 
-- [ ] Pruebas: el `admin` lee y cambia solo su institución; logo y portada siguen ADR-0006; sin configuración se informa y se usa la predeterminada con marca neutra; una versión nueva no cambia la elegida hasta aceptarla; auditoría sin datos personales.
-- [ ] Implementar; regenerar `openapi/v1.json` y cliente.
+- [x] Pruebas: el `admin` lee y cambia solo su institución; logo y portada siguen ADR-0006; sin configuración se informa y se usa la predeterminada con marca neutra; una versión nueva no cambia la elegida hasta aceptarla; auditoría sin datos personales.
+- [x] Implementar; regenerar `openapi/v1.json` y cliente.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. `IServicioConfiguracionDocumento`, `ServicioConfiguracionDocumento`, endpoints `/api/configuracion/documento-hoja-de-vida` y pruebas unitarias/HTTP completas.  
 **Bloqueos:** T-04.
 
 ## T-06 — Biblioteca global (superadmin)
 
 **Archivos exclusivos:** `.../Application/Servicios/IServicioPlantillasHojaDeVida.cs`, `.../Infrastructure/Servicios/ServicioPlantillasHojaDeVida.cs`, `.../WebApi/Endpoints/PlantillasHojaDeVidaEndpoints.cs`, pruebas `PlantillasHojaDeVidaTests.cs`.
 
-- [ ] Pruebas: solo `superadmin` crea, edita, publica y marca predeterminada (los demás 403); campo fuera del catálogo 400; borrador visible solo para el `superadmin`; auditoría.
-- [ ] Implementar; regenerar `openapi/v1.json` y cliente.
+- [x] Pruebas: solo `superadmin` crea, edita, publica y marca predeterminada (los demás 403); campo fuera del catálogo 400; borrador visible solo para el `superadmin`; auditoría.
+- [x] Implementar; regenerar `openapi/v1.json` y cliente.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. `IServicioPlantillasHojaDeVida`, `ServicioPlantillasHojaDeVida`, endpoints `/api/plantillas-hoja-de-vida`, validación contra catálogo cerrado, `openapi/v1.json` y cliente TypeScript regenerados.  
 **Bloqueos:** T-04.
 
 ## T-07 — Armado de datos desde la hoja de vida

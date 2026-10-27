@@ -1277,6 +1277,8 @@ app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
 app.MapProteccionDatos();
 app.MapSecciones();
+app.MapConfiguracionDocumento();
+app.MapPlantillasHojaDeVida();
 
 await app.RunAsync();
 
