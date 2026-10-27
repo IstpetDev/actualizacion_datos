@@ -1,7 +1,9 @@
 namespace Istpet.ActualizacionDatos.Infrastructure;
 
 using Istpet.ActualizacionDatos.Application;
+using Istpet.ActualizacionDatos.Application.Documentos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Infrastructure.Documentos;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Istpet.ActualizacionDatos.Infrastructure.Servicios;
@@ -46,6 +48,13 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaRespaldosItemsObligatorios>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaDocumentosPersonalesObligatorios>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaCapacitacionesObligatorias>();
+
+        // ADR-0033: Motor nativo QuestPDF para generación de documentos de hoja de vida
+        servicios.AddSingleton<IServicioGeneracionPdfHojaDeVida, GeneradorPdfHojaDeVida>();
+        servicios.AddScoped<IArmadorDatosDocumento, ArmadorDatosDocumento>();
+        servicios.AddScoped<IServicioDocumentoHojaDeVida, ServicioDocumentoHojaDeVida>();
+        servicios.AddScoped<IServicioConfiguracionDocumento, ServicioConfiguracionDocumento>();
+        servicios.AddScoped<IServicioPlantillasHojaDeVida, ServicioPlantillasHojaDeVida>();
 
         // ADR-0013: el protector guarda las claves en memoria durante toda la vida del proceso.
         servicios.AddSingleton<IProtectorCuentaBancaria, ProtectorCuentaBancariaAesGcm>();

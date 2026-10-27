@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { type Mock, vi } from 'vitest';
-import { InstitucionDto, InstitucionesClient } from '../../api-client';
+import { InstitucionDto, InstitucionesClient, PlantillasHojaDeVidaClient } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { SuperadminDashboardComponent } from './superadmin-dashboard.component';
 
@@ -11,6 +11,9 @@ describe('SuperadminDashboardComponent', () => {
   let institucionesClientMock: {
     listarInstituciones: Mock;
     crearInstitucion: Mock;
+  };
+  let plantillasClientMock: {
+    listarPlantillasHojaDeVida: Mock;
   };
   let authServiceMock: {
     sesion: Mock;
@@ -38,6 +41,10 @@ describe('SuperadminDashboardComponent', () => {
       ),
     };
 
+    plantillasClientMock = {
+      listarPlantillasHojaDeVida: vi.fn().mockReturnValue(of([])),
+    };
+
     authServiceMock = {
       sesion: vi.fn().mockReturnValue({
         documento: 'superadmin',
@@ -50,6 +57,7 @@ describe('SuperadminDashboardComponent', () => {
       imports: [SuperadminDashboardComponent],
       providers: [
         { provide: InstitucionesClient, useValue: institucionesClientMock },
+        { provide: PlantillasHojaDeVidaClient, useValue: plantillasClientMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
@@ -90,5 +98,12 @@ describe('SuperadminDashboardComponent', () => {
     expect(component.mensajeExito()).toContain('registrada exitosamente');
     expect(component.nombreInstitucion).toBe('');
     expect(component.adminDoc).toBe('');
+  });
+
+  it('permite_cambiar_a_la_pestana_de_plantillas', () => {
+    expect(component.tabActiva()).toBe('instituciones');
+    component.tabActiva.set('plantillas');
+    fixture.detectChanges();
+    expect(component.tabActiva()).toBe('plantillas');
   });
 });

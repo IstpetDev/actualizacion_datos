@@ -1,4 +1,4 @@
-# ADR-0032 — Exención automática y justificación de nuevo ingreso en capacitaciones obligatorias
+# ADR-0035 — Exención automática y justificación de nuevo ingreso en capacitaciones obligatorias
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-27

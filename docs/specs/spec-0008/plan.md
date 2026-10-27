@@ -55,7 +55,7 @@ Excepciones: ningún requisito queda sin tarea. `test-e2e.md` no se crea todaví
 | Aislamiento por institución | `docs/decisiones/ADR-0004-multitenancia-esquema-unico.md` | Vigente | T-01 a T-06 |
 | Archivos de respaldo | `docs/decisiones/ADR-0006-almacenamiento-de-archivos.md` | Vigente | T-03 |
 | Marcas por ítem | `docs/decisiones/ADR-0008-granularidad-del-rechazo.md` | Vigente | T-05 |
-| Exención y justificación nuevo ingreso | `docs/decisiones/ADR-0032-exencion-automatica-y-justificacion-capacitaciones-obligatorias.md` | Vigente | T-01, T-03, T-04, T-07 |
+| Exención y justificación nuevo ingreso | `docs/decisiones/ADR-0035-exencion-automatica-y-justificacion-capacitaciones-obligatorias.md` | Vigente | T-01, T-03, T-04, T-07 |
 | Campos configurables | `docs/decisiones/ADR-0009-campos-configurables.md` | Propuesto, no se cierra | Ninguna |
 
 No hace falta ADR adicional salvo que PD-CAP-02 (cargo) o PD-CAP-04 (campaña) se resuelvan a favor de agregar cargo o vincular campañas: en ese caso se redacta uno antes de las tareas afectadas (T-01, T-02).

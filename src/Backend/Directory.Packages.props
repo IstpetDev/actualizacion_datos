@@ -22,6 +22,10 @@
     <PackageVersion Include="Scalar.AspNetCore" Version="2.18.2" />
   </ItemGroup>
 
+  <ItemGroup Label="Documentos y PDF">
+    <PackageVersion Include="QuestPDF" Version="2026.9.1" />
+  </ItemGroup>
+
   <ItemGroup Label="Pruebas">
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
@@ -31,6 +35,7 @@
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="PdfPig" Version="0.1.16" />
   </ItemGroup>
 
 </Project>

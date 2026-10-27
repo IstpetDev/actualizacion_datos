@@ -1,5 +1,7 @@
 import politicaPrueba from './servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../api-client';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -28,6 +30,7 @@ import { HojaDeVidaComponent } from './hoja-de-vida.component';
 describe('HojaDeVidaComponent', () => {
   let component: HojaDeVidaComponent;
   let fixture: ComponentFixture<HojaDeVidaComponent>;
+  let httpTestingController: HttpTestingController;
 
   let stateMock: {
     cargarTodo: Mock;
@@ -128,6 +131,8 @@ describe('HojaDeVidaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [HojaDeVidaComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ConfiguracionClient,
           useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
@@ -146,6 +151,7 @@ describe('HojaDeVidaComponent', () => {
       ],
     }).compileComponents();
 
+    httpTestingController = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(HojaDeVidaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -397,5 +403,19 @@ describe('HojaDeVidaComponent', () => {
     const punto = (fixture.nativeElement as HTMLElement).querySelector('.tab-punto-cambios');
     expect(punto).toBeTruthy();
     expect(punto?.textContent).toBe('•');
+  });
+
+  it('permite_descargar_vista_previa_del_documento_pdf', () => {
+    component.descargarVistaPreviaPdf();
+    expect(component.descargandoPdf()).toBe(true);
+
+    const req = httpTestingController.expectOne('/api/mis-datos/documento-hoja-de-vida');
+    expect(req.request.method).toBe('GET');
+    req.flush(new Blob(['%PDF-1.4...']), {
+      headers: { 'content-disposition': 'attachment; filename="hoja-de-vida.pdf"' },
+    });
+
+    expect(component.descargandoPdf()).toBe(false);
+    expect(component.errorDescargaPdf()).toBeNull();
   });
 });

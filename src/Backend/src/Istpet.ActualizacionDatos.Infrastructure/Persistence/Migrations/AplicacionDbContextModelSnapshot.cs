@@ -278,6 +278,155 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.ToTable("campanas", (string)null);
                 });
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Documentos.ConfiguracionDocumentoInstitucion", b =>
+                {
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("ColorPrimario")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color_primario");
+
+                    b.Property<string>("ColorSecundario")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("color_secundario");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<string>("Lema")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("lema");
+
+                    b.Property<Guid?>("LogoArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("logo_archivo_id");
+
+                    b.Property<string>("NombreVisible")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre_visible");
+
+                    b.Property<Guid?>("PlantillaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plantilla_id");
+
+                    b.Property<Guid?>("PortadaArchivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("portada_archivo_id");
+
+                    b.Property<string>("TextoCompromiso")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("texto_compromiso");
+
+                    b.Property<Guid?>("VersionPlantillaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("version_plantilla_id");
+
+                    b.HasKey("InstitucionId")
+                        .HasName("pk_configuraciones_documento_institucion");
+
+                    b.ToTable("configuraciones_documento_institucion", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Documentos.PlantillaHojaDeVida", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ConfiguracionJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("configuracion_json");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descripcion");
+
+                    b.Property<string>("DisenoBase")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("diseno_base");
+
+                    b.Property<bool>("EsPredeterminada")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_predeterminada");
+
+                    b.Property<DateTime>("FechaActualizacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion_utc");
+
+                    b.Property<DateTime>("FechaCreacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_creacion_utc");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre");
+
+                    b.HasKey("Id")
+                        .HasName("pk_plantillas_hoja_de_vida");
+
+                    b.ToTable("plantillas_hoja_de_vida", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Documentos.VersionPlantillaHojaDeVida", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ConfiguracionJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("configuracion_json");
+
+                    b.Property<string>("DescripcionCambio")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descripcion_cambio");
+
+                    b.Property<string>("DisenoBase")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("diseno_base");
+
+                    b.Property<DateTime>("FechaPublicacionUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_publicacion_utc");
+
+                    b.Property<int>("NumeroVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero_version");
+
+                    b.Property<Guid>("PlantillaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plantilla_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_versiones_plantilla_hoja_de_vida");
+
+                    b.HasIndex("PlantillaId", "NumeroVersion")
+                        .IsUnique()
+                        .HasDatabaseName("ix_versiones_plantilla_hoja_de_vida_plantilla_id_numero_version");
+
+                    b.ToTable("versiones_plantilla_hoja_de_vida", (string)null);
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.Capacitacion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1906,6 +2055,16 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_campanas_instituciones_institucion_id");
                 });
 
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Documentos.VersionPlantillaHojaDeVida", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Documentos.PlantillaHojaDeVida", null)
+                        .WithMany("Versiones")
+                        .HasForeignKey("PlantillaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_versiones_plantilla_hoja_de_vida_plantillas_hoja_de_vida_pl");
+                });
+
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.Capacitacion", b =>
                 {
                     b.HasOne("Istpet.ActualizacionDatos.Domain.ArchivoAdjunto", null)
@@ -2351,6 +2510,11 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TipoFuncionarioId")
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_personas_tipos_funcionario_tipo_funcionario_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Documentos.PlantillaHojaDeVida", b =>
+                {
+                    b.Navigation("Versiones");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.Observacion", b =>

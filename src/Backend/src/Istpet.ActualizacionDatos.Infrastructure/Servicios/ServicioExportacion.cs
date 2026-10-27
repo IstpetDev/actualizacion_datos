@@ -3,7 +3,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
 using Istpet.ActualizacionDatos.Application;
+using Istpet.ActualizacionDatos.Application.Documentos;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
@@ -19,16 +21,22 @@ public class ServicioExportacion : IServicioExportacion
     private readonly AplicacionDbContext _context;
     private readonly IAlmacenArchivos _almacenArchivos;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IArmadorDatosDocumento _armadorDatos;
+    private readonly IServicioGeneracionPdfHojaDeVida _generadorPdf;
     private Dictionary<int, string>? _catalogosCv;
 
     public ServicioExportacion(
         AplicacionDbContext context,
         IAlmacenArchivos almacenArchivos,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IArmadorDatosDocumento armadorDatos,
+        IServicioGeneracionPdfHojaDeVida generadorPdf)
     {
         _context = context;
         _almacenArchivos = almacenArchivos;
         _contextoInstitucion = contextoInstitucion;
+        _armadorDatos = armadorDatos;
+        _generadorPdf = generadorPdf;
     }
 
     public async Task<DescargaArchivoDto> ExportarZipAsync(Guid? institucionId = null, CancellationToken ct = default)
@@ -61,6 +69,101 @@ public class ServicioExportacion : IServicioExportacion
         var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
         {
+            // Cargar configuración de documento y marca institucional para la exportación
+            var configInst = await _context.ConfiguracionesDocumentoInstitucion
+                .AsNoTracking()
+                .SingleOrDefaultAsync(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo), ct);
+
+            ConfiguracionPlantilla configuracionPlantilla;
+            if (configInst?.VersionPlantillaId.HasValue == true)
+            {
+                var version = await _context.VersionesPlantillaHojaDeVida
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(v => v.Id == configInst.VersionPlantillaId.Value, ct);
+
+                try
+                {
+                    configuracionPlantilla = !string.IsNullOrWhiteSpace(version?.ConfiguracionJson)
+                        ? JsonSerializer.Deserialize<ConfiguracionPlantilla>(version.ConfiguracionJson) ?? ConfiguracionPlantilla.Predeterminada()
+                        : ConfiguracionPlantilla.Predeterminada();
+                }
+                catch
+                {
+                    configuracionPlantilla = ConfiguracionPlantilla.Predeterminada();
+                }
+            }
+            else
+            {
+                configuracionPlantilla = ConfiguracionPlantilla.Predeterminada();
+            }
+
+            byte[]? logoBytes = null;
+            if (configInst?.LogoArchivoId.HasValue == true)
+            {
+                var archivoLogo = await _context.ArchivosAdjuntos
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(a => a.Id == configInst.LogoArchivoId.Value, ct);
+
+                if (archivoLogo != null)
+                {
+                    try
+                    {
+                        var stream = await _almacenArchivos.AbrirAsync(archivoLogo.InstitucionId, archivoLogo.PersonaId, archivoLogo.Id, ct);
+                        if (stream != null)
+                        {
+                            using (stream)
+                            using (var ms = new MemoryStream())
+                            {
+                                await stream.CopyToAsync(ms, ct);
+                                logoBytes = ms.ToArray();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        logoBytes = null;
+                    }
+                }
+            }
+
+            byte[]? portadaBytes = null;
+            if (configInst?.PortadaArchivoId.HasValue == true)
+            {
+                var archivoPortada = await _context.ArchivosAdjuntos
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(a => a.Id == configInst.PortadaArchivoId.Value, ct);
+
+                if (archivoPortada != null)
+                {
+                    try
+                    {
+                        var stream = await _almacenArchivos.AbrirAsync(archivoPortada.InstitucionId, archivoPortada.PersonaId, archivoPortada.Id, ct);
+                        if (stream != null)
+                        {
+                            using (stream)
+                            using (var ms = new MemoryStream())
+                            {
+                                await stream.CopyToAsync(ms, ct);
+                                portadaBytes = ms.ToArray();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        portadaBytes = null;
+                    }
+                }
+            }
+
+            var marca = new MarcaDocumento(
+                NombreVisible: configInst?.NombreVisible ?? institucionNombre,
+                LogoBytes: logoBytes,
+                PortadaBytes: portadaBytes,
+                ColorPrimario: configInst?.ColorPrimario ?? MarcaDocumento.Neutra.ColorPrimario,
+                ColorSecundario: configInst?.ColorSecundario ?? MarcaDocumento.Neutra.ColorSecundario,
+                Lema: configInst?.Lema,
+                TextoCompromiso: configInst?.TextoCompromiso);
+
             // 1. Generar index.md (inventario de la exportación)
             var contenidoIndice = ConstruirIndiceMarkdown(institucionNombre, institucionIdEfectivo, ahoraUtc, personasAprobadas, archivosPorPersona);
             var indexEntry = archive.CreateEntry($"{nombreCarpetaRaiz}/index.md", CompressionLevel.Optimal);
@@ -75,11 +178,30 @@ public class ServicioExportacion : IServicioExportacion
             {
                 var documentoSeguro = SanearSegmentoRuta(persona.Documento, persona.Id.ToString("N"));
                 var expediente = await ObtenerExpedienteAsync(persona, ct);
+
+                // HTML legado (PD-PLA-17)
                 var entradaCv = archive.CreateEntry($"{nombreCarpetaRaiz}/{documentoSeguro}/hoja-de-vida.html", CompressionLevel.Optimal);
                 using (var salidaCv = new StreamWriter(entradaCv.Open(), new UTF8Encoding(false)))
+                {
                     await salidaCv.WriteAsync(GeneradorCvHtml.Generar(expediente));
+                }
+
+                // PDF oficial desde plantilla y marca institucional (RF-PLA-013)
+                try
+                {
+                    var datosDoc = await _armadorDatos.ArmarDatosPersonaAsync(persona.Id, new InstitucionId(institucionIdEfectivo), ct);
+                    var bytesPdf = _generadorPdf.Generar(datosDoc, marca, configuracionPlantilla);
+                    var entradaPdf = archive.CreateEntry($"{nombreCarpetaRaiz}/{documentoSeguro}/hoja-de-vida.pdf", CompressionLevel.Optimal);
+                    using var streamSalidaPdf = entradaPdf.Open();
+                    await streamSalidaPdf.WriteAsync(bytesPdf, ct);
+                }
+                catch
+                {
+                    // Un fallo en una persona se ignora sin perder las demás (RF-PLA-013)
+                }
+
                 var archivosPersona = archivosPorPersona[persona.Id].ToList();
-                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "hoja-de-vida.html" };
+                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "hoja-de-vida.html", "hoja-de-vida.pdf" };
 
                 foreach (var archivo in archivosPersona)
                 {

@@ -39,14 +39,14 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 ## T-01 — Dominio, persistencia y migración
 
-**Objetivo:** entidad `CapacitacionObligatoria` con `FechaRealizacion` y `AplicaA`, `FechaIngresoInstitucion` en `Persona` (persistida desde nómina), vínculo en `Capacitacion` y esquema migrado (ADR-0032).  
+**Objetivo:** entidad `CapacitacionObligatoria` con `FechaRealizacion` y `AplicaA`, `FechaIngresoInstitucion` en `Persona` (persistida desde nómina), vínculo en `Capacitacion` y esquema migrado (ADR-0035).  
 **Área y rama:** Backend; `feature/92-capacitaciones-obligatorias`.  
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/CapacitacionObligatoria.cs`, `.../Domain/HojaDeVida/Capacitacion.cs`, `.../Infrastructure/Persistence/Configuraciones/HojaDeVida/CapacitacionObligatoriaConfiguracion.cs`, `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** campos del plan, sección «Diseño y contratos».  
 **Salida para integración:** entidad, migración y `DbSet`.  
 **Dependencias:** T-00. **ADR aplicable:** ADR-0029.
 
-- [x] Prueba de dominio que falle: nombre vacío, horas ≤ 0, `AplicaA` con alcance nulo, con tipo coincidente y distinto, y obligatoria inactiva (y exención por nuevo ingreso ADR-0032).
+- [x] Prueba de dominio que falle: nombre vacío, horas ≤ 0, `AplicaA` con alcance nulo, con tipo coincidente y distinto, y obligatoria inactiva (y exención por nuevo ingreso ADR-0035).
 - [x] Implementar entidad, vínculo y configuración EF con índice único parcial.
 - [x] Generar la migración y comprobar que `capacitaciones` existentes quedan intactas.
 - [x] `dotnet test src/Backend --filter "Categoria!=Integracion"`.
@@ -80,7 +80,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioHojaDeVida.cs`, `.../Application/Servicios/IServicioHojaDeVida.cs`, `.../WebApi/Endpoints/HojaDeVidaEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/CapacitacionesObligatoriasTests.cs`.  
 **Entrada/contrato:** `GuardarCapacitacionRequest.capacitacionObligatoriaId` y endpoint de lectura del plan.  
 **Salida para integración:** endpoints y estados `pendiente`, `cargada`, `observada`, `exento-nuevo-ingreso`, `justificada-nuevo-ingreso`.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0029, ADR-0032.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0029, ADR-0035.
 
 - [x] Pruebas que fallen: ve solo las que le aplican (RF-CAP-004, 008); vincular una que no le aplica o de otra institución (404, RF-CAP-013); una segunda vinculada reemplaza (RF-CAP-006); cambiar con actualización enviada o aprobada se rechaza por la API (RF-CAP-014); archivo no admitido se rechaza.
 - [x] Pruebas que fallen del vínculo propio: la persona vincula una capacitación suya sin obligatoria; no una ya vinculada a otra, ni de otra persona o institución; con actualización enviada o aprobada se rechaza.
@@ -98,7 +98,7 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ValidadorCompletitudEnvio.cs`, `.../Infrastructure/RegistroDeInfraestructura.cs`, `src/Backend/tests/.../WebApi.Tests/CapacitacionesObligatoriasTests.cs` (casos de envío; coordinar con T-02).  
 **Entrada/contrato:** `FaltanteEnvioDto` con sección `capacitaciones` y clave `capacitaciones.obligatoria.<id>`.  
 **Salida para integración:** regla registrada en el validador.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0029, ADR-0032.
+**Dependencias:** T-02. **ADR aplicable:** ADR-0029, ADR-0035.
 
 - [x] Pruebas que fallen: falta una que le aplica → no envía y nombra cuál; no le aplica → envía; persona sin tipo solo con las de «todas» (RF-CAP-008); con todas cumplidas envía; **las reglas actuales de RF-HDV-009 y el envío válido existente no se rompen**.
 - [x] Implementar la regla y registrarla.

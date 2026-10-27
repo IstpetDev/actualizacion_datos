@@ -14,7 +14,7 @@ public static class ProteccionDatosEndpoints
         {
             var (persona, institucion, rol) = Identidad(contexto);
             var estado = await servicio.ObtenerEstadoAsync(persona, institucion, rol, ct);
-            return estado.Aviso == null
+            return !estado.Aceptado && estado.Aviso == null
                 ? Results.Json(new MensajeRespuesta(estado.Mensaje!, "AVISO_PROTECCION_DATOS_NO_DISPONIBLE"), statusCode: StatusCodes.Status503ServiceUnavailable)
                 : Results.Ok(estado);
         })

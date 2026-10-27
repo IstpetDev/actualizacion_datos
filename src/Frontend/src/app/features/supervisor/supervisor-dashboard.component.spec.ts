@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { type Mock, vi } from 'vitest';
@@ -100,6 +102,8 @@ describe('SupervisorDashboardComponent', () => {
     referencias: [],
   };
 
+  let httpTestingController: HttpTestingController;
+
   beforeEach(async () => {
     revisionClientMock = {
       listarPendientesRevision: vi.fn().mockReturnValue(of(listaPendientesMock)),
@@ -134,12 +138,15 @@ describe('SupervisorDashboardComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SupervisorDashboardComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: RevisionClient, useValue: revisionClientMock },
         { provide: ArchivosClient, useValue: archivosClientMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
 
+    httpTestingController = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(SupervisorDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -277,5 +284,20 @@ describe('SupervisorDashboardComponent', () => {
         },
       ],
     });
+  });
+
+  it('permite_descargar_el_documento_pdf_de_la_persona_en_revision', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    component.descargarDocumentoPdf();
+    const req = httpTestingController.expectOne(
+      '/api/personas/11111111-1111-1111-1111-111111111111/documento-hoja-de-vida',
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush(new Blob(['%PDF-1.4...']), {
+      headers: { 'content-disposition': 'attachment; filename="hoja-de-vida-1700000001.pdf"' },
+    });
+    expect(component.descargandoPdf()).toBe(false);
   });
 });

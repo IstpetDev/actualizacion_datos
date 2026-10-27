@@ -588,6 +588,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                       <th>Ficha</th>
                       <th>Acceso</th>
                       <th>Estado</th>
+                      <th>Hoja de Vida</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -654,11 +655,22 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                         <td>
                           <span class="badge badge-warning">{{ per.estadoActualizacion }}</span>
                         </td>
+                        <td>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary"
+                            (click)="descargarHdvPersona(per.id, per.documento)"
+                            [attr.data-testid]="'btn-descargar-hdv-' + per.documento"
+                            title="Descargar Hoja de Vida en PDF"
+                          >
+                            PDF
+                          </button>
+                        </td>
                       </tr>
                     } @empty {
                       <tr>
                         <td
-                          colspan="8"
+                          colspan="9"
                           class="text-center empty-state"
                           data-testid="estado-personas-vacio"
                         >
@@ -1955,5 +1967,27 @@ export class AdminDashboardComponent implements OnInit {
     if (!contentDisposition) return null;
     const match = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?/i.exec(contentDisposition);
     return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  descargarHdvPersona(id: string, documento: string): void {
+    const url = `${this.baseUrl}/api/personas/${id}/documento-hoja-de-vida`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) return;
+          const nombreArchivo =
+            this.extraerNombreArchivo(res.headers.get('content-disposition')) ||
+            `hoja-de-vida-${documento}.pdf`;
+          this.descargarBlob(blob, nombreArchivo);
+        },
+        error: (err) => {
+          this.error.set(mensajeError(err, 'Error al descargar la hoja de vida de la persona.'));
+        },
+      });
   }
 }
