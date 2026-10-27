@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 
 internal static class ConfiguracionHojaDeVidaEndpoints
@@ -12,6 +13,14 @@ internal static class ConfiguracionHojaDeVidaEndpoints
     {
         var grupo = app.MapGroup("/api/configuracion").WithTags("Configuracion")
             .RequireAuthorization(politica => politica.RequireRole(nameof(RolUsuario.Admin), nameof(RolUsuario.Superadmin)));
+
+        app.MapGet("/api/configuracion/politica-validacion", (HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
+            EnInstitucion(http, contexto, async () => Results.Ok(await servicio.ObtenerPoliticaValidacionAsync(ct))))
+            .RequireAuthorization().WithTags("Configuracion").WithName("ObtenerPoliticaValidacion")
+            .Produces<PoliticaValidacionDto>().Produces<MensajeRespuesta>(400).Produces(401).Produces<MensajeRespuesta>(403);
+        grupo.MapPut("/correo-institucional", (GuardarDominiosCorreoRequest request, HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
+            EnInstitucion(http, contexto, async () => Results.Ok(await servicio.GuardarDominiosCorreoAsync(request, ct))))
+            .WithName("GuardarDominiosCorreo").Produces<PoliticaValidacionDto>().Produces<MensajeRespuesta>(400).Produces(401).Produces<MensajeRespuesta>(403);
 
         MapRecurso<GuardarTipoFuncionarioRequest, TipoFuncionarioDto>(grupo, "tipos-funcionario", "TiposFuncionario", "TipoFuncionario",
             (s, ct) => s.ListarTiposFuncionarioAsync(ct), (s, r, ct) => s.CrearTipoFuncionarioAsync(r, ct),

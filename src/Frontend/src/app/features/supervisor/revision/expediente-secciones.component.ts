@@ -127,7 +127,7 @@ export type TabExpediente =
               </div>
               @if (ficha.perfil) {
                 <div class="card-dato col-span-2">
-                  <span class="label">Perfil Profesional:</span>
+                  <span class="label">Perfil profesional generado:</span>
                   <p class="valor texto-perfil">{{ ficha.perfil }}</p>
                 </div>
               }

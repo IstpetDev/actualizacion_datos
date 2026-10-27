@@ -11,7 +11,7 @@ using Npgsql;
 using Testcontainers.PostgreSql;
 
 [Trait("Categoria", "Integracion")]
-public sealed class ConfiguracionHojaDeVidaIntegracionTests : IAsyncLifetime
+public sealed partial class ConfiguracionHojaDeVidaIntegracionTests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _contenedor = new PostgreSqlBuilder("postgres:17-alpine").Build();
 

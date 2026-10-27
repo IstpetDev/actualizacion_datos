@@ -1,4 +1,4 @@
-# ADR-0019 — Asignación masiva y persistencia de tipo de funcionario
+# ADR-0026 — Asignación masiva y persistencia de tipo de funcionario
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26

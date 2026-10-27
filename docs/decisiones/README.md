@@ -50,6 +50,11 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0016](ADR-0016-interfaz-de-prueba-de-la-api.md) | Interfaz para probar la API en desarrollo (Scalar) | Propuesto |
 | [ADR-0017](ADR-0017-acceso-a-postgres-por-tunel-ssh.md) | Acceso a PostgreSQL de producción por túnel SSH | Vigente |
 | [ADR-0018](ADR-0018-la-carga-de-nomina-habilita-el-acceso.md) | La carga de nómina habilita el acceso de las personas | Vigente |
-| [ADR-0019](ADR-0019-asignacion-masiva-y-persistencia-tipo-funcionario.md) | Asignación masiva y persistencia de tipo de funcionario | Vigente |
-
-<!-- prueba del ci: este comentario se puede borrar -->
+| [ADR-0019](ADR-0019-semillas-de-tipos-institucionales.md) | Semillas de tipos institucionales | Vigente |
+| [ADR-0020](ADR-0020-retirada-del-control-docente.md) | Retirada del control de clasificación docente | Vigente |
+| [ADR-0021](ADR-0021-carga-de-catalogos-en-produccion.md) | Carga de catálogos en producción | Vigente |
+| [ADR-0022](ADR-0022-bancos-e-instituciones-superiores.md) | Bancos e instituciones de educación superior | Vigente |
+| [ADR-0023](ADR-0023-habilitar-y-deshabilitar-acceso-de-personas.md) | Habilitación y deshabilitación del acceso de personas por el administrador | Vigente |
+| [ADR-0024](ADR-0024-validacion-y-dominios-institucionales.md) | Validación y dominios institucionales | Vigente |
+| [ADR-0025](ADR-0025-perfil-profesional-generado.md) | Perfil profesional generado | Vigente |
+| [ADR-0026](ADR-0026-asignacion-masiva-y-persistencia-tipo-funcionario.md) | Asignación masiva y persistencia de tipo de funcionario | Vigente |

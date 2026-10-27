@@ -27,6 +27,8 @@ using Xunit;
 /// </summary>
 public sealed class Spec0003E2ETests : IDisposable
 {
+    private static readonly string[] NombresReferenciaFicticios = ["Cero", "Uno", "Dos", "Tres", "Cuatro", "Cinco", "Seis"];
+
     private const string DocumentoDocenteA1 = "0000000001";
     private const string CorreoDocenteA1 = "usuario@ejemplo.test";
     private const string DocumentoDocenteA2 = "0000000002";
@@ -237,7 +239,7 @@ public sealed class Spec0003E2ETests : IDisposable
             await db.SaveChangesAsync();
         }
 
-        // 1. RF-HDV-001, RF-HDV-020: Completar ficha con perfil
+        // 1. RF-HDV-001: completar ficha; el perfil se genera según spec-0007.
         var reqFicha = new GuardarFichaPersonalRequest(
             PrimerNombre: "Nombre Ficticio",
             PrimerApellido: "Apellido Ficticio",
@@ -250,8 +252,7 @@ public sealed class Spec0003E2ETests : IDisposable
             ParroquiaResidenciaId: 1004,
             CallePrincipal: "Av. Principal 123",
             Celular: "0990000000",
-            CorreoInstitucional: CorreoDocenteA1,
-            Perfil: "Perfil breve docente de prueba");
+            CorreoInstitucional: CorreoDocenteA1);
 
         var respFicha = await _cliente.SendAsync(CrearRequest(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", instId, DocumentoDocenteA1, RolUsuario.Usuario, reqFicha));
         Assert.Equal(HttpStatusCode.OK, respFicha.StatusCode);
@@ -281,15 +282,15 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // 3. RF-HDV-017, RF-HDV-018: Dos referencias personales y una familiar
         var respRef1 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Referencia Uno", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Uno", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef1.StatusCode);
 
         var respRef2 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Referencia Dos", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Dos", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef2.StatusCode);
 
         var respRef3 = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("familiar", "Referencia Familiar", "0000000000")));
+            new GuardarReferenciaRequest("familiar", "Referencia Familiar", "0900000000")));
         Assert.Equal(HttpStatusCode.Created, respRef3.StatusCode);
 
         // 4. RF-HDV-007, RF-HDV-008: Subir los 5 documentos obligatorios
@@ -385,9 +386,9 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // Solo 1 referencia personal y 1 familiar (falta 1 personal)
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref Personal 1", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Personal Uno", "0900000000")));
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("familiar", "Ref Familiar 1", "0000000000")));
+            new GuardarReferenciaRequest("familiar", "Referencia Familiar Uno", "0900000000")));
 
         // 1 experiencia SIN certificado (falta respaldo)
         var respExpSinRespaldo = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/experiencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
@@ -422,7 +423,7 @@ public sealed class Spec0003E2ETests : IDisposable
 
         // 2. Agregar segunda referencia personal
         await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA2, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref Personal 2", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Personal Dos", "0900000000")));
 
         // 3. Adjuntar certificado a la experiencia
         var archExp = await CrearArchivoFisicoAsync(instId, docenteId, "certificado_exp.pdf");
@@ -499,7 +500,7 @@ public sealed class Spec0003E2ETests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, respModTitulo.StatusCode);
 
         var respModRef = await _cliente.SendAsync(CrearRequest(HttpMethod.Put, $"/api/mis-datos/hoja-de-vida/referencias/{refAId}", instAId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Mod", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Mod", "0900000000")));
         Assert.Equal(HttpStatusCode.BadRequest, respModRef.StatusCode);
 
         // 2. Supervisor A aprueba la actualización
@@ -574,11 +575,11 @@ public sealed class Spec0003E2ETests : IDisposable
         for (int i = 1; i <= 5; i++)
         {
             var respR = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-                new GuardarReferenciaRequest("personal", $"Ref {i}", "0000000000")));
+                new GuardarReferenciaRequest("personal", "Referencia " + NombresReferenciaFicticios[i], "0900000000")));
             Assert.Equal(HttpStatusCode.Created, respR.StatusCode);
         }
         var respSexta = await _cliente.SendAsync(CrearRequest(HttpMethod.Post, "/api/mis-datos/hoja-de-vida/referencias", instId, DocumentoDocenteA1, RolUsuario.Usuario,
-            new GuardarReferenciaRequest("personal", "Ref 6 Invalida", "0000000000")));
+            new GuardarReferenciaRequest("personal", "Referencia Sexta Inválida", "0900000000")));
         Assert.Equal(HttpStatusCode.BadRequest, respSexta.StatusCode);
 
         // 7. RF-HDV-020: Foto de ficha rechaza archivo PDF (solo imagen PNG/JPG)

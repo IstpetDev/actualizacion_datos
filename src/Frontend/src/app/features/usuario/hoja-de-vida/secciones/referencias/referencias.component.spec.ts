@@ -1,3 +1,5 @@
+import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../../../api-client';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -53,7 +55,13 @@ describe('ReferenciasComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ReferenciasComponent],
-      providers: [{ provide: HojaDeVidaStateService, useValue: stateMock }],
+      providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
+        { provide: HojaDeVidaStateService, useValue: stateMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReferenciasComponent);
@@ -128,5 +136,52 @@ describe('ReferenciasComponent', () => {
 
     component.eliminar('ref-1');
     expect(stateMock.eliminarReferencia).toHaveBeenCalledWith('ref-1');
+  });
+
+  it('muestra_error_de_formato_y_bloquea_guardar_hasta_corregir', async () => {
+    component.abrirFormulario();
+    component.modelo.telefono = '080000000';
+    fixture.detectChanges();
+    const boton = fixture.nativeElement.querySelector(
+      '[data-testid="btn-guardar-referencia"]',
+    ) as HTMLButtonElement;
+    expect(boton.disabled).toBe(true);
+    await fixture.whenStable();
+    expect(
+      fixture.nativeElement.querySelector('#error-modelo-telefono').textContent.trim().length,
+    ).toBeGreaterThan(5);
+    component.modelo.telefono = '0900000000';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(boton.disabled).toBe(false);
+  });
+
+  it('bloquea_cambio_de_tipo_si_hay_datos_sin_guardar_en_formulario', () => {
+    component.abrirFormulario();
+    component.modelo.nombresApellidos = 'Carlos Andrade';
+    fixture.detectChanges();
+
+    expect(component.tieneCambios()).toBe(true);
+
+    component.intentarCambiarTipo('Laboral');
+    fixture.detectChanges();
+
+    expect(component.tipoActivo()).toBe('Personal');
+    expect(component.mostrarModalSubtab()).toBe(true);
+  });
+
+  it('descartar_cambios_de_tipo_limpia_formulario_y_cambia_de_tipo', () => {
+    component.abrirFormulario();
+    component.modelo.nombresApellidos = 'Carlos Andrade';
+    component.intentarCambiarTipo('Laboral');
+    expect(component.mostrarModalSubtab()).toBe(true);
+
+    component.descartarYCambiarTipo();
+    fixture.detectChanges();
+
+    expect(component.mostrarModalSubtab()).toBe(false);
+    expect(component.mostrarFormulario()).toBe(false);
+    expect(component.tipoActivo()).toBe('Laboral');
   });
 });

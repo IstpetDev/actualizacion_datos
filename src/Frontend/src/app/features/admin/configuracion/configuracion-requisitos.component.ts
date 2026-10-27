@@ -1,3 +1,4 @@
+import { DominiosCorreoComponent } from './dominios-correo.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DominiosCorreoComponent],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -59,6 +60,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
           </div>
         }
 
+        <app-dominios-correo />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button
@@ -140,17 +142,6 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                       data-testid="input-tf-nombre"
                     />
                   </div>
-                  <div class="form-checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="formTfEsDocente"
-                        name="tfEsDocente"
-                        data-testid="input-tf-esdocente"
-                      />
-                      Aplica rol docente
-                    </label>
-                  </div>
                   <div class="form-actions mt-3">
                     <button
                       type="submit"
@@ -189,7 +180,6 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                       <tr>
                         <th>Código</th>
                         <th>Nombre</th>
-                        <th>Docente</th>
                         <th>Estado</th>
                         <th class="text-right">Acción</th>
                       </tr>
@@ -201,13 +191,6 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                             <strong>{{ tf.codigo }}</strong>
                           </td>
                           <td>{{ tf.nombre }}</td>
-                          <td>
-                            @if (tf.esDocente) {
-                              <span class="badge badge-info">Docente</span>
-                            } @else {
-                              <span class="text-muted">No docente</span>
-                            }
-                          </td>
                           <td>
                             <span
                               class="badge"
@@ -240,7 +223,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                         </tr>
                       } @empty {
                         <tr>
-                          <td colspan="5" class="text-center empty-state">
+                          <td colspan="4" class="text-center empty-state">
                             No hay tipos de funcionario configurados en la institución.
                           </td>
                         </tr>
@@ -1270,7 +1253,12 @@ export class ConfiguracionRequisitosComponent implements OnInit {
     });
 
     this.configClient.listarTiposDocumento().subscribe({
-      next: (tds) => this.tiposDocumento.set(tds || []),
+      next: (tds) => {
+        this.tiposDocumento.set(tds || []);
+        if (!this.editandoDocumentoId()) {
+          this.formTdOrden = this.siguienteOrdenDocumento();
+        }
+      },
       error: (err) => this.error.set(err?.message || 'Error al cargar tipos de documento.'),
     });
 
@@ -1389,7 +1377,11 @@ export class ConfiguracionRequisitosComponent implements OnInit {
     this.formTdNombre = '';
     this.formTdDescripcion = '';
     this.formTdTieneVencimiento = false;
-    this.formTdOrden = 1;
+    this.formTdOrden = this.siguienteOrdenDocumento();
+  }
+
+  private siguienteOrdenDocumento(): number {
+    return this.tiposDocumento().reduce((maximo, tipo) => Math.max(maximo, tipo.orden), 0) + 1;
   }
 
   guardarTipoDocumento(): void {

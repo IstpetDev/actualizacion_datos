@@ -1,5 +1,6 @@
+import politicaPrueba from '../../usuario/hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
   ConfiguracionClient,
@@ -16,6 +17,7 @@ describe('ConfiguracionRequisitosComponent', () => {
   let component: ConfiguracionRequisitosComponent;
   let fixture: ComponentFixture<ConfiguracionRequisitosComponent>;
   let configClientMock: {
+    obtenerPoliticaValidacion: Mock;
     listarTiposFuncionario: Mock;
     crearTipoFuncionario: Mock;
     actualizarTipoFuncionario: Mock;
@@ -99,6 +101,7 @@ describe('ConfiguracionRequisitosComponent', () => {
 
   beforeEach(async () => {
     configClientMock = {
+      obtenerPoliticaValidacion: vi.fn().mockReturnValue(of(politicaPrueba)),
       listarTiposFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario)),
       crearTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),
       actualizarTipoFuncionario: vi.fn().mockReturnValue(of(mockTiposFuncionario[0])),
@@ -179,6 +182,76 @@ describe('ConfiguracionRequisitosComponent', () => {
       esDocente: false,
       activo: true,
     });
+  });
+
+  it('oculta el control docente y conserva el atributo al editar y desactivar', () => {
+    const pantalla = fixture.nativeElement as HTMLElement;
+    expect(pantalla.querySelector('[data-testid="input-tf-esdocente"]')).toBeNull();
+    expect(
+      Array.from(pantalla.querySelectorAll('th')).map((celda) => celda.textContent?.trim()),
+    ).not.toContain('Docente');
+
+    component.iniciarEdicionFuncionario(mockTiposFuncionario[0]);
+    component.formTfNombre = 'Nombre ficticio editado';
+    component.guardarTipoFuncionario();
+    expect(configClientMock.actualizarTipoFuncionario).toHaveBeenCalledWith('tf-001', {
+      codigo: 'DOCENTE',
+      nombre: 'Nombre ficticio editado',
+      esDocente: true,
+      activo: true,
+    });
+    component.alternarActivoFuncionario(mockTiposFuncionario[0]);
+    expect(configClientMock.actualizarTipoFuncionario).toHaveBeenLastCalledWith('tf-001', {
+      codigo: 'DOCENTE',
+      nombre: 'Docente titular',
+      esDocente: true,
+      activo: false,
+    });
+  });
+
+  it('sugiere el máximo más uno incluyendo inactivos y conserva el orden al editar', () => {
+    const documentos = [1, 4, 7].map((orden) => ({
+      ...mockTiposDocumento[0],
+      id: `td-${orden}`,
+      orden,
+      activo: orden !== 7,
+    }));
+    configClientMock.listarTiposDocumento.mockReturnValue(of(documentos));
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(8);
+    component.iniciarEdicionDocumento(documentos[1]);
+    expect(component.formTdOrden).toBe(4);
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(4);
+    component.cancelarEdicionDocumento();
+    expect(component.formTdOrden).toBe(8);
+
+    configClientMock.listarTiposDocumento.mockReturnValue(of([]));
+    component.cargarDatos();
+    expect(component.formTdOrden).toBe(1);
+  });
+
+  it('recalcula el siguiente orden después de recibir la recarga asíncrona de cada alta', () => {
+    expect(component.formTdOrden).toBe(2);
+    const recarga = new Subject<TipoDocumentoDto[]>();
+    configClientMock.listarTiposDocumento.mockReturnValue(recarga);
+    component.formTdCodigo = 'DOCUMENTO_FICTICIO';
+    component.formTdNombre = 'Documento ficticio';
+    component.guardarTipoDocumento();
+    expect(configClientMock.crearTipoDocumento).toHaveBeenCalledWith(
+      expect.objectContaining({ orden: 2 }),
+    );
+    recarga.next([...mockTiposDocumento, { ...mockTiposDocumento[0], id: 'td-002', orden: 2 }]);
+    expect(component.formTdOrden).toBe(3);
+    component.formTdCodigo = 'OTRO_DOCUMENTO_FICTICIO';
+    component.formTdNombre = 'Otro documento ficticio';
+    component.guardarTipoDocumento();
+    expect(configClientMock.crearTipoDocumento).toHaveBeenLastCalledWith(
+      expect.objectContaining({ orden: 3 }),
+    );
+    recarga.next([...mockTiposDocumento, { ...mockTiposDocumento[0], id: 'td-003', orden: 3 }]);
+    expect(component.formTdOrden).toBe(4);
+    recarga.complete();
   });
 
   it('debe permitir crear un nuevo tipo de documento (RF-HDV-012)', () => {

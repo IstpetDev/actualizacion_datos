@@ -3,6 +3,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -15,6 +16,23 @@ public sealed class ServicioConfiguracionHojaDeVida(
 {
     private InstitucionId InstitucionActual => contexto.InstitucionId
         ?? throw new ReglaNegocioException("Se requiere una institución activa para configurar la hoja de vida.");
+
+    public async Task<PoliticaValidacionDto> ObtenerPoliticaValidacionAsync(CancellationToken ct = default)
+    {
+        var institucion = await db.Instituciones.AsNoTracking().SingleOrDefaultAsync(i => i.Id == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La institución no existe.");
+        return ValidacionHojaDeVida.Politica(institucion.Id.Valor, institucion.ObtenerDominiosCorreo());
+    }
+
+    public async Task<PoliticaValidacionDto> GuardarDominiosCorreoAsync(GuardarDominiosCorreoRequest request, CancellationToken ct = default)
+    {
+        var dominios = ValidacionHojaDeVida.NormalizarDominios(request.DominiosCorreoPermitidos);
+        var institucion = await db.Instituciones.SingleOrDefaultAsync(i => i.Id == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("La institución no existe.");
+        institucion.ConfigurarDominiosCorreo(dominios);
+        await db.SaveChangesAsync(ct);
+        return ValidacionHojaDeVida.Politica(institucion.Id.Valor, dominios);
+    }
 
     // El filtro explícito también limita al superadmin a la institución seleccionada.
     private IQueryable<TipoFuncionario> TiposFuncionario => db.TiposFuncionario.Where(t => t.InstitucionId == InstitucionActual);

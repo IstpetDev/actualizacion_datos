@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   API_BASE_URL,
@@ -366,10 +366,77 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
             <!-- Listado de Personas Registradas -->
             <div class="card">
               <h2 class="card-title">Personas de la Institución</h2>
+
+              <!-- Filtro de Acceso -->
+              <div class="tabla-filtros-acceso">
+                <label for="filtroAccesoSelect"><strong>Filtrar por acceso:</strong></label>
+                <select
+                  id="filtroAccesoSelect"
+                  class="form-control"
+                  style="max-width: 280px; padding: 0.25rem 0.5rem;"
+                  [ngModel]="filtroAcceso()"
+                  (ngModelChange)="cambiarFiltroAcceso($event)"
+                  data-testid="filtro-acceso"
+                >
+                  <option value="todos">Todas las personas ({{ personas().length }})</option>
+                  <option value="habilitados">Acceso Habilitado ({{ totalHabilitadas() }})</option>
+                  <option value="pendientes">
+                    Acceso Pendiente / Deshabilitado ({{ totalPendientes() }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- Barra de Acciones Masivas -->
+              @if (personasSeleccionadas().size > 0) {
+                <div class="barra-acciones-masivas" data-testid="barra-acciones-masivas">
+                  <span class="conteo-seleccionadas">
+                    <strong>{{ personasSeleccionadas().size }}</strong> persona(s) seleccionada(s)
+                  </span>
+                  <div class="botones-masivos">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success"
+                      (click)="cambiarAccesoSeleccionadas(true)"
+                      [disabled]="cambiandoAcceso()"
+                      data-testid="btn-habilitar-seleccionadas"
+                    >
+                      Habilitar seleccionadas
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-danger"
+                      (click)="cambiarAccesoSeleccionadas(false)"
+                      [disabled]="cambiandoAcceso()"
+                      data-testid="btn-deshabilitar-seleccionadas"
+                    >
+                      Deshabilitar seleccionadas
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary"
+                      (click)="limpiarSeleccion()"
+                      data-testid="btn-limpiar-seleccion"
+                    >
+                      Deseleccionar
+                    </button>
+                  </div>
+                </div>
+              }
+
               <div class="table-container">
                 <table class="data-table" data-testid="tabla-personas">
                   <thead>
                     <tr>
+                      <th class="col-checkbox">
+                        <input
+                          type="checkbox"
+                          [checked]="todasSeleccionadas()"
+                          [disabled]="personasFiltradasSeleccionables().length === 0"
+                          (change)="toggleSeleccionarTodas()"
+                          title="Seleccionar todas las visibles"
+                          data-testid="checkbox-seleccionar-todas"
+                        />
+                      </th>
                       <th>Documento</th>
                       <th>Nombre</th>
                       <th>Correo</th>
@@ -379,8 +446,18 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                     </tr>
                   </thead>
                   <tbody>
-                    @for (per of personas(); track per.id) {
+                    @for (per of personasFiltradas(); track per.id) {
                       <tr>
+                        <td class="col-checkbox">
+                          @if (esUsuarioComun(per)) {
+                            <input
+                              type="checkbox"
+                              [checked]="estaSeleccionada(per.id)"
+                              (change)="toggleSeleccion(per.id)"
+                              data-testid="checkbox-persona"
+                            />
+                          }
+                        </td>
                         <td>
                           <strong>{{ per.documento }}</strong>
                         </td>
@@ -390,15 +467,33 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                           <span class="badge badge-info">{{ per.rol }}</span>
                         </td>
                         <td>
-                          @if (per.accesoHabilitado) {
-                            <span class="badge badge-success" data-testid="acceso-habilitado"
-                              >Habilitado</span
-                            >
-                          } @else {
-                            <span class="badge badge-secondary" data-testid="acceso-pendiente"
-                              >Pendiente</span
-                            >
-                          }
+                          <div class="acceso-celda">
+                            @if (per.accesoHabilitado) {
+                              <span class="badge badge-success" data-testid="acceso-habilitado"
+                                >Habilitado</span
+                              >
+                            } @else {
+                              <span class="badge badge-secondary" data-testid="acceso-pendiente"
+                                >Pendiente</span
+                              >
+                            }
+                            @if (esUsuarioComun(per)) {
+                              <button
+                                type="button"
+                                class="btn-toggle-acceso"
+                                [class.btn-deshabilitar]="per.accesoHabilitado"
+                                [class.btn-habilitar]="!per.accesoHabilitado"
+                                (click)="cambiarAccesoIndividual(per)"
+                                [disabled]="cambiandoAcceso()"
+                                [attr.data-testid]="'btn-toggle-acceso-' + per.documento"
+                                [title]="
+                                  per.accesoHabilitado ? 'Deshabilitar acceso' : 'Habilitar acceso'
+                                "
+                              >
+                                {{ per.accesoHabilitado ? 'Deshabilitar' : 'Habilitar' }}
+                              </button>
+                            }
+                          </div>
                         </td>
                         <td>
                           <span class="badge badge-warning">{{ per.estadoActualizacion }}</span>
@@ -406,7 +501,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="6" class="text-center empty-state">
+                        <td colspan="7" class="text-center empty-state">
                           No hay personas registradas en la institución.
                         </td>
                       </tr>
@@ -780,6 +875,75 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion';
       display: flex;
       flex-direction: column;
     }
+    .tabla-filtros-acceso {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .barra-acciones-masivas {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.375rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .conteo-seleccionadas {
+      color: #1e40af;
+    }
+    .botones-masivos {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .col-checkbox {
+      width: 2.25rem;
+      text-align: center;
+    }
+    .acceso-celda {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-toggle-acceso {
+      padding: 0.15rem 0.45rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      border-radius: 0.25rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .btn-toggle-acceso:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-deshabilitar {
+      background: #fff1f2;
+      color: #be123c;
+      border-color: #fecdd3;
+    }
+    .btn-deshabilitar:hover:not(:disabled) {
+      background: #ffe4e6;
+    }
+    .btn-habilitar {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #bbf7d0;
+    }
+    .btn-habilitar:hover:not(:disabled) {
+      background: #dcfce7;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+    }
     @media (max-width: 768px) {
       .grid-dos-columnas {
         grid-template-columns: 1fr;
@@ -813,6 +977,40 @@ export class AdminDashboardComponent implements OnInit {
   // Personas
   readonly personas = signal<PersonaDto[]>([]);
   readonly cargandoPersonas = signal<boolean>(false);
+  // Control de Acceso y Selección Masiva (Issue #86, ADR-0023)
+  readonly filtroAcceso = signal<'todos' | 'habilitados' | 'pendientes'>('todos');
+  readonly personasSeleccionadas = signal<Set<string>>(new Set());
+  readonly cambiandoAcceso = signal<boolean>(false);
+
+  readonly personasFiltradas = computed(() => {
+    const lista = this.personas();
+    const filtro = this.filtroAcceso();
+    if (filtro === 'habilitados') {
+      return lista.filter((p) => p.accesoHabilitado);
+    }
+    if (filtro === 'pendientes') {
+      return lista.filter((p) => !p.accesoHabilitado);
+    }
+    return lista;
+  });
+
+  readonly totalHabilitadas = computed(
+    () => this.personas().filter((p) => p.accesoHabilitado).length,
+  );
+  readonly totalPendientes = computed(
+    () => this.personas().filter((p) => !p.accesoHabilitado).length,
+  );
+
+  readonly personasFiltradasSeleccionables = computed(() => {
+    return this.personasFiltradas().filter((p) => this.esUsuarioComun(p));
+  });
+
+  readonly todasSeleccionadas = computed(() => {
+    const seleccionables = this.personasFiltradasSeleccionables();
+    if (seleccionables.length === 0) return false;
+    const sel = this.personasSeleccionadas();
+    return seleccionables.every((p) => sel.has(p.id));
+  });
   readonly listaParaCargar = signal<PersonaCargaItem[]>([]);
   readonly resultadoCarga = signal<ResultadoCargaPersonasDto | null>(null);
   filaDoc = '';
@@ -935,6 +1133,115 @@ export class AdminDashboardComponent implements OnInit {
       next: (lista) => this.personas.set(lista),
       error: (err) => this.error.set(err?.message || 'Error al listar personas.'),
     });
+  }
+
+  esUsuarioComun(per: PersonaDto): boolean {
+    return per.rol?.toLowerCase() === 'usuario';
+  }
+
+  cambiarFiltroAcceso(filtro: 'todos' | 'habilitados' | 'pendientes'): void {
+    this.filtroAcceso.set(filtro);
+    this.limpiarSeleccion();
+  }
+
+  estaSeleccionada(id: string): boolean {
+    return this.personasSeleccionadas().has(id);
+  }
+
+  toggleSeleccion(id: string): void {
+    this.personasSeleccionadas.update((actual) => {
+      const nuevo = new Set(actual);
+      if (nuevo.has(id)) {
+        nuevo.delete(id);
+      } else {
+        nuevo.add(id);
+      }
+      return nuevo;
+    });
+  }
+
+  toggleSeleccionarTodas(): void {
+    const seleccionables = this.personasFiltradasSeleccionables();
+    const todas = this.todasSeleccionadas();
+    this.personasSeleccionadas.update((actual) => {
+      const nuevo = new Set(actual);
+      if (todas) {
+        seleccionables.forEach((p) => nuevo.delete(p.id));
+      } else {
+        seleccionables.forEach((p) => nuevo.add(p.id));
+      }
+      return nuevo;
+    });
+  }
+
+  limpiarSeleccion(): void {
+    this.personasSeleccionadas.set(new Set());
+  }
+
+  cambiarAccesoIndividual(per: PersonaDto): void {
+    const accion = per.accesoHabilitado ? 'deshabilitar' : 'habilitar';
+    const confirmar = window.confirm(
+      `¿Desea ${accion} el acceso de ${per.nombre || per.documento}?`,
+    );
+    if (!confirmar) return;
+
+    this.cambiandoAcceso.set(true);
+    this.error.set(null);
+
+    const nuevoEstado = !per.accesoHabilitado;
+    this.personasClient
+      .cambiarAccesoPersonas({
+        habilitar: nuevoEstado,
+        personaIds: [per.id],
+      })
+      .subscribe({
+        next: (res) => {
+          this.mensajeExito.set(
+            `Acceso ${nuevoEstado ? 'habilitado' : 'deshabilitado'} exitosamente para ${res.cambiadas} persona(s).`,
+          );
+          this.cambiandoAcceso.set(false);
+          this.cargarDatosPersonas();
+        },
+        error: (err) => {
+          this.error.set(err?.message || 'Error al cambiar el acceso de la persona.');
+          this.cambiandoAcceso.set(false);
+        },
+      });
+  }
+
+  cambiarAccesoSeleccionadas(habilitar: boolean): void {
+    const ids = Array.from(this.personasSeleccionadas());
+    if (ids.length === 0) return;
+
+    const accion = habilitar ? 'habilitar' : 'deshabilitar';
+    const confirmar = window.confirm(
+      `¿Desea ${accion} el acceso a las ${ids.length} personas seleccionadas?`,
+    );
+    if (!confirmar) return;
+
+    this.cambiandoAcceso.set(true);
+    this.error.set(null);
+
+    this.personasClient
+      .cambiarAccesoPersonas({
+        habilitar,
+        personaIds: ids,
+      })
+      .subscribe({
+        next: (res) => {
+          this.mensajeExito.set(
+            `Operación completada: ${res.cambiadas} persona(s) ${habilitar ? 'habilitada(s)' : 'deshabilitada(s)'}` +
+              (res.yaEnEstado > 0 ? ` (${res.yaEnEstado} ya estaban en ese estado).` : '.'),
+          );
+          this.personasSeleccionadas.set(new Set());
+          this.cambiandoAcceso.set(false);
+          this.cargarDatosPersonas();
+        },
+        error: (err) => {
+          this.error.set(err?.message || 'Error al procesar la actualización masiva de acceso.');
+          this.cambiandoAcceso.set(false);
+        },
+      });
   }
 
   agregarFilaPersona(): void {

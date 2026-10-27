@@ -2,6 +2,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -55,6 +56,7 @@ public class ServicioCuentaBancaria : IServicioCuentaBancaria
         AsegurarDisponible();
         var persona = await PersonaEditableAsync(documento, ct);
 
+        ValidacionHojaDeVida.Validar(request, "cuenta", ValidacionHojaDeVida.Politica(Guid.Empty, []));
         var numero = NumeroCuentaBancaria.Normalizar(request.Numero);
         await AsegurarCatalogosAsync(request.TipoCuentaId, request.BancoId, ct);
         var datos = new DatosCuentaBancaria(request.TipoCuentaId, request.BancoId, request.NombreBancoOtro, _protector.Proteger(numero));
@@ -131,6 +133,7 @@ public class ServicioCuentaBancaria : IServicioCuentaBancaria
             return false;
         }
 
+        ValidacionHojaDeVida.Validar(propuesta, "cuenta", ValidacionHojaDeVida.Politica(Guid.Empty, []));
         var numero = NumeroCuentaBancaria.Normalizar(propuesta.Numero);
         await AsegurarCatalogosAsync(propuesta.TipoCuentaId, propuesta.BancoId, ct);
         var datos = new DatosCuentaBancaria(propuesta.TipoCuentaId, propuesta.BancoId, propuesta.NombreBancoOtro, _protector.Proteger(numero));

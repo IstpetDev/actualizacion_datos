@@ -208,6 +208,12 @@ internal static class HojaDeVidaEndpoints
 
     private static Task<IResult> DelDueno(HttpContext http, IContextoInstitucion contexto, Func<string, Task<IResult>> accion)
     {
+        if (http.User.Identity?.IsAuthenticated == true && !http.User.IsInRole("Superadmin"))
+        {
+            var id = http.User.FindFirst("institucion_id")?.Value;
+            if (!Guid.TryParse(id, out var institucionId) || contexto.InstitucionId?.Valor != institucionId || contexto.EsSuperadmin)
+                return Task.FromResult(AccesoEndpoints.Prohibido("La institución debe corresponder a su sesión."));
+        }
         var documento = AccesoEndpoints.DocumentoActual(http, contexto);
         return string.IsNullOrWhiteSpace(documento)
             ? Task.FromResult(Results.Unauthorized())
