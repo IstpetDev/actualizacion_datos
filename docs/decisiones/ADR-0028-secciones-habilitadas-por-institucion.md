@@ -1,6 +1,6 @@
 # ADR-0028 — Almacenamiento de las secciones habilitadas por institución
 
-- **Estado:** Propuesto
+- **Estado:** Vigente
 - **Fecha:** 2026-10-27
 
 ## Contexto
@@ -34,22 +34,22 @@ Este ADR decide **solo dónde y cómo se guarda el estado** y quién lo consulta
 
 ## Decisión
 
-**Pendiente.** Recomendación del desarrollador, sin cerrar el ADR: **opción 1**. Es la única que conserva el comportamiento actual sin migrar datos, deja rastro de quién abrió o cerró y no ata el esquema a la lista de secciones.
+Se adopta la **opción 1**, por indicación expresa de quien desarrolla (2026-10-27, conversación del issue #92). Es la única que conserva el comportamiento actual sin migrar datos, deja rastro de quién abrió o cerró y no ata el esquema a la lista de secciones.
 
-Si se adopta la opción 1, el diseño parte de estas pautas, a precisar en el plan:
+El diseño parte de estas pautas, a precisar en el plan:
 
 - Una enumeración `SeccionHojaDeVida` en el dominio con las siete secciones y una entidad `SeccionInstitucion : EntidadInstitucional` (institución, sección, `Habilitada`, fecha y actor del último cambio).
 - Un servicio de aplicación `IServicioSecciones` que responde «¿está abierta la sección S para la institución I?» con una lectura por solicitud. Lo consultan los servicios de escritura, la completitud del envío y la lectura de la hoja de vida.
 - La ficha se trata como siempre abierta en el dominio, aunque exista una fila.
 - Cada cambio se registra en la auditoría sin contenido personal.
 
-Este ADR sigue **Propuesto** hasta que quien desarrolla lo cierre. Un agente de IA no lo cierra por su cuenta (AGENTS.md); las tareas que dependen del almacenamiento quedan «Bloqueadas por ADR» hasta entonces.
+Las tareas T-01 a T-06 y T-08 de la spec-0010, antes bloqueadas por este ADR, quedan liberadas.
 
 ## Consecuencias
 
-- **Si se adopta la opción 1:** una migración con una tabla nueva y sin datos; el despliegue no cambia el comportamiento actual; el costo es una consulta por solicitud de escritura, que se mantiene en una sola lectura.
+- Una migración con una tabla nueva y sin datos; el despliegue no cambia el comportamiento actual; el costo es una consulta por solicitud de escritura, que se mantiene en una sola lectura.
 - **Riesgo:** olvidar consultar el interruptor en una ruta de escritura nueva dejaría la sección cerrada escribible por la API. Se mitiga con pruebas que recorren todas las rutas de escritura de las secciones y con una sola puerta de entrada (`IServicioSecciones`).
-- **Alternativas:** la 2 acopla el esquema a las secciones y la 3 difumina la frontera con ADR-0009.
+- **Descartadas:** la 2 acopla el esquema a las secciones y la 3 difumina la frontera con ADR-0009.
 
 ## ADR relacionados
 

@@ -44,12 +44,12 @@
 
 | Decisión | ADR | Estado | Tareas condicionadas |
 |---|---|---|---|
-| Almacenamiento del interruptor (opción 1, tabla con ausencia = abierta) | `docs/decisiones/ADR-0028-secciones-habilitadas-por-institucion.md` | **Propuesto**: lo cierra quien desarrolla | T-01 a T-06, T-08 |
+| Almacenamiento del interruptor (opción 1, tabla con ausencia = abierta) | `docs/decisiones/ADR-0028-secciones-habilitadas-por-institucion.md` | Vigente (cerrado el 2026-10-27) | T-01 a T-06, T-08 |
 | Aislamiento por institución | `docs/decisiones/ADR-0004-multitenancia-esquema-unico.md` | Vigente | T-01 a T-06 |
 | Hoja de vida estructurada | `docs/decisiones/ADR-0010-hoja-de-vida-estructurada.md` | Vigente | T-04 |
 | Campos configurables | `docs/decisiones/ADR-0009-campos-configurables.md` | Propuesto, no se cierra | Ninguna |
 
-Las tareas T-01 a T-06 y T-08 están **«Bloqueadas por ADR»** hasta que ADR-0028 pase a Vigente.
+ADR-0028 está Vigente: ninguna tarea queda bloqueada por ADR.
 
 ## Mapa de archivos
 
@@ -83,7 +83,6 @@ Una migración nueva con la tabla `secciones_institucion`, **vacía**: como sin 
 
 | Riesgo o punto abierto | Efecto | Acción y responsable |
 |---|---|---|
-| ADR-0028 sigue Propuesto | Bloquea T-01 a T-06 y T-08 | Quien desarrolla lo cierra |
 | Una ruta de escritura sin consulta al interruptor | Sección cerrada escribible por la API | Prueba que recorre todas las rutas de escritura; una sola puerta de entrada |
 | Cambiar la completitud rompe el envío actual | Nadie podría enviar | Pruebas de regresión con todas las secciones abiertas (RF-SEC-006) |
 | Conflictos con #83 (pantalla de admin) | Rehacer la pantalla | Componente nuevo y acotado; revisar #83 antes de T-08 |
@@ -93,7 +92,7 @@ Una migración nueva con la tabla `secciones_institucion`, **vacía**: como sin 
 ## Comprobación del plan
 
 - [x] Las rutas y tecnologías coinciden con el código actual (servicios de escritura, validador, componente de pestañas).
-- [x] ADR-0028 identificado y tareas condicionadas; sigue pendiente de cierre por quien desarrolla.
+- [x] ADR-0028 Vigente (opción 1).
 - [x] Cada requisito de la v0.2 tiene tarea.
 - [x] Las tareas tienen dependencias y límites de edición.
 - [ ] Revisar con quien desarrolla los nombres de endpoints (provisionales) antes de T-02.

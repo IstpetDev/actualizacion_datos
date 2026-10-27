@@ -37,7 +37,7 @@ Resultado esperado: el `admin` de cada institución decide **qué secciones est�
 
 **Confirmado:** lo de la columna «Código». **Inferido:** que el servicio de guardado de cada sección pueda consultar el interruptor antes de escribir, y que el tratamiento de datos (RF-DAT-001) no dependa de ninguna sección.
 
-**ADR:** ninguno cubre el interruptor por sección (búsqueda en `docs/decisiones/`). Hace falta uno (PD-SEC-01): ADR-0028, Propuesto, `docs/decisiones/ADR-0028-secciones-habilitadas-por-institucion.md`.
+**ADR:** ninguno cubre el interruptor por sección (búsqueda en `docs/decisiones/`). Hace falta uno (PD-SEC-01): ADR-0028, Vigente (2026-10-27), `docs/decisiones/ADR-0028-secciones-habilitadas-por-institucion.md`.
 
 ## Alcance
 

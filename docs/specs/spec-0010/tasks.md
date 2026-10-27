@@ -2,7 +2,7 @@
 
 **Spec aprobado:** `spec.md` versión 0.2 (2026-10-27)  
 **Plan:** `plan.md` versión 0.1  
-**Estado:** Preparado para implementación. T-01 a T-06 y T-08 están **«Bloqueadas por ADR»**: falta que quien desarrolla cierre ADR-0028.
+**Estado:** Preparado para implementación. ADR-0028 Vigente (2026-10-27); sin bloqueos.
 
 Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones-por-fases` (de `develop`). Cada tarea que cambie la API regenera `openapi/v1.json` y el cliente. Todas incluyen pruebas. Sin datos reales.
 
@@ -11,7 +11,7 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 | Tarea | Requisitos | Depende de | Puede ir en paralelo con | Dueño |
 |---|---|---|---|---|
 | T-00 | Todos | Aprobación de la spec | Ninguna | Coordinador (hecha) |
-| T-01 | RF-SEC-009, 012, 013 | T-00, ADR-0028 | Ninguna | Coordinador |
+| T-01 | RF-SEC-009, 012, 013 | T-00 | Ninguna | Coordinador |
 | T-02 | RF-SEC-001, 002, 003, 007, 008, 011, 012 | T-01 | Ninguna | Coordinador |
 | T-03 | RF-SEC-005, 007 | T-02 | T-04, T-05, T-06 | Por asignar |
 | T-04 | RF-SEC-006 | T-02 | T-03, T-05, T-06 | Por asignar |
@@ -36,7 +36,7 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/HojaDeVida/SeccionHojaDeVida.cs`, `.../SeccionInstitucion.cs`, `.../Infrastructure/Persistence/Configuraciones/HojaDeVida/SeccionInstitucionConfiguracion.cs`, `.../Persistence/AplicacionDbContext.cs`, `.../Persistence/Migrations/*`, `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/HojaDeVidaTests.cs`.  
 **Entrada/contrato:** sección «Diseño y contratos» del plan.  
 **Salida para integración:** entidad, `DbSet` y migración.  
-**Dependencias:** T-00, ADR-0028. **ADR aplicable:** ADR-0028 (Propuesto).
+**Dependencias:** T-00. **ADR aplicable:** ADR-0028 (Vigente).
 
 - [ ] Prueba que falle: cerrar la ficha se rechaza; abrir y cerrar otras alterna; restricción única institución y sección.
 - [ ] Implementar y generar la migración; comprobar que la tabla queda vacía y no altera datos.
@@ -44,7 +44,7 @@ Prioritaria: va antes que spec-0008. Rama sugerida: `feature/spec-0010-secciones
 - [ ] Revisar RF-SEC-009, 012, 013.
 
 **Resultado registrado:** pendiente  
-**Bloqueos:** Bloqueada por ADR-0028.
+**Bloqueos:** Ninguno.
 
 ## T-02 — Servicio, endpoints y auditoría
 
