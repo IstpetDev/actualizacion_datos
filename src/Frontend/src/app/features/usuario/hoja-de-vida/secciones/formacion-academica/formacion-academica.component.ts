@@ -1,7 +1,10 @@
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
+import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
 import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
@@ -19,7 +22,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 @Component({
   selector: 'app-formacion-academica',
   standalone: true,
-  imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UploaderRespaldoComponent,
+    MarcaObservacionComponent,
+    ModalCambiosSinGuardarComponent,
+  ],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -46,7 +55,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="subtabActiva() === 'obtenidos'"
-          (click)="subtabActiva.set('obtenidos')"
+          (click)="intentarCambiarSubtab('obtenidos')"
           data-testid="subtab-obtenidos"
         >
           Títulos Obtenidos ({{ titulos().length }})
@@ -55,7 +64,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="subtabActiva() === 'en-curso'"
-          (click)="subtabActiva.set('en-curso')"
+          (click)="intentarCambiarSubtab('en-curso')"
           data-testid="subtab-en-curso"
         >
           Estudios en Curso ({{ titulosEnCurso().length }})
@@ -752,6 +761,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </div>
         </div>
       }
+
+      <!-- Modal de Advertencia de Cambios sin Guardar en Subpestaña -->
+      <app-modal-cambios-sin-guardar
+        [abierto]="mostrarModalSubtab()"
+        [guardando]="guardando()"
+        [mensajeError]="errorFormulario()"
+        (guardarYContinuar)="guardarYCambiarSubtab()"
+        (descartarYContinuar)="descartarYCambiarSubtab()"
+        (quedarse)="cancelarCambioSubtab()"
+      ></app-modal-cambios-sin-guardar>
     </section>
   `,
   styles: [
@@ -952,7 +971,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class FormacionAcademicaComponent implements OnInit {
+export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionConCambios {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly registroValidacion = this.validacion.registrarFormulario(
     'formacion-academica',
@@ -961,6 +980,97 @@ export class FormacionAcademicaComponent implements OnInit {
       (this.mostrarFormEnCurso() && this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')),
     inject(DestroyRef),
   );
+  readonly mostrarModalSubtab = signal(false);
+  subtabPendiente?: 'obtenidos' | 'en-curso';
+
+  intentarCambiarSubtab(nueva: 'obtenidos' | 'en-curso'): void {
+    if (this.subtabActiva() === nueva) return;
+    if (this.tieneCambios()) {
+      this.subtabPendiente = nueva;
+      this.mostrarModalSubtab.set(true);
+      return;
+    }
+    this.subtabActiva.set(nueva);
+  }
+
+  guardarYCambiarSubtab(): void {
+    this.guardarCambios().subscribe((ok) => {
+      if (ok) {
+        this.mostrarModalSubtab.set(false);
+        if (this.subtabPendiente) {
+          this.subtabActiva.set(this.subtabPendiente);
+          this.subtabPendiente = undefined;
+        }
+      }
+    });
+  }
+
+  descartarYCambiarSubtab(): void {
+    this.descartarCambios();
+    this.mostrarModalSubtab.set(false);
+    if (this.subtabPendiente) {
+      this.subtabActiva.set(this.subtabPendiente);
+      this.subtabPendiente = undefined;
+    }
+  }
+
+  cancelarCambioSubtab(): void {
+    this.mostrarModalSubtab.set(false);
+    this.subtabPendiente = undefined;
+  }
+
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    if (this.mostrarFormTitulo()) {
+      const m = this.modeloTitulo;
+      if (
+        this.idTituloEdicion() ||
+        m.nombreTitulo?.trim() ||
+        m.gradoAcademicoId ||
+        m.universidadId ||
+        m.nombreInstitucionOtra?.trim() ||
+        m.archivoId ||
+        this.fechaObtencionStr
+      ) {
+        return true;
+      }
+    }
+    if (this.mostrarFormEnCurso()) {
+      const m = this.modeloEnCurso;
+      if (
+        this.idEnCursoEdicion() ||
+        m.nombrePrograma?.trim() ||
+        m.gradoAcademicoId ||
+        m.nombreInstitucionOtra?.trim() ||
+        m.archivoId
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (this.mostrarFormTitulo()) {
+      return this.guardarTituloObservable();
+    }
+    if (this.mostrarFormEnCurso()) {
+      return this.guardarEnCursoObservable();
+    }
+    return of(true);
+  }
+
+  descartarCambios(): void {
+    if (this.mostrarFormTitulo()) {
+      this.cancelarFormTitulo();
+    }
+    if (this.mostrarFormEnCurso()) {
+      this.cancelarFormEnCurso();
+    }
+    this.state.actualizarEstadoCambios?.();
+  }
+
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
 
@@ -1018,6 +1128,7 @@ export class FormacionAcademicaComponent implements OnInit {
   };
 
   ngOnInit(): void {
+    this.state.registrarSeccion?.(this);
     this.catalogos.nivelesAcademicos().subscribe((n) => this.nivelesAcademicos.set(n));
     this.catalogos.universidades().subscribe((u) => this.universidades.set(u));
     // Cargar todos los grados para estudios en curso
@@ -1120,35 +1231,48 @@ export class FormacionAcademicaComponent implements OnInit {
     this.mostrarFormTitulo.set(true);
   }
 
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
+  }
+
   cancelarFormTitulo(): void {
     this.mostrarFormTitulo.set(false);
     this.idTituloEdicion.set(undefined);
   }
 
-  guardarTitulo(): void {
-    if (this.validacion.invalido(this.modeloTitulo, 'titulo')) return;
+  guardarTituloObservable(): Observable<boolean> {
     if (!this.modeloTitulo.nombreTitulo?.trim()) {
       this.errorFormulario.set('El nombre del título es obligatorio.');
-      return;
+      return of(false);
     }
     if (!this.modeloTitulo.gradoAcademicoId) {
       this.errorFormulario.set('Debe seleccionar el grado académico.');
-      return;
+      return of(false);
     }
     if (!this.modeloTitulo.universidadId && !this.modeloTitulo.nombreInstitucionOtra?.trim()) {
       this.errorFormulario.set(
         'Debe indicar la universidad del catálogo o el nombre de otra institución (RF-HDV-003).',
       );
-      return;
+      return of(false);
     }
 
-    this.state.guardarTitulo(this.modeloTitulo, this.idTituloEdicion()).subscribe({
-      next: () => this.cancelarFormTitulo(),
-      error: (err) => {
+    if (this.validacion.invalido(this.modeloTitulo, 'titulo')) return of(false);
+    return this.state.guardarTitulo(this.modeloTitulo, this.idTituloEdicion()).pipe(
+      map(() => {
+        this.cancelarFormTitulo();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
         this.validacion.registrarError(err, this.modeloTitulo);
         this.errorFormulario.set(err?.message || 'Error al guardar el título.');
-      },
-    });
+        return of(false);
+      }),
+    );
+  }
+
+  guardarTitulo(): void {
+    this.guardarTituloObservable().subscribe();
   }
 
   eliminarTitulo(id: string): void {
@@ -1207,28 +1331,37 @@ export class FormacionAcademicaComponent implements OnInit {
     }
   }
 
-  guardarEnCurso(): void {
-    if (this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')) return;
+  guardarEnCursoObservable(): Observable<boolean> {
     if (!this.modeloEnCurso.nombrePrograma?.trim()) {
       this.errorFormulario.set('El nombre del programa es obligatorio.');
-      return;
+      return of(false);
     }
     if (!this.modeloEnCurso.gradoAcademicoId) {
       this.errorFormulario.set('Debe seleccionar el grado que obtendrá.');
-      return;
+      return of(false);
     }
     if (!this.modeloEnCurso.nombreInstitucionOtra?.trim()) {
       this.errorFormulario.set('Debe especificar la institución educativa.');
-      return;
+      return of(false);
     }
 
-    this.state.guardarTituloEnCurso(this.modeloEnCurso, this.idEnCursoEdicion()).subscribe({
-      next: () => this.cancelarFormEnCurso(),
-      error: (err) => {
+    if (this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')) return of(false);
+    return this.state.guardarTituloEnCurso(this.modeloEnCurso, this.idEnCursoEdicion()).pipe(
+      map(() => {
+        this.cancelarFormEnCurso();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
         this.validacion.registrarError(err, this.modeloEnCurso);
         this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.');
-      },
-    });
+        return of(false);
+      }),
+    );
+  }
+
+  guardarEnCurso(): void {
+    this.guardarEnCursoObservable().subscribe();
   }
 
   eliminarEnCurso(id: string): void {

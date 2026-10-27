@@ -1,7 +1,9 @@
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, inject, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
   ElementoCatalogoDto,
@@ -514,7 +516,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class ExperienciaLaboralComponent implements OnInit {
+export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionConCambios {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly registroValidacion = this.validacion.registrarFormulario(
     'experiencia-laboral',
@@ -548,8 +550,41 @@ export class ExperienciaLaboralComponent implements OnInit {
     archivoId: undefined,
   };
 
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    if (this.mostrarFormulario()) {
+      return !!(
+        this.idEdicion() ||
+        this.modelo.empleador?.trim() ||
+        this.modelo.cargo?.trim() ||
+        this.fechaInicioStr ||
+        this.fechaFinStr ||
+        this.modelo.archivoId ||
+        this.modelo.ciudad?.trim() ||
+        this.modelo.funciones?.trim()
+      );
+    }
+    return false;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (!this.mostrarFormulario()) return of(true);
+    return this.guardarObservable();
+  }
+
+  descartarCambios(): void {
+    this.cancelarFormulario();
+    this.state.actualizarEstadoCambios?.();
+  }
+
   ngOnInit(): void {
     this.catalogos.paises().subscribe((p) => this.paises.set(p));
+    this.state.registrarSeccion?.(this);
+  }
+
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
   }
 
   onFechaInicioChange(valor: string): void {
@@ -612,28 +647,37 @@ export class ExperienciaLaboralComponent implements OnInit {
     this.idEdicion.set(undefined);
   }
 
-  guardar(): void {
+  guardarObservable(): Observable<boolean> {
     if (!this.modelo.empleador?.trim()) {
       this.errorFormulario.set('El nombre de la empresa o institución empleadora es obligatorio.');
-      return;
+      return of(false);
     }
     if (!this.modelo.cargo?.trim()) {
       this.errorFormulario.set('El cargo desempeñado es obligatorio.');
-      return;
+      return of(false);
     }
     if (!this.fechaInicioStr) {
       this.errorFormulario.set('La fecha de inicio de labores es obligatoria.');
-      return;
+      return of(false);
     }
 
-    if (this.validacion.invalido(this.modelo, 'experiencia')) return;
-    this.state.guardarExperiencia(this.modelo, this.idEdicion()).subscribe({
-      next: () => this.cancelarFormulario(),
-      error: (err) => {
+    if (this.validacion.invalido(this.modelo, 'experiencia')) return of(false);
+    return this.state.guardarExperiencia(this.modelo, this.idEdicion()).pipe(
+      map(() => {
+        this.cancelarFormulario();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
         this.validacion.registrarError(err, this.modelo);
         this.errorFormulario.set(err?.message || 'Error al guardar la experiencia laboral.');
-      },
-    });
+        return of(false);
+      }),
+    );
+  }
+
+  guardar(): void {
+    this.guardarObservable().subscribe();
   }
 
   eliminar(id: string): void {

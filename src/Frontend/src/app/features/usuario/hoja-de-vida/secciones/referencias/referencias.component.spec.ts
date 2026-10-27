@@ -156,4 +156,32 @@ describe('ReferenciasComponent', () => {
     fixture.detectChanges();
     expect(boton.disabled).toBe(false);
   });
+
+  it('bloquea_cambio_de_tipo_si_hay_datos_sin_guardar_en_formulario', () => {
+    component.abrirFormulario();
+    component.modelo.nombresApellidos = 'Carlos Andrade';
+    fixture.detectChanges();
+
+    expect(component.tieneCambios()).toBe(true);
+
+    component.intentarCambiarTipo('Laboral');
+    fixture.detectChanges();
+
+    expect(component.tipoActivo()).toBe('Personal');
+    expect(component.mostrarModalSubtab()).toBe(true);
+  });
+
+  it('descartar_cambios_de_tipo_limpia_formulario_y_cambia_de_tipo', () => {
+    component.abrirFormulario();
+    component.modelo.nombresApellidos = 'Carlos Andrade';
+    component.intentarCambiarTipo('Laboral');
+    expect(component.mostrarModalSubtab()).toBe(true);
+
+    component.descartarYCambiarTipo();
+    fixture.detectChanges();
+
+    expect(component.mostrarModalSubtab()).toBe(false);
+    expect(component.mostrarFormulario()).toBe(false);
+    expect(component.tipoActivo()).toBe('Laboral');
+  });
 });

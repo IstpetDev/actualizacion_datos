@@ -4,7 +4,9 @@ import {
 } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, effect, inject, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import { ElementoCatalogoDto, GuardarFichaPersonalRequest } from '../../../../../api-client';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
@@ -692,7 +694,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class FichaPersonalComponent implements OnInit {
+export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCambios {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly registroValidacion = this.validacion.registrarFormulario(
     'ficha-personal',
@@ -754,6 +756,42 @@ export class FichaPersonalComponent implements OnInit {
 
   readonly marcaFicha = signal(this.state.obtenerMarcaParaItem('ficha', 'datos_personales'));
 
+  private snapshotModelo = '';
+
+  private guardarSnapshot(): void {
+    this.snapshotModelo = JSON.stringify(this.modelo);
+  }
+
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    return JSON.stringify(this.modelo) !== this.snapshotModelo;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (this.validacion.invalido(this.modelo, 'ficha')) return of(false);
+    return this.state.guardarFichaPersonal(this.modelo).pipe(
+      map(() => {
+        this.guardarSnapshot();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((error: unknown) => { this.validacion.registrarError(error, this.modelo); return of(false); }),
+    );
+  }
+
+  descartarCambios(): void {
+    if (this.snapshotModelo) {
+      this.modelo = JSON.parse(this.snapshotModelo);
+      if (this.modelo.fechaNacimiento) {
+        this.fechaNacimientoStr = new Date(this.modelo.fechaNacimiento).toISOString().split('T')[0];
+      } else {
+        this.fechaNacimientoStr = '';
+      }
+    }
+    this.state.actualizarEstadoCambios?.();
+  }
+
   constructor() {
     effect(() => {
       const f = this.state.ficha();
@@ -791,12 +829,20 @@ export class FichaPersonalComponent implements OnInit {
           const d = new Date(f.fechaNacimiento);
           this.fechaNacimientoStr = d.toISOString().split('T')[0];
         }
+        this.guardarSnapshot();
+        this.state.actualizarEstadoCambios?.();
       }
     });
   }
 
   ngOnInit(): void {
     this.cargarCatalogosBase();
+    this.guardarSnapshot();
+    this.state.registrarSeccion?.(this);
+  }
+
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
   }
 
   private cargarCatalogosBase(): void {
@@ -853,8 +899,6 @@ export class FichaPersonalComponent implements OnInit {
   guardarFicha(): void {
     if (this.validacion.invalido(this.modelo, 'ficha')) return;
     if (!this.puedeEditar()) return;
-    this.state
-      .guardarFichaPersonal(this.modelo)
-      .subscribe({ error: (error: unknown) => this.validacion.registrarError(error, this.modelo) });
+    this.guardarCambios().subscribe();
   }
 }

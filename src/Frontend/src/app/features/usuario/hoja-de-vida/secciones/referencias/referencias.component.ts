@@ -1,6 +1,9 @@
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
+import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
 import { FormsModule } from '@angular/forms';
 import { GuardarReferenciaRequest, ReferenciaDto } from '../../../../../api-client';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
@@ -9,7 +12,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 @Component({
   selector: 'app-referencias',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarcaObservacionComponent],
+  imports: [CommonModule, FormsModule, MarcaObservacionComponent, ModalCambiosSinGuardarComponent],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -36,7 +39,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="tipoActivo() === 'Personal'"
-          (click)="cambiarTipo('Personal')"
+          (click)="intentarCambiarTipo('Personal')"
           data-testid="subtab-personales"
         >
           Referencias Personales ({{ personales().length }} / 5)
@@ -48,7 +51,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="tipoActivo() === 'Laboral'"
-          (click)="cambiarTipo('Laboral')"
+          (click)="intentarCambiarTipo('Laboral')"
           data-testid="subtab-laborales"
         >
           Referencias Laborales ({{ laborales().length }} / 5)
@@ -263,6 +266,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </table>
         </div>
       </div>
+
+      <!-- Modal de Advertencia de Cambios sin Guardar en Subpestaña -->
+      <app-modal-cambios-sin-guardar
+        [abierto]="mostrarModalSubtab()"
+        [guardando]="guardando()"
+        [mensajeError]="errorFormulario()"
+        (guardarYContinuar)="guardarYCambiarTipo()"
+        (descartarYContinuar)="descartarYCambiarTipo()"
+        (quedarse)="cancelarCambioTipo()"
+      ></app-modal-cambios-sin-guardar>
     </section>
   `,
   styles: [
@@ -454,13 +467,86 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class ReferenciasComponent {
+export class ReferenciasComponent implements OnInit, OnDestroy, SeccionConCambios {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly registroValidacion = this.validacion.registrarFormulario(
     'referencias',
     () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'referencia'),
     inject(DestroyRef),
   );
+  readonly mostrarModalSubtab = signal(false);
+  tipoPendiente?: 'Personal' | 'Laboral';
+
+  intentarCambiarTipo(tipo: 'Personal' | 'Laboral'): void {
+    if (this.tipoActivo() === tipo) return;
+    if (this.tieneCambios()) {
+      this.tipoPendiente = tipo;
+      this.mostrarModalSubtab.set(true);
+      return;
+    }
+    this.cambiarTipo(tipo);
+  }
+
+  guardarYCambiarTipo(): void {
+    this.guardarCambios().subscribe((ok) => {
+      if (ok) {
+        this.mostrarModalSubtab.set(false);
+        if (this.tipoPendiente) {
+          this.cambiarTipo(this.tipoPendiente);
+          this.tipoPendiente = undefined;
+        }
+      }
+    });
+  }
+
+  descartarYCambiarTipo(): void {
+    this.descartarCambios();
+    this.mostrarModalSubtab.set(false);
+    if (this.tipoPendiente) {
+      this.cambiarTipo(this.tipoPendiente);
+      this.tipoPendiente = undefined;
+    }
+  }
+
+  cancelarCambioTipo(): void {
+    this.mostrarModalSubtab.set(false);
+    this.tipoPendiente = undefined;
+  }
+
+  ngOnInit(): void {
+    this.state.registrarSeccion?.(this);
+  }
+
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
+  }
+
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    if (this.mostrarFormulario()) {
+      return !!(
+        this.idEdicion() ||
+        this.modelo.nombresApellidos?.trim() ||
+        this.modelo.telefono?.trim() ||
+        this.modelo.titulo?.trim() ||
+        this.modelo.cargoActual?.trim() ||
+        this.modelo.empresa?.trim()
+      );
+    }
+    return false;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (!this.mostrarFormulario()) return of(true);
+    return this.guardarObservable();
+  }
+
+  descartarCambios(): void {
+    this.cancelarFormulario();
+    this.state.actualizarEstadoCambios?.();
+  }
+
   private readonly state = inject(HojaDeVidaStateService);
 
   readonly puedeEditar = this.state.puedeEditar;
@@ -540,26 +626,35 @@ export class ReferenciasComponent {
     this.idEdicion.set(undefined);
   }
 
-  guardar(): void {
-    if (this.validacion.invalido(this.modelo, 'referencia')) return;
+  guardarObservable(): Observable<boolean> {
     if (!this.modelo.nombresApellidos?.trim()) {
       this.errorFormulario.set('Nombres y apellidos son obligatorios.');
-      return;
+      return of(false);
     }
     if (!this.modelo.telefono?.trim()) {
       this.errorFormulario.set('El teléfono de contacto es obligatorio.');
-      return;
+      return of(false);
     }
 
     this.modelo.tipo = this.tipoActivo();
 
-    this.state.guardarReferencia(this.modelo, this.idEdicion()).subscribe({
-      next: () => this.cancelarFormulario(),
-      error: (err) => {
+    if (this.validacion.invalido(this.modelo, 'referencia')) return of(false);
+    return this.state.guardarReferencia(this.modelo, this.idEdicion()).pipe(
+      map(() => {
+        this.cancelarFormulario();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
         this.validacion.registrarError(err, this.modelo);
         this.errorFormulario.set(err?.message || 'Error al guardar la referencia.');
-      },
-    });
+        return of(false);
+      }),
+    );
+  }
+
+  guardar(): void {
+    this.guardarObservable().subscribe();
   }
 
   eliminar(id: string): void {
