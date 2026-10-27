@@ -1,10 +1,10 @@
 # Aceptación de protección de datos al iniciar sesión — Spec
 
-**ID:** spec-0010; issue #99  
-**Versión:** 0.1  
-**Estado:** Borrador para revisión funcional  
-**Revisor funcional:** Por designar por la institución  
-**Fecha:** 2026-10-27  
+**ID:** spec-0011; issue #99
+**Versión:** 0.2
+**Estado:** Aprobada funcionalmente para implementación; autorización del contenido legal pendiente
+**Revisor funcional:** Solicitante del issue, con decisiones funcionales y técnicas delegadas en esta sesión
+**Fecha:** 2026-10-27
 **Áreas afectadas:** `src/Backend`, `src/Frontend`, persistencia PostgreSQL y contrato OpenAPI
 
 ## Problema y resultado esperado
@@ -35,9 +35,9 @@ Este documento propone ampliar RF-DAT-001 y la secuencia del escenario 1 de spec
 | Implementación | `src/Frontend/src/app/core/auth/auth.guard.ts`, `features/auth/login.component.ts` y `features/usuario/usuario-dashboard.component.ts` | La navegación considera cambio de contraseña y rol; el dashboard registra la aceptación al enviar. |
 | Referencia conceptual parcial | Entidades `PdCategoriasTerminosCondiciones`, `PdTerminosCondiciones`, `PdAceptacionesUsuarios` del proyecto local RRHH, bajo `src/Backend/RRHH.Domain/Entities/` | Se comprobaron las relaciones categoría/destinatarios → aviso/versiones → aceptación por identidad. No se copian sus tablas, código, dependencias, texto, IP ni dispositivo. Esta revisión no sustituye la de Mi_ISTPET exigida por #99. |
 
-**Hechos comprobados:** los descritos como implementación y referencia parcial. **Pendiente:** no se localizaron `Mi_ISTPET`, `TerminosService` ni `TerminosController` en los proyectos locales ni un repositorio accesible con ese nombre en la búsqueda de GitHub. No se ha consultado ninguna base de datos externa. Antes del diseño se necesita la ubicación autorizada del código de referencia (PD-PDP-07).
+**Hechos comprobados:** los descritos como implementación y referencia parcial. **Referencia revisada posteriormente:** `IstpetDev/Mi_ISTPET`, rama `dev_jb`, commit `4517511220d89c808a5a20a7abc6d88a8848e904`: `Mi_ISPET_BackEnd/Mi_ISTPET.Infrastructure/Services/TerminosService.cs`, `Mi_ISPET_BackEnd/Mi_ISTPET/Controllers/Auth/TerminosController.cs` y las tres entidades de `Mi_ISPET_BackEnd/Mi_ISTPET.Domain/Entities/`. Se revisaron los cinco archivos mediante GitHub CLI porque el conector no encontró el repositorio. El servicio selecciona categoría/versión y consulta aceptación individual; el controlador deriva la identidad de la sesión. La implementación propia no adopta su permiso por ausencia de aviso, la selección arbitraria entre vigentes, ni el registro de IP/dispositivo; valida versión y duplicados. No se consultó ninguna base externa. PD-PDP-07 queda resuelto.
 
-Se revisó el índice de `docs/decisiones/`: no hay un ADR sobre avisos versionados y aceptación como condición de acceso. La decisión arquitectónica nueva queda abierta en PD-PDP-06; esta spec no selecciona una estructura técnica ni cierra otros ADR propuestos.
+La decisión nueva se registra antes de implementar en ADR-0030, vigente por la delegación técnica del solicitante. No se cierra ningún ADR preexistente en estado Propuesto.
 
 ## Alcance
 
@@ -58,7 +58,7 @@ Se revisó el índice de `docs/decisiones/`: no hay un ADR sobre avisos versiona
 5. **Rechazo:** «No aceptar y cerrar sesión» sale sin registrar aceptación ni motivo. Cerrar el aviso, recargar o usar navegación directa mantiene la restricción. Al autenticar de nuevo se presenta el aviso pendiente. No se propone borrar datos existentes por rechazar; el tratamiento de solicitudes de supresión o retiro debe seguir el canal institucional aprobado.
 6. **Sin aviso o con fallo:** mostrar el impedimento sin datos personales y permitir reintentar o cerrar sesión. Fallar al leer o guardar no libera la restricción. Ante un resultado incierto al guardar, consultar el estado persistido; un reintento no duplica la evidencia ni altera su fecha original.
 7. **Publicación:** solo puede activarse contenido autorizado por la institución, con versión y destinatarios inequívocos. Un contenido ya publicado no se sobrescribe: una corrección crea otra versión. Los cambios de vigencia conservan la historia de qué contenido fue aceptado. El canal operativo de publicación y el modo de acreditar la autorización se deciden en PD-PDP-05 y el ADR futuro; no se permite una aceptación por representación para resolver la falta de un aviso.
-8. **Nueva versión:** se exige desde su entrada en vigencia a sus destinatarios, también en sesiones abiertas, antes de la siguiente operación protegida. No se espera al próximo login ni se confía solo en una cookie o estado local. No se cambia por ello el estado de un expediente enviado/aprobado ni se borran sus archivos.
+8. **Nueva versión:** se exige desde su entrada en vigencia a sus destinatarios, también en sesiones abiertas, antes de la siguiente operación protegida. No se espera al próximo login ni se confía solo en una cookie o estado local. Si ocurre durante una edición, la redirección obligatoria al aviso descarta cambios locales no guardados y prevalece sobre el modal de salida de spec-0006; no se intenta guardarlos automáticamente con el acceso bloqueado. No se cambia por ello el estado de un expediente enviado/aprobado ni se borran sus archivos.
 9. **Concurrencia:** si la versión deja de ser vigente entre su lectura y la aceptación, no se registra como aceptación vigente; se muestra la nueva versión sin casilla marcada. Dos solicitudes de la misma aceptación producen una sola evidencia y conservan la fecha inicial. La operación protegida se autoriza con la vigencia comprobada para esa solicitud, sin prometer revocar respuestas ya entregadas.
 10. **Legado:** todas las cuentas existentes sin evidencia de una versión exacta aceptan el aviso vigente al siguiente acceso protegido, incluso con sesión abierta. No se convierte el booleano antiguo en evidencia de una versión desconocida. Sus valores se conservan como histórico durante la transición, sin usarlos como autorización. Las actualizaciones y los archivos existentes se conservan. La ventana de despliegue requiere avisos aprobados para todas las combinaciones de institución/rol en uso antes de activar el bloqueo.
 
@@ -142,10 +142,18 @@ El texto o su fuente oficial institucional, la evidencia de autorización y la v
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente; registrar responsable funcional, sin datos personales de ejemplo  
-**Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Pendiente
+**Versión revisada:** 0.2
+**Decisión:** Aprobada para implementación funcional; contenido legal y publicación real pendientes de la institución
+**Aprobó:** Solicitante del issue en esta sesión; delegó completar la spec y resolver las decisiones funcionales y técnicas
+**Fecha y evidencia de aprobación:** 2026-10-27, respuesta a la v0.1: «hazlo tu, lo que pienses que sea lo mejor para el sistema, si te pide programar spect o completarla, hazlo».
+**Ajustes solicitados:** Completar y ejecutar el trabajo con autonomía. Se confirman los cuatro roles, orden clave → aviso → datos/correo, rechazo con salida, aceptación por versión, legado sin conversión y publicación por procedimiento operativo controlado. La aprobación funcional del solicitante no se presenta como autorización institucional del texto legal.
 
-Solo una aprobación explícita de esta versión y la resolución de los puntos funcionales pendientes habilitan `plan.md`, `tasks.md` y `test-e2e.md`. La solicitud de resolver el issue no se registra como aprobación de un documento que todavía no había sido presentado. Las decisiones arquitectónicas posteriores requieren su revisión propia antes de las tareas dependientes.
+La delegación recibida después de presentar la v0.1 habilita el plan y la implementación de las reglas completadas en esta v0.2. La institución debe aportar y autorizar el contenido antes de publicar un aviso real. No se declara cumplido ese criterio de #99 ni se cierra el issue solo por terminar el código.
+
+### Resolución de puntos abiertos
+
+- PD-PDP-02, 03 y 04: reglas funcionales confirmadas por delegación, con el alcance anterior. No se diseña un procedimiento jurídico de conservación o retiro; se remite al canal que especifique el aviso autorizado.
+- PD-PDP-05: publicación operativa mediante comando de la aplicación y archivo JSON autorizado, sin panel nuevo ni excepción de acceso para administradores pendientes. El operador provisiona el primer aviso antes de habilitar el uso.
+- PD-PDP-06: ADR-0030, registrado y revisado contra los ADR vigentes antes de ejecutar las tareas.
+- PD-PDP-07: resuelto por revisión del código exacto de Mi_ISTPET, con procedencia indicada arriba.
+- PD-PDP-01: pendiente institucional. Se localizaron la política publicada en `https://istpet.edu.ec/wp-content/uploads/2026/06/POLITICA-INTERNA-DE-PROTECCION-DE-DATOS-PERSONALES-PDF.pdf`, enlazada desde `https://istpet.edu.ec/index.php/normativa/`, y el aviso para alumnos `https://servicios.istpet.edu.ec/appEstudiantes/datosPersonales/AlumnosV1.html`. Se identifican como fuentes para revisión institucional, sin copiar su texto ni asumir su aplicabilidad al personal y a los cuatro roles. El sistema queda sin avisos reales sembrados y bloquea si falta uno autorizado.

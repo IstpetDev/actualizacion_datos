@@ -58,3 +58,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0024](ADR-0024-validacion-y-dominios-institucionales.md) | Validación y dominios institucionales | Vigente |
 | [ADR-0025](ADR-0025-perfil-profesional-generado.md) | Perfil profesional generado | Vigente |
 | [ADR-0026](ADR-0026-manejo-global-de-errores-y-contrato-uniforme.md) | Manejo global de errores y contrato uniforme | Vigente |
+| [ADR-0030](ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) | Avisos versionados y aceptación como condición de acceso | Vigente |
