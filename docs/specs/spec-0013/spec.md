@@ -2,7 +2,7 @@
 
 **ID:** spec-0013  
 **Versión:** 0.1  
-**Estado:** Borrador para revisión funcional  
+**Estado:** Aprobado (v0.1, 2026-10-27; ver «Revisión funcional»)  
 **Revisor funcional:** Joseph Baño (también solicitante)  
 **Responsable de implementación:** Alexander Martínez (`AlexanderMartinez0410`)  
 **Fecha:** 2026-10-27  
@@ -218,9 +218,11 @@ Resultado esperado:
 ## Revisión funcional
 
 **Versión revisada:** 0.1  
-**Decisión:** Pendiente  
-**Aprobó:** Pendiente  
-**Fecha y evidencia de aprobación:** Pendiente  
-**Ajustes solicitados:** Pendiente
+**Decisión:** Aprobado  
+**Aprobó:** Joseph Baño, solicitante y revisor funcional  
+**Fecha y evidencia de aprobación:** 2026-10-27; aprobación personal comunicada por el responsable de implementación (Alexander Martínez) sobre el PR #103  
+**Ajustes solicitados:** Ninguno. Se aceptan las propuestas de los puntos cuya decisión corresponde al revisor funcional (PD-PLA-02 a 08 y 10 a 17).
+
+**Pendiente:** ADR-0032 (PD-PLA-01) y ADR-0033 (PD-PLA-09) siguen en «Propuesto»; deben decidirse antes de ejecutar las tareas que dependen de ellos. La métrica de PD-PLA-16 se fija en `plan.md`.
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
