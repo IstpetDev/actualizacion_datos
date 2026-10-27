@@ -3,7 +3,8 @@
 **ID:** spec-0010; prioritaria; relacionada con el issue #92  
 **Versión:** 0.2  
 **Estado:** Aprobado (v0.2, 2026-10-27; ver «Revisión funcional»)  
-**Revisor funcional:** Por designar (el solicitante es Joseph Baño, quien definió las decisiones de «Decisiones del solicitante»)  
+**Revisor funcional:** Joseph Baño (también solicitante)  
+**Responsable de implementación:** Bryan (`bryancito1090`)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
 
