@@ -1,3 +1,4 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
@@ -648,7 +649,7 @@ export class ReferenciasComponent implements OnInit, OnDestroy, SeccionConCambio
       }),
       catchError((err) => {
         this.validacion.registrarError(err, this.modelo);
-        this.errorFormulario.set(err?.message || 'Error al guardar la referencia.');
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la referencia.'));
         return of(false);
       }),
     );

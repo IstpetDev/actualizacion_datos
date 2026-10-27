@@ -1,4 +1,4 @@
-# ADR-0026 — Asignación masiva y persistencia de tipo de funcionario
+# ADR-0027 — Asignación masiva y persistencia de tipo de funcionario
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26
@@ -28,12 +28,12 @@ Se adopta la opción 1:
 
 ## Consecuencias
 
-- La asignación de tipo de funcionario persiste de manera íntegra tras recargar la pantalla o iniciar nuevas sesiones.
-- Se reduce drásticamente el tiempo y esfuerzo operativo para configurar la nómina: asignar cientos de personas toma menos de 5 acciones del usuario.
-- El contrato de la API y el cliente del frontend se mantienen sincronizados y tipados sin accesos por índice no declarados.
+- El tipo de funcionario asignado a cada persona persiste de forma inmediata y se refleja tras recargar o cerrar sesión.
+- El administrador puede clasificar la nómina completa en pocos clics (menos de 5 acciones para cientos de personas).
+- El contrato queda fuertemente tipado en frontend sin recurrir a accesos por índice no tipados.
 
 ## ADR relacionados
 
-- [ADR-0003](ADR-0003-cliente-openapi-generado.md) — Cliente OpenAPI generado en el frontend.
+- [ADR-0004](ADR-0004-multitenancia-esquema-unico.md) — Multitenancy: esquema único con `institucion_id`.
 - [ADR-0010](ADR-0010-hoja-de-vida-estructurada.md) — Hoja de vida estructurada y catálogos.
-- [ADR-0014](ADR-0014-carga-de-nomina-real.md) — Carga de la nómina real: encabezados, nulos textuales y alias de catálogo.
+- [ADR-0019](ADR-0019-semillas-de-tipos-institucionales.md) — Semillas de tipos institucionales.
