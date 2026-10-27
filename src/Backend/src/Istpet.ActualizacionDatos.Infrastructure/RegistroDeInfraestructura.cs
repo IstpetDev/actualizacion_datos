@@ -37,6 +37,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioDocumentosPersonales, ServicioDocumentosPersonales>();
         servicios.AddScoped<IValidadorCompletitudEnvio, ValidadorCompletitudEnvio>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaFichaPersonalObligatoria>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaFormatosHojaDeVida>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaFormacionAcademicaObligatoria>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaReferenciasPersonalesObligatorias>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaRespaldosItemsObligatorios>();

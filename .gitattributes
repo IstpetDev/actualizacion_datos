@@ -1,4 +1,3 @@
 openapi/* text eol=lf
 src/Frontend/src/app/api-client/* text eol=lf
-data/catalogos/*.csv text eol=lf
-data/catalogos/*.json text eol=lf
+data/catalogos/* text eol=lf

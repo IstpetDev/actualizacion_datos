@@ -1,5 +1,7 @@
+import { mensajeError } from '../../../core/auth/mensaje-error';
+import { DominiosCorreoComponent } from './dominios-correo.component';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ConfiguracionClient,
@@ -19,7 +21,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DominiosCorreoComponent],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -59,6 +61,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
           </div>
         }
 
+        <app-dominios-correo />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button
@@ -564,30 +567,175 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
           </div>
         }
 
-        <!-- SUBTAB 4: ASIGNACIÓN A PERSONAS (RF-HDV-013) -->
+        <!-- SUBTAB 4: ASIGNACIÓN A PERSONAS (RF-HDV-013, Issue #76) -->
         @if (tabActiva() === 'asignaciones') {
           <div class="subtab-panel" data-testid="panel-asignaciones">
             <div class="card">
               <h3 class="card-title">Asignar Tipo de Funcionario a Personas (RF-HDV-013)</h3>
               <p class="card-desc">
                 Seleccione el tipo de funcionario correspondiente a cada persona registrada en la
-                nómina institucional.
+                nómina institucional. Los cambios persisten automáticamente.
               </p>
+
+              <!-- Resumen y alertas de asignación -->
+              <div class="resumen-asignaciones" data-testid="resumen-asignaciones">
+                <div class="metrica-item">
+                  <span class="metrica-label">Total en nómina:</span>
+                  <span
+                    class="metrica-valor badge badge-info"
+                    data-testid="contador-total-personas"
+                    >{{ personas().length }}</span
+                  >
+                </div>
+                <div class="metrica-item">
+                  <span class="metrica-label">Con tipo asignado:</span>
+                  <span class="metrica-valor badge badge-success" data-testid="contador-con-tipo">{{
+                    totalPersonasConTipo()
+                  }}</span>
+                </div>
+                <div class="metrica-item">
+                  <span class="metrica-label">Sin tipo asignado:</span>
+                  <span
+                    class="metrica-valor badge"
+                    [class.badge-danger]="totalPersonasSinTipo() > 0"
+                    [class.badge-secondary]="totalPersonasSinTipo() === 0"
+                    data-testid="contador-sin-tipo"
+                  >
+                    {{ totalPersonasSinTipo() }}
+                    {{ totalPersonasSinTipo() === 1 ? 'persona sin tipo' : 'personas sin tipo' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Barra de acciones masivas -->
+              <div class="barra-acciones-masivas" data-testid="barra-asignacion-masiva">
+                <div class="masivo-selector">
+                  <select
+                    class="form-control form-control-sm"
+                    [ngModel]="tipoParaAsignacionMasiva()"
+                    (ngModelChange)="tipoParaAsignacionMasiva.set($event)"
+                    data-testid="select-tipo-masivo"
+                  >
+                    <option value="">Seleccionar tipo para aplicar en lote...</option>
+                    @for (tf of tiposFuncionarioActivos(); track tf.id) {
+                      <option [value]="tf.id">{{ tf.nombre }} ({{ tf.codigo }})</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="masivo-botones">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    [disabled]="
+                      !tipoParaAsignacionMasiva() ||
+                      personasSeleccionadas().size === 0 ||
+                      procesandoAsignacionMasiva()
+                    "
+                    (click)="asignarMasivoSeleccionadas()"
+                    data-testid="btn-asignar-masivo-seleccionadas"
+                  >
+                    Asignar a seleccionadas ({{ personasSeleccionadas().size }})
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-sm"
+                    [disabled]="
+                      !tipoParaAsignacionMasiva() ||
+                      totalPersonasSinTipo() === 0 ||
+                      procesandoAsignacionMasiva()
+                    "
+                    (click)="asignarMasivoSinTipo()"
+                    data-testid="btn-asignar-todas-sin-tipo"
+                  >
+                    Asignar a todas las personas sin tipo ({{ totalPersonasSinTipo() }})
+                  </button>
+                </div>
+              </div>
+
+              <!-- Filtros y búsqueda -->
+              <div class="filtros-tabla-container">
+                <div class="filtro-busqueda">
+                  <input
+                    type="text"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar por documento o nombre..."
+                    [ngModel]="busquedaPersonas()"
+                    (ngModelChange)="onBusquedaChange($event)"
+                    data-testid="filtro-busqueda-personas"
+                  />
+                </div>
+                <div class="filtro-estado">
+                  <select
+                    class="form-control form-control-sm"
+                    [ngModel]="filtroTipoEstado()"
+                    (ngModelChange)="onFiltroEstadoChange($event)"
+                    data-testid="filtro-estado-tipo"
+                  >
+                    <option value="todos">Todas las personas ({{ personas().length }})</option>
+                    <option value="sin-tipo">
+                      Solo sin tipo asignado ({{ totalPersonasSinTipo() }})
+                    </option>
+                    <option value="con-tipo">
+                      Solo con tipo asignado ({{ totalPersonasConTipo() }})
+                    </option>
+                  </select>
+                </div>
+                <div class="filtro-tamano">
+                  <label for="selectTamanoPagina" class="tamano-label">Mostrar:</label>
+                  <select
+                    id="selectTamanoPagina"
+                    class="form-control form-control-sm tamano-select"
+                    [ngModel]="tamanoPaginaPersonas()"
+                    (ngModelChange)="onTamanoPaginaChange($event)"
+                    data-testid="select-tamano-pagina"
+                  >
+                    <option [value]="10">10 por pág.</option>
+                    <option [value]="25">25 por pág.</option>
+                    <option [value]="50">50 por pág.</option>
+                    <option [value]="100">100 por pág.</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="table-container">
                 <table class="data-table" data-testid="tabla-asignaciones-personas">
                   <thead>
                     <tr>
+                      <th class="th-checkbox">
+                        <input
+                          type="checkbox"
+                          [checked]="todasSeleccionadas()"
+                          (change)="toggleSeleccionarTodas()"
+                          aria-label="Seleccionar todas las personas de la página"
+                          data-testid="checkbox-seleccionar-todas"
+                        />
+                      </th>
                       <th>Documento</th>
                       <th>Nombre</th>
                       <th>Correo</th>
                       <th>Rol</th>
+                      <th>Estado</th>
                       <th>Tipo de Funcionario Asignado</th>
                       <th class="text-right">Acción</th>
                     </tr>
                   </thead>
                   <tbody>
-                    @for (per of personas(); track per.id) {
-                      <tr [attr.data-testid]="'fila-persona-asignacion-' + per.documento">
+                    @for (per of personasPaginadas(); track per.id) {
+                      <tr
+                        [attr.data-testid]="'fila-persona-asignacion-' + per.documento"
+                        [class.fila-sin-tipo]="!per.tipoFuncionarioId"
+                      >
+                        <td class="td-checkbox">
+                          <input
+                            type="checkbox"
+                            [checked]="personasSeleccionadas().has(per.id)"
+                            (change)="toggleSeleccion(per.id)"
+                            [attr.aria-label]="'Seleccionar persona ' + per.documento"
+                            [attr.data-testid]="'checkbox-persona-' + per.documento"
+                          />
+                        </td>
                         <td>
                           <strong>{{ per.documento }}</strong>
                         </td>
@@ -597,9 +745,19 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                           <span class="badge badge-info">{{ per.rol }}</span>
                         </td>
                         <td>
+                          @if (per.tipoFuncionarioId) {
+                            <span class="badge badge-success">Asignado</span>
+                          } @else {
+                            <span class="badge badge-danger" data-testid="badge-sin-tipo"
+                              >Sin tipo</span
+                            >
+                          }
+                        </td>
+                        <td>
                           <select
                             class="form-control form-control-sm"
-                            [ngModel]="per['tipoFuncionarioId'] || ''"
+                            [class.border-warning]="!per.tipoFuncionarioId"
+                            [ngModel]="per.tipoFuncionarioId || ''"
                             (ngModelChange)="asignarTipo(per, $event)"
                             [attr.data-testid]="'select-asignar-tf-' + per.documento"
                           >
@@ -610,7 +768,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                           </select>
                         </td>
                         <td class="text-right">
-                          @if (per['tipoFuncionarioId']) {
+                          @if (per.tipoFuncionarioId) {
                             <button
                               type="button"
                               class="btn btn-secondary btn-sm"
@@ -624,14 +782,51 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                       </tr>
                     } @empty {
                       <tr>
-                        <td colspan="6" class="text-center empty-state">
-                          No hay personas registradas en la institución.
+                        <td colspan="8" class="text-center empty-state">
+                          @if (personas().length === 0) {
+                            No hay personas registradas en la institución.
+                          } @else {
+                            No se encontraron personas con los filtros seleccionados.
+                          }
                         </td>
                       </tr>
                     }
                   </tbody>
                 </table>
               </div>
+
+              <!-- Paginación -->
+              @if (personasFiltradas().length > 0) {
+                <div class="paginacion-container" data-testid="paginador-personas">
+                  <div class="paginacion-info">
+                    Mostrando {{ indicePrimerElemento() }} - {{ indiceUltimoElemento() }} de
+                    {{ personasFiltradas().length }} personas
+                  </div>
+                  <div class="paginacion-controles">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      [disabled]="paginaPersonas() <= 1"
+                      (click)="cambiarPagina(paginaPersonas() - 1)"
+                      data-testid="btn-pagina-anterior"
+                    >
+                      &laquo; Anterior
+                    </button>
+                    <span class="paginacion-pagina"
+                      >Página {{ paginaPersonas() }} de {{ totalPaginasPersonas() }}</span
+                    >
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      [disabled]="paginaPersonas() >= totalPaginasPersonas()"
+                      (click)="cambiarPagina(paginaPersonas() + 1)"
+                      data-testid="btn-pagina-siguiente"
+                    >
+                      Siguiente &raquo;
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
         }
@@ -897,6 +1092,126 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
         align-items: flex-start;
         gap: 0.5rem;
       }
+    .resumen-asignaciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.375rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .metrica-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .metrica-label {
+      font-weight: 600;
+      color: #475569;
+    }
+    .barra-acciones-masivas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.375rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .masivo-selector {
+      flex: 1;
+      min-width: 250px;
+    }
+    .masivo-botones {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .filtros-tabla-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .filtro-busqueda {
+      flex: 1;
+      min-width: 200px;
+    }
+    .filtro-estado {
+      min-width: 200px;
+    }
+    .filtro-tamano {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tamano-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0;
+    }
+    .tamano-select {
+      width: auto;
+    }
+    .th-checkbox,
+    .td-checkbox {
+      width: 36px;
+      text-align: center;
+    }
+    .fila-sin-tipo {
+      background-color: #fffdf5;
+    }
+    .badge-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+    .border-warning {
+      border-color: #f59e0b;
+    }
+    .btn-warning {
+      background: #d97706;
+      color: #ffffff;
+      border: none;
+    }
+    .btn-warning:hover:not(:disabled) {
+      background: #b45309;
+    }
+    .paginacion-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+    }
+    .paginacion-info {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .paginacion-controles {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .paginacion-pagina {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
     }
   `,
 })
@@ -972,7 +1287,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
 
     this.configClient.listarTiposFuncionario().subscribe({
       next: (tfs) => this.tiposFuncionario.set(tfs || []),
-      error: (err) => this.error.set(err?.message || 'Error al cargar tipos de funcionario.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar tipos de funcionario.')),
     });
 
     this.configClient.listarTiposDocumento().subscribe({
@@ -982,12 +1297,12 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.formTdOrden = this.siguienteOrdenDocumento();
         }
       },
-      error: (err) => this.error.set(err?.message || 'Error al cargar tipos de documento.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar tipos de documento.')),
     });
 
     this.configClient.listarRequisitosDocumento().subscribe({
       next: (reqs) => this.requisitos.set(reqs || []),
-      error: (err) => this.error.set(err?.message || 'Error al cargar requisitos de documento.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al cargar requisitos de documento.')),
     });
 
     this.personasClient.listarPersonas().subscribe({
@@ -996,7 +1311,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargando.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al cargar personas para asignación.');
+        this.error.set(mensajeError(err, 'Error al cargar personas para asignación.'));
         this.cargando.set(false);
       },
     });
@@ -1043,7 +1358,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al actualizar tipo de funcionario.');
+          this.error.set(mensajeError(err, 'Error al actualizar tipo de funcionario.'));
           this.guardando.set(false);
         },
       });
@@ -1056,7 +1371,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al crear tipo de funcionario.');
+          this.error.set(mensajeError(err, 'Error al crear tipo de funcionario.'));
           this.guardando.set(false);
         },
       });
@@ -1080,7 +1395,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) =>
-        this.error.set(err?.message || 'Error al cambiar estado del tipo de funcionario.'),
+        this.error.set(mensajeError(err, 'Error al cambiar estado del tipo de funcionario.')),
     });
   }
 
@@ -1135,7 +1450,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al actualizar tipo de documento.');
+          this.error.set(mensajeError(err, 'Error al actualizar tipo de documento.'));
           this.guardando.set(false);
         },
       });
@@ -1148,7 +1463,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
           this.cargarDatos();
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al crear tipo de documento.');
+          this.error.set(mensajeError(err, 'Error al crear tipo de documento.'));
           this.guardando.set(false);
         },
       });
@@ -1174,7 +1489,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) =>
-        this.error.set(err?.message || 'Error al cambiar estado del tipo de documento.'),
+        this.error.set(mensajeError(err, 'Error al cambiar estado del tipo de documento.')),
     });
   }
 
@@ -1203,7 +1518,7 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.cargarDatos();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al crear requisito de documento.');
+        this.error.set(mensajeError(err, 'Error al crear requisito de documento.'));
         this.guardando.set(false);
       },
     });
@@ -1223,7 +1538,8 @@ export class ConfiguracionRequisitosComponent implements OnInit {
         this.mensajeExito.set(`Requisito ${nuevoEstado ? 'activado' : 'desactivado'}.`);
         this.cargarDatos();
       },
-      error: (err) => this.error.set(err?.message || 'Error al actualizar estado del requisito.'),
+      error: (err) =>
+        this.error.set(mensajeError(err, 'Error al actualizar estado del requisito.')),
     });
   }
 
@@ -1238,7 +1554,114 @@ export class ConfiguracionRequisitosComponent implements OnInit {
     return func ? `${func.nombre} (${func.codigo})` : id;
   }
 
-  // --- ASIGNACIÓN DE FUNCIONARIO A PERSONAS (RF-HDV-013) ---
+  // --- ASIGNACIÓN DE FUNCIONARIO A PERSONAS (RF-HDV-013, Issue #76) ---
+  readonly busquedaPersonas = signal<string>('');
+  readonly filtroTipoEstado = signal<'todos' | 'sin-tipo' | 'con-tipo'>('todos');
+  readonly paginaPersonas = signal<number>(1);
+  readonly tamanoPaginaPersonas = signal<number>(10);
+  readonly personasSeleccionadas = signal<Set<string>>(new Set<string>());
+  readonly tipoParaAsignacionMasiva = signal<string>('');
+  readonly procesandoAsignacionMasiva = signal<boolean>(false);
+
+  readonly totalPersonasSinTipo = computed(
+    () => this.personas().filter((p) => !p.tipoFuncionarioId).length,
+  );
+
+  readonly totalPersonasConTipo = computed(
+    () => this.personas().filter((p) => !!p.tipoFuncionarioId).length,
+  );
+
+  readonly personasFiltradas = computed(() => {
+    let lista = this.personas();
+    const query = this.busquedaPersonas().trim().toLowerCase();
+    if (query) {
+      lista = lista.filter(
+        (p) =>
+          p.documento.toLowerCase().includes(query) ||
+          (p.nombre && p.nombre.toLowerCase().includes(query)),
+      );
+    }
+    const estado = this.filtroTipoEstado();
+    if (estado === 'sin-tipo') {
+      lista = lista.filter((p) => !p.tipoFuncionarioId);
+    } else if (estado === 'con-tipo') {
+      lista = lista.filter((p) => !!p.tipoFuncionarioId);
+    }
+    return lista;
+  });
+
+  readonly totalPaginasPersonas = computed(() => {
+    const total = this.personasFiltradas().length;
+    return Math.max(1, Math.ceil(total / this.tamanoPaginaPersonas()));
+  });
+
+  readonly personasPaginadas = computed(() => {
+    const inicio = (this.paginaPersonas() - 1) * this.tamanoPaginaPersonas();
+    return this.personasFiltradas().slice(inicio, inicio + this.tamanoPaginaPersonas());
+  });
+
+  readonly indicePrimerElemento = computed(() => {
+    if (this.personasFiltradas().length === 0) return 0;
+    return (this.paginaPersonas() - 1) * this.tamanoPaginaPersonas() + 1;
+  });
+
+  readonly indiceUltimoElemento = computed(() => {
+    return Math.min(
+      this.paginaPersonas() * this.tamanoPaginaPersonas(),
+      this.personasFiltradas().length,
+    );
+  });
+
+  readonly todasSeleccionadas = computed(() => {
+    const pagina = this.personasPaginadas();
+    if (pagina.length === 0) return false;
+    const seleccion = this.personasSeleccionadas();
+    return pagina.every((p) => seleccion.has(p.id));
+  });
+
+  onBusquedaChange(valor: string): void {
+    this.busquedaPersonas.set(valor);
+    this.paginaPersonas.set(1);
+  }
+
+  onFiltroEstadoChange(valor: 'todos' | 'sin-tipo' | 'con-tipo'): void {
+    this.filtroTipoEstado.set(valor);
+    this.paginaPersonas.set(1);
+  }
+
+  onTamanoPaginaChange(valor: string | number): void {
+    this.tamanoPaginaPersonas.set(Number(valor));
+    this.paginaPersonas.set(1);
+  }
+
+  cambiarPagina(nuevaPagina: number): void {
+    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPaginasPersonas()) {
+      this.paginaPersonas.set(nuevaPagina);
+    }
+  }
+
+  toggleSeleccion(personaId: string): void {
+    const actuales = new Set(this.personasSeleccionadas());
+    if (actuales.has(personaId)) {
+      actuales.delete(personaId);
+    } else {
+      actuales.add(personaId);
+    }
+    this.personasSeleccionadas.set(actuales);
+  }
+
+  toggleSeleccionarTodas(): void {
+    const pagina = this.personasPaginadas();
+    const actuales = new Set(this.personasSeleccionadas());
+    const todasEnPagina = pagina.length > 0 && pagina.every((p) => actuales.has(p.id));
+    if (todasEnPagina) {
+      pagina.forEach((p) => actuales.delete(p.id));
+    } else {
+      pagina.forEach((p) => actuales.add(p.id));
+    }
+    this.personasSeleccionadas.set(actuales);
+  }
+
   asignarTipo(persona: PersonaDto, tipoFuncionarioId: string): void {
     this.error.set(null);
     this.mensajeExito.set(null);
@@ -1249,13 +1672,85 @@ export class ConfiguracionRequisitosComponent implements OnInit {
       .asignarTipoFuncionario(persona.id, { tipoFuncionarioId: nuevoTipoId })
       .subscribe({
         next: () => {
-          persona['tipoFuncionarioId'] = nuevoTipoId;
+          persona.tipoFuncionarioId = nuevoTipoId;
           this.mensajeExito.set(
             `Tipo de funcionario actualizado para ${persona.nombre || persona.documento}.`,
           );
         },
         error: (err) => {
-          this.error.set(err?.message || 'Error al asignar tipo de funcionario a la persona.');
+          this.error.set(mensajeError(err, 'Error al asignar tipo de funcionario a la persona.'));
+          this.cargarDatos();
+        },
+      });
+  }
+
+  asignarMasivoSeleccionadas(): void {
+    const tipoId = this.tipoParaAsignacionMasiva();
+    if (!tipoId || this.personasSeleccionadas().size === 0) return;
+
+    this.error.set(null);
+    this.mensajeExito.set(null);
+    this.procesandoAsignacionMasiva.set(true);
+
+    const ids = Array.from(this.personasSeleccionadas());
+    this.personasClient
+      .asignarTipoFuncionarioMasivo({
+        tipoFuncionarioId: tipoId,
+        personaIds: ids,
+        soloSinTipo: false,
+      })
+      .subscribe({
+        next: (res) => {
+          this.procesandoAsignacionMasiva.set(false);
+          this.personasSeleccionadas.set(new Set());
+          this.mensajeExito.set(
+            res?.mensaje || `Tipo de funcionario asignado a ${ids.length} personas seleccionadas.`,
+          );
+          this.cargarDatos();
+        },
+        error: (err) => {
+          this.procesandoAsignacionMasiva.set(false);
+          this.error.set(err?.message || 'Error en la asignación masiva.');
+          this.cargarDatos();
+        },
+      });
+  }
+
+  asignarMasivoSinTipo(): void {
+    const tipoId = this.tipoParaAsignacionMasiva();
+    if (!tipoId || this.totalPersonasSinTipo() === 0) return;
+
+    const total = this.totalPersonasSinTipo();
+    const confirma =
+      typeof window !== 'undefined' && typeof window.confirm === 'function'
+        ? window.confirm(
+            `¿Desea asignar este tipo de funcionario a las ${total} personas sin tipo?`,
+          )
+        : true;
+    if (!confirma) return;
+
+    this.error.set(null);
+    this.mensajeExito.set(null);
+    this.procesandoAsignacionMasiva.set(true);
+
+    this.personasClient
+      .asignarTipoFuncionarioMasivo({
+        tipoFuncionarioId: tipoId,
+        soloSinTipo: true,
+      })
+      .subscribe({
+        next: (res) => {
+          this.procesandoAsignacionMasiva.set(false);
+          this.personasSeleccionadas.set(new Set());
+          this.mensajeExito.set(
+            res?.mensaje ||
+              `Tipo de funcionario asignado a todas las personas sin tipo (${total}).`,
+          );
+          this.cargarDatos();
+        },
+        error: (err) => {
+          this.procesandoAsignacionMasiva.set(false);
+          this.error.set(err?.message || 'Error al asignar a personas sin tipo.');
           this.cargarDatos();
         },
       });

@@ -1,0 +1,247 @@
+{
+  "institucionId": "00000000-0000-0000-0000-000000000000",
+  "dominiosCorreoPermitidos": ["institucion-ficticia.example"],
+  "fechaNacimientoMinima": "1900-01-01",
+  "fechaNacimientoMaxima": "2008-10-26",
+  "reglas": {
+    "ficha": {
+      "primerNombre": {
+        "maximoCaracteres": 100,
+        "patron": "^(?=.*\\p{L})[\\p{L}\\p{M} \u0027\\u2019-]\u002B$",
+        "entero": false,
+        "multilinea": false
+      },
+      "segundoNombre": {
+        "maximoCaracteres": 100,
+        "patron": "^(?=.*\\p{L})[\\p{L}\\p{M} \u0027\\u2019-]\u002B$",
+        "entero": false,
+        "multilinea": false
+      },
+      "primerApellido": {
+        "maximoCaracteres": 100,
+        "patron": "^(?=.*\\p{L})[\\p{L}\\p{M} \u0027\\u2019-]\u002B$",
+        "entero": false,
+        "multilinea": false
+      },
+      "segundoApellido": {
+        "maximoCaracteres": 100,
+        "patron": "^(?=.*\\p{L})[\\p{L}\\p{M} \u0027\\u2019-]\u002B$",
+        "entero": false,
+        "multilinea": false
+      },
+      "fechaNacimiento": {
+        "entero": false,
+        "multilinea": false,
+        "tipo": "nacimiento"
+      },
+      "callePrincipal": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "calleSecundaria": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "numeroCasa": {
+        "maximoCaracteres": 20,
+        "entero": false,
+        "multilinea": false
+      },
+      "referenciaDomicilio": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "codigoPostal": {
+        "maximoCaracteres": 6,
+        "patron": "^[0-9]{1,6}$",
+        "entero": false,
+        "multilinea": false
+      },
+      "celular": {
+        "maximoCaracteres": 10,
+        "patron": "^09[0-9]{8}$",
+        "entero": false,
+        "multilinea": false
+      },
+      "telefonoConvencional": {
+        "maximoCaracteres": 9,
+        "patron": "^0[2-7][0-9]{7}$",
+        "entero": false,
+        "multilinea": false
+      },
+      "correoInstitucional": {
+        "maximoCaracteres": 200,
+        "patron": "^[A-Za-z0-9!#$%\u0026\u0027*\u002B/=?^_\u0060{|}~-]\u002B(?:\\.[A-Za-z0-9!#$%\u0026\u0027*\u002B/=?^_\u0060{|}~-]\u002B)*@[A-Za-z0-9.-]\u002B$",
+        "entero": false,
+        "multilinea": false,
+        "tipo": "correo"
+      },
+      "porcentajeDiscapacidad": {
+        "minimo": 0,
+        "maximo": 100,
+        "entero": true,
+        "multilinea": false
+      },
+      "numeroCarnetDiscapacidad": {
+        "maximoCaracteres": 30,
+        "entero": false,
+        "multilinea": false
+      }
+    },
+    "titulo": {
+      "nombreTitulo": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "nombreInstitucionOtra": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "numeroRegistroSenescyt": {
+        "maximoCaracteres": 50,
+        "entero": false,
+        "multilinea": false
+      }
+    },
+    "tituloEnCurso": {
+      "nombrePrograma": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "nombreInstitucionOtra": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "porcentajeBeca": {
+        "minimo": 0,
+        "maximo": 100,
+        "entero": true,
+        "multilinea": false
+      },
+      "montoBeca": {
+        "patron": "^(?:0|[1-9][0-9]{0,15})(?:\\.[0-9]{1,2})?$",
+        "minimo": 0,
+        "maximo": 9999999999999999.99,
+        "entero": false,
+        "multilinea": false,
+        "tipo": "monto"
+      }
+    },
+    "capacitacion": {
+      "nombreEvento": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "institucionOrganizadora": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "lugar": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "numeroHoras": {
+        "minimo": 1,
+        "maximo": 2147483647,
+        "entero": true,
+        "multilinea": false
+      }
+    },
+    "referencia": {
+      "nombresApellidos": {
+        "maximoCaracteres": 300,
+        "patron": "^(?=.*\\p{L})[\\p{L}\\p{M} \u0027\\u2019-]\u002B$",
+        "entero": false,
+        "multilinea": false
+      },
+      "telefono": {
+        "maximoCaracteres": 10,
+        "patron": "^(?:09[0-9]{8}|0[2-7][0-9]{7})$",
+        "entero": false,
+        "multilinea": false
+      },
+      "titulo": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "cargoActual": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "empresa": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      }
+    },
+    "experiencia": {
+      "empleador": {
+        "maximoCaracteres": 300,
+        "entero": false,
+        "multilinea": false
+      },
+      "cargo": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "ciudad": {
+        "maximoCaracteres": 150,
+        "entero": false,
+        "multilinea": false
+      },
+      "funciones": {
+        "maximoCaracteres": 4000,
+        "entero": false,
+        "multilinea": true
+      }
+    },
+    "documento": {
+      "numeroDocumento": {
+        "maximoCaracteres": 100,
+        "entero": false,
+        "multilinea": false
+      },
+      "entidadEmisora": {
+        "maximoCaracteres": 150,
+        "entero": false,
+        "multilinea": false
+      },
+      "categoriaLicencia": {
+        "maximoCaracteres": 30,
+        "entero": false,
+        "multilinea": false
+      },
+      "puntosLicencia": {
+        "minimo": 0,
+        "maximo": 2147483647,
+        "entero": true,
+        "multilinea": false
+      }
+    },
+    "cuenta": {
+      "nombreBancoOtro": {
+        "maximoCaracteres": 200,
+        "entero": false,
+        "multilinea": false
+      },
+      "numero": {
+        "entero": false,
+        "multilinea": false,
+        "tipo": "cuenta"
+      }
+    }
+  }
+}

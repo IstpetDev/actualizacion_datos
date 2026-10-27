@@ -1,3 +1,4 @@
+import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
@@ -483,17 +484,17 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                   />
                 </div>
                 <div class="filtro-select-grupo">
-                  <label for="filtroEstadoSelect" class="filtro-label">Acceso:</label>
+                  <label for="filtroAccesoSelect" class="filtro-label">Acceso:</label>
                   <select
-                    id="filtroEstadoSelect"
+                    id="filtroAccesoSelect"
                     class="form-control"
-                    [ngModel]="filtroEstadoAcceso()"
-                    (ngModelChange)="actualizarFiltroEstado($event)"
-                    data-testid="select-filtro-estado-acceso"
+                    [ngModel]="filtroAcceso()"
+                    (ngModelChange)="cambiarFiltroAcceso($event)"
+                    data-testid="filtro-acceso"
                   >
-                    <option value="todos">Todos los accesos</option>
-                    <option value="habilitado">Habilitados</option>
-                    <option value="pendiente">Pendientes</option>
+                    <option value="todos">Todos los accesos ({{ personas().length }})</option>
+                    <option value="habilitados">Habilitados ({{ totalHabilitadas() }})</option>
+                    <option value="pendientes">Pendientes ({{ totalPendientes() }})</option>
                   </select>
                 </div>
                 <div class="filtro-select-grupo">
@@ -512,10 +513,56 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                 </div>
               </div>
 
+              <!-- Barra de Acciones Masivas -->
+              @if (personasSeleccionadas().size > 0) {
+                <div class="barra-acciones-masivas" data-testid="barra-acciones-masivas">
+                  <span class="conteo-seleccionadas">
+                    <strong>{{ personasSeleccionadas().size }}</strong> persona(s) seleccionada(s)
+                  </span>
+                  <div class="botones-masivos">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success"
+                      (click)="cambiarAccesoSeleccionadas(true)"
+                      [disabled]="cambiandoAcceso()"
+                      data-testid="btn-habilitar-seleccionadas"
+                    >
+                      Habilitar seleccionadas
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-danger"
+                      (click)="cambiarAccesoSeleccionadas(false)"
+                      [disabled]="cambiandoAcceso()"
+                      data-testid="btn-deshabilitar-seleccionadas"
+                    >
+                      Deshabilitar seleccionadas
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-secondary"
+                      (click)="limpiarSeleccion()"
+                      data-testid="btn-limpiar-seleccion"
+                    >
+                      Deseleccionar
+                    </button>
+                  </div>
+                </div>
+              }
               <div class="table-container">
                 <table class="data-table" data-testid="tabla-personas">
                   <thead>
                     <tr>
+                      <th class="col-checkbox">
+                        <input
+                          type="checkbox"
+                          [checked]="todasSeleccionadas()"
+                          [disabled]="personasFiltradasSeleccionables().length === 0"
+                          (change)="toggleSeleccionarTodas()"
+                          title="Seleccionar todas las visibles"
+                          data-testid="checkbox-seleccionar-todas"
+                        />
+                      </th>
                       <th>Documento</th>
                       <th>Nombre</th>
                       <th>Correo</th>
@@ -528,6 +575,16 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                   <tbody>
                     @for (per of personasPaginadas(); track per.id) {
                       <tr>
+                        <td class="col-checkbox">
+                          @if (esUsuarioComun(per)) {
+                            <input
+                              type="checkbox"
+                              [checked]="estaSeleccionada(per.id)"
+                              (change)="toggleSeleccion(per.id)"
+                              data-testid="checkbox-persona"
+                            />
+                          }
+                        </td>
                         <td>
                           <strong>{{ per.documento }}</strong>
                         </td>
@@ -536,6 +593,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                         <td>
                           <span class="badge badge-info">{{ per.rol }}</span>
                         </td>
+                        <td>
                         <td>
                           @if (per.tieneFicha) {
                             <span class="badge badge-success" data-testid="ficha-cargada"
@@ -548,15 +606,34 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                           }
                         </td>
                         <td>
-                          @if (per.accesoHabilitado) {
-                            <span class="badge badge-success" data-testid="acceso-habilitado"
-                              >Habilitado</span
-                            >
-                          } @else {
-                            <span class="badge badge-secondary" data-testid="acceso-pendiente"
-                              >Pendiente</span
-                            >
-                          }
+                          <div class="acceso-celda">
+                            @if (per.accesoHabilitado) {
+                              <span class="badge badge-success" data-testid="acceso-habilitado"
+                                >Habilitado</span
+                              >
+                            } @else {
+                              <span class="badge badge-secondary" data-testid="acceso-pendiente"
+                                >Pendiente</span
+                              >
+                            }
+                            @if (esUsuarioComun(per)) {
+                              <button
+                                type="button"
+                                class="btn-toggle-acceso"
+                                [class.btn-deshabilitar]="per.accesoHabilitado"
+                                [class.btn-habilitar]="!per.accesoHabilitado"
+                                (click)="cambiarAccesoIndividual(per)"
+                                [disabled]="cambiandoAcceso()"
+                                [attr.data-testid]="'btn-toggle-acceso-' + per.documento"
+                                [title]="
+                                  per.accesoHabilitado ? 'Deshabilitar acceso' : 'Habilitar acceso'
+                                "
+                              >
+                                {{ per.accesoHabilitado ? 'Deshabilitar' : 'Habilitar' }}
+                              </button>
+                            }
+                          </div>
+                        </td>
                         </td>
                         <td>
                           <span class="badge badge-warning">{{ per.estadoActualizacion }}</span>
@@ -565,7 +642,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                     } @empty {
                       <tr>
                         <td
-                          colspan="7"
+                          colspan="8"
                           class="text-center empty-state"
                           data-testid="estado-personas-vacio"
                         >
@@ -1148,6 +1225,75 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       white-space: nowrap;
       border: 0;
     }
+    .tabla-filtros-acceso {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .barra-acciones-masivas {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.375rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.8125rem;
+    }
+    .conteo-seleccionadas {
+      color: #1e40af;
+    }
+    .botones-masivos {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .col-checkbox {
+      width: 2.25rem;
+      text-align: center;
+    }
+    .acceso-celda {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .btn-toggle-acceso {
+      padding: 0.15rem 0.45rem;
+      font-size: 0.7rem;
+      font-weight: 500;
+      border-radius: 0.25rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+    .btn-toggle-acceso:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-deshabilitar {
+      background: #fff1f2;
+      color: #be123c;
+      border-color: #fecdd3;
+    }
+    .btn-deshabilitar:hover:not(:disabled) {
+      background: #ffe4e6;
+    }
+    .btn-habilitar {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #bbf7d0;
+    }
+    .btn-habilitar:hover:not(:disabled) {
+      background: #dcfce7;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: #ffffff;
+    }
     @media (max-width: 768px) {
       .grid-dos-columnas {
         grid-template-columns: 1fr;
@@ -1214,23 +1360,14 @@ export class AdminDashboardComponent implements OnInit {
   // Personas
   readonly personas = signal<PersonaDto[]>([]);
   readonly cargandoPersonas = signal<boolean>(false);
-  readonly listaParaCargar = signal<PersonaCargaItem[]>([]);
-  readonly resultadoCarga = signal<ResultadoCargaPersonasDto | null>(null);
-  filaDoc = '';
-  filaNom = '';
-  filaCor = '';
-  archivoParaCargar: File | null = null;
-  readonly cargandoArchivo = signal(false);
-
-  // Paginación y filtros de personas
-  readonly filtroBusqueda = signal<string>('');
-  readonly filtroEstadoAcceso = signal<'todos' | 'habilitado' | 'pendiente'>('todos');
-  readonly paginaActual = signal<number>(1);
-  readonly filasPorPagina = signal<number>(25);
+  // Control de Acceso y Selección Masiva (Issue #86, ADR-0023)
+  readonly filtroAcceso = signal<'todos' | 'habilitados' | 'pendientes'>('todos');
+  readonly personasSeleccionadas = signal<Set<string>>(new Set());
+  readonly cambiandoAcceso = signal<boolean>(false);
 
   readonly personasFiltradas = computed(() => {
     const texto = this.filtroBusqueda().trim().toLowerCase();
-    const filtroAcceso = this.filtroEstadoAcceso();
+    const filtro = this.filtroAcceso();
     return this.personas().filter((p) => {
       const coincideTexto =
         !texto ||
@@ -1239,9 +1376,9 @@ export class AdminDashboardComponent implements OnInit {
         (p.correo && p.correo.toLowerCase().includes(texto));
 
       const coincideAcceso =
-        filtroAcceso === 'todos' ||
-        (filtroAcceso === 'habilitado' && p.accesoHabilitado) ||
-        (filtroAcceso === 'pendiente' && !p.accesoHabilitado);
+        filtro === 'todos' ||
+        (filtro === 'habilitados' && p.accesoHabilitado) ||
+        (filtro === 'pendientes' && !p.accesoHabilitado);
 
       return coincideTexto && coincideAcceso;
     });
@@ -1289,7 +1426,7 @@ export class AdminDashboardComponent implements OnInit {
 
     this.campanasClient.listarCampanas().subscribe({
       next: (lista) => this.campanas.set(lista),
-      error: (err) => this.error.set(err?.message || 'Error al listar campañas.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al listar campañas.')),
     });
   }
 
@@ -1319,7 +1456,7 @@ export class AdminDashboardComponent implements OnInit {
         this.cargarDatosCampanas();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al crear la campaña.');
+        this.error.set(mensajeError(err, 'Error al crear la campaña.'));
         this.guardandoCampana.set(false);
       },
     });
@@ -1374,7 +1511,7 @@ export class AdminDashboardComponent implements OnInit {
         this.panelCuentas?.cargar();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al procesar el archivo de nómina.');
+        this.error.set(mensajeError(err, 'Error al procesar el archivo de nómina.'));
         this.cargandoArchivo.set(false);
       },
     });
@@ -1386,17 +1523,12 @@ export class AdminDashboardComponent implements OnInit {
         this.personas.set(lista);
         this.paginaActual.set(1);
       },
-      error: (err) => this.error.set(err?.message || 'Error al listar personas.'),
+      error: (err) => this.error.set(mensajeError(err, 'Error al listar personas.')),
     });
   }
 
   actualizarBusqueda(texto: string): void {
     this.filtroBusqueda.set(texto);
-    this.paginaActual.set(1);
-  }
-
-  actualizarFiltroEstado(estado: 'todos' | 'habilitado' | 'pendiente'): void {
-    this.filtroEstadoAcceso.set(estado);
     this.paginaActual.set(1);
   }
 
@@ -1416,6 +1548,115 @@ export class AdminDashboardComponent implements OnInit {
       this.paginaActual.update((p) => p + 1);
     }
   }
+
+  esUsuarioComun(per: PersonaDto): boolean {
+    return per.rol?.toLowerCase() === 'usuario';
+  }
+
+  cambiarFiltroAcceso(filtro: 'todos' | 'habilitados' | 'pendientes'): void {
+    this.filtroAcceso.set(filtro);
+    this.paginaActual.set(1);
+    this.limpiarSeleccion();
+  }
+
+  estaSeleccionada(id: string): boolean {
+    return this.personasSeleccionadas().has(id);
+  }
+
+  toggleSeleccion(id: string): void {
+    this.personasSeleccionadas.update((actual) => {
+      const nuevo = new Set(actual);
+      if (nuevo.has(id)) {
+        nuevo.delete(id);
+      } else {
+        nuevo.add(id);
+      }
+      return nuevo;
+    });
+  }
+
+  toggleSeleccionarTodas(): void {
+    const seleccionables = this.personasFiltradasSeleccionables();
+    const todas = this.todasSeleccionadas();
+    this.personasSeleccionadas.update((actual) => {
+      const nuevo = new Set(actual);
+      if (todas) {
+        seleccionables.forEach((p) => nuevo.delete(p.id));
+      } else {
+        seleccionables.forEach((p) => nuevo.add(p.id));
+      }
+      return nuevo;
+    });
+  }
+
+  limpiarSeleccion(): void {
+    this.personasSeleccionadas.set(new Set());
+  }
+
+  cambiarAccesoIndividual(per: PersonaDto): void {
+    const accion = per.accesoHabilitado ? 'deshabilitar' : 'habilitar';
+    const confirmar = window.confirm(
+      `¿Desea ${accion} el acceso de ${per.nombre || per.documento}?`,
+    );
+    if (!confirmar) return;
+
+    this.cambiandoAcceso.set(true);
+    this.error.set(null);
+
+    const nuevoEstado = !per.accesoHabilitado;
+    this.personasClient
+      .cambiarAccesoPersonas({
+        habilitar: nuevoEstado,
+        personaIds: [per.id],
+      })
+      .subscribe({
+        next: (res) => {
+          this.mensajeExito.set(
+            `Acceso ${nuevoEstado ? 'habilitado' : 'deshabilitado'} exitosamente para ${res.cambiadas} persona(s).`,
+          );
+          this.cambiandoAcceso.set(false);
+          this.cargarDatosPersonas();
+        },
+        error: (err) => {
+          this.error.set(mensajeError(err, 'Error al cambiar el acceso de la persona.'));
+          this.cambiandoAcceso.set(false);
+        },
+      });
+  }
+
+  cambiarAccesoSeleccionadas(habilitar: boolean): void {
+    const ids = Array.from(this.personasSeleccionadas());
+    if (ids.length === 0) return;
+
+    const accion = habilitar ? 'habilitar' : 'deshabilitar';
+    const confirmar = window.confirm(
+      `¿Desea ${accion} el acceso a las ${ids.length} personas seleccionadas?`,
+    );
+    if (!confirmar) return;
+
+    this.cambiandoAcceso.set(true);
+    this.error.set(null);
+
+    this.personasClient
+      .cambiarAccesoPersonas({
+        habilitar,
+        personaIds: ids,
+      })
+      .subscribe({
+        next: (res) => {
+          this.mensajeExito.set(
+            `Operación completada: ${res.cambiadas} persona(s) ${habilitar ? 'habilitada(s)' : 'deshabilitada(s)'}` +
+              (res.yaEnEstado > 0 ? ` (${res.yaEnEstado} ya estaban en ese estado).` : '.'),
+          );
+          this.personasSeleccionadas.set(new Set());
+          this.cambiandoAcceso.set(false);
+          this.cargarDatosPersonas();
+        },
+        error: (err) => {
+          this.error.set(mensajeError(err, 'Error al procesar la actualización masiva de acceso.'));
+          this.cambiandoAcceso.set(false);
+        },
+      });
 
   agregarFilaPersona(): void {
     const doc = this.filaDoc.trim();
@@ -1457,7 +1698,7 @@ export class AdminDashboardComponent implements OnInit {
         this.panelCuentas?.cargar();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Error al procesar la carga de personas.');
+        this.error.set(mensajeError(err, 'Error al procesar la carga de personas.'));
         this.cargandoPersonas.set(false);
       },
     });
@@ -1496,7 +1737,7 @@ export class AdminDashboardComponent implements OnInit {
           this.exportandoZip.set(false);
         },
         error: async (err) => {
-          let msg = err?.message || 'Error al generar la exportación ZIP.';
+          let msg = mensajeError(err, 'Error al generar la exportación ZIP.');
           if (err?.error instanceof Blob) {
             try {
               const texto = await err.error.text();
@@ -1543,7 +1784,7 @@ export class AdminDashboardComponent implements OnInit {
           this.exportandoExcel.set(false);
         },
         error: async (err) => {
-          let msg = err?.message || 'Error al generar la exportación Excel.';
+          let msg = mensajeError(err, 'Error al generar la exportación Excel.');
           if (err?.error instanceof Blob) {
             try {
               const texto = await err.error.text();

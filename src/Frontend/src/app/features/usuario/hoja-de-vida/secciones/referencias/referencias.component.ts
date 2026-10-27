@@ -1,5 +1,10 @@
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
+import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { DestroyRef, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { catchError, map, Observable, of } from 'rxjs';
+import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
+import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
 import { FormsModule } from '@angular/forms';
 import { GuardarReferenciaRequest, ReferenciaDto } from '../../../../../api-client';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
@@ -8,8 +13,15 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 @Component({
   selector: 'app-referencias',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarcaObservacionComponent],
+  imports: [CommonModule, FormsModule, MarcaObservacionComponent, ModalCambiosSinGuardarComponent],
   template: `
+    @if (validacion.errorCarga()) {
+      <p role="alert">
+        {{ validacion.errorCarga() }}
+        <button type="button" (click)="validacion.cargar()">Reintentar</button>
+      </p>
+    }
+
     <section class="seccion-referencias" data-testid="seccion-referencias">
       <header class="seccion-header">
         <div class="header-titulos">
@@ -28,7 +40,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="tipoActivo() === 'Personal'"
-          (click)="cambiarTipo('Personal')"
+          (click)="intentarCambiarTipo('Personal')"
           data-testid="subtab-personales"
         >
           Referencias Personales ({{ personales().length }} / 5)
@@ -40,7 +52,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           type="button"
           class="subtab-btn"
           [class.active]="tipoActivo() === 'Laboral'"
-          (click)="cambiarTipo('Laboral')"
+          (click)="intentarCambiarTipo('Laboral')"
           data-testid="subtab-laborales"
         >
           Referencias Laborales ({{ laborales().length }} / 5)
@@ -81,6 +93,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   >Nombres y Apellidos Completos <span class="text-danger">*</span></label
                 >
                 <input
+                  [attr.aria-describedby]="'error-modelo-nombresApellidos'"
                   id="nombresApellidos"
                   type="text"
                   class="form-control"
@@ -88,6 +101,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Ing. Carlos Andrade"
                   data-testid="input-nombres-apellidos"
                 />
+                @if (validacion.mensaje(modelo, 'referencia', 'nombresApellidos'); as mensaje) {
+                  <small id="error-modelo-nombresApellidos" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
 
               <div class="form-group">
@@ -95,6 +113,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   >Teléfono / Celular de Contacto <span class="text-danger">*</span></label
                 >
                 <input
+                  [attr.aria-describedby]="'error-modelo-telefono'"
                   id="telefono"
                   type="tel"
                   class="form-control"
@@ -102,6 +121,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. 0991234567"
                   data-testid="input-telefono"
                 />
+                @if (validacion.mensaje(modelo, 'referencia', 'telefono'); as mensaje) {
+                  <small id="error-modelo-telefono" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
             </div>
 
@@ -109,6 +133,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <div class="form-group">
                 <label for="titulo">Título o Profesión</label>
                 <input
+                  [attr.aria-describedby]="'error-modelo-titulo'"
                   id="titulo"
                   type="text"
                   class="form-control"
@@ -116,11 +141,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Abogado"
                   data-testid="input-titulo-ref"
                 />
+                @if (validacion.mensaje(modelo, 'referencia', 'titulo'); as mensaje) {
+                  <small id="error-modelo-titulo" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
 
               <div class="form-group">
                 <label for="cargoActual">Cargo Actual</label>
                 <input
+                  [attr.aria-describedby]="'error-modelo-cargoActual'"
                   id="cargoActual"
                   type="text"
                   class="form-control"
@@ -128,11 +159,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Coordinador Académico"
                   data-testid="input-cargo-ref"
                 />
+                @if (validacion.mensaje(modelo, 'referencia', 'cargoActual'); as mensaje) {
+                  <small id="error-modelo-cargoActual" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
 
               <div class="form-group">
                 <label for="empresa">Institución / Empresa</label>
                 <input
+                  [attr.aria-describedby]="'error-modelo-empresa'"
                   id="empresa"
                   type="text"
                   class="form-control"
@@ -140,6 +177,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Ministerio de Educación"
                   data-testid="input-empresa-ref"
                 />
+                @if (validacion.mensaje(modelo, 'referencia', 'empresa'); as mensaje) {
+                  <small id="error-modelo-empresa" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
             </div>
 
@@ -156,7 +198,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <button
                 type="button"
                 class="btn btn-primary btn-sm"
-                [disabled]="guardando()"
+                [disabled]="guardando() || validacion.invalido(modelo, 'referencia')"
                 (click)="guardar()"
                 data-testid="btn-guardar-referencia"
               >
@@ -225,6 +267,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </table>
         </div>
       </div>
+
+      <!-- Modal de Advertencia de Cambios sin Guardar en Subpestaña -->
+      <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
+        [abierto]="mostrarModalSubtab()"
+        [guardando]="guardando()"
+        [mensajeError]="errorFormulario()"
+        (guardarYContinuar)="guardarYCambiarTipo()"
+        (descartarYContinuar)="descartarYCambiarTipo()"
+        (quedarse)="cancelarCambioTipo()"
+      ></app-modal-cambios-sin-guardar>
     </section>
   `,
   styles: [
@@ -416,7 +469,86 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     `,
   ],
 })
-export class ReferenciasComponent {
+export class ReferenciasComponent implements OnInit, OnDestroy, SeccionConCambios {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
+  private readonly registroValidacion = this.validacion.registrarFormulario(
+    'referencias',
+    () => this.mostrarFormulario() && this.validacion.invalido(this.modelo, 'referencia'),
+    inject(DestroyRef),
+  );
+  readonly mostrarModalSubtab = signal(false);
+  tipoPendiente?: 'Personal' | 'Laboral';
+
+  intentarCambiarTipo(tipo: 'Personal' | 'Laboral'): void {
+    if (this.tipoActivo() === tipo) return;
+    if (this.tieneCambios()) {
+      this.tipoPendiente = tipo;
+      this.mostrarModalSubtab.set(true);
+      return;
+    }
+    this.cambiarTipo(tipo);
+  }
+
+  guardarYCambiarTipo(): void {
+    this.guardarCambios().subscribe((ok) => {
+      if (ok) {
+        this.mostrarModalSubtab.set(false);
+        if (this.tipoPendiente) {
+          this.cambiarTipo(this.tipoPendiente);
+          this.tipoPendiente = undefined;
+        }
+      }
+    });
+  }
+
+  descartarYCambiarTipo(): void {
+    this.descartarCambios();
+    this.mostrarModalSubtab.set(false);
+    if (this.tipoPendiente) {
+      this.cambiarTipo(this.tipoPendiente);
+      this.tipoPendiente = undefined;
+    }
+  }
+
+  cancelarCambioTipo(): void {
+    this.mostrarModalSubtab.set(false);
+    this.tipoPendiente = undefined;
+  }
+
+  ngOnInit(): void {
+    this.state.registrarSeccion?.(this);
+  }
+
+  ngOnDestroy(): void {
+    this.state.desregistrarSeccion?.(this);
+  }
+
+  tieneCambios(): boolean {
+    if (!this.puedeEditar()) return false;
+    if (this.mostrarFormulario()) {
+      return !!(
+        this.idEdicion() ||
+        this.modelo.nombresApellidos?.trim() ||
+        this.modelo.telefono?.trim() ||
+        this.modelo.titulo?.trim() ||
+        this.modelo.cargoActual?.trim() ||
+        this.modelo.empresa?.trim()
+      );
+    }
+    return false;
+  }
+
+  guardarCambios(): Observable<boolean> {
+    if (!this.puedeEditar()) return of(true);
+    if (!this.mostrarFormulario()) return of(true);
+    return this.guardarObservable();
+  }
+
+  descartarCambios(): void {
+    this.cancelarFormulario();
+    this.state.actualizarEstadoCambios?.();
+  }
+
   private readonly state = inject(HojaDeVidaStateService);
 
   readonly puedeEditar = this.state.puedeEditar;
@@ -496,22 +628,35 @@ export class ReferenciasComponent {
     this.idEdicion.set(undefined);
   }
 
-  guardar(): void {
+  guardarObservable(): Observable<boolean> {
     if (!this.modelo.nombresApellidos?.trim()) {
       this.errorFormulario.set('Nombres y apellidos son obligatorios.');
-      return;
+      return of(false);
     }
     if (!this.modelo.telefono?.trim()) {
       this.errorFormulario.set('El teléfono de contacto es obligatorio.');
-      return;
+      return of(false);
     }
 
     this.modelo.tipo = this.tipoActivo();
 
-    this.state.guardarReferencia(this.modelo, this.idEdicion()).subscribe({
-      next: () => this.cancelarFormulario(),
-      error: (err) => this.errorFormulario.set(err?.message || 'Error al guardar la referencia.'),
-    });
+    if (this.validacion.invalido(this.modelo, 'referencia')) return of(false);
+    return this.state.guardarReferencia(this.modelo, this.idEdicion()).pipe(
+      map(() => {
+        this.cancelarFormulario();
+        this.state.actualizarEstadoCambios?.();
+        return true;
+      }),
+      catchError((err) => {
+        this.validacion.registrarError(err, this.modelo);
+        this.errorFormulario.set(mensajeError(err, 'Error al guardar la referencia.'));
+        return of(false);
+      }),
+    );
+  }
+
+  guardar(): void {
+    this.guardarObservable().subscribe();
   }
 
   eliminar(id: string): void {

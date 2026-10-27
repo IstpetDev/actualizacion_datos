@@ -118,6 +118,49 @@
         }
       }
     },
+    "/api/configuracion/politica-validacion": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ObtenerPoliticaValidacion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaValidacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/personas/{id}/tipo-funcionario": {
       "put": {
         "tags": [
@@ -152,6 +195,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas/asignar-tipo-masivo": {
+      "post": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "AsignarTipoFuncionarioMasivo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarTipoFuncionarioMasivoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoAsignacionTipoMasivoDto"
                 }
               }
             }
@@ -797,6 +903,59 @@
                   "items": {
                     "$ref": "#/components/schemas/PersonaDto"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas/acceso": {
+      "post": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "CambiarAccesoPersonas",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarAccesoPersonasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoCambioAccesoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
                 }
               }
             }
@@ -3100,6 +3259,59 @@
         }
       }
     },
+    "/api/configuracion/correo-institucional": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "GuardarDominiosCorreo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarDominiosCorreoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaValidacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuracion/tipos-funcionario": {
       "get": {
         "tags": [
@@ -4138,6 +4350,35 @@
           }
         }
       },
+      "AsignarTipoFuncionarioMasivoRequest": {
+        "required": [
+          "tipoFuncionarioId"
+        ],
+        "type": "object",
+        "properties": {
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "personaIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "soloSinTipo": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "AsignarTipoFuncionarioRequest": {
         "required": [
           "tipoFuncionarioId"
@@ -4190,6 +4431,31 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CambiarAccesoPersonasRequest": {
+        "required": [
+          "habilitar"
+        ],
+        "type": "object",
+        "properties": {
+          "habilitar": {
+            "type": "boolean"
+          },
+          "personaIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "todas": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5319,6 +5585,20 @@
           }
         }
       },
+      "GuardarDominiosCorreoRequest": {
+        "required": [
+          "dominiosCorreoPermitidos"
+        ],
+        "type": "object",
+        "properties": {
+          "dominiosCorreoPermitidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "GuardarExperienciaLaboralRequest": {
         "required": [
           "empleador",
@@ -5565,12 +5845,6 @@
               "string"
             ]
           },
-          "perfil": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "fotoArchivoId": {
             "type": [
               "null",
@@ -5578,7 +5852,8 @@
             ],
             "format": "uuid"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "GuardarReferenciaRequest": {
         "required": [
@@ -6081,6 +6356,30 @@
         "properties": {
           "mensaje": {
             "type": "string"
+          },
+          "codigo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errores": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "traceId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6379,6 +6678,52 @@
           "tieneFicha": {
             "type": "boolean",
             "default": false
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "PoliticaValidacionDto": {
+        "required": [
+          "institucionId",
+          "dominiosCorreoPermitidos",
+          "fechaNacimientoMinima",
+          "fechaNacimientoMaxima",
+          "reglas"
+        ],
+        "type": "object",
+        "properties": {
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dominiosCorreoPermitidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fechaNacimientoMinima": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaNacimientoMaxima": {
+            "type": "string",
+            "format": "date"
+          },
+          "reglas": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ReglaCampoDto"
+              }
+            }
           }
         }
       },
@@ -6458,6 +6803,58 @@
           }
         }
       },
+      "ReglaCampoDto": {
+        "type": "object",
+        "properties": {
+          "maximoCaracteres": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "patron": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minimo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "maximo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "entero": {
+            "type": "boolean",
+            "default": false
+          },
+          "multilinea": {
+            "type": "boolean",
+            "default": false
+          },
+          "tipo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RequisitoDocumentoDto": {
         "required": [
           "id",
@@ -6499,6 +6896,69 @@
         "properties": {
           "estado": {
             "type": "string"
+          }
+        }
+      },
+      "ResultadoAsignacionTipoMasivoDto": {
+        "required": [
+          "totalModificados",
+          "totalConTipo",
+          "totalSinTipo",
+          "mensaje"
+        ],
+        "type": "object",
+        "properties": {
+          "totalModificados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalConTipo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalSinTipo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "mensaje": {
+            "type": "string"
+          }
+        }
+      },
+      "ResultadoCambioAccesoDto": {
+        "required": [
+          "cambiadas",
+          "yaEnEstado"
+        ],
+        "type": "object",
+        "properties": {
+          "cambiadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "yaEnEstado": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -7076,6 +7536,9 @@
       "name": "MisDatos"
     },
     {
+      "name": "Configuracion"
+    },
+    {
       "name": "Personas"
     },
     {
@@ -7104,9 +7567,6 @@
     },
     {
       "name": "DocumentosPersonales"
-    },
-    {
-      "name": "Configuracion"
     },
     {
       "name": "CuentaBancaria"

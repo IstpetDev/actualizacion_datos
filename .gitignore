@@ -97,3 +97,8 @@ Desktop.ini
 
 # Salida de gitleaks en local
 gitleaks.sarif
+
+catalogos_*.sql
+seed_*.sql
+seed_*.zip
+*.sql.gz

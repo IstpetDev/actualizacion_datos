@@ -19,7 +19,8 @@ internal static class GeneradorExcelOpenXml
         string Estado,
         int CantidadArchivos,
         bool TratamientoDatosAceptado,
-        DateTime FechaCreacionUtc);
+        DateTime FechaCreacionUtc,
+        string Perfil = "");
 
     public static byte[] GenerarExcelPersonasAprobadas(
         string nombreInstitucion,
@@ -162,6 +163,7 @@ internal static class GeneradorExcelOpenXml
         sb.AppendLine(CrearCeldaTexto("F1", "Archivos Adjuntos", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("G1", "Tratamiento de Datos Aceptado", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("H1", "Fecha Registro (UTC)", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("I1", "Perfil profesional generado", estilo: 1));
         sb.AppendLine("    </row>");
 
         // Filas de datos
@@ -179,6 +181,7 @@ internal static class GeneradorExcelOpenXml
             sb.AppendLine(CrearCeldaNumero(string.Create(CultureInfo.InvariantCulture, $"F{numFila}"), fila.CantidadArchivos));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"G{numFila}"), fila.TratamientoDatosAceptado ? "Sí" : "No"));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"H{numFila}"), fila.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"I{numFila}"), fila.Perfil));
             sb.AppendLine("    </row>");
         }
 

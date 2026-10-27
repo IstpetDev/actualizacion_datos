@@ -1,3 +1,4 @@
+import { ValidacionHojaDeVidaService } from '../usuario/hoja-de-vida/servicios/validacion-hoja-de-vida.service';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin, Observable } from 'rxjs';
@@ -108,7 +109,18 @@ import {
               pattern="[0-9 \\-]{6,30}"
               required
             />
-            <button type="submit" [disabled]="formulario.invalid || ocupado()">
+            @if (validacion.mensaje(datosValidacion(), 'cuenta', 'numero'); as mensaje) {
+              <small role="alert">{{ mensaje }}</small>
+            }
+            @if (validacion.mensaje(datosValidacion(), 'cuenta', 'nombreBancoOtro'); as mensaje) {
+              <small role="alert">{{ mensaje }}</small>
+            }
+            <button
+              type="submit"
+              [disabled]="
+                formulario.invalid || ocupado() || validacion.invalido(datosValidacion(), 'cuenta')
+              "
+            >
               Guardar cuenta
             </button>
           </form>
@@ -134,6 +146,13 @@ import {
   `,
 })
 export class MiCuentaBancariaComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
+  datosValidacion(): object {
+    return {
+      numero: this.numero,
+      nombreBancoOtro: this.bancoId === null ? this.nombreBancoOtro : undefined,
+    };
+  }
   private readonly cliente = inject(CuentaBancariaClient);
   private readonly catalogos = inject(CatalogosClient);
 
@@ -193,7 +212,8 @@ export class MiCuentaBancariaComponent implements OnInit {
   }
 
   guardar(): void {
-    if (this.tipoCuentaId === null) return;
+    if (this.tipoCuentaId === null || this.validacion.invalido(this.datosValidacion(), 'cuenta'))
+      return;
     this.realizar(
       this.cliente.guardarMiCuentaBancaria({
         tipoCuentaId: this.tipoCuentaId,

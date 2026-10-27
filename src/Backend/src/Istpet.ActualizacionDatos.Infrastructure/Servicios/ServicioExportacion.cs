@@ -19,6 +19,7 @@ public class ServicioExportacion : IServicioExportacion
     private readonly AplicacionDbContext _context;
     private readonly IAlmacenArchivos _almacenArchivos;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private Dictionary<int, string>? _catalogosCv;
 
     public ServicioExportacion(
         AplicacionDbContext context,
@@ -73,8 +74,12 @@ public class ServicioExportacion : IServicioExportacion
             foreach (var persona in personasAprobadas)
             {
                 var documentoSeguro = SanearSegmentoRuta(persona.Documento, persona.Id.ToString("N"));
+                var expediente = await ObtenerExpedienteAsync(persona, ct);
+                var entradaCv = archive.CreateEntry($"{nombreCarpetaRaiz}/{documentoSeguro}/hoja-de-vida.html", CompressionLevel.Optimal);
+                using (var salidaCv = new StreamWriter(entradaCv.Open(), new UTF8Encoding(false)))
+                    await salidaCv.WriteAsync(GeneradorCvHtml.Generar(expediente));
                 var archivosPersona = archivosPorPersona[persona.Id].ToList();
-                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "hoja-de-vida.html" };
 
                 foreach (var archivo in archivosPersona)
                 {
@@ -147,6 +152,8 @@ public class ServicioExportacion : IServicioExportacion
             .Select(g => new { PersonaId = g.Key, Total = g.Count() })
             .ToDictionaryAsync(x => x.PersonaId, x => x.Total, ct);
 
+        var perfiles = new Dictionary<Guid, string>();
+        foreach (var persona in personasAprobadas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
         var filas = personasAprobadas.Select(p => new GeneradorExcelOpenXml.FilaExportacion(
             Documento: p.Documento,
             Nombre: p.Nombre ?? "—",
@@ -155,7 +162,8 @@ public class ServicioExportacion : IServicioExportacion
             Estado: p.EstadoActualizacion.ToString(),
             CantidadArchivos: conteoArchivos.GetValueOrDefault(p.Id, 0),
             TratamientoDatosAceptado: p.TratamientoDatosAceptado,
-            FechaCreacionUtc: p.FechaCreacionUtc
+            FechaCreacionUtc: p.FechaCreacionUtc,
+            Perfil: perfiles[p.Id]
         )).ToList();
 
         var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas);
@@ -180,6 +188,23 @@ public class ServicioExportacion : IServicioExportacion
             memoryStream,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             nombreArchivo);
+    }
+
+    private async Task<GeneradorCvHtml.Expediente> ObtenerExpedienteAsync(Persona persona, CancellationToken ct)
+    {
+        // Filtros explícitos: el superadmin también puede exportar una institución seleccionada.
+        var id = persona.Id;
+        var institucion = persona.InstitucionId;
+        _catalogosCv ??= await _context.ElementosCatalogo.AsNoTracking().ToDictionaryAsync(e => e.Id, e => e.Nombre, ct);
+        return new(
+            await _context.FichasPersonales.FirstOrDefaultAsync(f => f.PersonaId == id && f.InstitucionId == institucion, ct),
+            await _context.TitulosAcademicos.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.TitulosEnCurso.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.Capacitaciones.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.ExperienciasLaborales.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.ReferenciasPersonales.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.DocumentosPersonales.Where(t => t.PersonaId == id && t.InstitucionId == institucion).ToListAsync(ct),
+            await _context.CuentasBancarias.FirstOrDefaultAsync(t => t.PersonaId == id && t.InstitucionId == institucion, ct), _catalogosCv);
     }
 
     private async Task<(Guid Id, string Nombre)> ValidarYResolverInstitucionAsync(Guid? institucionId, CancellationToken ct)

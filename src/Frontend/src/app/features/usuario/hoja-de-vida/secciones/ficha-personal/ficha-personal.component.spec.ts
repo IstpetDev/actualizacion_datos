@@ -1,3 +1,6 @@
+import { casosFicha } from '../../servicios/casos-validacion.fixture';
+import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../../../api-client';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
@@ -17,6 +20,7 @@ describe('FichaPersonalComponent', () => {
     obtenerMarcaParaItem: Mock;
   };
   let catalogosMock: {
+    obtener: Mock;
     paises: Mock;
     estadosCiviles: Mock;
     tiposSangre: Mock;
@@ -72,6 +76,7 @@ describe('FichaPersonalComponent', () => {
     };
 
     catalogosMock = {
+      obtener: vi.fn().mockReturnValue(of([])),
       paises: vi.fn().mockReturnValue(of([])),
       estadosCiviles: vi.fn().mockReturnValue(of([])),
       tiposSangre: vi.fn().mockReturnValue(of([])),
@@ -84,6 +89,10 @@ describe('FichaPersonalComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FichaPersonalComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosMock },
         { provide: ArchivosClient, useValue: { subirArchivo: vi.fn() } },
@@ -147,5 +156,48 @@ describe('FichaPersonalComponent', () => {
     component.ngOnInit();
     expect(catalogosMock.provincias).toHaveBeenLastCalledWith(9876);
     expect(component.provinciasResidencia()).toEqual(mockProvincias);
+  });
+
+  it.each(casosFicha)(
+    'muestra mensaje y bloquea guardar por %s = %s',
+    async (campo, valor, valido) => {
+      (component.modelo as Record<string, unknown>)[campo] = valor;
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const boton = fixture.nativeElement.querySelector(
+        '[data-testid="btn-guardar-ficha"]',
+      ) as HTMLButtonElement;
+      expect(boton.disabled).toBe(!valido);
+      const mensaje = fixture.nativeElement.querySelector('#error-modelo-' + campo);
+      if (!valido) expect(mensaje?.textContent?.trim().length).toBeGreaterThan(5);
+      if (campo === 'correoInstitucional' && valor.includes('otra-ficticia'))
+        expect(mensaje?.textContent).toContain('@institucion-ficticia.example');
+      if (!valido) {
+        component.guardarFicha();
+        component.guardarCambios().subscribe((guardado) => expect(guardado).toBe(false));
+        expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+      }
+    },
+  );
+
+  it('no muestra ni envía perfil; permite guardar un borrador incompleto válido', () => {
+    expect(fixture.nativeElement.querySelector('[name="perfil"]')).toBeNull();
+    component.modelo = { celular: '0900000000' };
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith({ celular: '0900000000' });
+  });
+
+  it('detecta_cambios_cuando_se_modifican_campos_y_los_descarta_correctamente', () => {
+    component.ngOnInit();
+    const originalNombre = component.modelo.primerNombre;
+    expect(component.tieneCambios()).toBe(false);
+
+    component.modelo.primerNombre = 'NombreModificado';
+    expect(component.tieneCambios()).toBe(true);
+
+    component.descartarCambios();
+    expect(component.modelo.primerNombre).toBe(originalNombre);
+    expect(component.tieneCambios()).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+import politicaPrueba from '../usuario/hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -27,6 +28,7 @@ describe('AdminDashboardComponent', () => {
   let personasClientMock: {
     listarPersonas: Mock;
     cargarPersonas: Mock;
+    cambiarAccesoPersonas: Mock;
   };
   let authServiceMock: {
     sesion: Mock;
@@ -83,6 +85,7 @@ describe('AdminDashboardComponent', () => {
     personasClientMock = {
       listarPersonas: vi.fn().mockReturnValue(of(personasMock)),
       cargarPersonas: vi.fn().mockReturnValue(of(resultadoCargaMock)),
+      cambiarAccesoPersonas: vi.fn().mockReturnValue(of({ cambiadas: 1, yaEnEstado: 0 })),
     };
 
     authServiceMock = {
@@ -105,6 +108,7 @@ describe('AdminDashboardComponent', () => {
         {
           provide: ConfiguracionClient,
           useValue: {
+            obtenerPoliticaValidacion: () => of(politicaPrueba),
             listarTiposFuncionario: () => of([]),
             listarTiposDocumento: () => of([]),
             listarRequisitosDocumento: () => of([]),
@@ -166,6 +170,115 @@ describe('AdminDashboardComponent', () => {
     expect(compiled.querySelectorAll('[data-testid="acceso-habilitado"]').length).toBe(1);
     expect(compiled.querySelectorAll('[data-testid="acceso-pendiente"]').length).toBe(1);
     personasMock.pop();
+  });
+
+  it('la_tabla_de_personas_permite_filtrar_por_estado_de_acceso', () => {
+    const listaTest: PersonaDto[] = [
+      {
+        ...personasMock[0],
+        id: '11111111-1111-1111-1111-111111111111',
+        documento: '1700000001',
+        accesoHabilitado: true,
+      },
+      {
+        ...personasMock[0],
+        id: '22222222-2222-2222-2222-222222222222',
+        documento: '1700000002',
+        accesoHabilitado: false,
+      },
+    ];
+    component.cambiarTab('personas');
+    component.personas.set(listaTest);
+    fixture.detectChanges();
+
+    expect(component.personasFiltradas().length).toBe(2);
+    expect(component.totalHabilitadas()).toBe(1);
+    expect(component.totalPendientes()).toBe(1);
+
+    component.cambiarFiltroAcceso('habilitados');
+    fixture.detectChanges();
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].id).toBe('11111111-1111-1111-1111-111111111111');
+
+    component.cambiarFiltroAcceso('pendientes');
+    fixture.detectChanges();
+    expect(component.personasFiltradas().length).toBe(1);
+    expect(component.personasFiltradas()[0].id).toBe('22222222-2222-2222-2222-222222222222');
+  });
+
+  it('permite_seleccionar_individualmente_y_masivamente_personas_rol_usuario', () => {
+    const listaTest: PersonaDto[] = [
+      {
+        ...personasMock[0],
+        id: '11111111-1111-1111-1111-111111111111',
+        rol: 'usuario',
+      },
+      {
+        ...personasMock[0],
+        id: '22222222-2222-2222-2222-222222222222',
+        rol: 'usuario',
+      },
+      {
+        ...personasMock[0],
+        id: '33333333-3333-3333-3333-333333333333',
+        rol: 'admin',
+      },
+    ];
+    component.cambiarTab('personas');
+    component.personas.set(listaTest);
+    fixture.detectChanges();
+
+    expect(component.personasFiltradasSeleccionables().length).toBe(2);
+
+    // Seleccionar individual
+    component.toggleSeleccion('11111111-1111-1111-1111-111111111111');
+    expect(component.estaSeleccionada('11111111-1111-1111-1111-111111111111')).toBe(true);
+    expect(component.todasSeleccionadas()).toBe(false);
+
+    // Seleccionar todas
+    component.toggleSeleccionarTodas();
+    expect(component.todasSeleccionadas()).toBe(true);
+    expect(component.personasSeleccionadas().size).toBe(2);
+
+    // Deseleccionar todas
+    component.toggleSeleccionarTodas();
+    expect(component.personasSeleccionadas().size).toBe(0);
+  });
+
+  it('permite_cambiar_acceso_individual_con_confirmacion', () => {
+    const spyConfirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const persona = personasMock[0];
+    component.personas.set([persona]);
+    fixture.detectChanges();
+
+    component.cambiarAccesoIndividual(persona);
+    fixture.detectChanges();
+
+    expect(spyConfirm).toHaveBeenCalled();
+    expect(personasClientMock.cambiarAccesoPersonas).toHaveBeenCalledWith({
+      habilitar: false,
+      personaIds: [persona.id],
+    });
+    expect(component.mensajeExito()).toContain('deshabilitado exitosamente');
+    spyConfirm.mockRestore();
+  });
+
+  it('permite_cambiar_acceso_masivo_a_personas_seleccionadas', () => {
+    const spyConfirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    personasClientMock.cambiarAccesoPersonas.mockReturnValue(of({ cambiadas: 2, yaEnEstado: 0 }));
+
+    component.personasSeleccionadas.set(new Set(['id-1', 'id-2']));
+    component.cambiarAccesoSeleccionadas(true);
+    fixture.detectChanges();
+
+    expect(spyConfirm).toHaveBeenCalled();
+    expect(personasClientMock.cambiarAccesoPersonas).toHaveBeenCalledWith({
+      habilitar: true,
+      personaIds: ['id-1', 'id-2'],
+    });
+    expect(component.mensajeExito()).toContain('2 persona(s) habilitada(s)');
+    expect(component.personasSeleccionadas().size).toBe(0);
+    spyConfirm.mockRestore();
   });
 
   it('permite_cargar_nomina_de_personas_y_muestra_resultados', () => {
