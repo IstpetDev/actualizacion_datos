@@ -242,4 +242,285 @@ public sealed class CapacitacionesObligatoriasTests : IDisposable
         Assert.Contains(item.PersonasPendientes, p => p.Documento == "1700000082");
         Assert.DoesNotContain(item.PersonasPendientes, p => p.Documento == "1700000081");
     }
+
+    private async Task AsegurarCampanaActivaAsync(InstitucionId? institucion = null)
+    {
+        institucion ??= _institucion;
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        if (!await db.Instituciones.AnyAsync(i => i.Id == institucion))
+        {
+            db.Instituciones.Add(new Institucion(institucion, "Institución ficticia de prueba"));
+            await db.SaveChangesAsync();
+        }
+        if (!await db.Campanas.AnyAsync(c => c.InstitucionId == institucion && c.Activa))
+        {
+            db.Campanas.Add(new Campana(
+                Guid.NewGuid(),
+                institucion,
+                "Campaña 2026",
+                DateTime.UtcNow.AddDays(-1),
+                DateTime.UtcNow.AddDays(30),
+                activa: true));
+            await db.SaveChangesAsync();
+        }
+    }
+
+    private async Task<Guid> CrearArchivoAdjuntoAsync(Guid personaId, InstitucionId? institucion = null)
+    {
+        institucion ??= _institucion;
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var archivo = new ArchivoAdjunto(
+            Guid.NewGuid(),
+            institucion,
+            personaId,
+            "certificado.pdf",
+            "application/pdf",
+            1024,
+            "hash123",
+            "ruta/ficticia/cert.pdf",
+            "certificado-capacitacion");
+        db.ArchivosAdjuntos.Add(archivo);
+        await db.SaveChangesAsync();
+        return archivo.Id;
+    }
+
+    [Fact]
+    public async Task Usuario_ve_solo_capacitaciones_que_le_aplican_y_con_su_estado()
+    {
+        await AsegurarCampanaActivaAsync();
+
+        // 1. Crear tipos de funcionario
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var tipoDocente = new TipoFuncionario(Guid.NewGuid(), _institucion, "DOC", "Docente", esDocente: true);
+        var tipoAdmin = new TipoFuncionario(Guid.NewGuid(), _institucion, "ADM", "Administrativo", esDocente: false);
+        db.TiposFuncionario.AddRange(tipoDocente, tipoAdmin);
+
+        // 2. Crear capacitaciones obligatorias
+        var obGeneral = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso General Todo Personal");
+        var obDocente = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Exclusivo Docente", tipoFuncionarioId: tipoDocente.Id);
+        var obAdmin = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Exclusivo Admin", tipoFuncionarioId: tipoAdmin.Id);
+        db.CapacitacionesObligatorias.AddRange(obGeneral, obDocente, obAdmin);
+        await db.SaveChangesAsync();
+
+        // 3. Autenticar como Docente
+        var usuarioDocenteId = await AutenticarAsync(RolUsuario.Usuario);
+        using (var alcanceDoc = _fabrica.Services.CreateScope())
+        {
+            var dbDoc = alcanceDoc.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var pDoc = await dbDoc.Personas.IgnoreQueryFilters().SingleAsync(p => p.Id == usuarioDocenteId);
+            pDoc.AsignarTipoFuncionario(tipoDocente.Id);
+            await dbDoc.SaveChangesAsync();
+        }
+
+        var resDoc = await _cliente.GetAsync("/api/mis-datos/capacitaciones-obligatorias");
+        Assert.Equal(HttpStatusCode.OK, resDoc.StatusCode);
+        var listaDoc = await resDoc.Content.ReadFromJsonAsync<List<EstadoCapacitacionObligatoriaPersonaDto>>();
+        Assert.NotNull(listaDoc);
+        Assert.Contains(listaDoc, c => c.Id == obGeneral.Id && c.Estado == "pendiente");
+        Assert.Contains(listaDoc, c => c.Id == obDocente.Id && c.Estado == "pendiente");
+        Assert.DoesNotContain(listaDoc, c => c.Id == obAdmin.Id);
+
+        // 4. Autenticar como Persona sin tipo
+        await AutenticarAsync(RolUsuario.Usuario);
+        var resSinTipo = await _cliente.GetAsync("/api/mis-datos/capacitaciones-obligatorias");
+        Assert.Equal(HttpStatusCode.OK, resSinTipo.StatusCode);
+        var listaSinTipo = await resSinTipo.Content.ReadFromJsonAsync<List<EstadoCapacitacionObligatoriaPersonaDto>>();
+        Assert.NotNull(listaSinTipo);
+        Assert.Contains(listaSinTipo, c => c.Id == obGeneral.Id);
+        Assert.DoesNotContain(listaSinTipo, c => c.Id == obDocente.Id);
+        Assert.DoesNotContain(listaSinTipo, c => c.Id == obAdmin.Id);
+    }
+
+    [Fact]
+    public async Task Usuario_puede_subir_capacitacion_vinculada_y_reemplazarla()
+    {
+        await AsegurarCampanaActivaAsync();
+        var usuarioId = await AutenticarAsync(RolUsuario.Usuario);
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Primeros Auxilios");
+        db.CapacitacionesObligatorias.Add(ob);
+        await db.SaveChangesAsync();
+
+        var archivo1 = await CrearArchivoAdjuntoAsync(usuarioId);
+        var archivo2 = await CrearArchivoAdjuntoAsync(usuarioId);
+
+        // 1. Subir primera capacitación vinculada
+        var req1 = new GuardarCapacitacionRequest(
+            NombreEvento: "Taller Primeros Auxilios 2026",
+            InstitucionOrganizadora: "Cruz Roja",
+            NumeroHoras: 20,
+            FechaInicio: new DateOnly(2026, 2, 1),
+            FechaFin: new DateOnly(2026, 2, 5),
+            ArchivoId: archivo1,
+            CapacitacionObligatoriaId: ob.Id);
+
+        var resPost1 = await _cliente.PostAsJsonAsync("/api/mis-datos/hoja-de-vida/capacitaciones", req1);
+        Assert.Equal(HttpStatusCode.Created, resPost1.StatusCode);
+        var cap1 = await resPost1.Content.ReadFromJsonAsync<CapacitacionDto>();
+        Assert.NotNull(cap1);
+        Assert.Equal(ob.Id, cap1.CapacitacionObligatoriaId);
+
+        // Verificar que figura como cargada
+        var resEstado1 = await _cliente.GetFromJsonAsync<List<EstadoCapacitacionObligatoriaPersonaDto>>("/api/mis-datos/capacitaciones-obligatorias");
+        Assert.NotNull(resEstado1);
+        var obEstado1 = resEstado1.Single(c => c.Id == ob.Id);
+        Assert.Equal("cargada", obEstado1.Estado);
+        Assert.Equal(cap1.Id, obEstado1.CapacitacionId);
+
+        // 2. Subir segunda capacitación vinculada a la misma obligatoria (reemplaza vínculo)
+        var req2 = new GuardarCapacitacionRequest(
+            NombreEvento: "Taller Avanzado Primeros Auxilios",
+            InstitucionOrganizadora: "Cruz Roja",
+            NumeroHoras: 40,
+            FechaInicio: new DateOnly(2026, 3, 1),
+            FechaFin: new DateOnly(2026, 3, 10),
+            ArchivoId: archivo2,
+            CapacitacionObligatoriaId: ob.Id);
+
+        var resPost2 = await _cliente.PostAsJsonAsync("/api/mis-datos/hoja-de-vida/capacitaciones", req2);
+        Assert.Equal(HttpStatusCode.Created, resPost2.StatusCode);
+        var cap2 = await resPost2.Content.ReadFromJsonAsync<CapacitacionDto>();
+        Assert.NotNull(cap2);
+        Assert.Equal(ob.Id, cap2.CapacitacionObligatoriaId);
+
+        // Verificar que en base de datos cap1 quedó sin vínculo
+        using var alcanceVerif = _fabrica.Services.CreateScope();
+        var dbVerif = alcanceVerif.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var cap1Bd = await dbVerif.Capacitaciones.IgnoreQueryFilters().SingleAsync(c => c.Id == cap1.Id);
+        var cap2Bd = await dbVerif.Capacitaciones.IgnoreQueryFilters().SingleAsync(c => c.Id == cap2.Id);
+        Assert.Null(cap1Bd.CapacitacionObligatoriaId);
+        Assert.Equal(ob.Id, cap2Bd.CapacitacionObligatoriaId);
+    }
+
+    [Fact]
+    public async Task Vincular_obligatoria_de_otra_institucion_o_invalida_responde_404()
+    {
+        await AsegurarCampanaActivaAsync();
+        var usuarioId = await AutenticarAsync(RolUsuario.Usuario);
+
+        var instOtra = InstitucionId.Nuevo();
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        db.Instituciones.Add(new Institucion(instOtra, "Otra Inst"));
+        var obOtra = new CapacitacionObligatoria(Guid.NewGuid(), instOtra, "Curso Otra Inst");
+        db.CapacitacionesObligatorias.Add(obOtra);
+        await db.SaveChangesAsync();
+
+        var archivo = await CrearArchivoAdjuntoAsync(usuarioId);
+
+        var req = new GuardarCapacitacionRequest(
+            NombreEvento: "Curso X",
+            InstitucionOrganizadora: "Org",
+            ArchivoId: archivo,
+            CapacitacionObligatoriaId: obOtra.Id);
+
+        var res = await _cliente.PostAsJsonAsync("/api/mis-datos/hoja-de-vida/capacitaciones", req);
+        Assert.Equal(HttpStatusCode.NotFound, res.StatusCode);
+    }
+
+    [Fact]
+    public async Task Usuario_puede_vincular_capacitacion_propia_existente()
+    {
+        await AsegurarCampanaActivaAsync();
+        var usuarioId = await AutenticarAsync(RolUsuario.Usuario);
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Ética Pública");
+        db.CapacitacionesObligatorias.Add(ob);
+        await db.SaveChangesAsync();
+
+        var archivo = await CrearArchivoAdjuntoAsync(usuarioId);
+
+        // 1. Subir capacitación personal sin obligatoria
+        var req = new GuardarCapacitacionRequest(
+            NombreEvento: "Seminario de Ética",
+            InstitucionOrganizadora: "Contraloría",
+            NumeroHoras: 20,
+            FechaInicio: new DateOnly(2026, 1, 10),
+            ArchivoId: archivo);
+
+        var resPost = await _cliente.PostAsJsonAsync("/api/mis-datos/hoja-de-vida/capacitaciones", req);
+        Assert.Equal(HttpStatusCode.Created, resPost.StatusCode);
+        var creada = await resPost.Content.ReadFromJsonAsync<CapacitacionDto>();
+        Assert.NotNull(creada);
+        Assert.Null(creada.CapacitacionObligatoriaId);
+
+        // 2. Vincular vía endpoint
+        var resVincular = await _cliente.PostAsJsonAsync($"/api/mis-datos/capacitaciones-obligatorias/{ob.Id}/vincular",
+            new VincularCapacitacionObligatoriaRequest(creada.Id));
+        Assert.Equal(HttpStatusCode.OK, resVincular.StatusCode);
+
+        // 3. Verificar estado
+        var resEstado = await _cliente.GetFromJsonAsync<List<EstadoCapacitacionObligatoriaPersonaDto>>("/api/mis-datos/capacitaciones-obligatorias");
+        Assert.NotNull(resEstado);
+        var estadoOb = resEstado.Single(c => c.Id == ob.Id);
+        Assert.Equal("cargada", estadoOb.Estado);
+        Assert.Equal(creada.Id, estadoOb.CapacitacionId);
+    }
+
+    [Fact]
+    public async Task No_puede_vincular_con_actualizacion_enviada()
+    {
+        await AsegurarCampanaActivaAsync();
+
+        // Crear persona en estado Enviado
+        var doc = (++_numeroPersona).ToString("D10", System.Globalization.CultureInfo.InvariantCulture);
+        var personaEnviada = new Persona(
+            Guid.NewGuid(),
+            _institucion,
+            doc,
+            RolUsuario.Usuario,
+            "Persona Enviada",
+            accesoHabilitado: true,
+            estadoActualizacion: EstadoActualizacion.Enviado);
+        personaEnviada.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(personaEnviada, "ClaveFicticiaCapacitaciones92"), debeCambiarContrasena: false);
+
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Curso Seguridad Laboral");
+
+        using (var alcance = _fabrica.Services.CreateScope())
+        {
+            var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            db.Personas.Add(personaEnviada);
+            db.CapacitacionesObligatorias.Add(ob);
+            await db.SaveChangesAsync();
+        }
+
+        var resLogin = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest(doc, "ClaveFicticiaCapacitaciones92"));
+        Assert.Equal(HttpStatusCode.OK, resLogin.StatusCode);
+
+        var res = await _cliente.PostAsJsonAsync($"/api/mis-datos/capacitaciones-obligatorias/{ob.Id}/vincular",
+            new VincularCapacitacionObligatoriaRequest(Guid.NewGuid()));
+        Assert.True(res.StatusCode == HttpStatusCode.BadRequest || res.StatusCode == HttpStatusCode.Forbidden || res.StatusCode == HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Persona_puede_justificar_por_nuevo_ingreso_manualmente()
+    {
+        await AsegurarCampanaActivaAsync();
+        await AutenticarAsync(RolUsuario.Usuario);
+
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+        var ob = new CapacitacionObligatoria(Guid.NewGuid(), _institucion, "Inducción Año 2025");
+        db.CapacitacionesObligatorias.Add(ob);
+        await db.SaveChangesAsync();
+
+        // Justificar
+        var resJust = await _cliente.PostAsJsonAsync($"/api/mis-datos/capacitaciones-obligatorias/{ob.Id}/justificar-nuevo-ingreso",
+            new JustificarNuevoIngresoRequest("Ingresé a la institución recientemente y no alcancé a cursarla"));
+        Assert.Equal(HttpStatusCode.OK, resJust.StatusCode);
+
+        // Consultar estado
+        var resLista = await _cliente.GetFromJsonAsync<List<EstadoCapacitacionObligatoriaPersonaDto>>("/api/mis-datos/capacitaciones-obligatorias");
+        Assert.NotNull(resLista);
+        var estadoOb = resLista.Single(c => c.Id == ob.Id);
+        Assert.Equal("justificada-nuevo-ingreso", estadoOb.Estado);
+        Assert.Equal("Ingresé a la institución recientemente y no alcancé a cursarla", estadoOb.JustificacionNuevoIngreso);
+    }
 }

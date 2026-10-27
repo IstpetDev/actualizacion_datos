@@ -36,5 +36,9 @@ public interface IServicioHojaDeVida
     Task<ReferenciaDto> ActualizarReferenciaAsync(string documento, Guid id, GuardarReferenciaRequest request, CancellationToken ct = default);
     Task EliminarReferenciaAsync(string documento, Guid id, CancellationToken ct = default);
 
+    Task<List<EstadoCapacitacionObligatoriaPersonaDto>> ListarCapacitacionesObligatoriasAsync(string documento, CancellationToken ct = default);
+    Task VincularCapacitacionObligatoriaAsync(string documento, Guid obligatoriaId, VincularCapacitacionObligatoriaRequest request, CancellationToken ct = default);
+    Task JustificarNuevoIngresoAsync(string documento, Guid obligatoriaId, JustificarNuevoIngresoRequest request, CancellationToken ct = default);
+
     Task<HojaDeVidaDto> ObtenerParaRevisionAsync(string documento, CancellationToken ct = default);
 }

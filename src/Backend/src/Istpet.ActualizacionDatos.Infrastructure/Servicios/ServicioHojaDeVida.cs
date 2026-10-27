@@ -326,6 +326,12 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
 
+        if (request.CapacitacionObligatoriaId.HasValue)
+        {
+            await ValidarObligatoriaAsync(request.CapacitacionObligatoriaId.Value, persona, ct);
+            await DesvincularPreviaMismaObligatoriaAsync(persona.Id, request.CapacitacionObligatoriaId.Value, null, ct);
+        }
+
         var capacitacion = new Capacitacion(
             Guid.NewGuid(),
             persona.InstitucionId,
@@ -339,7 +345,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.FechaFin,
                 request.NumeroHoras,
                 request.Lugar,
-                request.FinanciadaPorInstitucion));
+                request.FinanciadaPorInstitucion,
+                request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
         _context.Capacitaciones.Add(capacitacion);
@@ -366,6 +373,12 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
 
+        if (request.CapacitacionObligatoriaId.HasValue)
+        {
+            await ValidarObligatoriaAsync(request.CapacitacionObligatoriaId.Value, persona, ct);
+            await DesvincularPreviaMismaObligatoriaAsync(persona.Id, request.CapacitacionObligatoriaId.Value, capacitacion.Id, ct);
+        }
+
         capacitacion.Actualizar(new DatosCapacitacion(
             request.NombreEvento,
             request.InstitucionOrganizadora,
@@ -375,7 +388,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.FechaFin,
             request.NumeroHoras,
             request.Lugar,
-            request.FinanciadaPorInstitucion));
+            request.FinanciadaPorInstitucion,
+            request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
         await _context.SaveChangesAsync(ct);
@@ -737,7 +751,222 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         c.Lugar,
         c.FinanciadaPorInstitucion,
         c.ArchivoId,
-        c.FechaActualizacionUtc);
+        c.FechaActualizacionUtc,
+        c.CapacitacionObligatoriaId);
+
+    public async Task<List<EstadoCapacitacionObligatoriaPersonaDto>> ListarCapacitacionesObligatoriasAsync(string documento, CancellationToken ct = default)
+    {
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Documento == documento, ct)
+            ?? throw new RecursoNoEncontradoException("La persona no existe en la institución.");
+
+        var obligatorias = await _context.CapacitacionesObligatorias
+            .Where(o => o.InstitucionId == persona.InstitucionId && o.Activo)
+            .OrderBy(o => o.Orden)
+            .ThenBy(o => o.Nombre)
+            .ToListAsync(ct);
+
+        var obligatoriasAplicables = obligatorias.Where(o => o.AplicaA(persona.TipoFuncionarioId)).ToList();
+        if (obligatoriasAplicables.Count == 0)
+        {
+            return [];
+        }
+
+        var capacitaciones = await _context.Capacitaciones
+            .Where(c => c.PersonaId == persona.Id && c.CapacitacionObligatoriaId != null)
+            .ToListAsync(ct);
+
+        var marcasObservadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (persona.EstadoActualizacion == EstadoActualizacion.Devuelto)
+        {
+            var ultimaObservacion = await _context.Observaciones
+                .Where(o => o.PersonaId == persona.Id)
+                .OrderByDescending(o => o.FechaUtc)
+                .FirstOrDefaultAsync(ct);
+
+            if (ultimaObservacion != null)
+            {
+                var marcas = await _context.MarcasObservacion
+                    .Where(m => m.ObservacionId == ultimaObservacion.Id)
+                    .Select(m => m.ClaveDestino)
+                    .ToListAsync(ct);
+
+                foreach (var m in marcas)
+                {
+                    marcasObservadas.Add(m);
+                }
+            }
+        }
+
+        var justificaciones = ObtenerJustificacionesNuevoIngreso(persona.DatosPersonalesJson);
+
+        var resultado = new List<EstadoCapacitacionObligatoriaPersonaDto>();
+        foreach (var ob in obligatoriasAplicables)
+        {
+            var vinculada = capacitaciones.FirstOrDefault(c => c.CapacitacionObligatoriaId == ob.Id);
+            string estado;
+            Guid? capId = vinculada?.Id;
+            string? justificacion = null;
+            DateTime? fechaJustificacion = null;
+
+            if (vinculada != null)
+            {
+                var esObservada = marcasObservadas.Contains($"capacitacion:{vinculada.Id}") ||
+                                  marcasObservadas.Contains($"capacitacion_obligatoria:{ob.Id}") ||
+                                  marcasObservadas.Contains($"capacitaciones.obligatoria.{ob.Id}");
+                estado = esObservada ? "observada" : "cargada";
+            }
+            else if (ob.EsExentoPorNuevoIngreso(persona.FechaIngresoInstitucion))
+            {
+                estado = "exento-nuevo-ingreso";
+            }
+            else if (justificaciones.TryGetValue(ob.Id, out var itemJustificado))
+            {
+                estado = "justificada-nuevo-ingreso";
+                justificacion = itemJustificado.Justificacion;
+                fechaJustificacion = itemJustificado.FechaUtc;
+            }
+            else
+            {
+                estado = "pendiente";
+            }
+
+            resultado.Add(new EstadoCapacitacionObligatoriaPersonaDto(
+                ob.Id,
+                ob.Nombre,
+                ob.InstitucionOrganizadora,
+                ob.HorasEsperadas,
+                ob.FechaRealizacion,
+                ob.TipoFuncionarioId,
+                estado,
+                capId,
+                justificacion,
+                fechaJustificacion,
+                persona.FechaIngresoInstitucion));
+        }
+
+        return resultado;
+    }
+
+    public async Task VincularCapacitacionObligatoriaAsync(string documento, Guid obligatoriaId, VincularCapacitacionObligatoriaRequest request, CancellationToken ct = default)
+    {
+        var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
+
+        var ob = await ValidarObligatoriaAsync(obligatoriaId, persona, ct);
+
+        var capacitacion = await _context.Capacitaciones
+            .FirstOrDefaultAsync(c => c.Id == request.CapacitacionId && c.PersonaId == persona.Id, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación no existe o no pertenece a la persona.");
+
+        if (capacitacion.CapacitacionObligatoriaId.HasValue && capacitacion.CapacitacionObligatoriaId != obligatoriaId)
+        {
+            throw new ConflictoEstadoException("La capacitación ya se encuentra vinculada a otra obligación institucional.");
+        }
+
+        await DesvincularPreviaMismaObligatoriaAsync(persona.Id, obligatoriaId, capacitacion.Id, ct);
+
+        capacitacion.VincularCapacitacionObligatoria(obligatoriaId);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task JustificarNuevoIngresoAsync(string documento, Guid obligatoriaId, JustificarNuevoIngresoRequest request, CancellationToken ct = default)
+    {
+        var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
+
+        if (string.IsNullOrWhiteSpace(request.Justificacion) || request.Justificacion.Trim().Length > 500)
+        {
+            throw new ReglaNegocioException("La justificación es obligatoria y no puede superar 500 caracteres.");
+        }
+
+        await ValidarObligatoriaAsync(obligatoriaId, persona, ct);
+
+        var justificaciones = ObtenerJustificacionesNuevoIngreso(persona.DatosPersonalesJson);
+        justificaciones[obligatoriaId] = new JustificacionItem(request.Justificacion.Trim(), DateTime.UtcNow);
+
+        GuardarJustificacionesNuevoIngreso(persona, justificaciones);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    private async Task<CapacitacionObligatoria> ValidarObligatoriaAsync(Guid obligatoriaId, Persona persona, CancellationToken ct)
+    {
+        var ob = await _context.CapacitacionesObligatorias
+            .FirstOrDefaultAsync(o => o.Id == obligatoriaId && o.InstitucionId == persona.InstitucionId && o.Activo, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación obligatoria no existe en la institución o está inactiva.");
+
+        if (!ob.AplicaA(persona.TipoFuncionarioId))
+        {
+            throw new RecursoNoEncontradoException("La capacitación obligatoria no aplica a su tipo de funcionario.");
+        }
+
+        return ob;
+    }
+
+    private async Task DesvincularPreviaMismaObligatoriaAsync(Guid personaId, Guid obligatoriaId, Guid? excluirCapacitacionId, CancellationToken ct)
+    {
+        var query = _context.Capacitaciones
+            .Where(c => c.PersonaId == personaId && c.CapacitacionObligatoriaId == obligatoriaId);
+
+        if (excluirCapacitacionId.HasValue)
+        {
+            query = query.Where(c => c.Id != excluirCapacitacionId.Value);
+        }
+
+        var previas = await query.ToListAsync(ct);
+        foreach (var p in previas)
+        {
+            p.VincularCapacitacionObligatoria(null);
+        }
+    }
+
+    private sealed record JustificacionItem(string Justificacion, DateTime FechaUtc);
+
+    private static Dictionary<Guid, JustificacionItem> ObtenerJustificacionesNuevoIngreso(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("justificaciones_capacitaciones", out var prop))
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JustificacionItem>>(prop.GetRawText());
+                if (dict != null)
+                {
+                    return dict
+                        .Where(kvp => Guid.TryParse(kvp.Key, out _))
+                        .ToDictionary(kvp => Guid.Parse(kvp.Key), kvp => kvp.Value);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+        return [];
+    }
+
+    private static void GuardarJustificacionesNuevoIngreso(Persona persona, Dictionary<Guid, JustificacionItem> justificaciones)
+    {
+        Dictionary<string, object?> root = [];
+        if (!string.IsNullOrWhiteSpace(persona.DatosPersonalesJson))
+        {
+            try
+            {
+                var parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(persona.DatosPersonalesJson);
+                if (parsed != null)
+                {
+                    root = parsed;
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+            }
+        }
+
+        var dictStr = justificaciones.ToDictionary(k => k.Key.ToString(), v => v.Value);
+        root["justificaciones_capacitaciones"] = dictStr;
+        persona.ActualizarBorrador(System.Text.Json.JsonSerializer.Serialize(root));
+    }
 
     private static ExperienciaLaboralDto MapearExperiencia(ExperienciaLaboral e) => new(
         e.Id,

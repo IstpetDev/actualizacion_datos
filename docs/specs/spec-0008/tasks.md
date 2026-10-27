@@ -77,19 +77,19 @@ Rama: `feature/92-capacitaciones-obligatorias`. Cada tarea que cambie la API reg
 
 **Objetivo:** lectura de obligatorias con estado, guardado de capacitaciones vinculadas y vínculo de una capacitación existente de la propia persona (PD-CAP-11).  
 **Área y rama:** Backend; misma rama.  
-**Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioHojaDeVida.cs`, `.../Application/Servicios/IServicioHojaDeVida.cs`, `.../WebApi/Endpoints/HojaDeVidaEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/HojaDeVidaTests.cs`.  
+**Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioHojaDeVida.cs`, `.../Application/Servicios/IServicioHojaDeVida.cs`, `.../WebApi/Endpoints/HojaDeVidaEndpoints.cs`, `src/Backend/tests/.../WebApi.Tests/CapacitacionesObligatoriasTests.cs`.  
 **Entrada/contrato:** `GuardarCapacitacionRequest.capacitacionObligatoriaId` y endpoint de lectura del plan.  
-**Salida para integración:** endpoints y estados `pendiente`, `cargada`, `observada`.  
-**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0029.
+**Salida para integración:** endpoints y estados `pendiente`, `cargada`, `observada`, `exento-nuevo-ingreso`, `justificada-nuevo-ingreso`.  
+**Dependencias:** T-02. **ADR aplicable:** ADR-0006, ADR-0029, ADR-0032.
 
-- [ ] Pruebas que fallen: ve solo las que le aplican (RF-CAP-004, 008); vincular una que no le aplica o de otra institución (404, RF-CAP-013); una segunda vinculada reemplaza (RF-CAP-006); cambiar con actualización enviada o aprobada se rechaza por la API (RF-CAP-014); archivo no admitido se rechaza.
-- [ ] Pruebas que fallen del vínculo propio: la persona vincula una capacitación suya sin obligatoria; no una ya vinculada a otra, ni de otra persona o institución; con actualización enviada o aprobada se rechaza.
-- [ ] Implementar lectura y vínculo en el guardado, y la lista de capacitaciones propias sin vincular.
-- [ ] `dotnet test src/Backend`.
-- [ ] Revisar RF-CAP-004, 005, 006, 013, 014 y el vínculo propio de RF-CAP-005.
+- [x] Pruebas que fallen: ve solo las que le aplican (RF-CAP-004, 008); vincular una que no le aplica o de otra institución (404, RF-CAP-013); una segunda vinculada reemplaza (RF-CAP-006); cambiar con actualización enviada o aprobada se rechaza por la API (RF-CAP-014); archivo no admitido se rechaza.
+- [x] Pruebas que fallen del vínculo propio: la persona vincula una capacitación suya sin obligatoria; no una ya vinculada a otra, ni de otra persona o institución; con actualización enviada o aprobada se rechaza.
+- [x] Implementar lectura y vínculo en el guardado, y la lista de capacitaciones propias sin vincular.
+- [x] `dotnet test src/Backend`.
+- [x] Revisar RF-CAP-004, 005, 006, 013, 014 y el vínculo propio de RF-CAP-005.
 
-**Resultado registrado:** pendiente  
-**Bloqueos:** T-02.
+**Resultado registrado:** completado el 2026-10-27; lectura de obligatorias por usuario con estados calculados (incluyendo exención y justificación nuevo ingreso), vinculación directa al crear/editar o vía endpoint específico, reemplazo automático y aislamiento institucional; 13 pruebas específicas y 579 unitarias pasando.  
+**Bloqueos:** Ninguno.
 
 ## T-04 — Bloqueo del envío
 

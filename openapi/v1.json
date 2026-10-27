@@ -3233,6 +3233,200 @@
         }
       }
     },
+    "/api/mis-datos/capacitaciones-obligatorias": {
+      "get": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "ObtenerMisCapacitacionesObligatorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstadoCapacitacionObligatoriaPersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/capacitaciones-obligatorias/{id}/vincular": {
+      "post": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "VincularCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VincularCapacitacionObligatoriaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/capacitaciones-obligatorias/{id}/justificar-nuevo-ingreso": {
+      "post": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "JustificarNuevoIngresoCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JustificarNuevoIngresoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/mis-datos/documentos": {
       "get": {
         "tags": [
@@ -5633,6 +5827,90 @@
           }
         }
       },
+      "EstadoCapacitacionObligatoriaPersonaDto": {
+        "required": [
+          "id",
+          "nombre",
+          "institucionOrganizadora",
+          "horasEsperadas",
+          "fechaRealizacion",
+          "tipoFuncionarioId",
+          "estado",
+          "capacitacionId",
+          "justificacionNuevoIngreso",
+          "fechaJustificacionUtc",
+          "fechaIngresoInstitucion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "horasEsperadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaRealizacion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "capacitacionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "justificacionNuevoIngreso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaJustificacionUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "fechaIngresoInstitucion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "EstadoCuentaPersonaDto": {
         "required": [
           "personaId",
@@ -7081,6 +7359,17 @@
           }
         }
       },
+      "JustificarNuevoIngresoRequest": {
+        "required": [
+          "justificacion"
+        ],
+        "type": "object",
+        "properties": {
+          "justificacion": {
+            "type": "string"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "documento",
@@ -8424,6 +8713,18 @@
             "type": "string"
           }
         }
+      },
+      "VincularCapacitacionObligatoriaRequest": {
+        "required": [
+          "capacitacionId"
+        ],
+        "type": "object",
+        "properties": {
+          "capacitacionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       }
     }
   },
@@ -8469,6 +8770,9 @@
     },
     {
       "name": "HojaDeVida"
+    },
+    {
+      "name": "CapacitacionesObligatorias"
     },
     {
       "name": "DocumentosPersonales"
