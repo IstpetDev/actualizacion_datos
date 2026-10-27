@@ -38,7 +38,7 @@ public abstract class RegistroHojaDeVida : EntidadInstitucional
     }
 
     protected static string? Limpiar(string? valor) =>
-        string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        string.IsNullOrWhiteSpace(valor) ? null : valor.Normalize(System.Text.NormalizationForm.FormC).Replace("\r\n", "\n", StringComparison.Ordinal).Trim(' ');
 
     protected static string Obligatorio(string? valor, string nombreCampo)
     {
@@ -47,7 +47,7 @@ public abstract class RegistroHojaDeVida : EntidadInstitucional
             throw new ReglaNegocioException($"El campo {nombreCampo} es obligatorio.");
         }
 
-        return valor.Trim();
+        return valor.Normalize(System.Text.NormalizationForm.FormC).Replace("\r\n", "\n", StringComparison.Ordinal).Trim(' ');
     }
 
     protected static void ValidarRangoFechas(DateOnly? inicio, DateOnly? fin)

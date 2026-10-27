@@ -147,5 +147,5 @@ public class FichaPersonal : EntidadInstitucional
     }
 
     private static string? Limpiar(string? valor) =>
-        string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        string.IsNullOrWhiteSpace(valor) ? null : valor.Normalize(System.Text.NormalizationForm.FormC).Replace("\r\n", "\n", StringComparison.Ordinal).Trim(' ');
 }

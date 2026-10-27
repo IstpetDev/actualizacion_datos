@@ -1,6 +1,7 @@
+import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
@@ -29,6 +30,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     ModalCambiosSinGuardarComponent,
   ],
   template: `
+    @if (validacion.errorCarga()) {
+      <p role="alert">
+        {{ validacion.errorCarga() }}
+        <button type="button" (click)="validacion.cargar()">Reintentar</button>
+      </p>
+    }
+
     <section class="seccion-formacion" data-testid="seccion-formacion-academica">
       <header class="seccion-header">
         <div class="header-titulos">
@@ -110,6 +118,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     >Grado Académico <span class="text-danger">*</span></label
                   >
                   <select
+                    [attr.aria-describedby]="'error-modeloTitulo-gradoAcademicoId'"
                     id="gradoAcademico"
                     class="form-control"
                     [(ngModel)]="modeloTitulo.gradoAcademicoId"
@@ -121,6 +130,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                       <option [ngValue]="g.id">{{ g.nombre }}</option>
                     }
                   </select>
+                  @if (validacion.mensaje(modeloTitulo, 'titulo', 'gradoAcademicoId'); as mensaje) {
+                    <small
+                      id="error-modeloTitulo-gradoAcademicoId"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
               </div>
 
@@ -129,6 +146,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   >Nombre Completo del Título <span class="text-danger">*</span></label
                 >
                 <input
+                  [attr.aria-describedby]="'error-modeloTitulo-nombreTitulo'"
                   id="nombreTitulo"
                   type="text"
                   class="form-control"
@@ -136,12 +154,18 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Licenciado en Ciencias de la Educación"
                   data-testid="input-nombre-titulo"
                 />
+                @if (validacion.mensaje(modeloTitulo, 'titulo', 'nombreTitulo'); as mensaje) {
+                  <small id="error-modeloTitulo-nombreTitulo" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
 
               <div class="grid-dos mt-3">
                 <div class="form-group">
                   <label for="universidad">Universidad / Institución de Educación Superior</label>
                   <select
+                    [attr.aria-describedby]="'error-modeloTitulo-universidadId'"
                     id="universidad"
                     class="form-control"
                     [(ngModel)]="modeloTitulo.universidadId"
@@ -152,11 +176,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                       <option [ngValue]="u.id">{{ u.nombre }}</option>
                     }
                   </select>
+                  @if (validacion.mensaje(modeloTitulo, 'titulo', 'universidadId'); as mensaje) {
+                    <small id="error-modeloTitulo-universidadId" class="text-danger" role="alert">{{
+                      mensaje
+                    }}</small>
+                  }
                 </div>
 
                 <div class="form-group">
                   <label for="institucionOtra">Otra Institución (si no aparece en catálogo)</label>
                   <input
+                    [attr.aria-describedby]="'error-modeloTitulo-nombreInstitucionOtra'"
                     id="institucionOtra"
                     type="text"
                     class="form-control"
@@ -164,6 +194,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     placeholder="Institución internacional o externa"
                     data-testid="input-institucion-otra"
                   />
+                  @if (
+                    validacion.mensaje(modeloTitulo, 'titulo', 'nombreInstitucionOtra');
+                    as mensaje
+                  ) {
+                    <small
+                      id="error-modeloTitulo-nombreInstitucionOtra"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
               </div>
 
@@ -171,6 +212,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <div class="form-group">
                   <label for="registroSenescyt">N° de Registro SENESCYT</label>
                   <input
+                    [attr.aria-describedby]="'error-modeloTitulo-numeroRegistroSenescyt'"
                     id="registroSenescyt"
                     type="text"
                     class="form-control"
@@ -178,11 +220,23 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     placeholder="1005-2020-123456"
                     data-testid="input-registro-senescyt"
                   />
+                  @if (
+                    validacion.mensaje(modeloTitulo, 'titulo', 'numeroRegistroSenescyt');
+                    as mensaje
+                  ) {
+                    <small
+                      id="error-modeloTitulo-numeroRegistroSenescyt"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
 
                 <div class="form-group">
                   <label for="fechaObtencion">Fecha de Obtención / Graduación</label>
                   <input
+                    [attr.aria-describedby]="'error-modeloTitulo-fechaObtencion'"
                     id="fechaObtencion"
                     type="date"
                     class="form-control"
@@ -190,6 +244,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     (ngModelChange)="onFechaObtencionChange($event)"
                     data-testid="input-fecha-obtencion"
                   />
+                  @if (validacion.mensaje(modeloTitulo, 'titulo', 'fechaObtencion'); as mensaje) {
+                    <small
+                      id="error-modeloTitulo-fechaObtencion"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
               </div>
 
@@ -228,6 +290,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <div class="form-group">
                   <label for="campoDetallado">Campo detallado</label>
                   <select
+                    [attr.aria-describedby]="'error-modeloTitulo-campoDetalladoUnescoId'"
                     id="campoDetallado"
                     class="form-control"
                     [(ngModel)]="modeloTitulo.campoDetalladoUnescoId"
@@ -239,6 +302,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                       <option [ngValue]="campo.id">{{ campo.nombre }}</option>
                     }
                   </select>
+                  @if (
+                    validacion.mensaje(modeloTitulo, 'titulo', 'campoDetalladoUnescoId');
+                    as mensaje
+                  ) {
+                    <small
+                      id="error-modeloTitulo-campoDetalladoUnescoId"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
               </div>
 
@@ -272,7 +346,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <button
                   type="button"
                   class="btn btn-primary btn-sm"
-                  [disabled]="guardando()"
+                  [disabled]="guardando() || validacion.invalido(modeloTitulo, 'titulo')"
                   (click)="guardarTitulo()"
                   data-testid="btn-guardar-titulo"
                 >
@@ -377,6 +451,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   >Nombre del Programa / Carrera <span class="text-danger">*</span></label
                 >
                 <input
+                  [attr.aria-describedby]="'error-modeloEnCurso-nombrePrograma'"
                   id="nombrePrograma"
                   type="text"
                   class="form-control"
@@ -384,6 +459,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   placeholder="Ej. Maestría en Inteligencia Artificial"
                   data-testid="input-nombre-programa"
                 />
+                @if (
+                  validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'nombrePrograma');
+                  as mensaje
+                ) {
+                  <small id="error-modeloEnCurso-nombrePrograma" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
               </div>
 
               <div class="grid-dos mt-3">
@@ -392,6 +475,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     >Grado que Obtendrá <span class="text-danger">*</span></label
                   >
                   <select
+                    [attr.aria-describedby]="'error-modeloEnCurso-gradoAcademicoId'"
                     id="gradoEnCurso"
                     class="form-control"
                     [(ngModel)]="modeloEnCurso.gradoAcademicoId"
@@ -402,6 +486,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                       <option [ngValue]="g.id">{{ g.nombre }}</option>
                     }
                   </select>
+                  @if (
+                    validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'gradoAcademicoId');
+                    as mensaje
+                  ) {
+                    <small
+                      id="error-modeloEnCurso-gradoAcademicoId"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
 
                 <div class="form-group">
@@ -409,6 +504,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     >Institución Educativa <span class="text-danger">*</span></label
                   >
                   <input
+                    [attr.aria-describedby]="'error-modeloEnCurso-nombreInstitucionOtra'"
                     id="institucionEnCurso"
                     type="text"
                     class="form-control"
@@ -416,6 +512,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     placeholder="Universidad donde cursa los estudios"
                     data-testid="input-institucion-en-curso"
                   />
+                  @if (
+                    validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'nombreInstitucionOtra');
+                    as mensaje
+                  ) {
+                    <small
+                      id="error-modeloEnCurso-nombreInstitucionOtra"
+                      class="text-danger"
+                      role="alert"
+                      >{{ mensaje }}</small
+                    >
+                  }
                 </div>
               </div>
 
@@ -438,6 +545,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     <div class="form-group">
                       <label for="tipoBeca">Tipo de beca</label>
                       <select
+                        [attr.aria-describedby]="'error-modeloEnCurso-tipoBecaId'"
                         id="tipoBeca"
                         class="form-control"
                         [(ngModel)]="modeloEnCurso.tipoBecaId"
@@ -448,10 +556,22 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                           <option [ngValue]="tipo.id">{{ tipo.nombre }}</option>
                         }
                       </select>
+                      @if (
+                        validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'tipoBecaId');
+                        as mensaje
+                      ) {
+                        <small
+                          id="error-modeloEnCurso-tipoBecaId"
+                          class="text-danger"
+                          role="alert"
+                          >{{ mensaje }}</small
+                        >
+                      }
                     </div>
                     <div class="form-group">
                       <label for="financiamientoBeca">Financiamiento de beca</label>
                       <select
+                        [attr.aria-describedby]="'error-modeloEnCurso-financiamientoBecaId'"
                         id="financiamientoBeca"
                         class="form-control"
                         [(ngModel)]="modeloEnCurso.financiamientoBecaId"
@@ -462,12 +582,24 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                           <option [ngValue]="tipo.id">{{ tipo.nombre }}</option>
                         }
                       </select>
+                      @if (
+                        validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'financiamientoBecaId');
+                        as mensaje
+                      ) {
+                        <small
+                          id="error-modeloEnCurso-financiamientoBecaId"
+                          class="text-danger"
+                          role="alert"
+                          >{{ mensaje }}</small
+                        >
+                      }
                     </div>
                   </div>
                   <div class="grid-dos">
                     <div class="form-group">
                       <label for="porcentajeBeca">Porcentaje de Cobertura (%)</label>
                       <input
+                        [attr.aria-describedby]="'error-modeloEnCurso-porcentajeBeca'"
                         id="porcentajeBeca"
                         type="number"
                         min="1"
@@ -477,11 +609,23 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                         placeholder="100"
                         data-testid="input-porcentaje-beca"
                       />
+                      @if (
+                        validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'porcentajeBeca');
+                        as mensaje
+                      ) {
+                        <small
+                          id="error-modeloEnCurso-porcentajeBeca"
+                          class="text-danger"
+                          role="alert"
+                          >{{ mensaje }}</small
+                        >
+                      }
                     </div>
 
                     <div class="form-group">
                       <label for="montoBeca">Monto de la Beca (USD)</label>
                       <input
+                        [attr.aria-describedby]="'error-modeloEnCurso-montoBeca'"
                         id="montoBeca"
                         type="number"
                         min="0"
@@ -490,6 +634,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                         placeholder="5000"
                         data-testid="input-monto-beca"
                       />
+                      @if (
+                        validacion.mensaje(modeloEnCurso, 'tituloEnCurso', 'montoBeca');
+                        as mensaje
+                      ) {
+                        <small
+                          id="error-modeloEnCurso-montoBeca"
+                          class="text-danger"
+                          role="alert"
+                          >{{ mensaje }}</small
+                        >
+                      }
                     </div>
                   </div>
                 </div>
@@ -525,7 +680,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <button
                   type="button"
                   class="btn btn-primary btn-sm"
-                  [disabled]="guardando()"
+                  [disabled]="guardando() || validacion.invalido(modeloEnCurso, 'tituloEnCurso')"
                   (click)="guardarEnCurso()"
                   data-testid="btn-guardar-en-curso"
                 >
@@ -609,6 +764,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 
       <!-- Modal de Advertencia de Cambios sin Guardar en Subpestaña -->
       <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
         [abierto]="mostrarModalSubtab()"
         [guardando]="guardando()"
         [mensajeError]="errorFormulario()"
@@ -817,6 +973,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
   ],
 })
 export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionConCambios {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
+  private readonly registroValidacion = this.validacion.registrarFormulario(
+    'formacion-academica',
+    () =>
+      (this.mostrarFormTitulo() && this.validacion.invalido(this.modeloTitulo, 'titulo')) ||
+      (this.mostrarFormEnCurso() && this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')),
+    inject(DestroyRef),
+  );
   readonly mostrarModalSubtab = signal(false);
   subtabPendiente?: 'obtenidos' | 'en-curso';
 
@@ -1093,6 +1257,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       return of(false);
     }
 
+    if (this.validacion.invalido(this.modeloTitulo, 'titulo')) return of(false);
     return this.state.guardarTitulo(this.modeloTitulo, this.idTituloEdicion()).pipe(
       map(() => {
         this.cancelarFormTitulo();
@@ -1100,6 +1265,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
         return true;
       }),
       catchError((err) => {
+        this.validacion.registrarError(err, this.modeloTitulo);
         this.errorFormulario.set(err?.message || 'Error al guardar el título.');
         return of(false);
       }),
@@ -1180,6 +1346,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       return of(false);
     }
 
+    if (this.validacion.invalido(this.modeloEnCurso, 'tituloEnCurso')) return of(false);
     return this.state.guardarTituloEnCurso(this.modeloEnCurso, this.idEnCursoEdicion()).pipe(
       map(() => {
         this.cancelarFormEnCurso();
@@ -1187,6 +1354,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
         return true;
       }),
       catchError((err) => {
+        this.validacion.registrarError(err, this.modeloEnCurso);
         this.errorFormulario.set(err?.message || 'Error al guardar el estudio en curso.');
         return of(false);
       }),

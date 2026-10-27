@@ -7,6 +7,7 @@ namespace Istpet.ActualizacionDatos.Application.Modelos;
 
 // --- Ficha personal (RF-HDV-001, RF-HDV-020, T-02) ---
 
+[System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
 public sealed record GuardarFichaPersonalRequest(
     string? PrimerNombre = null,
     string? SegundoNombre = null,
@@ -33,7 +34,6 @@ public sealed record GuardarFichaPersonalRequest(
     int? DiscapacidadId = null,
     int? PorcentajeDiscapacidad = null,
     string? NumeroCarnetDiscapacidad = null,
-    string? Perfil = null,
     Guid? FotoArchivoId = null);
 
 public sealed record FichaPersonalDto(

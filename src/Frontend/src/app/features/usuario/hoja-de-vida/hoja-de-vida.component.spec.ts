@@ -1,3 +1,5 @@
+import politicaPrueba from './servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../api-client';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -126,6 +128,10 @@ describe('HojaDeVidaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [HojaDeVidaComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosCacheMock },
         {

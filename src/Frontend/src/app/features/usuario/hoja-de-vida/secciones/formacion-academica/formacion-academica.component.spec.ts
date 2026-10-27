@@ -1,3 +1,5 @@
+import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../../../api-client';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
@@ -88,6 +90,10 @@ describe('FormacionAcademicaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FormacionAcademicaComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosMock },
         { provide: ArchivosClient, useValue: { subirArchivo: vi.fn() } },

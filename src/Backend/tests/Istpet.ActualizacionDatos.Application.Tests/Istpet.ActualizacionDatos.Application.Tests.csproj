@@ -27,4 +27,7 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="../../../../src/Frontend/src/app/features/usuario/hoja-de-vida/servicios/politica-validacion.fixture.json" Link="politica-validacion.fixture.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

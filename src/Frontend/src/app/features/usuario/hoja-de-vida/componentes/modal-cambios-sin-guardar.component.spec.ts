@@ -114,4 +114,17 @@ describe('ModalCambiosSinGuardarComponent', () => {
     expect(alerta).not.toBeNull();
     expect(alerta.textContent).toContain('Faltan campos obligatorios para guardar.');
   });
+
+  it('bloquea guardar con errores sin impedir volver a corregir', () => {
+    component.abierto = true;
+    component.guardarDeshabilitado = true;
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="btn-guardar-continuar"]').disabled,
+    ).toBe(true);
+    expect(fixture.nativeElement.querySelector('[data-testid="btn-quedarme-aqui"]').disabled).toBe(
+      false,
+    );
+    expect(fixture.nativeElement.textContent).toContain('formato inválido');
+  });
 });

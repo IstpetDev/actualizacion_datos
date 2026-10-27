@@ -46,6 +46,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
               continúa sin guardar, perderá la información ingresada.
             </p>
 
+            @if (guardarDeshabilitado) {
+              <p role="alert">
+                Hay campos con formato inválido. Elija «Quedarme aquí» para corregirlos antes de
+                guardar.
+              </p>
+            }
             @if (mensajeError) {
               <div class="alerta-error" role="alert" data-testid="error-modal-cambios">
                 {{ mensajeError }}
@@ -77,7 +83,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
             <button
               type="button"
               class="btn btn-primary"
-              [disabled]="guardando"
+              [disabled]="guardando || guardarDeshabilitado"
               (click)="guardarYContinuar.emit()"
               data-testid="btn-guardar-continuar"
             >
@@ -221,6 +227,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class ModalCambiosSinGuardarComponent {
   @Input() abierto = false;
+  @Input() guardarDeshabilitado = false;
   @Input() guardando = false;
   @Input() mensajeError = '';
 

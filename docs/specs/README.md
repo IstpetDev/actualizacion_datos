@@ -52,3 +52,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0005](spec-0005/spec.md) | Habilitación y deshabilitación del acceso de personas | Borrador (2026-10-26) |
 
 | [spec-0006](spec-0006/spec.md) | Advertencia y protección ante cambios sin guardar en la Hoja de Vida, issue #90 | Aprobado (2026-10-26) |
+| [spec-0007](spec-0007/spec.md) | Validación, correo institucional y perfil automático, issue #88 | Aprobada v0.1 (2026-10-26) |

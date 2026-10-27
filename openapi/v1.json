@@ -118,6 +118,49 @@
         }
       }
     },
+    "/api/configuracion/politica-validacion": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ObtenerPoliticaValidacion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaValidacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/personas/{id}/tipo-funcionario": {
       "put": {
         "tags": [
@@ -3153,6 +3196,59 @@
         }
       }
     },
+    "/api/configuracion/correo-institucional": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "GuardarDominiosCorreo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarDominiosCorreoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoliticaValidacionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuracion/tipos-funcionario": {
       "get": {
         "tags": [
@@ -5397,6 +5493,20 @@
           }
         }
       },
+      "GuardarDominiosCorreoRequest": {
+        "required": [
+          "dominiosCorreoPermitidos"
+        ],
+        "type": "object",
+        "properties": {
+          "dominiosCorreoPermitidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "GuardarExperienciaLaboralRequest": {
         "required": [
           "empleador",
@@ -5643,12 +5753,6 @@
               "string"
             ]
           },
-          "perfil": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "fotoArchivoId": {
             "type": [
               "null",
@@ -5656,7 +5760,8 @@
             ],
             "format": "uuid"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "GuardarReferenciaRequest": {
         "required": [
@@ -6159,6 +6264,30 @@
         "properties": {
           "mensaje": {
             "type": "string"
+          },
+          "codigo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errores": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "traceId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6456,6 +6585,45 @@
           }
         }
       },
+      "PoliticaValidacionDto": {
+        "required": [
+          "institucionId",
+          "dominiosCorreoPermitidos",
+          "fechaNacimientoMinima",
+          "fechaNacimientoMaxima",
+          "reglas"
+        ],
+        "type": "object",
+        "properties": {
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dominiosCorreoPermitidos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fechaNacimientoMinima": {
+            "type": "string",
+            "format": "date"
+          },
+          "fechaNacimientoMaxima": {
+            "type": "string",
+            "format": "date"
+          },
+          "reglas": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ReglaCampoDto"
+              }
+            }
+          }
+        }
+      },
       "RechazoCargaDto": {
         "required": [
           "fila",
@@ -6529,6 +6697,58 @@
           "fechaActualizacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ReglaCampoDto": {
+        "type": "object",
+        "properties": {
+          "maximoCaracteres": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "patron": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minimo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "maximo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "entero": {
+            "type": "boolean",
+            "default": false
+          },
+          "multilinea": {
+            "type": "boolean",
+            "default": false
+          },
+          "tipo": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7175,6 +7395,9 @@
       "name": "MisDatos"
     },
     {
+      "name": "Configuracion"
+    },
+    {
       "name": "Personas"
     },
     {
@@ -7203,9 +7426,6 @@
     },
     {
       "name": "DocumentosPersonales"
-    },
-    {
-      "name": "Configuracion"
     },
     {
       "name": "CuentaBancaria"

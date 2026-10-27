@@ -1,3 +1,4 @@
+import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -70,7 +71,7 @@ export type TabSeccionHojaVida =
             <button
               type="button"
               class="btn btn-primary"
-              [disabled]="guardando() || cargando()"
+              [disabled]="guardando() || cargando() || validacion.hayErrores()"
               (click)="validarYEnviar()"
               data-testid="btn-enviar-revision-top"
             >
@@ -290,7 +291,7 @@ export type TabSeccionHojaVida =
               <button
                 type="button"
                 class="btn btn-primary btn-lg"
-                [disabled]="guardando()"
+                [disabled]="guardando() || validacion.hayErrores()"
                 (click)="validarYEnviar()"
                 data-testid="btn-enviar-revision"
               >
@@ -310,6 +311,7 @@ export type TabSeccionHojaVida =
 
       <!-- Modal de Advertencia por Cambios sin Guardar (Issue #90) -->
       <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
         [abierto]="mostrarModalCambios()"
         [guardando]="guardando()"
         [mensajeError]="errorCambios()"
@@ -587,6 +589,7 @@ export type TabSeccionHojaVida =
   ],
 })
 export class HojaDeVidaComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
   readonly tieneCambios = this.state.tieneCambiosSinGuardarSignal ?? signal(false);
   readonly mostrarModalCambios = signal(false);
@@ -707,6 +710,7 @@ export class HojaDeVidaComponent implements OnInit {
   }
 
   validarYEnviar(): void {
+    if (this.validacion.hayErrores()) return;
     this.state.obtenerFaltantes().subscribe({
       next: (faltantes: FaltanteEnvioDto[]) => {
         if (faltantes && faltantes.length > 0) {
