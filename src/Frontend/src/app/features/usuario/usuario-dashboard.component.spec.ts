@@ -1,3 +1,5 @@
+import { ConfiguracionClient } from '../../api-client';
+import politicaPrueba from './hoja-de-vida/servicios/politica-validacion.fixture.json';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -83,6 +85,10 @@ describe('panel de usuario', () => {
     TestBed.configureTestingModule({
       imports: [UsuarioDashboardComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: '' },

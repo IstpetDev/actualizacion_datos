@@ -1,6 +1,6 @@
 # Catálogos públicos para la hoja de vida
 
-**Consulta y normalización:** 2026-10-22. **Alcance:** issue #29, spec-0003 v0.3, RF-HDV-014 y ADR-0010 decisión 5. Los CSV son las entradas versionadas del importador. Contienen listas públicas de lugares, instituciones y clasificaciones; ningún registro de personas.
+**Consulta y normalización:** 2026-10-22; ampliación de bancos e institutos: 2026-10-26 (spec-0004 v0.2, ADR-0021 y ADR-0022). **Alcance:** issue #29, spec-0003 v0.3, RF-HDV-014 y ADR-0010 decisión 5. Los CSV son las entradas versionadas del importador. Contienen listas públicas de lugares, instituciones y clasificaciones; ningún registro de personas.
 
 ## Procedencia, edición y cobertura
 
@@ -30,9 +30,9 @@ Los códigos M49, DPA e IES se conservan en `codigo_externo`; en los campos CINE
 
 La migración mantiene las 22 opciones iniciales de sexo, estado civil, tipo de sangre y capacitación. Agrega cinco entradas acordadas en spec-0003: instrucción profesional (id 48), niveles primaria/secundaria (51/52), y grados primaria completa/bachillerato (61/62). Estas cinco no reciben códigos externos inventados.
 
-Los CSV de niveles y grados incluyen las dos semillas respectivas, idénticas y al principio, para que el orden del archivo coloque primaria y secundaria antes de los estudios superiores. El importador verifica que esas filas no cambien la semilla. Las demás entradas reciben ids >=1000; `id` y `codigo` son conceptos distintos. La carga completa deja **2106 elementos**: 29 semillas (incluidos los tipos de cuenta bancaria 71 y 72 de #45) y 2077 importados. Todos los tipos tienen elementos salvo `Banco` (ADR-0013), que espera su fuente oficial (Superintendencia de Bancos, PD-HDV-03); hasta entonces la cuenta bancaria admite escribir el nombre del banco.
+Los CSV de niveles y grados incluyen las dos semillas respectivas, idénticas y al principio, para que el orden del archivo coloque primaria y secundaria antes de los estudios superiores. El importador verifica que esas filas no cambien la semilla. Las demás entradas reciben ids >=1000; `id` y `codigo` son conceptos distintos. La carga original dejaba **2106 elementos**: 29 semillas (incluidos los tipos de cuenta bancaria 71 y 72 de #45) y 2077 importados. La ampliación añade 28 bancos y 216 institutos: **2350 elementos** en total y opciones para los 21 tipos. Universidad contiene 280 IES (64 universidades y 216 institutos). La cuenta bancaria conserva el nombre escrito para entidades no incluidas.
 
-Orden de importación: los tipos sin padre primero; país antes de provincia y universidad; provincia antes de cantón; cantón antes de parroquia; nivel antes de grado; amplio antes de específico antes de detallado. El cargador de desarrollo sigue el orden del enum, que ya cumple esas dependencias. Dentro de cada CSV, el número de fila de datos fija `orden`; los empates en consulta se resuelven por código.
+Orden de importación: los tipos sin padre primero; país antes de provincia y universidad; provincia antes de cantón; cantón antes de parroquia; nivel antes de grado; amplio antes de específico antes de detallado. El cargador común sigue el orden del enum, que ya cumple esas dependencias. Importa `InstitutosSuperiores.csv` como Universidad después de `Universidad.csv`; ambos dependen de País. Los órdenes de los dos archivos pueden coincidir y las consultas desempatan por código. Dentro de cada CSV, el número de fila de datos fija `orden`; los empates en consulta se resuelven por código.
 
 ## Usar la API
 
@@ -44,12 +44,22 @@ Orden de importación: los tipos sin padre primero; país antes de provincia y u
 
 ## Desarrollo con Docker
 
-`docker-compose.yml` habilita `Catalogos__CargarAlInicio=true` solo en Development y monta esta carpeta de solo lectura en `/catalogos`. Tras las migraciones se cargan los 15 CSV con el mismo servicio de importación. Al reiniciar no se duplica. Si falta un archivo requerido o es inválido, el arranque falla con un mensaje; no se declara saludable una carga incompleta.
+`docker-compose.yml` habilita `Catalogos__CargarAlInicio=true` solo en Development y monta esta carpeta de solo lectura en `/catalogos`. Tras las migraciones se cargan los 17 CSV con el mismo servicio de importación. Al reiniciar no se duplica. Si falta un archivo requerido o es inválido, el arranque falla con un mensaje; no se declara saludable una carga incompleta.
 
-Fuera de Development no se ejecuta la carga automática, aunque aparezca esa opción de configuración. La imagen no descarga catálogos ni los incorpora implícitamente a producción. Un superadmin puede importar de forma explícita mediante la API en el entorno que corresponda.
+En producción se ejecuta `--migrar` y luego `--cargar-catalogos` antes de levantar los servicios. La distribución y la imagen contienen `catalogos/` con los 17 CSV y `fuentes.json`. El comando comprueba todos los hashes SHA-256 antes de escribir y usa el mismo importador; no descarga fuentes en ejecución. Sin `Catalogos:Directorio` se usa esa carpeta junto al ejecutable. Un fallo detiene el despliegue; repetir recupera el lote, con transacciones por CSV. El arranque Production verifica catálogos activos y relaciones de Ecuador, geografía, IES, grados y UNESCO; falla antes de servir tráfico si están incompletos. La generación OpenAPI en compilación no consulta la base (patrón oficial GetDocument.Insider).
+
+Construcción desde la raíz: `docker build -f src/Backend/Dockerfile -t actualizacion-datos-backend:prueba .`. El `.dockerignore` raíz limita el contexto a backend y catálogos y excluye configuración local y salidas. El compose de desarrollo y los workflows usan este mismo contexto. No se cambia el contexto de frontend.
 
 ## Trazabilidad y actualización
 
 [fuentes.json](fuentes.json) registra fecha de consulta, URLs, SHA-256 de los recursos descargados y SHA-256/recuento de cada CSV normalizado. Los documentos completos de las fuentes quedan fuera del repositorio: solo se versionan sus tablas públicas normalizadas, sin ejemplos, firmas ni metadatos personales de los documentos originales.
 
 Para actualizar una fuente: descargar desde su URL oficial, extraer solo la tabla indicada arriba, conservar códigos y ceros iniciales, comparar cobertura y cambios, escribir UTF-8 con la misma cabecera y actualizar el manifiesto/fecha. No asignar equivalencias institucionales por similitud de nombres. La extracción de esta versión usó XML estándar de XLSX para DPA, tablas HTML para ONU/CES y tablas del PDF para los diccionarios y CINE; se verificaron unicidad, relaciones y recuentos antes de importar sobre PostgreSQL. No se añadieron dependencias de extracción a la aplicación.
+
+
+## Ampliación de fuentes: bancos e institutos (2026-10-26)
+
+- `Banco.csv`: **28 entidades**, los tres grupos del [catastro público de la Superintendencia de Bancos](https://www.superbancos.gob.ec/bancos/catastro-publico/): 23 nacionales privadas, 1 extranjera privada y 4 públicas. Se extraen solo las tres tablas de denominaciones. Se normalizan espacios y se ordena por denominación. Los códigos `SB_...` son claves técnicas propias derivadas de la denominación (ASCII, mayúsculas, guiones bajos, máximo 50 caracteres), no códigos oficiales, RUC ni equivalencias con talento humano. Al actualizar se deben conservar esas claves aunque cambie una denominación. `codigo_externo` queda vacío porque esta tabla no publica un código oficial. No incluye cooperativas SEPS; sigue disponible otro banco por nombre.
+- `InstitutosSuperiores.csv`: **216 IES**, unión por código oficial de los listados CES de [públicos](https://www.ces.gob.ec/?page_id=1543) (62) y [particulares](https://www.ces.gob.ec/?page_id=5058) (154). Se extraen código de cuatro dígitos y denominación, se normalizan espacios y se ordena por código. Padre Ecuador `218`; código externo igual al oficial. No hay colisiones entre estas 216 claves ni con las 64 universidades. Los listados incluyen institutos y conservatorios; la instantánea no certifica vigencia de programas o títulos. No se importa información de personas de las páginas.
+
+`fuentes.json` conserva los hashes anteriores y añade fecha y SHA-256 de cada recurso consultado, y de los dos CSV nuevos. Los recursos completos se mantienen fuera del repositorio. La carga de las IES extranjeras sigue siendo «Otra institución»; no se crea una lista de universidades frecuentes ni un enum nuevo.

@@ -21,7 +21,7 @@ docs=false
 
 while IFS= read -r archivo || [ -n "$archivo" ]; do
   case "$archivo" in
-    src/Backend/*) backend=true; openapi=true ;;
+    src/Backend/* | data/catalogos/* | .dockerignore) backend=true; openapi=true ;;
     src/Frontend/src/app/api-client/*) frontend=true; openapi=true ;;
     src/Frontend/*) frontend=true ;;
     openapi/*) openapi=true ;;

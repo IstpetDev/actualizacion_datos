@@ -131,3 +131,27 @@ export function extraerDetalleError(
 export function mensajeError(error: unknown, alternativa = 'Ocurrió un error inesperado.'): string {
   return extraerDetalleError(error, alternativa).mensaje;
 }
+
+export function extraerErroresCampos(error: unknown): Record<string, string[]> {
+  const detalle: unknown =
+    error instanceof SwaggerException
+      ? error.result
+      : error instanceof HttpErrorResponse
+        ? error.error
+        : error;
+  if (
+    !detalle ||
+    typeof detalle !== 'object' ||
+    !('errores' in detalle) ||
+    !detalle.errores ||
+    typeof detalle.errores !== 'object'
+  )
+    return {};
+  return Object.fromEntries(
+    Object.entries(detalle.errores).filter(
+      (entrada): entrada is [string, string[]] =>
+        Array.isArray(entrada[1]) &&
+        entrada[1].every((valor: unknown) => typeof valor === 'string'),
+    ),
+  );
+}

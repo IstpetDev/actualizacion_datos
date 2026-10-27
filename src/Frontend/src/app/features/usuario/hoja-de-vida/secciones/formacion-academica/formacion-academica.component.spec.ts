@@ -1,3 +1,5 @@
+import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
+import { ConfiguracionClient } from '../../../../../api-client';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
@@ -88,6 +90,10 @@ describe('FormacionAcademicaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [FormacionAcademicaComponent],
       providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
+        },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosMock },
         { provide: ArchivosClient, useValue: { subirArchivo: vi.fn() } },
@@ -197,5 +203,110 @@ describe('FormacionAcademicaComponent', () => {
 
     component.eliminarEnCurso('enc-1');
     expect(stateMock.eliminarTituloEnCurso).toHaveBeenCalledWith('enc-1');
+  });
+  it('filtra campos UNESCO por padre y limpia el detalle al cambiar la selección', () => {
+    component.camposEspecificos.set([
+      {
+        id: 20,
+        tipo: 13,
+        codigo: 'A.1',
+        nombre: 'Específico ficticio A',
+        padreId: 10,
+        codigoExterno: undefined,
+        orden: 1,
+      },
+      {
+        id: 21,
+        tipo: 13,
+        codigo: 'B.1',
+        nombre: 'Específico ficticio B',
+        padreId: 11,
+        codigoExterno: undefined,
+        orden: 2,
+      },
+    ]);
+    component.camposDetallados.set([
+      {
+        id: 30,
+        tipo: 14,
+        codigo: 'A.1.1',
+        nombre: 'Detalle ficticio',
+        padreId: 20,
+        codigoExterno: undefined,
+        orden: 1,
+      },
+    ]);
+    component.cambiarCampoAmplio(10);
+    expect(component.especificosDisponibles().map((campo) => campo.id)).toEqual([20]);
+    component.cambiarCampoEspecifico(20);
+    expect(component.detalladosDisponibles().map((campo) => campo.id)).toEqual([30]);
+    component.modeloTitulo.campoDetalladoUnescoId = 30;
+    component.cambiarCampoAmplio(11);
+    expect(component.modeloTitulo.campoDetalladoUnescoId).toBeUndefined();
+    expect(component.campoEspecificoId).toBeUndefined();
+  });
+
+  it('conserva beca y financiamiento al editar y los limpia al desmarcar', () => {
+    component.subtabActiva.set('en-curso');
+    component.editarEnCurso({
+      id: 'estudio-ficticio',
+      universidadId: undefined,
+      campoDetalladoUnescoId: undefined,
+      fechaInicio: undefined,
+      fechaFinEstimada: undefined,
+      montoBeca: undefined,
+      archivoId: undefined,
+      nombrePrograma: 'Programa ficticio',
+      gradoAcademicoId: 1,
+      nombreInstitucionOtra: 'Institución ficticia',
+      tieneBeca: true,
+      tipoBecaId: 40,
+      financiamientoBecaId: 50,
+      porcentajeBeca: 50,
+      fechaActualizacionUtc: new Date(),
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="select-tipo-beca"]'),
+    ).toBeTruthy();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="select-financiamiento-beca"]',
+      ),
+    ).toBeTruthy();
+    expect(component.modeloEnCurso.tipoBecaId).toBe(40);
+    expect(component.modeloEnCurso.financiamientoBecaId).toBe(50);
+    expect(component.modeloEnCurso.tieneBeca).toBe(true);
+    component.onBecaToggle(false);
+    expect(component.modeloEnCurso.tieneBeca).toBe(false);
+    expect(component.modeloEnCurso.tipoBecaId).toBeUndefined();
+    expect(component.modeloEnCurso.financiamientoBecaId).toBeUndefined();
+  });
+  it('bloquea_cambio_de_subpestana_si_hay_datos_sin_guardar_en_formulario', () => {
+    component.abrirFormTitulo();
+    component.modeloTitulo.nombreTitulo = 'Maestría en Computación';
+    fixture.detectChanges();
+
+    expect(component.tieneCambios()).toBe(true);
+
+    component.intentarCambiarSubtab('en-curso');
+    fixture.detectChanges();
+
+    expect(component.subtabActiva()).toBe('obtenidos');
+    expect(component.mostrarModalSubtab()).toBe(true);
+  });
+
+  it('descartar_cambios_de_subpestana_limpia_formulario_y_cambia_de_subpestana', () => {
+    component.abrirFormTitulo();
+    component.modeloTitulo.nombreTitulo = 'Maestría en Computación';
+    component.intentarCambiarSubtab('en-curso');
+    expect(component.mostrarModalSubtab()).toBe(true);
+
+    component.descartarYCambiarSubtab();
+    fixture.detectChanges();
+
+    expect(component.mostrarModalSubtab()).toBe(false);
+    expect(component.mostrarFormTitulo()).toBe(false);
+    expect(component.subtabActiva()).toBe('en-curso');
   });
 });

@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 
 // Ayudas compartidas por los archivos de Endpoints/ (spec-0003, T-00). Repiten la resolución de actor
@@ -54,6 +55,10 @@ internal static class AccesoEndpoints
         try
         {
             return await accion();
+        }
+        catch (ValidacionCamposException ex)
+        {
+            return Results.BadRequest(new MensajeRespuesta(ex.Message, "VALIDACION_CAMPOS", ex.Errores));
         }
         catch (RecursoNoEncontradoException ex)
         {

@@ -8,6 +8,7 @@ using System.Xml;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -184,7 +185,7 @@ public class ServicioPersonas : IServicioPersonas
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Cargo de Trabajo", $"Cargo '{item.CargoTrabajo}' sin tipo de funcionario coincidente"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Cargo de Trabajo", "Cargo sin tipo de funcionario coincidente"));
                 }
             }
             else
@@ -204,12 +205,12 @@ public class ServicioPersonas : IServicioPersonas
                     }
                     else
                     {
-                        advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacimiento", $"Fecha de nacimiento '{item.Nacimiento}' fuera de rango válido"));
+                        advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacimiento", "Fecha de nacimiento con formato o rango no válido"));
                     }
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacimiento", $"Fecha de nacimiento '{item.Nacimiento}' con formato no reconocido"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacimiento", "Fecha de nacimiento con formato o rango no válido"));
                 }
             }
             else
@@ -232,7 +233,7 @@ public class ServicioPersonas : IServicioPersonas
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Estado Civil", $"Estado civil '{item.EstadoCivil}' no coincide con el catálogo"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Estado Civil", "Estado civil sin coincidencia en catálogo"));
                 }
             }
             else
@@ -256,7 +257,7 @@ public class ServicioPersonas : IServicioPersonas
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Sangre", $"Tipo de sangre '{item.Sangre}' no coincide con el catálogo"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Sangre", "Tipo de sangre sin coincidencia en catálogo"));
                 }
             }
             else
@@ -281,7 +282,7 @@ public class ServicioPersonas : IServicioPersonas
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacionalidad", $"Nacionalidad '{item.Nacionalidad}' no coincide con el catálogo"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Nacionalidad", "Nacionalidad sin coincidencia en catálogo"));
                 }
             }
             else
@@ -313,18 +314,18 @@ public class ServicioPersonas : IServicioPersonas
             string? telefonoConvencional = null;
             if (!string.IsNullOrWhiteSpace(item.Telefono2))
             {
-                var telLimpio = new string(item.Telefono2.Where(char.IsAsciiDigit).ToArray());
-                if (telLimpio.StartsWith("09", StringComparison.Ordinal) && telLimpio.Length == 10)
+                var telLimpio = item.Telefono2;
+                if (ValidacionHojaDeVida.Coincide(telLimpio, ValidacionHojaDeVida.PatronCelular))
                 {
                     celular = telLimpio;
                 }
-                else if (telLimpio.Length is >= 7 and <= 10)
+                else if (ValidacionHojaDeVida.Coincide(telLimpio, ValidacionHojaDeVida.PatronConvencional))
                 {
                     telefonoConvencional = telLimpio;
                 }
                 else
                 {
-                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Teléfono 2", $"Teléfono '{item.Telefono2}' con formato no reconocido"));
+                    advertencias.Add(new AdvertenciaCargaDto(numeroFila, "Teléfono 2", "Teléfono con formato no válido"));
                 }
             }
             else
@@ -334,7 +335,7 @@ public class ServicioPersonas : IServicioPersonas
 
             // 11. Crear FichaPersonal con datos propuestos
             var ficha = new FichaPersonal(institucionId, nuevaPersona.Id);
-            ficha.Actualizar(new DatosFichaPersonal(
+            var datosFicha = new DatosFichaPersonal(
                 PrimerNombre: nombresDivididos.PrimerNombre,
                 SegundoNombre: nombresDivididos.SegundoNombre,
                 PrimerApellido: nombresDivididos.PrimerApellido,
@@ -345,7 +346,21 @@ public class ServicioPersonas : IServicioPersonas
                 PaisNacionalidadId: paisNacionalidadId,
                 CallePrincipal: callePrincipal,
                 Celular: celular,
-                TelefonoConvencional: telefonoConvencional));
+                TelefonoConvencional: telefonoConvencional);
+            var politica = ValidacionHojaDeVida.Politica(institucionId.Valor, []);
+            var erroresFormato = ValidacionHojaDeVida.Evaluar(datosFicha, "ficha", politica);
+            foreach (var (campo, mensajes) in erroresFormato)
+                advertencias.Add(new AdvertenciaCargaDto(numeroFila, campo, string.Join(" ", mensajes)));
+            datosFicha = datosFicha with
+            {
+                PrimerNombre = erroresFormato.ContainsKey("primerNombre") ? null : datosFicha.PrimerNombre,
+                SegundoNombre = erroresFormato.ContainsKey("segundoNombre") ? null : datosFicha.SegundoNombre,
+                PrimerApellido = erroresFormato.ContainsKey("primerApellido") ? null : datosFicha.PrimerApellido,
+                SegundoApellido = erroresFormato.ContainsKey("segundoApellido") ? null : datosFicha.SegundoApellido,
+                FechaNacimiento = erroresFormato.ContainsKey("fechaNacimiento") ? null : datosFicha.FechaNacimiento,
+                CallePrincipal = erroresFormato.ContainsKey("callePrincipal") ? null : datosFicha.CallePrincipal
+            };
+            ficha.Actualizar(datosFicha);
 
             _context.Personas.Add(nuevaPersona);
             _context.FichasPersonales.Add(ficha);
@@ -722,6 +737,80 @@ public class ServicioPersonas : IServicioPersonas
             p.AccesoHabilitado,
             p.EstadoActualizacion.ToString(),
             p.FechaCreacionUtc)).ToList();
+    }
+
+    public async Task<ResultadoCambioAccesoDto> CambiarAccesoAsync(CambiarAccesoPersonasRequest request, CancellationToken ct = default)
+    {
+        var institucionId = _contextoInstitucion.InstitucionId
+            ?? throw new ReglaNegocioException("Se requiere una institución activa para modificar el acceso de personas.");
+
+        // Solo se opera sobre usuarios con rol Usuario de la institución actual
+        // No se permite modificar a administradores ni supervisores
+        var query = _context.Personas
+            .Where(p => p.InstitucionId == institucionId && p.Rol == RolUsuario.Usuario);
+
+        // Prevenir que un admin se deshabilite a sí mismo si por alguna razón tuviera rol Usuario
+        if (!string.IsNullOrWhiteSpace(_contextoInstitucion.ActorActual))
+        {
+            var actor = _contextoInstitucion.ActorActual.Trim();
+            query = query.Where(p => p.Documento != actor);
+        }
+
+        if (!request.Todas)
+        {
+            var ids = request.PersonaIds?.Distinct().ToList() ?? [];
+            if (ids.Count == 0)
+            {
+                return new ResultadoCambioAccesoDto(0, 0);
+            }
+
+            query = query.Where(p => ids.Contains(p.Id));
+        }
+
+        var personas = await query.ToListAsync(ct);
+
+        var cambiadas = 0;
+        var yaEnEstado = 0;
+
+        foreach (var persona in personas)
+        {
+            if (persona.AccesoHabilitado != request.Habilitar)
+            {
+                if (request.Habilitar)
+                {
+                    persona.HabilitarAcceso();
+                }
+                else
+                {
+                    persona.DeshabilitarAcceso();
+                }
+                cambiadas++;
+            }
+            else
+            {
+                yaEnEstado++;
+            }
+        }
+
+        if (cambiadas > 0)
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+
+        // Auditoría según RF-ACC-006 / ADR-0023
+        var accion = request.Habilitar ? "HABILITAR_ACCESO" : "DESHABILITAR_ACCESO";
+        var detalle = $"{(request.Habilitar ? "Habilitado" : "Deshabilitado")} el acceso a {cambiadas} persona(s) ({yaEnEstado} ya en ese estado)";
+        _context.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            _contextoInstitucion.ActorActual ?? "admin",
+            accion,
+            institucionId,
+            DateTime.UtcNow,
+            detalle));
+
+        await _context.SaveChangesAsync(ct);
+
+        return new ResultadoCambioAccesoDto(cambiadas, yaEnEstado);
     }
 
     private static string NormalizarTexto(string texto)

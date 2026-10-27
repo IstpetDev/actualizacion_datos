@@ -1,4 +1,4 @@
-# ADR-0020 — Manejo global de errores y contrato uniforme
+# ADR-0026 — Manejo global de errores y contrato uniforme
 
 - **Estado:** Vigente
 - **Fecha:** 2026-10-26

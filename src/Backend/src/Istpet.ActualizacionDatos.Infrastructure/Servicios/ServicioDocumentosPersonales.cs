@@ -2,6 +2,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -67,6 +68,7 @@ public class ServicioDocumentosPersonales : IServicioDocumentosPersonales
             throw new ReglaNegocioException("No se permite modificar documentos personales fuera del período de una campaña abierta.");
         }
 
+        ValidacionHojaDeVida.Validar(request, "documento", ValidacionHojaDeVida.Politica(Guid.Empty, []));
         var persona = await _context.Personas
             .FirstOrDefaultAsync(p => p.Documento == documento, ct)
             ?? throw new RecursoNoEncontradoException("La persona no existe en la institución.");

@@ -11,7 +11,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class ConfiguracionHojaDeVidaTests : IDisposable
+public sealed partial class ConfiguracionHojaDeVidaTests : IDisposable
 {
     private readonly SqliteConnection _conexion = new("DataSource=:memory:");
     private readonly WebApplicationFactory<Program> _fabrica;
@@ -57,6 +57,40 @@ public sealed class ConfiguracionHojaDeVidaTests : IDisposable
         var respuesta = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest(persona.Documento, "ClaveFicticiaConfiguracion31"));
         Assert.True(respuesta.StatusCode == HttpStatusCode.OK, await respuesta.Content.ReadAsStringAsync());
         return persona.Id;
+    }
+
+    [Fact]
+    public async Task SemillaTiposInstitucionales_alta_por_http_y_admin_edita_y_desactiva_los_tipos()
+    {
+        await AutenticarAsync(RolUsuario.Superadmin);
+        var alta = await _cliente.PostAsJsonAsync("/api/instituciones/", new CrearInstitucionRequest("Institución ficticia con tipos base"));
+        Assert.Equal(HttpStatusCode.Created, alta.StatusCode);
+        var institucion = (await alta.Content.ReadFromJsonAsync<InstitucionDto>())!;
+        await AutenticarAsync(institucion: new InstitucionId(institucion.Id));
+        var funcionarios = (await _cliente.GetFromJsonAsync<List<TipoFuncionarioDto>>("/api/configuracion/tipos-funcionario"))!;
+        var documentos = (await _cliente.GetFromJsonAsync<List<TipoDocumentoDto>>("/api/configuracion/tipos-documento"))!;
+        Assert.Equal(2, funcionarios.Count);
+        Assert.Equal(6, documentos.Count);
+        Assert.Empty((await _cliente.GetFromJsonAsync<List<RequisitoDocumentoDto>>("/api/configuracion/requisitos"))!);
+
+        var docente = Assert.Single(funcionarios, t => t.Codigo == "DOCENTE");
+        var respuesta = await _cliente.PutAsJsonAsync($"/api/configuracion/tipos-funcionario/{docente.Id}",
+            new GuardarTipoFuncionarioRequest(docente.Codigo, "Docente ficticio personalizado", docente.EsDocente, false));
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        docente = (await respuesta.Content.ReadFromJsonAsync<TipoFuncionarioDto>())!;
+        Assert.True(docente.EsDocente);
+        Assert.False(docente.Activo);
+        Assert.Equal("Docente ficticio personalizado", docente.Nombre);
+
+        var cedula = Assert.Single(documentos, t => t.Codigo == "CEDULA");
+        respuesta = await _cliente.PutAsJsonAsync($"/api/configuracion/tipos-documento/{cedula.Id}",
+            new GuardarTipoDocumentoRequest(cedula.Codigo, "Documento ficticio editado", "Instrucción ficticia", false, 20, false));
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        cedula = (await respuesta.Content.ReadFromJsonAsync<TipoDocumentoDto>())!;
+        Assert.False(cedula.Activo);
+        Assert.False(cedula.TieneVencimiento);
+        Assert.Equal(20, cedula.Orden);
+        Assert.Equal("Instrucción ficticia", cedula.Descripcion);
     }
 
     [Fact]

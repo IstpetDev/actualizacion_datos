@@ -1,5 +1,9 @@
+import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { Observable } from 'rxjs';
+import { ModalCambiosSinGuardarComponent } from './componentes/modal-cambios-sin-guardar.component';
+import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
 import { FaltanteEnvioDto } from '../../../api-client';
 import { ModalFaltantesEnvioComponent } from './componentes/modal-faltantes-envio.component';
 import { CapacitacionesComponent } from './secciones/capacitaciones/capacitaciones.component';
@@ -20,12 +24,14 @@ export type TabSeccionHojaVida =
     CommonModule,
     DatePipe,
     FichaPersonalComponent,
+    MiCuentaBancariaComponent,
     FormacionAcademicaComponent,
     CapacitacionesComponent,
     ExperienciaLaboralComponent,
     ReferenciasComponent,
     DocumentosPersonalesComponent,
     ModalFaltantesEnvioComponent,
+    ModalCambiosSinGuardarComponent,
   ],
   template: `
     <div class="hoja-vida-container" data-testid="contenedor-hoja-de-vida">
@@ -65,7 +71,7 @@ export type TabSeccionHojaVida =
             <button
               type="button"
               class="btn btn-primary"
-              [disabled]="guardando() || cargando()"
+              [disabled]="guardando() || cargando() || validacion.hayErrores()"
               (click)="validarYEnviar()"
               data-testid="btn-enviar-revision-top"
             >
@@ -131,71 +137,119 @@ export type TabSeccionHojaVida =
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'ficha'"
-            (click)="tabActiva.set('ficha')"
+            (click)="intentarCambiarTab('ficha')"
             data-testid="tab-ficha-personal"
           >
             <span class="tab-num">1</span>
             <span class="tab-texto">Ficha Personal</span>
+            @if (tabActiva() === 'ficha' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
 
           <button
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'formacion'"
-            (click)="tabActiva.set('formacion')"
+            (click)="intentarCambiarTab('formacion')"
             data-testid="tab-formacion-academica"
           >
             <span class="tab-num">2</span>
             <span class="tab-texto">Formación Académica</span>
             <span class="tab-badge">{{ titulos().length + titulosEnCurso().length }}</span>
+            @if (tabActiva() === 'formacion' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
 
           <button
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'capacitaciones'"
-            (click)="tabActiva.set('capacitaciones')"
+            (click)="intentarCambiarTab('capacitaciones')"
             data-testid="tab-capacitaciones"
           >
             <span class="tab-num">3</span>
             <span class="tab-texto">Capacitaciones</span>
             <span class="tab-badge">{{ capacitaciones().length }}</span>
+            @if (tabActiva() === 'capacitaciones' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
 
           <button
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'experiencia'"
-            (click)="tabActiva.set('experiencia')"
+            (click)="intentarCambiarTab('experiencia')"
             data-testid="tab-experiencia-laboral"
           >
             <span class="tab-num">4</span>
             <span class="tab-texto">Experiencia Laboral</span>
             <span class="tab-badge">{{ experiencias().length }}</span>
+            @if (tabActiva() === 'experiencia' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
 
           <button
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'referencias'"
-            (click)="tabActiva.set('referencias')"
+            (click)="intentarCambiarTab('referencias')"
             data-testid="tab-referencias"
           >
             <span class="tab-num">5</span>
             <span class="tab-texto">Referencias</span>
             <span class="tab-badge">{{ referencias().length }}</span>
+            @if (tabActiva() === 'referencias' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
 
           <button
             type="button"
             class="seccion-tab-btn"
             [class.active]="tabActiva() === 'documentos'"
-            (click)="tabActiva.set('documentos')"
+            (click)="intentarCambiarTab('documentos')"
             data-testid="tab-documentos-personales"
           >
             <span class="tab-num">6</span>
             <span class="tab-texto">Documentación</span>
             <span class="tab-badge">{{ documentosRequeridos().length }}</span>
+            @if (tabActiva() === 'documentos' && tieneCambios()) {
+              <span
+                class="tab-punto-cambios"
+                title="Cambios sin guardar"
+                aria-label="Cambios sin guardar"
+                >•</span
+              >
+            }
           </button>
         </nav>
 
@@ -204,6 +258,7 @@ export type TabSeccionHojaVida =
           @switch (tabActiva()) {
             @case ('ficha') {
               <app-ficha-personal></app-ficha-personal>
+              <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
             }
             @case ('formacion') {
               <app-formacion-academica></app-formacion-academica>
@@ -236,7 +291,7 @@ export type TabSeccionHojaVida =
               <button
                 type="button"
                 class="btn btn-primary btn-lg"
-                [disabled]="guardando()"
+                [disabled]="guardando() || validacion.hayErrores()"
                 (click)="validarYEnviar()"
                 data-testid="btn-enviar-revision"
               >
@@ -253,10 +308,31 @@ export type TabSeccionHojaVida =
         [faltantes]="faltantes()"
         (cerrar)="mostrarModalFaltantes.set(false)"
       ></app-modal-faltantes-envio>
+
+      <!-- Modal de Advertencia por Cambios sin Guardar (Issue #90) -->
+      <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
+        [abierto]="mostrarModalCambios()"
+        [guardando]="guardando()"
+        [mensajeError]="errorCambios()"
+        (guardarYContinuar)="onGuardarYContinuar()"
+        (descartarYContinuar)="onDescartarYContinuar()"
+        (quedarse)="onQuedarmeAqui()"
+      ></app-modal-cambios-sin-guardar>
     </div>
   `,
   styles: [
     `
+      .tab-punto-cambios {
+        display: inline-block;
+        font-size: 1.35rem;
+        line-height: 1;
+        color: #d97706;
+        margin-left: 0.15rem;
+        font-weight: 900;
+        vertical-align: middle;
+      }
+
       .hoja-vida-container {
         max-width: 1120px;
         margin: 0 auto;
@@ -513,7 +589,97 @@ export type TabSeccionHojaVida =
   ],
 })
 export class HojaDeVidaComponent implements OnInit {
+  readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
+  readonly tieneCambios = this.state.tieneCambiosSinGuardarSignal ?? signal(false);
+  readonly mostrarModalCambios = signal(false);
+  readonly errorCambios = signal('');
+  tabPendiente?: TabSeccionHojaVida;
+  private resolverNavegacion?: (permitir: boolean) => void;
+
+  intentarCambiarTab(nuevaTab: TabSeccionHojaVida): void {
+    if (this.tabActiva() === nuevaTab) return;
+    if (this.state.tieneCambiosSinGuardar ? this.state.tieneCambiosSinGuardar() : false) {
+      this.tabPendiente = nuevaTab;
+      this.errorCambios.set('');
+      this.mostrarModalCambios.set(true);
+      return;
+    }
+    this.tabActiva.set(nuevaTab);
+  }
+
+  onGuardarYContinuar(): void {
+    const seccion = this.state.seccionActiva ? this.state.seccionActiva() : null;
+    if (!seccion) {
+      this.completarNavegacionPendiente(true);
+      return;
+    }
+    seccion.guardarCambios().subscribe({
+      next: (exito) => {
+        if (exito) {
+          this.completarNavegacionPendiente(true);
+        } else {
+          this.errorCambios.set(
+            'No fue posible guardar los cambios. Revise los campos obligatorios o la conexión.',
+          );
+        }
+      },
+      error: (err) => {
+        this.errorCambios.set(err?.message || 'Error al guardar los cambios.');
+      },
+    });
+  }
+
+  onDescartarYContinuar(): void {
+    const seccion = this.state.seccionActiva();
+    if (seccion) {
+      seccion.descartarCambios();
+    }
+    this.completarNavegacionPendiente(true);
+  }
+
+  onQuedarmeAqui(): void {
+    this.mostrarModalCambios.set(false);
+    this.tabPendiente = undefined;
+    if (this.resolverNavegacion) {
+      this.resolverNavegacion(false);
+      this.resolverNavegacion = undefined;
+    }
+  }
+
+  private completarNavegacionPendiente(permitir: boolean): void {
+    this.mostrarModalCambios.set(false);
+    if (permitir && this.tabPendiente) {
+      this.tabActiva.set(this.tabPendiente);
+      this.tabPendiente = undefined;
+    }
+    if (this.resolverNavegacion) {
+      this.resolverNavegacion(permitir);
+      this.resolverNavegacion = undefined;
+    }
+  }
+
+  puedeDesactivar(): Observable<boolean> | boolean {
+    if (!(this.state.tieneCambiosSinGuardar ? this.state.tieneCambiosSinGuardar() : false)) {
+      return true;
+    }
+    this.errorCambios.set('');
+    this.mostrarModalCambios.set(true);
+    return new Observable<boolean>((observer) => {
+      this.resolverNavegacion = (permitir: boolean) => {
+        observer.next(permitir);
+        observer.complete();
+      };
+    });
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.state.tieneCambiosSinGuardar()) {
+      event.preventDefault();
+      event.returnValue = true;
+    }
+  }
 
   readonly cargando = this.state.cargando;
   readonly guardando = this.state.guardando;
@@ -544,6 +710,7 @@ export class HojaDeVidaComponent implements OnInit {
   }
 
   validarYEnviar(): void {
+    if (this.validacion.hayErrores()) return;
     this.state.obtenerFaltantes().subscribe({
       next: (faltantes: FaltanteEnvioDto[]) => {
         if (faltantes && faltantes.length > 0) {

@@ -228,14 +228,15 @@ public sealed class CatalogosTests : IDisposable
     }
 
     [Fact]
-    public async Task Produccion_no_carga_catalogos_automaticamente_aunque_se_active_la_opcion()
+    public void Produccion_rechaza_arranque_sin_catalogos_aunque_se_active_la_opcion_de_desarrollo()
     {
         using var produccion = _fabrica.WithWebHostBuilder(builder => builder
             .UseEnvironment("Production")
             .UseSetting("Catalogos:CargarAlInicio", "true")
             .UseSetting("Catalogos:Directorio", "/directorio-ficticio-inexistente"));
-        using var cliente = produccion.CreateClient();
-        Assert.Equal(HttpStatusCode.OK, (await cliente.GetAsync("/health")).StatusCode);
+        var error = Assert.Throws<InvalidOperationException>(() => produccion.CreateClient());
+        Assert.Contains("Catálogos obligatorios incompletos", error.Message, StringComparison.Ordinal);
+        Assert.Contains("Banco", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
