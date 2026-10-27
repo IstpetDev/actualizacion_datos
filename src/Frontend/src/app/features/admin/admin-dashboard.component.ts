@@ -1788,8 +1788,11 @@ export class AdminDashboardComponent implements OnInit {
       });
   }
 
-  actualizarFiltroEstado(estado: 'todos' | 'habilitados' | 'pendientes' | 'habilitado' | 'pendiente'): void {
-    const normalizado = estado === 'habilitado' ? 'habilitados' : estado === 'pendiente' ? 'pendientes' : 'todos';
+  actualizarFiltroEstado(
+    estado: 'todos' | 'habilitados' | 'pendientes' | 'habilitado' | 'pendiente',
+  ): void {
+    const normalizado =
+      estado === 'habilitado' ? 'habilitados' : estado === 'pendiente' ? 'pendientes' : 'todos';
     this.cambiarFiltroAcceso(normalizado);
   }
 

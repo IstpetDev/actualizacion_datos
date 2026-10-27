@@ -138,6 +138,7 @@ jobs:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
+          echo "Cargando catálogos versionados..."
           ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml run --rm backend --cargar-catalogos"
 
@@ -171,7 +172,7 @@ jobs:
             "cd /d ${DIR} && set TAG=${SHA}&& docker compose -f docker-compose.prod.yml up -d --remove-orphans"
 
   verificar:
-    name: Verificación de salud (Smoke Tests)
+    name: Comprobar salud de los servicios
     needs: desplegar
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -189,7 +190,7 @@ jobs:
           tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Comprobar salud de los servicios
+      - name: Verificar salud de servicios (API y Frontend)
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
@@ -197,7 +198,7 @@ jobs:
           echo "Esperando a que los servicios se estabilicen..."
           sleep 10
           ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
-            "cd /d ${DIR} && powershell -NoProfile -Command \"\$p = if (\$env:PUERTO_PUBLICO) { \$env:PUERTO_PUBLICO } else { '8088' }; Write-Host 'Comprobando API en puerto '\$p; curl.exe -f -s http://127.0.0.1:\$p/health | Out-Null; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo /health'; exit 1 }; Write-Host 'Comprobando Frontend en puerto '\$p; curl.exe -f -s -o NUL http://127.0.0.1:\$p/; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo Frontend'; exit 1 }; Write-Host 'Servicios respondiendo exitosamente.'\""
+            "powershell -NoProfile -Command \"\$puerto = (Get-Content '${DIR}/.env' -ErrorAction SilentlyContinue | Select-String '^PUERTO_PUBLICO=(\d+)' | ForEach-Object { \$_.Matches.Groups[1].Value }) | Select-Object -First 1; if (-not \$puerto) { \$puerto = if (\$env:PUERTO_PUBLICO) { \$env:PUERTO_PUBLICO } else { '8088' } }; Write-Host ('Comprobando API /health en puerto ' + \$puerto + '...'); curl.exe -f -s http://127.0.0.1:\$puerto/health | Out-Null; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo /health'; exit 1 }; Write-Host 'API /health responde OK.'; Write-Host ('Comprobando Frontend SPA / en puerto ' + \$puerto + '...'); curl.exe -f -s -o NUL http://127.0.0.1:\$puerto/; if (\$LASTEXITCODE -ne 0) { Write-Error 'Fallo Frontend'; exit 1 }; Write-Host 'Frontend responde OK.'; cd /d '${DIR}'; docker compose -f docker-compose.prod.yml ps\""
 
   limpiar:
     name: Limpiar imágenes antiguas

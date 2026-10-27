@@ -62,3 +62,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0028](ADR-0028-secciones-habilitadas-por-institucion.md) | Almacenamiento de las secciones habilitadas por institución | Vigente |
 | [ADR-0029](ADR-0029-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Vigente |
 | [ADR-0030](ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) | Avisos versionados y aceptación como condición de acceso | Vigente |
+| [ADR-0031](ADR-0031-auditoria-infraestructura-y-seguridad-en-despliegue.md) | Seguridad en origen, auditoría de infraestructura y verificación de despliegue | Vigente |

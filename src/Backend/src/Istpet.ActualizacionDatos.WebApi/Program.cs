@@ -13,6 +13,7 @@ using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Istpet.ActualizacionDatos.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -20,12 +21,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AgregarInfraestructura(builder.Configuration);
 
-builder.Services.Configure<ForwardedHeadersOptions>(opciones =>
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    opciones.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-                                Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-    opciones.KnownIPNetworks.Clear();
-    opciones.KnownProxies.Clear();
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -34,9 +34,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "istpet_auth";
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-            ? CookieSecurePolicy.SameAsRequest
-            : CookieSecurePolicy.Always;
+        var configuracionSecure = builder.Configuration.GetValue<string>("Autenticacion:CookieSecurePolicy");
+        options.Cookie.SecurePolicy = configuracionSecure switch
+        {
+            "Always" => CookieSecurePolicy.Always,
+            "SameAsRequest" => CookieSecurePolicy.SameAsRequest,
+            "None" => CookieSecurePolicy.None,
+            _ => builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always
+        };
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
 
