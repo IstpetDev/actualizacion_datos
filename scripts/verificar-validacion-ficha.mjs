@@ -2,11 +2,11 @@
 // Requiere imagen backend construida y frontend compilado; Playwright se instala fuera del proyecto.
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { createServer, request } from "node:http";
 import { readFileSync, mkdirSync, existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { resolve, extname, sep } from "node:path";
 import { setTimeout as esperar } from "node:timers/promises";
+import { crearServidorPruebasE2E } from "./servidor-pruebas-e2e.mjs";
 
 const { chromium, expect } = createRequire(import.meta.url)(
   process.env.PLAYWRIGHT_MODULO || "playwright/test",
@@ -150,55 +150,7 @@ try {
   }
   const dist = resolve("src/Frontend/dist/Frontend/browser");
   assert(existsSync(`${dist}/index.html`), "Compile el frontend primero");
-  servidor = createServer((peticion, respuesta) => {
-    if (
-      peticion.url.startsWith("/api/") ||
-      peticion.url.startsWith("/health")
-    ) {
-      const proxy = request(
-        new URL(peticion.url, backend),
-        { method: peticion.method, headers: peticion.headers },
-        (remota) => {
-          respuesta.writeHead(remota.statusCode, remota.headers);
-          remota.pipe(respuesta);
-        },
-      );
-      proxy.on("error", () => {
-        respuesta.writeHead(502);
-        respuesta.end();
-      });
-      peticion.pipe(proxy);
-      return;
-    }
-    const ruta = resolve(
-      dist,
-      `.${decodeURIComponent(new URL(peticion.url, "http://local").pathname)}`,
-    );
-    if (!ruta.startsWith(dist + sep)) {
-      respuesta.writeHead(403);
-      respuesta.end();
-      return;
-    }
-    try {
-      const archivo =
-        existsSync(ruta) && extname(ruta) ? ruta : `${dist}/index.html`;
-      const tipos = {
-        ".js": "text/javascript",
-        ".css": "text/css",
-        ".html": "text/html",
-        ".svg": "image/svg+xml",
-        ".png": "image/png",
-      };
-      respuesta.setHeader(
-        "Content-Type",
-        tipos[extname(archivo)] || "application/octet-stream",
-      );
-      respuesta.end(readFileSync(archivo));
-    } catch {
-      respuesta.writeHead(404);
-      respuesta.end();
-    }
-  });
+  servidor = crearServidorPruebasE2E({ puertoBackend: puerto, rutaDist: dist });
   await new Promise((listo) => servidor.listen(0, "127.0.0.1", listo));
   const base = `http://127.0.0.1:${servidor.address().port}`;
   navegador = await chromium.launch({
