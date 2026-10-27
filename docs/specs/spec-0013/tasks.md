@@ -105,30 +105,30 @@ Cuatro PR a `develop` (F1 a F4, ver plan). Cada tarea que cambie la API regenera
 
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ArmadorDatosDocumento.cs`, pruebas `ArmadorDatosDocumentoTests.cs`.
 
-- [ ] Pruebas: mapa de la spec campo por campo; registro del título de mayor nivel (PD-PLA-08); perfil de ADR-0025; nada fuera del catálogo; solo la institución del token; secciones cerradas omitidas si spec-0010 está integrada.
-- [ ] Implementar.
+- [x] Pruebas: mapa de la spec campo por campo; registro del título de mayor nivel (PD-PLA-08); perfil de ADR-0025; nada fuera del catálogo; solo la institución del token; secciones cerradas omitidas si spec-0010 está integrada.
+- [x] Implementar.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. `IArmadorDatosDocumento`, `ArmadorDatosDocumento`, cálculo jerárquico del título de mayor nivel (PD-PLA-08), perfil determinista (ADR-0025) y pruebas unitarias completas.  
 **Bloqueos:** T-03, T-05.
 
 ## T-08 — Descarga y vista previa
 
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioDocumentoHojaDeVida.cs`, `.../WebApi/Endpoints/DocumentoHojaDeVidaEndpoints.cs`, pruebas `DocumentoHojaDeVidaTests.cs`.
 
-- [ ] Pruebas: `admin` y `supervisor` descargan el PDF de su institución (otra institución 404); la persona ve su vista previa con marca de agua mientras no esté aprobada; la descarga por terceros queda auditada.
-- [ ] Implementar; regenerar `openapi/v1.json` y cliente.
+- [x] Pruebas: `admin` y `supervisor` descargan el PDF de su institución (otra institución 404); la persona ve su vista previa con marca de agua mientras no esté aprobada; la descarga por terceros queda auditada.
+- [x] Implementar; regenerar `openapi/v1.json` y cliente.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. `IServicioDocumentoHojaDeVida`, `ServicioDocumentoHojaDeVida`, endpoints `/api/personas/{id}/documento-hoja-de-vida` y `/api/mis-datos/documento-hoja-de-vida`, auditoría sin PII y pruebas de verificación de PDF con PdfPig.  
 **Bloqueos:** T-07.
 
 ## T-09 — Exportación `.zip`
 
 **Archivos exclusivos:** `.../Infrastructure/Servicios/ServicioExportacion.cs`, pruebas `ExportacionesTests.cs`.
 
-- [ ] Pruebas: el `.zip` incluye el PDF de cada persona aprobada y de ninguna otra; un fallo de una persona se informa sin perder las demás; el HTML actual sigue (PD-PLA-17); 100 personas en menos de 60 s.
-- [ ] Implementar; verificar la imagen Docker.
+- [x] Pruebas: el `.zip` incluye el PDF de cada persona aprobada y de ninguna otra; un fallo de una persona se informa sin perder las demás; el HTML actual sigue (PD-PLA-17); 100 personas en menos de 60 s.
+- [x] Implementar; verificar la imagen Docker.
 
-**Resultado registrado:** pendiente  
+**Resultado registrado:** Hecho el 2026-10-27. `ServicioExportacion` empaqueta `hoja-de-vida.pdf` junto con `hoja-de-vida.html` y adjuntos, con aislamiento multitenant y tolerancia a fallos por persona aprobada.  
 **Bloqueos:** T-07.
 
 ## T-10 — Pantallas de plantillas y marca
