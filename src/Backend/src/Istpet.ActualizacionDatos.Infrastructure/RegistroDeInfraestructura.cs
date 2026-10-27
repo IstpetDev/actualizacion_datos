@@ -50,6 +50,8 @@ public static class RegistroDeInfraestructura
 
         // ADR-0033: Motor nativo QuestPDF para generación de documentos de hoja de vida
         servicios.AddSingleton<IServicioGeneracionPdfHojaDeVida, GeneradorPdfHojaDeVida>();
+        servicios.AddScoped<IServicioConfiguracionDocumento, ServicioConfiguracionDocumento>();
+        servicios.AddScoped<IServicioPlantillasHojaDeVida, ServicioPlantillasHojaDeVida>();
 
         // ADR-0013: el protector guarda las claves en memoria durante toda la vida del proceso.
         servicios.AddSingleton<IProtectorCuentaBancaria, ProtectorCuentaBancariaAesGcm>();
