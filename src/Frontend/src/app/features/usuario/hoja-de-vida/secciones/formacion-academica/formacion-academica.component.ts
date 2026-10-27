@@ -764,6 +764,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 
       <!-- Modal de Advertencia de Cambios sin Guardar en Subpestaña -->
       <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
         [abierto]="mostrarModalSubtab()"
         [guardando]="guardando()"
         [mensajeError]="errorFormulario()"

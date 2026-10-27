@@ -148,14 +148,14 @@ Los logs de validación no contienen cuerpo, nombres, teléfonos, correos, perfi
 
 ## Criterios de aceptación y pruebas
 
-- [ ] RF-VAL-001: casos válidos, inválidos, vacíos opcionales y límites de **cada campo** de la matriz en xUnit y Vitest; conservar reglas del inventario o su exclusión explícita.
-- [ ] RF-VAL-002/006: guardado y envío válidos siguen funcionando; antiguos inválidos tienen mensajes y camino de corrección; importación no introduce formatos rechazados silenciosamente.
-- [ ] RF-VAL-003: mensajes asociados a campos y botones bloqueados; peticiones directas 400 con motivos; captura de logs sin eco de los valores ficticios.
-- [ ] RF-VAL-004/005: migración de dominios y pruebas de permisos, aislamiento A/B, configuración vacía, cambio posterior, mayúsculas, un único `@` y coincidencia exacta.
-- [ ] RF-VAL-007/008: rechazo explícito de perfil por HTTP, retirada del editor, legado no expuesto y generación coincidente en revisión, HTML del ZIP y Excel.
-- [ ] RF-VAL-009: ADR y nota de RF-HDV-020 antes de implementar; integración del contrato #89 resuelta; ninguna regla ni permiso de GitHub modificado.
+- [x] RF-VAL-001: casos válidos, inválidos, vacíos opcionales y límites de **cada campo** de la matriz en xUnit y Vitest; conservar reglas del inventario o su exclusión explícita.
+- [x] RF-VAL-002/006: guardado y envío válidos siguen funcionando; antiguos inválidos tienen mensajes y camino de corrección; importación no introduce formatos rechazados silenciosamente.
+- [x] RF-VAL-003: mensajes asociados a campos y botones bloqueados; peticiones directas 400 con motivos; captura de logs sin eco de los valores ficticios.
+- [x] RF-VAL-004/005: migración de dominios y pruebas de permisos, aislamiento A/B, configuración vacía, cambio posterior, mayúsculas, un único `@` y coincidencia exacta.
+- [x] RF-VAL-007/008: rechazo explícito de perfil por HTTP, retirada del editor, legado no expuesto y generación coincidente en revisión, HTML del ZIP y Excel.
+- [x] RF-VAL-009: ADR y nota de RF-HDV-020 antes de implementar; integración del contrato #89 resuelta; ninguna regla ni permiso de GitHub modificado.
 - [ ] RF-VAL-010: `dotnet build src/Backend`, `dotnet test src/Backend`, `corepack pnpm --dir src/Frontend test:ci`, compilación frontend, lint, format:check y formato .NET; pruebas PostgreSQL para migración y aislamiento; OpenAPI/cliente regenerados y job correcto.
-- [ ] Recorrido de navegador con API real, personas ficticias y capturas: corregir formato, dominio esperado y envío válido; revisión y descarga con perfil generado.
+- [x] Recorrido de navegador con API real, personas ficticias y capturas: corregir formato, dominio esperado y envío válido; revisión y descarga con perfil generado.
 - [ ] PR hacia `develop`, sin conflictos y CI del HEAD final correcto; intentar aprobación, integrar y verificar #88 cerrado, sin comentarios adicionales.
 
 ## Puntos que requieren decisión

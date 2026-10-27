@@ -13,4 +13,4 @@ Spec v0.1 aprobada. Ambiente local aislado, PostgreSQL efímero y API real para 
 
 Datos ficticios: nombres «Persona Ficticia», celular `0900000000`, convencional `020000000`, correo `persona@institucion-a.ejemplo.test`, cuenta `0000000000`. Fechas límite derivadas de un reloj de pruebas. Los datos anteriores de #80 que usaban teléfonos inválidos se corrigen en fixtures; no se relajan reglas para pasar pruebas.
 
-Resultados pendientes; registrar en `docs/evidencia/issue-88.md` con versión de código, comandos, salidas y límites de simulación. Las pruebas de componente no se presentan como conexión real.
+Resultados locales completos (514 xUnit, 337 Vitest y navegador con API/PostgreSQL reales); evidencia registrada en `docs/evidencia/issue-88.md` con comandos, salidas y límites de las verificaciones. El CI y el cierre se consultan en GitHub. Las pruebas de componente no se presentan como conexión real.

@@ -776,7 +776,10 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
         this.state.actualizarEstadoCambios?.();
         return true;
       }),
-      catchError((error: unknown) => { this.validacion.registrarError(error, this.modelo); return of(false); }),
+      catchError((error: unknown) => {
+        this.validacion.registrarError(error, this.modelo);
+        return of(false);
+      }),
     );
   }
 

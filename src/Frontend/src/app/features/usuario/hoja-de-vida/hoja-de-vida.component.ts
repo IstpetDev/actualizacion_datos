@@ -311,6 +311,7 @@ export type TabSeccionHojaVida =
 
       <!-- Modal de Advertencia por Cambios sin Guardar (Issue #90) -->
       <app-modal-cambios-sin-guardar
+        [guardarDeshabilitado]="validacion.hayErrores()"
         [abierto]="mostrarModalCambios()"
         [guardando]="guardando()"
         [mensajeError]="errorCambios()"

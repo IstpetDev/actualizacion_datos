@@ -175,6 +175,7 @@ describe('FichaPersonalComponent', () => {
         expect(mensaje?.textContent).toContain('@institucion-ficticia.example');
       if (!valido) {
         component.guardarFicha();
+        component.guardarCambios().subscribe((guardado) => expect(guardado).toBe(false));
         expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
       }
     },
