@@ -20,9 +20,19 @@ export const routes: Routes = [
     ],
   },
 
+  {
+    path: 'proteccion-datos',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/auth/aviso-proteccion-datos.component').then(
+        (m) => m.AvisoProteccionDatosComponent,
+      ),
+  },
+
   // Vista de acceso denegado (HTTP 403 visual)
   {
     path: 'no-autorizado',
+    canActivate: [authGuard],
     component: MainLayoutComponent,
     children: [
       {

@@ -62,6 +62,10 @@ pnpm --dir src/Frontend install
 pnpm --dir src/Frontend test:ci
 ```
 
+## Aviso de protección de datos
+
+El acceso exige aceptar la versión vigente autorizada por la institución antes de consultar o modificar datos. El cambio obligatorio de contraseña conserva la prioridad. Sin aviso vigente, el acceso permanece restringido. El operador publica el contenido institucional con `--publicar-aviso ruta.json`; ver [procedimiento, versionado y primera carga](docs/proteccion-datos.md). No hay textos legales ni aceptaciones sembrados por defecto.
+
 ## Cliente OpenAPI
 
 El backend exporta el contrato a `openapi/v1.json` al compilar. El cliente de Angular (`src/Frontend/src/app/api-client/`) se genera con NSwag a partir de ese archivo y **se versiona**. El CI regenera ambos y falla si lo versionado está desactualizado.

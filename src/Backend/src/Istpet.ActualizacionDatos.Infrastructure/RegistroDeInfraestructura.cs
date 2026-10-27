@@ -15,6 +15,7 @@ public static class RegistroDeInfraestructura
         this IServiceCollection servicios,
         IConfiguration configuracion)
     {
+        servicios.AddSingleton(TimeProvider.System);
         servicios.AddScoped<ContextoInstitucion>();
         servicios.AddScoped<IContextoInstitucion>(sp => sp.GetRequiredService<ContextoInstitucion>());
 
@@ -24,6 +25,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IServicioCampanas, ServicioCampanas>();
         servicios.AddScoped<IEnviadorCorreo, EnviadorCorreoLog>();
         servicios.AddScoped<IServicioAutenticacion, ServicioAutenticacion>();
+        servicios.AddScoped<IServicioProteccionDatos, ServicioProteccionDatos>();
         servicios.AddScoped<IServicioDatosUsuario, ServicioDatosUsuario>();
         servicios.AddScoped<IServicioRevision, ServicioRevision>();
         servicios.AddScoped<IServicioAuditoria, ServicioAuditoria>();

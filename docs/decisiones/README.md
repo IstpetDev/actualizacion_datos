@@ -61,3 +61,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0027](ADR-0027-asignacion-masiva-y-persistencia-tipo-funcionario.md) | Asignación masiva y persistencia de tipo de funcionario | Vigente |
 | [ADR-0028](ADR-0028-secciones-habilitadas-por-institucion.md) | Almacenamiento de las secciones habilitadas por institución | Vigente |
 | [ADR-0029](ADR-0029-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Vigente |
+| [ADR-0030](ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) | Avisos versionados y aceptación como condición de acceso | Vigente |

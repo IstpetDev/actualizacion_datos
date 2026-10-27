@@ -49,7 +49,7 @@ public sealed class Spec0003E2ETests : IDisposable
         _conexion.Open();
         _almacenTemporal = Path.Combine(Path.GetTempPath(), "istpet-hdv-e2e-" + Guid.NewGuid().ToString("N"));
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.UseSetting("Almacenamiento:RutaRaiz", _almacenTemporal);
             builder.UseSetting("CuentaBancaria:PermitirClavesTemporales", "true");
@@ -223,7 +223,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Nombre Ficticio Apellido Ficticio",
                 CorreoDocenteA1,
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.AsignarTipoFuncionario(tipoDocenteId);
             db.Personas.Add(docente);
@@ -352,7 +352,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente A2 Ficticio",
                 "docente2@ejemplo.test",
-                accesoHabilitado: true);
+                accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.AsignarTipoFuncionario(tipoDocenteId);
             db.Personas.Add(docente);
@@ -465,14 +465,14 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto B"));
 
-            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             pA.AceptarTratamientoDatos(DateTime.UtcNow);
             pA.EnviarARevision(DateTime.UtcNow);
 
-            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente B", "docente.b@ejemplo.test", accesoHabilitado: true);
+            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente B", "docente.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             pB.AceptarTratamientoDatos(DateTime.UtcNow);
 
-            var supA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var supA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(pA, pB, supA);
 
@@ -532,7 +532,7 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             db.Personas.Add(docente);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
             await db.SaveChangesAsync();
@@ -606,11 +606,11 @@ public sealed class Spec0003E2ETests : IDisposable
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
 
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docente.AceptarTratamientoDatos(DateTime.UtcNow);
             docente.EnviarARevision(DateTime.UtcNow);
 
-            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(docente, sup);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
@@ -665,15 +665,15 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto B"));
 
-            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true);
+            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             adminA.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(adminA, ClaveComun), debeCambiarContrasena: false);
 
-            var adminB = new Persona(Guid.NewGuid(), new InstitucionId(instBId), DocumentoAdminB, RolUsuario.Admin, "Admin B", "admin.b@ejemplo.test", accesoHabilitado: true);
+            var adminB = new Persona(Guid.NewGuid(), new InstitucionId(instBId), DocumentoAdminB, RolUsuario.Admin, "Admin B", "admin.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             adminB.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(adminB, ClaveComun), debeCambiarContrasena: false);
 
-            var docA1 = new Persona(docenteA1Id, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A1", CorreoDocenteA1, accesoHabilitado: true);
+            var docA1 = new Persona(docenteA1Id, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A1", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docA1.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(docA1, ClaveComun), debeCambiarContrasena: false);
-            var docA2 = new Persona(docenteA2Id, new InstitucionId(instAId), DocumentoDocenteA2, RolUsuario.Usuario, "Docente A2", "docente.a2@ejemplo.test", accesoHabilitado: true);
+            var docA2 = new Persona(docenteA2Id, new InstitucionId(instAId), DocumentoDocenteA2, RolUsuario.Usuario, "Docente A2", "docente.a2@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(adminA, adminB, docA1, docA2);
             await db.SaveChangesAsync();
@@ -753,7 +753,7 @@ public sealed class Spec0003E2ETests : IDisposable
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
             // Persona previamente existente en la institución
-            db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(instId), "0000000050", RolUsuario.Usuario, "Persona Previa", "previa@ejemplo.test", accesoHabilitado: true));
+            db.Personas.Add(new Persona(Guid.NewGuid(), new InstitucionId(instId), "0000000050", RolUsuario.Usuario, "Persona Previa", "previa@ejemplo.test", accesoHabilitado: true, correoVerificado: true));
             await db.SaveChangesAsync();
         }
 
@@ -817,8 +817,8 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
-            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true);
+            var docente = new Persona(docenteId, new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
+            var sup = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoSupervisorA, RolUsuario.Supervisor, "Supervisor A", "sup@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
             db.Personas.AddRange(docente, sup);
             db.Campanas.Add(new Campana(Guid.NewGuid(), new InstitucionId(instId), "Camp A", DateTime.UtcNow.AddDays(-2), DateTime.UtcNow.AddDays(10), activa: true));
             await db.SaveChangesAsync();
@@ -873,7 +873,7 @@ public sealed class Spec0003E2ETests : IDisposable
         {
             var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
             db.Instituciones.Add(new Institucion(new InstitucionId(instId), "Instituto Ficticio A"));
-            var docente = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true);
+            var docente = new Persona(Guid.NewGuid(), new InstitucionId(instId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true);
             docente.EstablecerPasswordHash(new PasswordHasher<Persona>().HashPassword(docente, ClaveComun), debeCambiarContrasena: false);
             db.Personas.Add(docente);
             await db.SaveChangesAsync();
@@ -922,7 +922,7 @@ public sealed class Spec0003E2ETests : IDisposable
                 RolUsuario.Usuario,
                 "Docente A",
                 CorreoDocenteA1,
-                accesoHabilitado: true,
+                accesoHabilitado: true, correoVerificado: true,
                 estadoActualizacion: EstadoActualizacion.Aprobado,
                 tratamientoDatosAceptado: true);
             db.Personas.Add(docente);
@@ -991,9 +991,9 @@ public sealed class Spec0003E2ETests : IDisposable
             db.Instituciones.Add(new Institucion(new InstitucionId(instAId), "Instituto Ficticio A"));
             db.Instituciones.Add(new Institucion(new InstitucionId(instBId), "Instituto Ficticio B"));
 
-            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente Aprobado A", CorreoDocenteA1, accesoHabilitado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
-            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente Aprobado B", "doc.b@ejemplo.test", accesoHabilitado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
-            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true);
+            var pA = new Persona(docenteAId, new InstitucionId(instAId), DocumentoDocenteA1, RolUsuario.Usuario, "Docente Aprobado A", CorreoDocenteA1, accesoHabilitado: true, correoVerificado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
+            var pB = new Persona(docenteBId, new InstitucionId(instBId), DocumentoDocenteB1, RolUsuario.Usuario, "Docente Aprobado B", "doc.b@ejemplo.test", accesoHabilitado: true, correoVerificado: true, estadoActualizacion: EstadoActualizacion.Aprobado, tratamientoDatosAceptado: true, fechaAceptacionTratamientoDatosUtc: DateTime.UtcNow);
+            var adminA = new Persona(Guid.NewGuid(), new InstitucionId(instAId), DocumentoAdminA, RolUsuario.Admin, "Admin A", "admin.a@ejemplo.test", accesoHabilitado: true, correoVerificado: true);
 
             db.Personas.AddRange(pA, pB, adminA);
 

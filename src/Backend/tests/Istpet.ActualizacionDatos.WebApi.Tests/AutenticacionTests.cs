@@ -22,7 +22,7 @@ public sealed class AutenticacionTests : IDisposable
         _conexion = new SqliteConnection("DataSource=:memory:");
         _conexion.Open();
 
-        _fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        _fabrica = new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -97,7 +97,9 @@ public sealed class AutenticacionTests : IDisposable
 
         var resultado = await loginResponse.Content.ReadFromJsonAsync<ResultadoLoginDto>();
         Assert.NotNull(resultado);
-        Assert.Equal("1700000011", resultado.Documento);
+        Assert.Empty(resultado.Documento);
+        Assert.Null(resultado.Nombre);
+        Assert.Null(resultado.Correo);
         Assert.True(resultado.DebeCambiarContrasena);
 
         // 2. Intentar llamar a otro endpoint estando en estado debeCambiarContrasena -> 403 Forbidden

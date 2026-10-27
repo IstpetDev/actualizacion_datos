@@ -165,7 +165,7 @@ public class ManejadorGlobalExcepcionesTests : IClassFixture<WebApplicationFacto
     public async Task Ruta_inexistente_devuelve_404_con_cuerpo_json_uniforme()
     {
         using var client = _factory.CreateClient();
-        var respuesta = await client.GetAsync(new Uri("/api/ruta-totalmente-inexistente-12345", UriKind.Relative));
+        var respuesta = await client.GetAsync(new Uri("/ruta-totalmente-inexistente-12345", UriKind.Relative));
 
         Assert.Equal(HttpStatusCode.NotFound, respuesta.StatusCode);
         var cuerpo = await respuesta.Content.ReadFromJsonAsync<MensajeRespuesta>();

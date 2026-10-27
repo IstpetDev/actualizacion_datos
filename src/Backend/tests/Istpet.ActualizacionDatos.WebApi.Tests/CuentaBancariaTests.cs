@@ -51,7 +51,7 @@ public sealed class CuentaBancariaTests : IDisposable
     }
 
     private static WebApplicationFactory<Program> CrearFabrica(SqliteConnection conexion, bool clavesTemporales) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new FabricaPruebas().WithWebHostBuilder(builder =>
         {
             // Sin claves configuradas: o claves temporales (desarrollo) o 503.
             builder.UseSetting("CuentaBancaria:PermitirClavesTemporales", clavesTemporales ? "true" : "false");
