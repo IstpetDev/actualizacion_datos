@@ -4,7 +4,16 @@ import {
 } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  DestroyRef,
+  Component,
+  effect,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  untracked,
+} from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, Subscription } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
@@ -516,56 +525,111 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         </fieldset>
 
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
-          <legend class="grupo-titulo">Discapacidad (si corresponde)</legend>
-          <div class="grid-dos">
-            <div class="form-group">
-              <label for="discapacidadId">Tipo de discapacidad</label>
-              <select
-                id="discapacidadId"
-                name="discapacidadId"
-                class="form-control"
-                [ngModel]="modelo.discapacidadId"
-                (ngModelChange)="onDiscapacidadChange($event)"
-              >
-                <option [ngValue]="undefined">Sin discapacidad</option>
-                @for (discapacidad of discapacidades(); track discapacidad.id) {
-                  <option [ngValue]="discapacidad.id">{{ discapacidad.nombre }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="porcentajeDiscapacidad">Porcentaje de discapacidad</label
-              ><input
-                class="form-control"
-                id="porcentajeDiscapacidad"
-                name="porcentajeDiscapacidad"
-                type="number"
-                [(ngModel)]="modelo.porcentajeDiscapacidad"
-                [disabled]="!modelo.discapacidadId"
-                min="0"
-                max="100"
-                step="1"
-                aria-describedby="error-porcentaje"
+          <legend class="grupo-titulo">¿Posee alguna discapacidad?</legend>
+          <div class="opciones-discapacidad">
+            <label for="poseeDiscapacidadNo">
+              <input
+                id="poseeDiscapacidadNo"
+                name="poseeDiscapacidad"
+                type="radio"
+                [value]="false"
+                [ngModel]="poseeDiscapacidad()"
+                (ngModelChange)="onPoseeDiscapacidadChange($event)"
               />
-              @if (validacion.mensaje(modelo, 'ficha', 'porcentajeDiscapacidad'); as mensaje) {
-                <small id="error-porcentaje" class="text-danger" role="alert">{{ mensaje }}</small>
-              }
-            </div>
-            <div class="form-group">
-              <label for="numeroCarnetDiscapacidad">Número de carné</label
-              ><input
-                class="form-control"
-                id="numeroCarnetDiscapacidad"
-                name="numeroCarnetDiscapacidad"
-                [(ngModel)]="modelo.numeroCarnetDiscapacidad"
-                [disabled]="!modelo.discapacidadId"
-                aria-describedby="error-carnet"
+              No
+            </label>
+            <label for="poseeDiscapacidadSi">
+              <input
+                id="poseeDiscapacidadSi"
+                name="poseeDiscapacidad"
+                type="radio"
+                [value]="true"
+                [ngModel]="poseeDiscapacidad()"
+                (ngModelChange)="onPoseeDiscapacidadChange($event)"
               />
-              @if (validacion.mensaje(modelo, 'ficha', 'numeroCarnetDiscapacidad'); as mensaje) {
-                <small id="error-carnet" class="text-danger" role="alert">{{ mensaje }}</small>
-              }
-            </div>
+              Sí
+            </label>
           </div>
+          @if (!poseeDiscapacidad()) {
+            <p>
+              No necesita llenar detalles. Al guardar, no se registrarán tipo, porcentaje ni carné
+              de discapacidad.
+            </p>
+          } @else {
+            <p>
+              Seleccione el tipo de discapacidad. El porcentaje y el número de carné son opcionales.
+            </p>
+            @if (errorCargaDiscapacidades()) {
+              <p class="text-danger" role="alert">
+                {{ errorCargaDiscapacidades() }}
+                <button type="button" (click)="cargarDiscapacidades()">Reintentar</button>
+              </p>
+            }
+            <div class="grid-dos">
+              <div class="form-group">
+                <label for="discapacidadId">Tipo de discapacidad</label>
+                <select
+                  id="discapacidadId"
+                  name="discapacidadId"
+                  class="form-control"
+                  [ngModel]="modelo.discapacidadId"
+                  (ngModelChange)="onDiscapacidadChange($event)"
+                  required
+                  aria-describedby="error-discapacidad"
+                  [attr.aria-invalid]="!!errorDiscapacidad()"
+                >
+                  <option [ngValue]="undefined">Seleccione un tipo de discapacidad</option>
+                  @if (modelo.discapacidadId && !tipoDiscapacidadDisponible()) {
+                    <option [ngValue]="modelo.discapacidadId" disabled>
+                      Tipo guardado no disponible: seleccione uno vigente
+                    </option>
+                  }
+                  @for (discapacidad of discapacidades(); track discapacidad.id) {
+                    <option [ngValue]="discapacidad.id">{{ discapacidad.nombre }}</option>
+                  }
+                </select>
+                @if (errorDiscapacidad(); as mensaje) {
+                  <small id="error-discapacidad" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label for="porcentajeDiscapacidad">Porcentaje de discapacidad (opcional)</label
+                ><input
+                  class="form-control"
+                  id="porcentajeDiscapacidad"
+                  name="porcentajeDiscapacidad"
+                  type="number"
+                  [(ngModel)]="modelo.porcentajeDiscapacidad"
+                  [disabled]="!modelo.discapacidadId"
+                  min="0"
+                  max="100"
+                  step="1"
+                  aria-describedby="error-porcentaje"
+                />
+                @if (validacion.mensaje(modelo, 'ficha', 'porcentajeDiscapacidad'); as mensaje) {
+                  <small id="error-porcentaje" class="text-danger" role="alert">{{
+                    mensaje
+                  }}</small>
+                }
+              </div>
+              <div class="form-group">
+                <label for="numeroCarnetDiscapacidad">Número de carné (opcional)</label
+                ><input
+                  class="form-control"
+                  id="numeroCarnetDiscapacidad"
+                  name="numeroCarnetDiscapacidad"
+                  [(ngModel)]="modelo.numeroCarnetDiscapacidad"
+                  [disabled]="!modelo.discapacidadId"
+                  aria-describedby="error-carnet"
+                />
+                @if (validacion.mensaje(modelo, 'ficha', 'numeroCarnetDiscapacidad'); as mensaje) {
+                  <small id="error-carnet" class="text-danger" role="alert">{{ mensaje }}</small>
+                }
+              </div>
+            </div>
+          }
         </fieldset>
         <!-- 5. FOTOGRAFÍA (spec-0007) -->
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
@@ -602,7 +666,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <button
               type="submit"
               class="btn btn-primary"
-              [disabled]="guardando() || validacion.invalido(modelo, 'ficha')"
+              [disabled]="guardando() || formularioInvalido()"
               data-testid="btn-guardar-ficha"
             >
               {{ guardando() ? 'Guardando cambios...' : 'Guardar Ficha Personal' }}
@@ -721,6 +785,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
       .text-danger {
         color: #dc2626;
       }
+      .opciones-discapacidad {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+      }
+      .opciones-discapacidad label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        cursor: pointer;
+      }
     `,
   ],
 })
@@ -728,7 +803,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly registroValidacion = this.validacion.registrarFormulario(
     'ficha-personal',
-    () => this.validacion.invalido(this.modelo, 'ficha'),
+    () => this.formularioInvalido(),
     inject(DestroyRef),
   );
   readonly fechaPolitica = fechaPolitica;
@@ -753,6 +828,12 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly tiposSangre = signal<ElementoCatalogoDto[]>([]);
   readonly etnias = signal<ElementoCatalogoDto[]>([]);
   readonly discapacidades = signal<ElementoCatalogoDto[]>([]);
+  readonly poseeDiscapacidad = signal(false);
+  readonly errorCargaDiscapacidades = signal('');
+  private readonly catalogoDiscapacidadesCargado = signal(false);
+  private idsSinDiscapacidad = new Set<number>();
+  private respuestaDiscapacidadModificada = false;
+  private cargaDiscapacidades?: Subscription;
 
   // Cascada de residencia
   readonly provinciaResidenciaId = signal<number | undefined>(undefined);
@@ -792,27 +873,34 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly marcaFicha = signal(this.state.obtenerMarcaParaItem('ficha', 'datos_personales'));
 
   private snapshotModelo = '';
+  private snapshotPoseeDiscapacidad = false;
 
   private guardarSnapshot(): void {
     this.snapshotModelo = JSON.stringify(this.modelo);
+    this.snapshotPoseeDiscapacidad = this.poseeDiscapacidad();
   }
 
   tieneCambios(): boolean {
     if (!this.puedeEditar()) return false;
-    return JSON.stringify(this.modelo) !== this.snapshotModelo;
+    return (
+      JSON.stringify(this.modelo) !== this.snapshotModelo ||
+      this.poseeDiscapacidad() !== this.snapshotPoseeDiscapacidad
+    );
   }
 
   guardarCambios(): Observable<boolean> {
     if (!this.puedeEditar()) return of(true);
-    if (this.validacion.invalido(this.modelo, 'ficha')) return of(false);
-    return this.state.guardarFichaPersonal(this.modelo).pipe(
+    if (this.formularioInvalido()) return of(false);
+    const datos = this.datosParaGuardar();
+    return this.state.guardarFichaPersonal(datos).pipe(
       map(() => {
+        this.modelo = datos;
         this.guardarSnapshot();
         this.state.actualizarEstadoCambios?.();
         return true;
       }),
       catchError((error: unknown) => {
-        this.validacion.registrarError(error, this.modelo);
+        this.validacion.registrarError(error, datos);
         return of(false);
       }),
     );
@@ -821,6 +909,8 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   descartarCambios(): void {
     if (this.snapshotModelo) {
       this.modelo = JSON.parse(this.snapshotModelo);
+      this.poseeDiscapacidad.set(this.snapshotPoseeDiscapacidad);
+      this.respuestaDiscapacidadModificada = false;
       if (this.modelo.fechaNacimiento) {
         this.fechaNacimientoStr = new Date(this.modelo.fechaNacimiento).toISOString().split('T')[0];
       } else {
@@ -835,41 +925,45 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     effect(() => {
       const f = this.state.ficha();
       if (f) {
-        this.modelo = {
-          primerNombre: f.primerNombre ?? '',
-          segundoNombre: f.segundoNombre,
-          primerApellido: f.primerApellido ?? '',
-          segundoApellido: f.segundoApellido,
-          sexoId: f.sexoId,
-          fechaNacimiento: f.fechaNacimiento,
-          estadoCivilId: f.estadoCivilId,
-          tipoSangreId: f.tipoSangreId,
-          etniaId: f.etniaId,
-          nacionalidadIndigenaId: f.nacionalidadIndigenaId,
-          paisNacionalidadId: f.paisNacionalidadId,
-          paisNacimientoId: f.paisNacimientoId,
-          parroquiaNacimientoId: f.parroquiaNacimientoId,
-          parroquiaResidenciaId: f.parroquiaResidenciaId,
-          callePrincipal: f.callePrincipal,
-          calleSecundaria: f.calleSecundaria,
-          numeroCasa: f.numeroCasa,
-          referenciaDomicilio: f.referenciaDomicilio,
-          codigoPostal: f.codigoPostal,
-          telefonoConvencional: f.telefonoConvencional,
-          celular: f.celular,
-          correoInstitucional: f.correoInstitucional,
-          discapacidadId: f.discapacidadId,
-          porcentajeDiscapacidad: f.porcentajeDiscapacidad,
-          numeroCarnetDiscapacidad: f.numeroCarnetDiscapacidad,
-          fotoArchivoId: f.fotoArchivoId,
-        };
+        untracked(() => {
+          this.modelo = {
+            primerNombre: f.primerNombre ?? '',
+            segundoNombre: f.segundoNombre,
+            primerApellido: f.primerApellido ?? '',
+            segundoApellido: f.segundoApellido,
+            sexoId: f.sexoId,
+            fechaNacimiento: f.fechaNacimiento,
+            estadoCivilId: f.estadoCivilId,
+            tipoSangreId: f.tipoSangreId,
+            etniaId: f.etniaId,
+            nacionalidadIndigenaId: f.nacionalidadIndigenaId,
+            paisNacionalidadId: f.paisNacionalidadId,
+            paisNacimientoId: f.paisNacimientoId,
+            parroquiaNacimientoId: f.parroquiaNacimientoId,
+            parroquiaResidenciaId: f.parroquiaResidenciaId,
+            callePrincipal: f.callePrincipal,
+            calleSecundaria: f.calleSecundaria,
+            numeroCasa: f.numeroCasa,
+            referenciaDomicilio: f.referenciaDomicilio,
+            codigoPostal: f.codigoPostal,
+            telefonoConvencional: f.telefonoConvencional,
+            celular: f.celular,
+            correoInstitucional: f.correoInstitucional,
+            discapacidadId: f.discapacidadId ?? undefined,
+            porcentajeDiscapacidad: f.porcentajeDiscapacidad,
+            numeroCarnetDiscapacidad: f.numeroCarnetDiscapacidad,
+            fotoArchivoId: f.fotoArchivoId,
+          };
+          this.respuestaDiscapacidadModificada = false;
+          this.poseeDiscapacidad.set(this.inferirPoseeDiscapacidad());
 
-        this.fechaNacimientoStr = f.fechaNacimiento
-          ? new Date(f.fechaNacimiento).toISOString().split('T')[0]
-          : '';
-        this.rehidratarResidencia();
-        this.guardarSnapshot();
-        this.state.actualizarEstadoCambios?.();
+          this.fechaNacimientoStr = f.fechaNacimiento
+            ? new Date(f.fechaNacimiento).toISOString().split('T')[0]
+            : '';
+          this.rehidratarResidencia();
+          this.guardarSnapshot();
+          this.state.actualizarEstadoCambios?.();
+        });
       }
     });
   }
@@ -882,6 +976,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
 
   ngOnDestroy(): void {
     this.cargaResidencia?.unsubscribe();
+    this.cargaDiscapacidades?.unsubscribe();
     this.state.desregistrarSeccion?.(this);
   }
 
@@ -899,7 +994,81 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     this.catalogos.estadosCiviles().subscribe((e) => this.estadosCiviles.set(e));
     this.catalogos.tiposSangre().subscribe((s) => this.tiposSangre.set(s));
     this.catalogos.etnias().subscribe((e) => this.etnias.set(e));
-    this.catalogos.discapacidades().subscribe((d) => this.discapacidades.set(d));
+    this.cargarDiscapacidades();
+  }
+
+  cargarDiscapacidades(): void {
+    this.cargaDiscapacidades?.unsubscribe();
+    this.catalogoDiscapacidadesCargado.set(false);
+    this.errorCargaDiscapacidades.set('');
+    this.cargaDiscapacidades = this.catalogos.discapacidades().subscribe({
+      next: (tipos) => {
+        const sinDiscapacidad = (tipo: ElementoCatalogoDto): boolean =>
+          [tipo.codigo, tipo.nombre].some((valor) =>
+            ['NINGUNA', 'NINGUNO', 'SIN DISCAPACIDAD', 'NO APLICA'].includes(
+              (valor ?? '').trim().replace(/[_-]/g, ' ').replace(/\s+/g, ' ').toUpperCase(),
+            ),
+          );
+        this.idsSinDiscapacidad = new Set(tipos.filter(sinDiscapacidad).map((tipo) => tipo.id));
+        this.discapacidades.set(tipos.filter((tipo) => !sinDiscapacidad(tipo)));
+        this.catalogoDiscapacidadesCargado.set(true);
+        if (this.snapshotModelo) {
+          this.snapshotPoseeDiscapacidad = this.inferirPoseeDiscapacidad(
+            JSON.parse(this.snapshotModelo),
+          );
+        }
+        if (!this.respuestaDiscapacidadModificada) {
+          this.poseeDiscapacidad.set(this.inferirPoseeDiscapacidad());
+        }
+      },
+      error: () =>
+        this.errorCargaDiscapacidades.set(
+          'No se pudieron cargar los tipos de discapacidad. Reintente la carga.',
+        ),
+    });
+  }
+
+  private inferirPoseeDiscapacidad(datos = this.modelo): boolean {
+    const tieneDetalles =
+      datos.porcentajeDiscapacidad != null || !!datos.numeroCarnetDiscapacidad?.trim();
+    return (
+      tieneDetalles ||
+      (datos.discapacidadId != null && !this.idsSinDiscapacidad.has(datos.discapacidadId))
+    );
+  }
+
+  tipoDiscapacidadDisponible(): boolean {
+    return this.discapacidades().some((tipo) => tipo.id === this.modelo.discapacidadId);
+  }
+
+  errorDiscapacidad(): string {
+    if (!this.poseeDiscapacidad()) return '';
+    if (!this.catalogoDiscapacidadesCargado())
+      return 'Cargue los tipos de discapacidad antes de guardar.';
+    return this.tipoDiscapacidadDisponible()
+      ? ''
+      : 'Seleccione un tipo de discapacidad vigente para responder Sí.';
+  }
+
+  formularioInvalido(): boolean {
+    return !!this.errorDiscapacidad() || this.validacion.invalido(this.datosParaGuardar(), 'ficha');
+  }
+
+  private datosParaGuardar(): GuardarFichaPersonalRequest {
+    return this.poseeDiscapacidad()
+      ? this.modelo
+      : {
+          ...this.modelo,
+          discapacidadId: undefined,
+          porcentajeDiscapacidad: undefined,
+          numeroCarnetDiscapacidad: undefined,
+        };
+  }
+
+  onPoseeDiscapacidadChange(posee: boolean): void {
+    this.poseeDiscapacidad.set(posee);
+    this.respuestaDiscapacidadModificada = true;
+    this.state.actualizarEstadoCambios?.();
   }
 
   rehidratarResidencia(): void {
@@ -972,10 +1141,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
 
   onDiscapacidadChange(discapacidadId?: number): void {
     this.modelo.discapacidadId = discapacidadId;
-    if (!discapacidadId) {
-      this.modelo.porcentajeDiscapacidad = undefined;
-      this.modelo.numeroCarnetDiscapacidad = undefined;
-    }
+    this.respuestaDiscapacidadModificada = true;
   }
 
   onFotoSubida(archivoId: string): void {
@@ -987,7 +1153,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   guardarFicha(): void {
-    if (this.validacion.invalido(this.modelo, 'ficha')) return;
+    if (this.formularioInvalido()) return;
     if (!this.puedeEditar()) return;
     this.guardarCambios().subscribe();
   }
