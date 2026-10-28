@@ -5,7 +5,7 @@ import {
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
 import { DestroyRef, Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { catchError, map, Observable, of } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of, Subscription } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import { ElementoCatalogoDto, GuardarFichaPersonalRequest } from '../../../../../api-client';
@@ -37,6 +37,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 
       <!-- Marca de observación del supervisor si existe sobre la Ficha -->
       <app-marca-observacion [marca]="marcaFicha()"></app-marca-observacion>
+
+      @if (errorResidencia()) {
+        <p class="text-danger" role="alert">
+          {{ errorResidencia() }}
+          <button type="button" (click)="rehidratarResidencia()">Reintentar</button>
+        </p>
+      }
 
       <form (ngSubmit)="guardarFicha()" class="formulario-ficha" data-testid="form-ficha">
         <!-- 1. IDENTIFICACIÓN Y NOMBRES -->
@@ -512,6 +519,21 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <legend class="grupo-titulo">Discapacidad (si corresponde)</legend>
           <div class="grid-dos">
             <div class="form-group">
+              <label for="discapacidadId">Tipo de discapacidad</label>
+              <select
+                id="discapacidadId"
+                name="discapacidadId"
+                class="form-control"
+                [ngModel]="modelo.discapacidadId"
+                (ngModelChange)="onDiscapacidadChange($event)"
+              >
+                <option [ngValue]="undefined">Sin discapacidad</option>
+                @for (discapacidad of discapacidades(); track discapacidad.id) {
+                  <option [ngValue]="discapacidad.id">{{ discapacidad.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
               <label for="porcentajeDiscapacidad">Porcentaje de discapacidad</label
               ><input
                 class="form-control"
@@ -519,6 +541,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 name="porcentajeDiscapacidad"
                 type="number"
                 [(ngModel)]="modelo.porcentajeDiscapacidad"
+                [disabled]="!modelo.discapacidadId"
                 min="0"
                 max="100"
                 step="1"
@@ -535,6 +558,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 id="numeroCarnetDiscapacidad"
                 name="numeroCarnetDiscapacidad"
                 [(ngModel)]="modelo.numeroCarnetDiscapacidad"
+                [disabled]="!modelo.discapacidadId"
                 aria-describedby="error-carnet"
               />
               @if (validacion.mensaje(modelo, 'ficha', 'numeroCarnetDiscapacidad'); as mensaje) {
@@ -567,6 +591,12 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         </fieldset>
 
         <!-- Botón de Guardado -->
+        @if (mensajeExito()) {
+          <p role="status">{{ mensajeExito() }}</p>
+        }
+        @if (error()) {
+          <p class="text-danger" role="alert">{{ error() }}</p>
+        }
         @if (puedeEditar()) {
           <div class="acciones-form mt-4">
             <button
@@ -707,6 +737,10 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
 
   readonly puedeEditar = this.state.puedeEditar;
   readonly guardando = this.state.guardando;
+  readonly mensajeExito = this.state.mensajeExito;
+  readonly error = this.state.error;
+  readonly errorResidencia = signal('');
+  private cargaResidencia?: Subscription;
 
   // Catálogos
   readonly paises = signal<ElementoCatalogoDto[]>([]);
@@ -718,6 +752,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly estadosCiviles = signal<ElementoCatalogoDto[]>([]);
   readonly tiposSangre = signal<ElementoCatalogoDto[]>([]);
   readonly etnias = signal<ElementoCatalogoDto[]>([]);
+  readonly discapacidades = signal<ElementoCatalogoDto[]>([]);
 
   // Cascada de residencia
   readonly provinciaResidenciaId = signal<number | undefined>(undefined);
@@ -791,6 +826,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
       } else {
         this.fechaNacimientoStr = '';
       }
+      this.rehidratarResidencia();
     }
     this.state.actualizarEstadoCambios?.();
   }
@@ -828,10 +864,10 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
           fotoArchivoId: f.fotoArchivoId,
         };
 
-        if (f.fechaNacimiento) {
-          const d = new Date(f.fechaNacimiento);
-          this.fechaNacimientoStr = d.toISOString().split('T')[0];
-        }
+        this.fechaNacimientoStr = f.fechaNacimiento
+          ? new Date(f.fechaNacimiento).toISOString().split('T')[0]
+          : '';
+        this.rehidratarResidencia();
         this.guardarSnapshot();
         this.state.actualizarEstadoCambios?.();
       }
@@ -845,6 +881,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   ngOnDestroy(): void {
+    this.cargaResidencia?.unsubscribe();
     this.state.desregistrarSeccion?.(this);
   }
 
@@ -862,9 +899,45 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     this.catalogos.estadosCiviles().subscribe((e) => this.estadosCiviles.set(e));
     this.catalogos.tiposSangre().subscribe((s) => this.tiposSangre.set(s));
     this.catalogos.etnias().subscribe((e) => this.etnias.set(e));
+    this.catalogos.discapacidades().subscribe((d) => this.discapacidades.set(d));
+  }
+
+  rehidratarResidencia(): void {
+    this.cargaResidencia?.unsubscribe();
+    this.errorResidencia.set('');
+    this.provinciaResidenciaId.set(undefined);
+    this.cantonResidenciaId.set(undefined);
+    this.cantonesResidencia.set([]);
+    this.parroquiasResidencia.set([]);
+    const parroquiaId = this.modelo.parroquiaResidenciaId;
+    if (!parroquiaId) return;
+
+    this.cargaResidencia = forkJoin({
+      parroquias: this.catalogos.obtener('Parroquia'),
+      cantones: this.catalogos.obtener('Canton'),
+    }).subscribe({
+      next: ({ parroquias, cantones }) => {
+        const parroquia = parroquias.find((p) => p.id === parroquiaId);
+        const canton = cantones.find((c) => c.id === parroquia?.padreId);
+        if (!canton?.padreId) {
+          this.errorResidencia.set(
+            'No se pudo recuperar la ubicación guardada. Seleccione su residencia.',
+          );
+          return;
+        }
+        this.provinciaResidenciaId.set(canton.padreId);
+        this.cantonResidenciaId.set(canton.id);
+        this.cantonesResidencia.set(cantones.filter((c) => c.padreId === canton.padreId));
+        this.parroquiasResidencia.set(parroquias.filter((p) => p.padreId === canton.id));
+      },
+      error: () =>
+        this.errorResidencia.set('No se pudo cargar la ubicación guardada. Reintente la carga.'),
+    });
   }
 
   onProvinciaResidenciaChange(provinciaId?: number): void {
+    this.cargaResidencia?.unsubscribe();
+    this.errorResidencia.set('');
     this.provinciaResidenciaId.set(provinciaId);
     this.cantonResidenciaId.set(undefined);
     this.modelo.parroquiaResidenciaId = undefined;
@@ -872,23 +945,37 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     this.parroquiasResidencia.set([]);
 
     if (provinciaId) {
-      this.catalogos.cantones(provinciaId).subscribe((c) => this.cantonesResidencia.set(c));
+      this.cargaResidencia = this.catalogos
+        .cantones(provinciaId)
+        .subscribe((c) => this.cantonesResidencia.set(c));
     }
   }
 
   onCantonResidenciaChange(cantonId?: number): void {
+    this.cargaResidencia?.unsubscribe();
+    this.errorResidencia.set('');
     this.cantonResidenciaId.set(cantonId);
     this.modelo.parroquiaResidenciaId = undefined;
     this.parroquiasResidencia.set([]);
 
     if (cantonId) {
-      this.catalogos.parroquias(cantonId).subscribe((p) => this.parroquiasResidencia.set(p));
+      this.cargaResidencia = this.catalogos
+        .parroquias(cantonId)
+        .subscribe((p) => this.parroquiasResidencia.set(p));
     }
   }
 
   onFechaNacimientoChange(valor: string): void {
     this.fechaNacimientoStr = valor;
     this.modelo.fechaNacimiento = fechaSinHora(valor);
+  }
+
+  onDiscapacidadChange(discapacidadId?: number): void {
+    this.modelo.discapacidadId = discapacidadId;
+    if (!discapacidadId) {
+      this.modelo.porcentajeDiscapacidad = undefined;
+      this.modelo.numeroCarnetDiscapacidad = undefined;
+    }
   }
 
   onFotoSubida(archivoId: string): void {

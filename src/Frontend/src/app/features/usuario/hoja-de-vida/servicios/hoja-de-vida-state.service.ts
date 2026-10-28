@@ -228,6 +228,7 @@ export class HojaDeVidaStateService {
   guardarFichaPersonal(request: GuardarFichaPersonalRequest): Observable<FichaPersonalDto> {
     this.guardando.set(true);
     this.error.set('');
+    this.mensajeExito.set('');
 
     return this.hdvClient.guardarMiFichaPersonal(request).pipe(
       tap((fichaActualizada) => {
