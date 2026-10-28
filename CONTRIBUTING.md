@@ -83,6 +83,49 @@ Toda idea nueva o cambio de comportamiento sigue este orden:
 
 **ADR antes de las tareas que dependen de él.** Toda decisión de arquitectura nueva se registra en `docs/decisiones/` (plantilla `ADR-0000-plantilla.md`, guía en [docs/decisiones/README.md](docs/decisiones/README.md)) *antes* de ejecutar las tareas que la necesitan. Los ADR en estado "Propuesto" los cierra quien desarrolla.
 
+## Pruebas locales
+
+Durante el desarrollo, ejecuta primero las pruebas directamente relacionadas con el cambio. Antes de terminar, compila el área modificada y vuelve a ejecutar las pruebas pertinentes. Si cambias contratos, código compartido, configuración o infraestructura de pruebas, ejecuta la suite completa de cada área afectada. Por ejemplo, un cambio en la API y su cliente requiere comprobar backend y frontend. Registra los comandos, el número de pruebas ejecutadas y el resultado real; **cero pruebas encontradas no cuenta como verificación**.
+
+### Backend: proyecto, clase y método
+
+Ubica cada prueba en `Domain.Tests` para reglas de dominio, `Application.Tests` para casos de uso o validación, y `WebApi.Tests` para HTTP, infraestructura o persistencia. Nombra la clase por la unidad o comportamiento seguido de `Tests` y agrupa allí sus escenarios. Una clase `partial` puede distribuir la misma unidad en varios archivos. No hace falta reorganizar las clases existentes. Las pruebas que requieren PostgreSQL con Testcontainers se guardan en `WebApi.Tests/Integracion/` y llevan `[Trait("Categoria", "Integracion")]` en la clase; así las reconoce el filtro existente de CI.
+
+Desde la raíz del repositorio, estos ejemplos ejecutan pruebas unitarias sin Docker:
+
+```bash
+# Todas las pruebas del proyecto de dominio.
+dotnet test src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests --filter 'Categoria!=Integracion'
+
+# Una clase de WebApi.Tests. El nombre completo evita coincidencias parciales.
+dotnet test src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests --filter 'FullyQualifiedName~Istpet.ActualizacionDatos.WebApi.Tests.CuentaBancariaTests.&Categoria!=Integracion'
+
+# Un método de esa clase.
+dotnet test src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests --filter 'FullyQualifiedName~Istpet.ActualizacionDatos.WebApi.Tests.CuentaBancariaTests.Sin_sesion_responde_401&Categoria!=Integracion'
+```
+
+Para todas las unitarias del backend: `dotnet test src/Backend --filter 'Categoria!=Integracion'`. Para incluir integración se necesita Docker y se usa `dotnet test src/Backend`.
+
+### Frontend: archivo y carpeta
+
+Coloca cada `.spec.ts` junto al componente, servicio o guardia que verifica. Usa el mismo nombre base (`mi-cuenta-bancaria.component.ts` → `mi-cuenta-bancaria.component.spec.ts`) y agrupa escenarios de esa unidad. Describe el comportamiento observable en `describe` e `it`; no hace falta dividir los specs existentes.
+
+Las rutas de `--include` son relativas a `src/Frontend/src`, no a la raíz del repositorio. Desde la raíz:
+
+```bash
+# Un componente.
+pnpm --dir src/Frontend exec ng test --watch=false --include=app/features/cuenta-bancaria/mi-cuenta-bancaria.component.spec.ts
+
+# Todos los specs de una carpeta funcional.
+pnpm --dir src/Frontend exec ng test --watch=false '--include=app/features/cuenta-bancaria/**/*.spec.ts'
+```
+
+Para toda la suite del frontend: `pnpm --dir src/Frontend test:ci`. El comando `pnpm --dir src/Frontend test` activa observación de cambios en una terminal interactiva; usa `--watch=false` en una ejecución puntual.
+
+### Relación con CI
+
+La selección anterior es solo local. El CI de [ADR-0005](docs/decisiones/ADR-0005-ci-por-niveles.md) conserva su filtro por rutas: en PR a `develop` ejecuta todas las unitarias del área afectada; en PR a `main` ejecuta unitarias e integración, y también hace una ejecución completa semanal sobre `develop`. Ningún comando local selectivo se añade al workflow.
+
 ## Qué comprueban los PR
 
 Los checks se ejecutan solos. El agregador `ci-ok` debe estar en verde para fusionar. "Aviso" significa que corre y anota el PR, pero no impide fusionar.
