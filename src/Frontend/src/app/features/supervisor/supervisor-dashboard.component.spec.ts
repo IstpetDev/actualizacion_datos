@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+﻿import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -28,6 +28,7 @@ describe('SupervisorDashboardComponent', () => {
   };
   let archivosClientMock: {
     descargarArchivo: Mock;
+    retirarArchivoSupervisor: Mock;
   };
   let authServiceMock: {
     sesion: Mock;
@@ -124,6 +125,7 @@ describe('SupervisorDashboardComponent', () => {
 
     archivosClientMock = {
       descargarArchivo: vi.fn().mockReturnValue(of(new Blob(['test']))),
+      retirarArchivoSupervisor: vi.fn().mockReturnValue(of({ mensaje: 'Archivo retirado' })),
     };
 
     authServiceMock = {
@@ -327,5 +329,66 @@ describe('SupervisorDashboardComponent', () => {
       '22222222-2222-2222-2222-222222222222',
     );
     expect(component.error()).toBeNull();
+  });
+
+  describe('Issue #139: retiro auditado de adjuntos por supervisor', () => {
+    it('muestra_boton_retirar_en_cada_archivo_del_expediente', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      const btnRetirar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-retirar-22222222-2222-2222-2222-222222222222"]',
+      );
+      expect(btnRetirar).not.toBeNull();
+    });
+
+    it('iniciar_retiro_abre_modal_y_deshabilita_confirmar_sin_motivo', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      component.iniciarRetiroArchivo(archivosMock[0]);
+      fixture.detectChanges();
+
+      const modal = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="modal-retiro-archivo"]',
+      );
+      expect(modal).not.toBeNull();
+      expect(component.archivoParaRetirar()).toEqual(archivosMock[0]);
+
+      const btnConfirmar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-confirmar-retiro"]',
+      ) as HTMLButtonElement;
+      expect(btnConfirmar).not.toBeNull();
+      expect(btnConfirmar.disabled).toBe(true);
+
+      component.cancelarRetiroArchivo();
+      fixture.detectChanges();
+      expect(component.archivoParaRetirar()).toBeNull();
+    });
+
+    it('confirmar_retiro_con_motivo_llama_a_api_y_recarga_archivos', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      component.iniciarRetiroArchivo(archivosMock[0]);
+      component.motivoRetiro = 'Documento con firmas borrosas e ilegibles.';
+      fixture.detectChanges();
+
+      const btnConfirmar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-confirmar-retiro"]',
+      ) as HTMLButtonElement;
+      expect(btnConfirmar.disabled).toBe(false);
+
+      revisionClientMock.listarArchivosExpediente.mockClear();
+      component.confirmarRetiroArchivo();
+
+      expect(archivosClientMock.retirarArchivoSupervisor).toHaveBeenCalledWith(
+        '22222222-2222-2222-2222-222222222222',
+        { motivo: 'Documento con firmas borrosas e ilegibles.' },
+      );
+      expect(revisionClientMock.listarArchivosExpediente).toHaveBeenCalledWith('1700000001');
+      expect(component.archivoParaRetirar()).toBeNull();
+      expect(component.mensajeExito()).toContain('El adjunto ha sido retirado');
+    });
   });
 });

@@ -45,6 +45,8 @@ public class AlmacenArchivosDisco : IAlmacenArchivos
             Directory.CreateDirectory(directorio);
         }
 
+        Console.WriteLine($"[AlmacenArchivos] Guardando archivo físico en disco: {rutaFisica}");
+
         await using (var archivoStream = new FileStream(rutaFisica, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true))
         {
             await contenido.CopyToAsync(archivoStream, ct);
@@ -64,6 +66,8 @@ public class AlmacenArchivosDisco : IAlmacenArchivos
             return Task.FromResult<Stream?>(null);
         }
 
+        Console.WriteLine($"[AlmacenArchivos] Abriendo archivo físico desde disco: {rutaFisica}");
+
         Stream stream = new FileStream(rutaFisica, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 81920, useAsync: true);
         return Task.FromResult<Stream?>(stream);
     }
@@ -75,6 +79,8 @@ public class AlmacenArchivosDisco : IAlmacenArchivos
         {
             return Task.FromResult(false);
         }
+
+        Console.WriteLine($"[AlmacenArchivos] Eliminando archivo físico de disco: {rutaFisica}");
 
         File.Delete(rutaFisica);
         return Task.FromResult(true);

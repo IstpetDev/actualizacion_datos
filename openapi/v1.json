@@ -2241,6 +2241,71 @@
         }
       }
     },
+    "/api/archivos/{id}/retirar": {
+      "post": {
+        "tags": [
+          "Archivos"
+        ],
+        "summary": "Retirar auditadamente un adjunto por un supervisor o administrador con motivo obligatorio",
+        "operationId": "RetirarArchivoSupervisor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetirarArchivoSupervisorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/exportaciones/zip": {
       "get": {
         "tags": [
@@ -10131,6 +10196,17 @@
           "fechaCreacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "RetirarArchivoSupervisorRequest": {
+        "required": [
+          "motivo"
+        ],
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string"
           }
         }
       },

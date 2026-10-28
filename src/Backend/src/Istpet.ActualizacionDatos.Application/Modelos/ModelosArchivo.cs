@@ -15,3 +15,6 @@ public sealed record DescargaArchivoDto(
     Stream Contenido,
     string TipoContenido,
     string NombreOriginal);
+
+public sealed record RetirarArchivoSupervisorRequest(
+    string Motivo);

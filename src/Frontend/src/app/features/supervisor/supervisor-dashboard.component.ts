@@ -1,4 +1,4 @@
-import { mensajeError } from '../../core/auth/mensaje-error';
+﻿import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
@@ -229,14 +229,24 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                         {{ archivo.fechaSubidaUtc | date: 'dd/MM/yyyy HH:mm' }}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      (click)="descargarArchivo(archivo.id, archivo.nombreOriginal)"
-                      [attr.data-testid]="'btn-descargar-' + archivo.id"
-                    >
-                      Descargar
-                    </button>
+                    <div class="archivo-acciones">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        (click)="descargarArchivo(archivo.id, archivo.nombreOriginal)"
+                        [attr.data-testid]="'btn-descargar-' + archivo.id"
+                      >
+                        Descargar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="iniciarRetiroArchivo(archivo)"
+                        [attr.data-testid]="'btn-retirar-' + archivo.id"
+                      >
+                        Retirar
+                      </button>
+                    </div>
                   </div>
                 } @empty {
                   <p class="text-muted">No se registran documentos adjuntos en este expediente.</p>
@@ -401,6 +411,63 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 data-testid="btn-confirmar-devolver"
               >
                 {{ procesando() ? 'Devolviendo...' : 'Confirmar y Devolver' }}
+              </button>
+            </footer>
+          </div>
+        </div>
+      }
+
+      <!-- Modal para Retiro Auditado de Adjuntos (Issue #139, ADR-0039) -->
+      @if (archivoParaRetirar(); as arch) {
+        <div class="modal-backdrop" data-testid="modal-retiro-archivo">
+          <div class="modal-dialog">
+            <header class="modal-header">
+              <h3>Retirar Documento Adjunto</h3>
+              <button type="button" class="btn-cerrar" (click)="cancelarRetiroArchivo()">✕</button>
+            </header>
+            <div class="modal-body">
+              <p>
+                Está por retirar el archivo <strong>{{ arch.nombreOriginal }}</strong> del
+                expediente de {{ expedienteSeleccionado()?.nombre }}.
+              </p>
+              <p class="text-danger">
+                Esta acción es auditada e inmutable. El archivo será eliminado físicamente del
+                almacenamiento.
+              </p>
+              <div class="form-group">
+                <label for="motivoRetiro">Motivo del retiro (obligatorio):</label>
+                <textarea
+                  id="motivoRetiro"
+                  class="form-control"
+                  rows="3"
+                  [(ngModel)]="motivoRetiro"
+                  placeholder="Explique detalladamente el motivo por el cual se retira este adjunto..."
+                  data-testid="input-motivo-retiro"
+                ></textarea>
+                @if (errorRetiro()) {
+                  <p class="text-danger" role="alert" data-testid="error-retiro">
+                    {{ errorRetiro() }}
+                  </p>
+                }
+              </div>
+            </div>
+            <footer class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancelarRetiroArchivo()"
+                [disabled]="retirandoArchivo()"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                (click)="confirmarRetiroArchivo()"
+                [disabled]="retirandoArchivo() || !motivoRetiro.trim()"
+                data-testid="btn-confirmar-retiro"
+              >
+                {{ retirandoArchivo() ? 'Retirando...' : 'Confirmar Retiro' }}
               </button>
             </footer>
           </div>
@@ -638,6 +705,11 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
       border: 1px solid #e2e8f0;
       border-radius: 0.375rem;
       padding: 0.75rem;
+    }
+    .archivo-acciones {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
     .archivo-info {
       display: flex;
@@ -1019,6 +1091,54 @@ export class SupervisorDashboardComponent implements OnInit {
 
   obtenerClaves(obj: Record<string, unknown>): string[] {
     return Object.keys(obj || {});
+  }
+
+  readonly archivoParaRetirar = signal<ArchivoDto | null>(null);
+  motivoRetiro = '';
+  readonly retirandoArchivo = signal(false);
+  readonly errorRetiro = signal('');
+
+  iniciarRetiroArchivo(archivo: ArchivoDto): void {
+    this.archivoParaRetirar.set(archivo);
+    this.motivoRetiro = '';
+    this.errorRetiro.set('');
+  }
+
+  cancelarRetiroArchivo(): void {
+    this.archivoParaRetirar.set(null);
+    this.motivoRetiro = '';
+    this.errorRetiro.set('');
+  }
+
+  confirmarRetiroArchivo(): void {
+    const archivo = this.archivoParaRetirar();
+    if (!archivo) return;
+    const motivo = this.motivoRetiro.trim();
+    if (!motivo || motivo.length < 5) {
+      this.errorRetiro.set('Debe ingresar un motivo obligatorio (mínimo 5 caracteres).');
+      return;
+    }
+
+    this.retirandoArchivo.set(true);
+    this.errorRetiro.set('');
+    this.archivosClient.retirarArchivoSupervisor(archivo.id, { motivo }).subscribe({
+      next: () => {
+        this.retirandoArchivo.set(false);
+        this.archivoParaRetirar.set(null);
+        this.motivoRetiro = '';
+        this.mensajeExito.set('El adjunto ha sido retirado del expediente exitosamente.');
+        const exp = this.expedienteSeleccionado();
+        if (exp) {
+          this.revisionClient.listarArchivosExpediente(exp.documento).subscribe({
+            next: (archivos) => this.archivosExpediente.set(archivos),
+          });
+        }
+      },
+      error: (err) => {
+        this.retirandoArchivo.set(false);
+        this.errorRetiro.set(mensajeError(err, 'Error al retirar el archivo adjunto.'));
+      },
+    });
   }
 
   descargarDocumentoPdf(): void {
