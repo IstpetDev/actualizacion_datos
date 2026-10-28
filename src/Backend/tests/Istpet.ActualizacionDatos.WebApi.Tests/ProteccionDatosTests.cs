@@ -463,6 +463,120 @@ public sealed class ProteccionDatosTests : IDisposable
         Assert.Contains("verificar su correo", (await respuesta.Content.ReadFromJsonAsync<MensajeRespuesta>())!.Mensaje, StringComparison.Ordinal);
         Assert.Equal(1, await EvidenciasAsync());
     }
+
+    [Fact]
+    public async Task Superadmin_gestiona_y_publica_aviso_institucional_desbloqueando_usuarios_con_auditoria()
+    {
+        // 1. Superadmin autenticado
+        var superadmin = await CuentaAsync(RolUsuario.Superadmin, cambiarClave: false, documento: "0000000099");
+        using var clienteSuperadmin = Cliente();
+        await LoginAsync(clienteSuperadmin, superadmin);
+
+        // 2. Crear nueva institución
+        var respuestaCrear = await clienteSuperadmin.PostAsJsonAsync("/api/instituciones", new CrearInstitucionRequest(
+            "Instituto Tecnológico Ficticio Para Políticas",
+            [new AdminInicialRequest("1700000095", "Admin Institucional Ficticio", "admin.inst@ejemplo.test")]));
+        Assert.Equal(HttpStatusCode.Created, respuestaCrear.StatusCode);
+        var nuevaInst = (await respuestaCrear.Content.ReadFromJsonAsync<InstitucionDto>())!;
+
+        // 3. Usuario no superadmin no puede consultar ni publicar en endpoints de superadmin
+        var adminSinPermiso = await CuentaAsync(RolUsuario.Admin, cambiarClave: false, documento: "1700000095");
+        using var clienteAdminSinPermiso = Cliente();
+        await LoginAsync(clienteAdminSinPermiso, adminSinPermiso);
+
+        var getProhibido = await clienteAdminSinPermiso.GetAsync($"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos");
+        Assert.Equal(HttpStatusCode.Forbidden, getProhibido.StatusCode);
+
+        // 4. Superadmin consulta historial inicial: lista vacía
+        var historialInicial = await clienteSuperadmin.GetFromJsonAsync<List<AvisoInstitucionalDto>>(
+            $"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos");
+        Assert.NotNull(historialInicial);
+        Assert.Empty(historialInicial!);
+
+        // 5. Rechazo ante falta de confirmación explícita
+        var solicitudSinConfirmar = new PublicarAvisoInstitucionalRequest(
+            "1.0.0",
+            "Política Institucional Ficticia",
+            "Rectorado / Oficial Ficticio",
+            "Texto íntegro ficticio del aviso legal para pruebas.",
+            "Acepto voluntariamente el tratamiento de mis datos.",
+            "https://institucion.test/aviso",
+            "Resolución Rectoral 2026-001",
+            [RolUsuario.Usuario, RolUsuario.Supervisor, RolUsuario.Admin],
+            _reloj.Ahora.UtcDateTime,
+            null,
+            AprobacionInstitucionalConfirmada: false);
+
+        var respSinConfirmar = await clienteSuperadmin.PostAsJsonAsync(
+            $"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos", solicitudSinConfirmar);
+        Assert.Equal(HttpStatusCode.BadRequest, respSinConfirmar.StatusCode);
+
+        // 6. Publicación exitosa por superadmin
+        var solicitudValida = solicitudSinConfirmar with { AprobacionInstitucionalConfirmada = true };
+        var respPublicar = await clienteSuperadmin.PostAsJsonAsync(
+            $"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos", solicitudValida);
+        Assert.Equal(HttpStatusCode.Created, respPublicar.StatusCode);
+        var publicado = (await respPublicar.Content.ReadFromJsonAsync<AvisoInstitucionalDto>())!;
+        Assert.Equal("1.0.0", publicado.Version);
+        Assert.True(publicado.EsVigente);
+        Assert.Equal(3, publicado.RolesDestinatarios.Length);
+
+        // 7. Intento de publicar versión duplicada es rechazado
+        var respDuplicada = await clienteSuperadmin.PostAsJsonAsync(
+            $"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos", solicitudValida);
+        Assert.Equal(HttpStatusCode.BadRequest, respDuplicada.StatusCode);
+
+        // 8. Superadmin consulta historial actualizado
+        var historialConAviso = await clienteSuperadmin.GetFromJsonAsync<List<AvisoInstitucionalDto>>(
+            $"/api/superadmin/instituciones/{nuevaInst.Id}/avisos-proteccion-datos");
+        Assert.NotNull(historialConAviso);
+        Assert.Single(historialConAviso!);
+        Assert.True(historialConAviso![0].EsVigente);
+
+        // 9. Desbloqueo: Admin de la institución ahora puede consultar y aceptar el aviso
+        using var clienteAdminNuevo = Cliente();
+        await clienteAdminNuevo.PostAsJsonAsync("/api/auth/login",
+            new LoginRequest("1700000095", "1700000095", nuevaInst.Id));
+        await clienteAdminNuevo.PostAsJsonAsync("/api/auth/cambiar-clave",
+            new CambiarContrasenaRequest(null, "ClaveAdmin95Segura"));
+
+        var estadoAdmin = await clienteAdminNuevo.GetFromJsonAsync<EstadoProteccionDatosDto>("/api/proteccion-datos/aviso");
+        Assert.NotNull(estadoAdmin);
+        Assert.False(estadoAdmin!.Aceptado);
+        Assert.NotNull(estadoAdmin.Aviso);
+        Assert.Equal("1.0.0", estadoAdmin.Aviso!.Version);
+
+        var respAceptar = await clienteAdminNuevo.PostAsJsonAsync("/api/mis-datos/aceptar-tratamiento",
+            new AceptarAvisoRequest(estadoAdmin.Aviso.Id, true));
+        Assert.Equal(HttpStatusCode.OK, respAceptar.StatusCode);
+
+        // Ahora admin accede sin bloqueo
+        var personasResp = await clienteAdminNuevo.GetAsync("/api/personas");
+        Assert.Equal(HttpStatusCode.OK, personasResp.StatusCode);
+
+        // 10. Verificación de auditoría del actor superadmin
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var audit = await db.Auditorias
+                .SingleOrDefaultAsync(a => a.Accion == "PUBLICAR_AVISO_PROTECCION_DATOS" && a.InstitucionId == new InstitucionId(nuevaInst.Id));
+            Assert.NotNull(audit);
+            Assert.Equal("0000000099", audit!.Actor);
+            Assert.Contains("1.0.0", audit.Detalle);
+        }
+    }
+
+    [Fact]
+    public async Task Superadmin_consultar_institucion_inexistente_retorna_not_found()
+    {
+        var superadmin = await CuentaAsync(RolUsuario.Superadmin, cambiarClave: false, documento: "0000000099");
+        using var clienteSuperadmin = Cliente();
+        await LoginAsync(clienteSuperadmin, superadmin);
+
+        var idInexistente = Guid.NewGuid();
+        var resp = await clienteSuperadmin.GetAsync($"/api/superadmin/instituciones/{idInexistente}/avisos-proteccion-datos");
+        Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
+    }
 }
 
 internal sealed class RelojProteccionDatosPrueba : TimeProvider
