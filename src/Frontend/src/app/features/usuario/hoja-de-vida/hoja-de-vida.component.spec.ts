@@ -12,6 +12,7 @@ import {
   CatalogosClient,
   CuentaBancariaClient,
   DocumentoRequeridoDto,
+  EstadoCapacitacionObligatoriaPersonaDto,
   EstadoEdicionDto,
   ExperienciaLaboralDto,
   FaltanteEnvioDto,
@@ -48,6 +49,7 @@ describe('HojaDeVidaComponent', () => {
     titulos: WritableSignal<TituloAcademicoDto[]>;
     titulosEnCurso: WritableSignal<TituloEnCursoDto[]>;
     capacitaciones: WritableSignal<CapacitacionDto[]>;
+    capacitacionesObligatorias?: WritableSignal<EstadoCapacitacionObligatoriaPersonaDto[]>;
     experiencias: WritableSignal<ExperienciaLaboralDto[]>;
     referencias: WritableSignal<ReferenciaDto[]>;
     documentosRequeridos: WritableSignal<DocumentoRequeridoDto[]>;
@@ -98,6 +100,7 @@ describe('HojaDeVidaComponent', () => {
       titulos: signal([]),
       titulosEnCurso: signal([]),
       capacitaciones: signal([]),
+      capacitacionesObligatorias: signal([]),
       experiencias: signal([]),
       referencias: signal([]),
       documentosRequeridos: signal([]),

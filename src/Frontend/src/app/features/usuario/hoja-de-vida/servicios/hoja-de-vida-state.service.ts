@@ -26,6 +26,9 @@ import {
   ReferenciaDto,
   TituloAcademicoDto,
   TituloEnCursoDto,
+  CapacitacionesObligatoriasClient,
+  EstadoCapacitacionObligatoriaPersonaDto,
+  MensajeRespuesta,
 } from '../../../../api-client';
 
 @Injectable({
@@ -35,6 +38,7 @@ export class HojaDeVidaStateService {
   private readonly hdvClient = inject(HojaDeVidaClient);
   private readonly docsClient = inject(DocumentosPersonalesClient);
   private readonly misDatosClient = inject(MisDatosClient);
+  private readonly capacitacionesObligatoriasClient = inject(CapacitacionesObligatoriasClient);
 
   // Signals de Estado Principal
   readonly hojaDeVida = signal<HojaDeVidaDto | null>(null);
@@ -43,6 +47,7 @@ export class HojaDeVidaStateService {
   readonly marcasObservacion = signal<MarcaObservacionDto[]>([]);
   readonly estadoEdicion = signal<EstadoEdicionDto | null>(null);
   readonly observaciones = signal<ObservacionDto[]>([]);
+  readonly capacitacionesObligatorias = signal<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
 
   readonly seccionActiva = signal<SeccionConCambios | null>(null);
   readonly tieneCambiosSinGuardarSignal = signal<boolean>(false);
@@ -138,14 +143,18 @@ export class HojaDeVidaStateService {
         .obtenerEstadoEdicion()
         .pipe(catchError(() => of(null as unknown as EstadoEdicionDto))),
       obs: this.misDatosClient.obtenerObservacionesMisDatos().pipe(catchError(() => of([]))),
+      obligatorias: this.capacitacionesObligatoriasClient
+        .obtenerMisCapacitacionesObligatorias()
+        .pipe(catchError(() => of([]))),
     }).pipe(
-      tap(({ hdv, docs, estado, obs }) => {
+      tap(({ hdv, docs, estado, obs, obligatorias }) => {
         this.hojaDeVida.set(hdv);
         this.documentos.set(docs ?? []);
         this.estadoEdicion.set(estado);
         const marcas: MarcaObservacionDto[] = (obs ?? []).flatMap((o) => o.marcas ?? []);
         this.marcasObservacion.set(marcas);
         this.observaciones.set(obs ?? []);
+        this.capacitacionesObligatorias.set(obligatorias ?? []);
       }),
       catchError((err) => {
         const msg = mensajeError(err, 'No fue posible cargar la información de la hoja de vida.');
@@ -336,6 +345,7 @@ export class HojaDeVidaStateService {
             ? actual.capacitaciones.map((c) => (c.id === id ? capGuardada : c))
             : [...actual.capacitaciones, capGuardada];
           this.hojaDeVida.set({ ...actual, capacitaciones });
+          this.cargarCapacitacionesObligatorias().subscribe();
         }
       }),
       finalize(() => this.guardando.set(false)),
@@ -352,10 +362,47 @@ export class HojaDeVidaStateService {
             ...actual,
             capacitaciones: actual.capacitaciones.filter((c) => c.id !== id),
           });
+          this.cargarCapacitacionesObligatorias().subscribe();
         }
       }),
       finalize(() => this.guardando.set(false)),
     );
+  }
+
+  cargarCapacitacionesObligatorias(): Observable<EstadoCapacitacionObligatoriaPersonaDto[]> {
+    return this.capacitacionesObligatoriasClient.obtenerMisCapacitacionesObligatorias().pipe(
+      tap((obs) => this.capacitacionesObligatorias.set(obs ?? [])),
+      catchError(() => of([])),
+    );
+  }
+
+  vincularCapacitacionObligatoria(
+    obligatoriaId: string,
+    capacitacionId: string,
+  ): Observable<MensajeRespuesta> {
+    this.guardando.set(true);
+    return this.capacitacionesObligatoriasClient
+      .vincularCapacitacionObligatoria(obligatoriaId, { capacitacionId })
+      .pipe(
+        tap(() => {
+          this.cargarCapacitacionesObligatorias().subscribe();
+          this.hdvClient.obtenerMiHojaDeVida().subscribe((hdv) => this.hojaDeVida.set(hdv));
+        }),
+        finalize(() => this.guardando.set(false)),
+      );
+  }
+
+  justificarNuevoIngreso(
+    obligatoriaId: string,
+    justificacion: string,
+  ): Observable<MensajeRespuesta> {
+    this.guardando.set(true);
+    return this.capacitacionesObligatoriasClient
+      .justificarNuevoIngresoCapacitacionObligatoria(obligatoriaId, { justificacion })
+      .pipe(
+        tap(() => this.cargarCapacitacionesObligatorias().subscribe()),
+        finalize(() => this.guardando.set(false)),
+      );
   }
 
   // --- Operaciones de Experiencia Laboral ---

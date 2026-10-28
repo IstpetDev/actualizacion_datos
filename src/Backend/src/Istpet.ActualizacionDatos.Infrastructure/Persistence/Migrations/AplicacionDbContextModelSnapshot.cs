@@ -438,6 +438,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("archivo_id");
 
+                    b.Property<Guid?>("CapacitacionObligatoriaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("capacitacion_obligatoria_id");
+
                     b.Property<DateTime>("FechaActualizacionUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_actualizacion_utc");
@@ -499,6 +503,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                     b.HasIndex("ArchivoId")
                         .HasDatabaseName("ix_capacitaciones_archivo_id");
 
+                    b.HasIndex("CapacitacionObligatoriaId")
+                        .HasDatabaseName("ix_capacitaciones_capacitacion_obligatoria_id");
+
                     b.HasIndex("InstitucionId")
                         .HasDatabaseName("ix_capacitaciones_institucion_id");
 
@@ -509,6 +516,62 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_capacitaciones_tipo_capacitacion_id");
 
                     b.ToTable("capacitaciones", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CapacitacionObligatoria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<DateOnly?>("FechaRealizacion")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_realizacion");
+
+                    b.Property<int?>("HorasEsperadas")
+                        .HasColumnType("integer")
+                        .HasColumnName("horas_esperadas");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("InstitucionOrganizadora")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("institucion_organizadora");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("nombre");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer")
+                        .HasColumnName("orden");
+
+                    b.Property<Guid?>("TipoFuncionarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_funcionario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_capacitaciones_obligatorias");
+
+                    b.HasIndex("TipoFuncionarioId")
+                        .HasDatabaseName("ix_capacitaciones_obligatorias_tipo_funcionario_id");
+
+                    b.HasIndex("InstitucionId", "Nombre")
+                        .IsUnique()
+                        .HasDatabaseName("ix_capacitaciones_obligatorias_institucion_nombre_activo")
+                        .HasFilter("activo = true");
+
+                    b.ToTable("capacitaciones_obligatorias", (string)null);
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CuentaBancaria", b =>
@@ -1880,6 +1943,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_creacion_utc");
 
+                    b.Property<DateOnly?>("FechaIngresoInstitucion")
+                        .HasColumnType("date")
+                        .HasColumnName("fecha_ingreso_institucion");
+
                     b.Property<Guid>("InstitucionId")
                         .HasColumnType("uuid")
                         .HasColumnName("institucion_id");
@@ -2006,6 +2073,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_capacitaciones_archivos_adjuntos_archivo_id");
 
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.CapacitacionObligatoria", null)
+                        .WithMany()
+                        .HasForeignKey("CapacitacionObligatoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_capacitaciones_capacitaciones_obligatorias_capacitacion_obl");
+
                     b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
                         .WithMany()
                         .HasForeignKey("InstitucionId")
@@ -2025,6 +2098,22 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasForeignKey("TipoCapacitacionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_capacitaciones_elementos_catalogo_tipo_capacitacion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CapacitacionObligatoria", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_capacitaciones_obligatorias_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", null)
+                        .WithMany()
+                        .HasForeignKey("TipoFuncionarioId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_capacitaciones_obligatorias_tipos_funcionario_tipo_funciona");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.CuentaBancaria", b =>

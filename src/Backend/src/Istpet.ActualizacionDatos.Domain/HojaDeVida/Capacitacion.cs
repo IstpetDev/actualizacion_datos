@@ -16,7 +16,8 @@ public sealed record DatosCapacitacion(
     DateOnly? FechaFin = null,
     int? NumeroHoras = null,
     string? Lugar = null,
-    bool FinanciadaPorInstitucion = false);
+    bool FinanciadaPorInstitucion = false,
+    Guid? CapacitacionObligatoriaId = null);
 
 // Capacitación, curso, seminario o congreso. Equivale a `cursos_profesores` del
 // sistema de origen (no a `cursos`, que allí son los niveles de una carrera).
@@ -31,6 +32,7 @@ public class Capacitacion : RegistroHojaDeVida
     public int? NumeroHoras { get; private set; }
     public string? Lugar { get; private set; }
     public bool FinanciadaPorInstitucion { get; private set; }
+    public Guid? CapacitacionObligatoriaId { get; private set; }
 
     private Capacitacion()
     {
@@ -49,6 +51,12 @@ public class Capacitacion : RegistroHojaDeVida
     public void Actualizar(DatosCapacitacion datos, DateTime? fechaUtc = null)
     {
         Aplicar(datos);
+        MarcarActualizado(fechaUtc);
+    }
+
+    public void VincularCapacitacionObligatoria(Guid? obligatoriaId, DateTime? fechaUtc = null)
+    {
+        CapacitacionObligatoriaId = obligatoriaId;
         MarcarActualizado(fechaUtc);
     }
 
@@ -71,5 +79,6 @@ public class Capacitacion : RegistroHojaDeVida
         NumeroHoras = datos.NumeroHoras;
         Lugar = Limpiar(datos.Lugar);
         FinanciadaPorInstitucion = datos.FinanciadaPorInstitucion;
+        CapacitacionObligatoriaId = datos.CapacitacionObligatoriaId;
     }
 }

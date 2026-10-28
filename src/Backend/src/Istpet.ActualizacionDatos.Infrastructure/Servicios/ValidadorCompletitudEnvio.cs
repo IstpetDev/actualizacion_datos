@@ -314,3 +314,104 @@ public class ReglaDocumentosPersonalesObligatorios : IReglaCompletitudEnvio
         return faltantes;
     }
 }
+
+/// <summary>
+/// RF-CAP-007, RF-CAP-008, RF-CAP-019, RF-CAP-020 (spec-0008, ADR-0029, ADR-0032):
+/// Capacitaciones obligatorias institucionales aplicables que deben estar cumplidas para enviar a revisión.
+/// Satisfecha si:
+/// 1) Vinculada a una Capacitacion con certificado de respaldo.
+/// 2) Exenta automáticamente por fecha de nuevo ingreso (FechaIngresoInstitucion > FechaRealizacion).
+/// 3) Justificada manualmente por nuevo ingreso.
+/// </summary>
+public class ReglaCapacitacionesObligatorias : IReglaCompletitudEnvio
+{
+    public SeccionHojaDeVida? Seccion => SeccionHojaDeVida.Capacitaciones;
+    private readonly AplicacionDbContext _context;
+
+    public ReglaCapacitacionesObligatorias(AplicacionDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IReadOnlyList<FaltanteEnvioDto>> EvaluarAsync(Guid personaId, CancellationToken ct = default)
+    {
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Id == personaId, ct);
+
+        if (persona == null)
+        {
+            return [];
+        }
+
+        var obligatorias = await _context.CapacitacionesObligatorias
+            .Where(o => o.InstitucionId == persona.InstitucionId && o.Activo)
+            .ToListAsync(ct);
+
+        var aplicables = obligatorias.Where(o => o.AplicaA(persona.TipoFuncionarioId)).ToList();
+        if (aplicables.Count == 0)
+        {
+            return [];
+        }
+
+        var capacitacionesVinculadas = await _context.Capacitaciones
+            .Where(c => c.PersonaId == personaId && c.CapacitacionObligatoriaId != null && c.ArchivoId != null)
+            .Select(c => c.CapacitacionObligatoriaId!.Value)
+            .ToHashSetAsync(ct);
+
+        var justificaciones = ObtenerJustificacionesNuevoIngreso(persona.DatosPersonalesJson);
+
+        var faltantes = new List<FaltanteEnvioDto>();
+        foreach (var ob in aplicables)
+        {
+            // 1) Cumplida con certificado
+            if (capacitacionesVinculadas.Contains(ob.Id))
+            {
+                continue;
+            }
+
+            // 2) Exenta por nuevo ingreso
+            if (ob.EsExentoPorNuevoIngreso(persona.FechaIngresoInstitucion))
+            {
+                continue;
+            }
+
+            // 3) Justificada por nuevo ingreso
+            if (justificaciones.Contains(ob.Id))
+            {
+                continue;
+            }
+
+            faltantes.Add(new FaltanteEnvioDto(
+                "capacitaciones",
+                $"capacitaciones.obligatoria.{ob.Id}",
+                $"La capacitación obligatoria '{ob.Nombre}' no ha sido completada.",
+                ob.Id));
+        }
+
+        return faltantes;
+    }
+
+    private static HashSet<Guid> ObtenerJustificacionesNuevoIngreso(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("justificaciones_capacitaciones", out var prop))
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(prop.GetRawText());
+                if (dict != null)
+                {
+                    return dict.Keys
+                        .Where(k => Guid.TryParse(k, out _))
+                        .Select(Guid.Parse)
+                        .ToHashSet();
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+        return [];
+    }
+}

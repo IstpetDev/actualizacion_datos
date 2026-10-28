@@ -87,6 +87,12 @@ public sealed partial class ManejadorGlobalExcepciones(
                 "RECURSO_NO_ENCONTRADO",
                 null),
 
+            ConflictoEstadoException ex => (
+                StatusCodes.Status409Conflict,
+                ex.Message,
+                "CONFLICTO_ESTADO",
+                null),
+
             CuentaBancariaNoDisponibleException ex => (
                 StatusCodes.Status503ServiceUnavailable,
                 ex.Message,

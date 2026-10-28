@@ -34,6 +34,8 @@ describe('ConfiguracionRequisitosComponent', () => {
     crearRequisitoDocumento: Mock;
     actualizarRequisitoDocumento: Mock;
     eliminarRequisitoDocumento: Mock;
+    listarCapacitacionesObligatorias?: Mock;
+    obtenerCumplimientoCapacitacionesObligatorias?: Mock;
   };
   let personasClientMock: {
     listarPersonas: Mock;
@@ -118,6 +120,8 @@ describe('ConfiguracionRequisitosComponent', () => {
       crearRequisitoDocumento: vi.fn().mockReturnValue(of(mockRequisitos[0])),
       actualizarRequisitoDocumento: vi.fn().mockReturnValue(of(mockRequisitos[0])),
       eliminarRequisitoDocumento: vi.fn().mockReturnValue(of(undefined)),
+      listarCapacitacionesObligatorias: vi.fn().mockReturnValue(of([])),
+      obtenerCumplimientoCapacitacionesObligatorias: vi.fn().mockReturnValue(of([])),
     };
 
     personasClientMock = {

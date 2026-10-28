@@ -47,6 +47,7 @@ public static class RegistroDeInfraestructura
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaReferenciasPersonalesObligatorias>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaRespaldosItemsObligatorios>();
         servicios.AddScoped<IReglaCompletitudEnvio, ReglaDocumentosPersonalesObligatorios>();
+        servicios.AddScoped<IReglaCompletitudEnvio, ReglaCapacitacionesObligatorias>();
 
         // ADR-0033: Motor nativo QuestPDF para generación de documentos de hoja de vida
         servicios.AddSingleton<IServicioGeneracionPdfHojaDeVida, GeneradorPdfHojaDeVida>();

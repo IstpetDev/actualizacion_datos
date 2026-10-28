@@ -258,14 +258,38 @@ public class ServicioExportacion : IServicioExportacion
     {
         var (institucionIdEfectivo, institucionNombre) = await ValidarYResolverInstitucionAsync(institucionId, ct);
 
-        // RF-EXP-001 / RF-EXP-004: Solo personas con datos aprobados de la institución
-        var personasAprobadas = await _context.Personas
-            .AsNoTracking()
-            .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) && p.EstadoActualizacion == EstadoActualizacion.Aprobado)
-            .OrderBy(p => p.Documento)
-            .ToListAsync(ct);
+        var ahoraUtc = DateTime.UtcNow;
 
-        var personasIds = personasAprobadas.Select(p => p.Id).ToList();
+        // Campañas para verificar vencimiento (RF-CAP-016 / T-10)
+        var campanas = await _context.Campanas
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo))
+            .ToListAsync(ct);
+        var campanaAbierta = campanas.Any(c => c.EstaAbiertaEn(ahoraUtc));
+        var hayCampanaVencida = campanas.Any(c => c.FechaFinUtc < ahoraUtc);
+
+        // RF-EXP-001 / RF-EXP-004: Solo personas con datos aprobados de la institución
+        // RF-CAP-016: Si la campaña ha vencido y no hay campaña abierta, el admin puede ver y exportar borradores incompletos
+        List<Persona> personas;
+        if (!campanaAbierta && hayCampanaVencida)
+        {
+            personas = await _context.Personas
+                .AsNoTracking()
+                .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) &&
+                           (p.EstadoActualizacion == EstadoActualizacion.Aprobado || p.EstadoActualizacion == EstadoActualizacion.Borrador))
+                .OrderBy(p => p.Documento)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            personas = await _context.Personas
+                .AsNoTracking()
+                .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) && p.EstadoActualizacion == EstadoActualizacion.Aprobado)
+                .OrderBy(p => p.Documento)
+                .ToListAsync(ct);
+        }
+
+        var personasIds = personas.Select(p => p.Id).ToList();
 
         var conteoArchivos = await _context.ArchivosAdjuntos
             .AsNoTracking()
@@ -275,23 +299,100 @@ public class ServicioExportacion : IServicioExportacion
             .ToDictionaryAsync(x => x.PersonaId, x => x.Total, ct);
 
         var perfiles = new Dictionary<Guid, string>();
-        foreach (var persona in personasAprobadas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
-        var filas = personasAprobadas.Select(p => new GeneradorExcelOpenXml.FilaExportacion(
+        foreach (var persona in personas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
+
+        // Cargar obligatorias activas y capacitaciones para reporte detallado (RF-CAP-011)
+        var obligatorias = await _context.CapacitacionesObligatorias
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo) && c.Activo)
+            .OrderBy(c => c.Orden)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync(ct);
+
+        var capacitaciones = await _context.Capacitaciones
+            .AsNoTracking()
+            .Where(c => personasIds.Contains(c.PersonaId) && c.InstitucionId == new InstitucionId(institucionIdEfectivo))
+            .ToListAsync(ct);
+
+        var filasObligatorias = new List<GeneradorExcelOpenXml.FilaCapacitacionObligatoria>();
+        var resumenObligatoriasPorPersona = new Dictionary<Guid, string>();
+
+        foreach (var p in personas)
+        {
+            if (obligatorias.Count == 0)
+            {
+                resumenObligatoriasPorPersona[p.Id] = "—";
+                continue;
+            }
+
+            var totalAplica = 0;
+            var cumplidas = 0;
+
+            foreach (var ob in obligatorias)
+            {
+                var aplica = ob.AplicaA(p.TipoFuncionarioId);
+                if (!aplica)
+                {
+                    filasObligatorias.Add(new GeneradorExcelOpenXml.FilaCapacitacionObligatoria(
+                        p.Documento,
+                        p.Nombre ?? "—",
+                        ob.Nombre,
+                        "No",
+                        "No aplica",
+                        "—",
+                        ob.FechaRealizacion?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—"));
+                    continue;
+                }
+
+                totalAplica++;
+                var vinculada = capacitaciones.FirstOrDefault(c => c.PersonaId == p.Id && c.CapacitacionObligatoriaId == ob.Id);
+                string estadoTexto;
+                string horasTexto = vinculada?.NumeroHoras?.ToString(CultureInfo.InvariantCulture) ?? ob.HorasEsperadas?.ToString(CultureInfo.InvariantCulture) ?? "—";
+
+                if (vinculada != null)
+                {
+                    cumplidas++;
+                    estadoTexto = p.EstadoActualizacion == EstadoActualizacion.Aprobado ? "Aprobada" : "Cargada";
+                }
+                else if (ob.EsExentoPorNuevoIngreso(p.FechaIngresoInstitucion))
+                {
+                    cumplidas++;
+                    estadoTexto = "Exento (nuevo ingreso)";
+                }
+                else
+                {
+                    estadoTexto = "Pendiente";
+                }
+
+                filasObligatorias.Add(new GeneradorExcelOpenXml.FilaCapacitacionObligatoria(
+                    p.Documento,
+                    p.Nombre ?? "—",
+                    ob.Nombre,
+                    "Sí",
+                    estadoTexto,
+                    horasTexto,
+                    ob.FechaRealizacion?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—"));
+            }
+
+            resumenObligatoriasPorPersona[p.Id] = totalAplica > 0 ? $"{cumplidas}/{totalAplica} cumplidas" : "Sin obligatorias aplicables";
+        }
+
+        var filas = personas.Select(p => new GeneradorExcelOpenXml.FilaExportacion(
             Documento: p.Documento,
             Nombre: p.Nombre ?? "—",
             Correo: p.Correo ?? "—",
             Rol: p.Rol.ToString(),
-            Estado: p.EstadoActualizacion.ToString(),
+            Estado: p.EstadoActualizacion == EstadoActualizacion.Borrador ? "Incompleto, no enviado" : p.EstadoActualizacion.ToString(),
             CantidadArchivos: conteoArchivos.GetValueOrDefault(p.Id, 0),
             TratamientoDatosAceptado: p.TratamientoDatosAceptado,
             FechaCreacionUtc: p.FechaCreacionUtc,
-            Perfil: perfiles[p.Id]
+            Perfil: perfiles[p.Id],
+            EstadoCapacitacionesObligatorias: resumenObligatoriasPorPersona.GetValueOrDefault(p.Id, "—")
         )).ToList();
 
-        var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas);
+        var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas, filasObligatorias);
         var memoryStream = new MemoryStream(bytesExcel);
 
-        var ahoraUtc = DateTime.UtcNow;
         var slugInstitucion = GenerarSlug(institucionNombre);
         var nombreArchivo = $"{slugInstitucion}_{ahoraUtc:yyyyMMdd_HHmmss}_datos.xlsx";
 
@@ -303,7 +404,7 @@ public class ServicioExportacion : IServicioExportacion
             "ExportacionExcel",
             new InstitucionId(institucionIdEfectivo),
             ahoraUtc,
-            detalle: $"Generación de reporte Excel para {institucionNombre} con {personasAprobadas.Count} personas aprobadas."));
+            detalle: $"Generación de reporte Excel para {institucionNombre} con {personas.Count} personas."));
         await _context.SaveChangesAsync(ct);
 
         return new DescargaArchivoDto(

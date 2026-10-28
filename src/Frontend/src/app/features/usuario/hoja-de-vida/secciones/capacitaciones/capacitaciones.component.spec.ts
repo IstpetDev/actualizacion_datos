@@ -1,5 +1,8 @@
 import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
-import { ConfiguracionClient } from '../../../../../api-client';
+import {
+  ConfiguracionClient,
+  EstadoCapacitacionObligatoriaPersonaDto,
+} from '../../../../../api-client';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -17,9 +20,12 @@ describe('CapacitacionesComponent', () => {
     puedeEditar: WritableSignal<boolean>;
     guardando: WritableSignal<boolean>;
     capacitaciones: WritableSignal<CapacitacionDto[]>;
+    capacitacionesObligatorias: WritableSignal<EstadoCapacitacionObligatoriaPersonaDto[]>;
     guardarCapacitacion: Mock;
     eliminarCapacitacion: Mock;
     obtenerMarcaParaItem: Mock;
+    vincularCapacitacionObligatoria: Mock;
+    justificarNuevoIngreso: Mock;
   };
 
   let catalogosMock: {
@@ -58,9 +64,12 @@ describe('CapacitacionesComponent', () => {
       puedeEditar: signal(true),
       guardando: signal(false),
       capacitaciones: signal([mockCapacitacion]),
+      capacitacionesObligatorias: signal([]),
       guardarCapacitacion: vi.fn().mockReturnValue(of({})),
       eliminarCapacitacion: vi.fn().mockReturnValue(of({})),
       obtenerMarcaParaItem: vi.fn().mockReturnValue(undefined),
+      vincularCapacitacionObligatoria: vi.fn().mockReturnValue(of({})),
+      justificarNuevoIngreso: vi.fn().mockReturnValue(of({})),
     };
 
     catalogosMock = {
@@ -209,5 +218,89 @@ describe('CapacitacionesComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(boton.disabled).toBe(false);
+  });
+
+  it('muestra_bloque_de_obligatorias_con_sus_estados_RF_CAP_004', () => {
+    stateMock.capacitacionesObligatorias.set([
+      {
+        id: 'ob-1',
+        nombre: 'Seguridad en el Trabajo',
+        institucionOrganizadora: 'ISTPET',
+        horasEsperadas: 20,
+        fechaRealizacion: new Date('2026-03-01'),
+        estado: 'pendiente',
+      } as unknown as EstadoCapacitacionObligatoriaPersonaDto,
+      {
+        id: 'ob-2',
+        nombre: 'Didáctica Superior',
+        horasEsperadas: 40,
+        estado: 'cargada',
+        capacitacionId: 'cap-1',
+      } as unknown as EstadoCapacitacionObligatoriaPersonaDto,
+      {
+        id: 'ob-3',
+        nombre: 'Ética Pública',
+        estado: 'exento-nuevo-ingreso',
+      } as unknown as EstadoCapacitacionObligatoriaPersonaDto,
+    ]);
+    fixture.detectChanges();
+
+    const bloque = fixture.nativeElement.querySelector(
+      '[data-testid="bloque-capacitaciones-obligatorias"]',
+    );
+    expect(bloque).toBeTruthy();
+
+    const cardOb1 = fixture.nativeElement.querySelector('[data-testid="card-obligatoria-ob-1"]');
+    expect(cardOb1).toBeTruthy();
+    expect(cardOb1.textContent).toContain('Seguridad en el Trabajo');
+    expect(cardOb1.textContent).toContain('Pendiente');
+
+    const cardOb2 = fixture.nativeElement.querySelector('[data-testid="card-obligatoria-ob-2"]');
+    expect(cardOb2.textContent).toContain('Cargada');
+
+    const cardOb3 = fixture.nativeElement.querySelector('[data-testid="card-obligatoria-ob-3"]');
+    expect(cardOb3.textContent).toContain('Exento');
+  });
+
+  it('subir_para_obligatoria_prellena_formulario', () => {
+    const ob = {
+      id: 'ob-99',
+      nombre: 'Curso de Inducción',
+      institucionOrganizadora: 'ISTPET Central',
+      horasEsperadas: 15,
+      estado: 'pendiente',
+    } as unknown as EstadoCapacitacionObligatoriaPersonaDto;
+    component.subirParaObligatoria(ob);
+    fixture.detectChanges();
+
+    expect(component.mostrarFormulario()).toBe(true);
+    expect(component.modelo.capacitacionObligatoriaId).toBe('ob-99');
+    expect(component.modelo.nombreEvento).toBe('Curso de Inducción');
+    expect(component.modelo.institucionOrganizadora).toBe('ISTPET Central');
+    expect(component.modelo.numeroHoras).toBe(15);
+  });
+
+  it('vincular_existente_y_justificar_llaman_al_servicio', () => {
+    const ob = {
+      id: 'ob-1',
+      nombre: 'Seguridad en el Trabajo',
+      estado: 'pendiente',
+    } as unknown as EstadoCapacitacionObligatoriaPersonaDto;
+
+    // 1. Vincular existente
+    component.abrirModalVincular(ob);
+    expect(component.obligatoriaParaVincular()).toEqual(ob);
+    component.capacitacionSeleccionadaParaVincular = 'cap-1';
+    component.confirmarVincularExistente();
+    expect(stateMock.vincularCapacitacionObligatoria).toHaveBeenCalledWith('ob-1', 'cap-1');
+    expect(component.obligatoriaParaVincular()).toBeNull();
+
+    // 2. Justificar
+    component.abrirModalJustificar(ob);
+    expect(component.obligatoriaParaJustificar()).toEqual(ob);
+    component.textoJustificacion = 'Ingresé recientemente';
+    component.confirmarJustificar();
+    expect(stateMock.justificarNuevoIngreso).toHaveBeenCalledWith('ob-1', 'Ingresé recientemente');
+    expect(component.obligatoriaParaJustificar()).toBeNull();
   });
 });

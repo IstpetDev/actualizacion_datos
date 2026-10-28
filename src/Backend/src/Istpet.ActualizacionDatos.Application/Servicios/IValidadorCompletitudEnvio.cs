@@ -44,3 +44,15 @@ public sealed class RecursoNoEncontradoException : ReglaNegocioException
     {
     }
 }
+
+/// <summary>
+/// La operación entra en conflicto con el estado actual del recurso (ej. nombre repetido o modificación no permitida).
+/// La API responde 409 Conflict.
+/// </summary>
+public sealed class ConflictoEstadoException : ReglaNegocioException
+{
+    public ConflictoEstadoException(string mensaje)
+        : base(mensaje)
+    {
+    }
+}

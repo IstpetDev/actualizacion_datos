@@ -17,8 +17,10 @@ import {
 } from '../../../api-client';
 import { AuthService } from '../../../core/auth';
 import { ConfiguracionDocumentoComponent } from './configuracion-documento.component';
+import { CapacitacionesObligatoriasConfigComponent } from './capacitaciones-obligatorias-config.component';
 
-type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones' | 'documento';
+type TabConfiguracion =
+  'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones' | 'documento' | 'capacitaciones';
 
 @Component({
   selector: 'app-configuracion-requisitos',
@@ -29,6 +31,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
     DominiosCorreoComponent,
     SeccionesComponent,
     ConfiguracionDocumentoComponent,
+    CapacitacionesObligatoriasConfigComponent,
   ],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
@@ -117,6 +120,15 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
             data-testid="tab-formato-documento"
           >
             5. Plantilla y Marca (PDF)
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'capacitaciones'"
+            (click)="cambiarTab('capacitaciones')"
+            data-testid="tab-capacitaciones-obligatorias"
+          >
+            6. Capacitaciones Obligatorias
           </button>
         </nav>
 
@@ -853,6 +865,13 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
         @if (tabActiva() === 'documento') {
           <div class="subtab-panel" data-testid="panel-plantilla-documento">
             <app-configuracion-documento />
+          </div>
+        }
+
+        <!-- SUBTAB 6: CAPACITACIONES OBLIGATORIAS (RF-CAP-001, RF-CAP-002, RF-CAP-010) -->
+        @if (tabActiva() === 'capacitaciones') {
+          <div class="subtab-panel" data-testid="panel-capacitaciones-obligatorias">
+            <app-capacitaciones-obligatorias-config />
           </div>
         }
       }
