@@ -70,3 +70,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0036](ADR-0036-gestion-politicas-proteccion-datos-superadmin.md) | Gestión y publicación de políticas y avisos de protección de datos en panel superadmin | Vigente |
 | [ADR-0037](ADR-0037-sincronizacion-nombre-desde-ficha.md) | Sincronización del nombre desde la ficha personal | Vigente por pedido explícito #125 |
 | [ADR-0038](ADR-0038-asignacion-roles-institucionales.md) | Asignación de roles institucionales | Vigente por pedido explícito #129 |
+| [ADR-0039](ADR-0039-visibilidad-de-borradores-y-avance-para-supervisores.md) | Visibilidad de borradores y avance institucional para supervisores | Vigente por pedido explícito #143 |
