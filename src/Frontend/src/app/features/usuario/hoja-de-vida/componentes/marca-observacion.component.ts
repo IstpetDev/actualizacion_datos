@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, input } from '@angular/core';
-import { MarcaObservacionDto } from '../../../../api-client';
+import { MarcaConRevision } from '../../../revision-compartida/observaciones-revision';
 
 @Component({
   selector: 'app-marca-observacion',
@@ -12,6 +12,15 @@ import { MarcaObservacionDto } from '../../../../api-client';
         <div class="marca-header">
           <span class="marca-tag">Observación de Revisión</span>
         </div>
+        @if (m.revision; as revision) {
+          <p class="marca-metadatos">
+            Ronda {{ revision.ronda }} · Autor: {{ revision.autor }} ·
+            {{ revision.fechaUtc | date: 'dd/MM/yyyy HH:mm' }}
+            @if (m.estadoExpediente) {
+              · Estado del expediente: {{ m.estadoExpediente }}
+            }
+          </p>
+        }
         <p class="marca-texto">{{ m.texto }}</p>
       </div>
     }
@@ -36,15 +45,23 @@ import { MarcaObservacionDto } from '../../../../api-client';
         color: #b91c1c;
         letter-spacing: 0.025em;
       }
+      .marca-metadatos {
+        font-size: 0.75rem;
+        margin: 0.25rem 0;
+        color: #475569;
+        overflow-wrap: anywhere;
+      }
       .marca-texto {
         font-size: 0.875rem;
         color: #991b1b;
         margin: 0;
         line-height: 1.4;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
       }
     `,
   ],
 })
 export class MarcaObservacionComponent {
-  readonly marca = input<MarcaObservacionDto | undefined>(undefined);
+  readonly marca = input<MarcaConRevision | undefined>(undefined);
 }

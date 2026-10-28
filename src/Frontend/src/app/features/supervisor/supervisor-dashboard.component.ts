@@ -1,7 +1,9 @@
+import { catchError, forkJoin, of, Subscription } from 'rxjs';
+import { ObservacionesRevisionComponent } from '../revision-compartida/observaciones-revision.component';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   API_BASE_URL,
@@ -25,6 +27,7 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
   standalone: true,
   imports: [
     CommonModule,
+    ObservacionesRevisionComponent,
     FormsModule,
     CuentaBancariaRevisionComponent,
     ExpedienteSeccionesComponent,
@@ -142,7 +145,9 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 type="button"
                 class="btn btn-danger"
                 (click)="abrirModalDevolver()"
-                [disabled]="procesando()"
+                [disabled]="
+                  procesando() || expedienteSeleccionado()?.estadoActualizacion !== 'Enviado'
+                "
                 data-testid="btn-abrir-devolver"
               >
                 Devolver con Observaciones
@@ -151,7 +156,9 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 type="button"
                 class="btn btn-success"
                 (click)="aprobar()"
-                [disabled]="procesando()"
+                [disabled]="
+                  procesando() || expedienteSeleccionado()?.estadoActualizacion !== 'Enviado'
+                "
                 data-testid="btn-aprobar"
               >
                 {{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}
@@ -243,37 +250,19 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 }
               </div>
 
-              <!-- Historial de Observaciones Previas -->
-              @if (expedienteSeleccionado()?.observaciones?.length) {
-                <h3 class="card-title mt-4">Observaciones Anteriores</h3>
-                <div class="observaciones-previas">
-                  @for (obs of expedienteSeleccionado()?.observaciones; track obs.id) {
-                    <div class="obs-item">
-                      <div class="obs-header">
-                        <strong>{{ obs.autor }}</strong>
-                        <span>{{ obs.fechaUtc | date: 'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
-                      <p class="obs-texto">{{ obs.texto }}</p>
-                      @if (obs.marcas?.length) {
-                        <ul class="marcas-previas">
-                          @for (m of obs.marcas; track m.id) {
-                            <li>
-                              <strong>[{{ m.tipoDestino }}] {{ m.claveDestino }}:</strong>
-                              {{ m.texto }}
-                            </li>
-                          }
-                        </ul>
-                      }
-                    </div>
-                  }
-                </div>
-              }
+              <app-observaciones-revision
+                [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
+                [hojaDeVida]="hojaDeVida()"
+                [archivos]="archivosExpediente()"
+                [estado]="expedienteSeleccionado()?.estadoActualizacion || ''"
+              />
             </section>
           </div>
 
           @if (hojaDeVida(); as hdv) {
             <app-expediente-secciones
               [hojaDeVida]="hdv"
+              [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
               [archivos]="archivosExpediente()"
               (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
               (marcarItem)="iniciarMarcaItem($event)"
@@ -812,7 +801,7 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
     }
   `,
 })
-export class SupervisorDashboardComponent implements OnInit {
+export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);
   private readonly revisionClient = inject(RevisionClient);
   private readonly archivosClient = inject(ArchivosClient);
@@ -839,6 +828,12 @@ export class SupervisorDashboardComponent implements OnInit {
   nuevaMarcaTexto = signal<string>('');
   readonly marcas = signal<MarcaObservacionItem[]>([]);
 
+  private cargaExpediente?: Subscription;
+
+  ngOnDestroy(): void {
+    this.cargaExpediente?.unsubscribe();
+  }
+
   ngOnInit(): void {
     this.cargarPendientes();
   }
@@ -860,42 +855,33 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   verExpediente(documento: string): void {
+    this.cerrarExpediente();
     this.cargandoExpediente.set(true);
     this.error.set(null);
     this.mensajeExito.set(null);
-
-    this.revisionClient.obtenerExpedienteParaRevision(documento).subscribe({
-      next: (exp) => {
+    this.cargaExpediente = forkJoin({
+      exp: this.revisionClient.obtenerExpedienteParaRevision(documento),
+      hdv: this.revisionClient
+        .obtenerHojaDeVidaParaRevision(documento)
+        .pipe(catchError(() => of(null))),
+      archivos: this.revisionClient
+        .listarArchivosExpediente(documento)
+        .pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ exp, hdv, archivos }) => {
         this.expedienteSeleccionado.set(exp);
+        this.hojaDeVida.set(hdv);
+        this.archivosExpediente.set(archivos);
         try {
-          if (exp.datosPersonalesJson) {
-            this.datosPersonalesParsed.set(JSON.parse(exp.datosPersonalesJson));
-          } else {
-            this.datosPersonalesParsed.set(null);
-          }
+          this.datosPersonalesParsed.set(
+            exp.datosPersonalesJson ? JSON.parse(exp.datosPersonalesJson) : null,
+          );
         } catch {
           this.datosPersonalesParsed.set(null);
         }
-
-        // Cargar la hoja de vida estructurada por secciones (spec-0003, RF-HDV-011)
-        this.revisionClient.obtenerHojaDeVidaParaRevision(documento).subscribe({
-          next: (hdv) => this.hojaDeVida.set(hdv),
-          error: () => this.hojaDeVida.set(null),
-        });
-
-        // Cargar los archivos adjuntos del expediente
-        this.revisionClient.listarArchivosExpediente(documento).subscribe({
-          next: (archivos) => {
-            this.archivosExpediente.set(archivos);
-            this.cargandoExpediente.set(false);
-          },
-          error: () => {
-            this.archivosExpediente.set([]);
-            this.cargandoExpediente.set(false);
-          },
-        });
+        this.cargandoExpediente.set(false);
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.error.set(mensajeError(err, 'Error al obtener el expediente para revisión.'));
         this.cargandoExpediente.set(false);
       },
@@ -903,6 +889,8 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   cerrarExpediente(): void {
+    this.cargaExpediente?.unsubscribe();
+    this.cargandoExpediente.set(false);
     this.expedienteSeleccionado.set(null);
     this.hojaDeVida.set(null);
     this.archivosExpediente.set([]);
@@ -910,6 +898,7 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
+    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
     this.nuevaMarcaTipo.set(info.tipo || 'Item');
     this.nuevaMarcaClave.set(info.clave);
     this.nuevaMarcaTexto.set('');
@@ -918,7 +907,7 @@ export class SupervisorDashboardComponent implements OnInit {
 
   aprobar(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp) return;
+    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -938,6 +927,7 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   abrirModalDevolver(): void {
+    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
     this.observacionGeneral.set('');
     this.marcas.set([]);
     this.nuevaMarcaClave.set('');
@@ -972,7 +962,7 @@ export class SupervisorDashboardComponent implements OnInit {
   confirmarDevolucion(): void {
     const exp = this.expedienteSeleccionado();
     const general = this.observacionGeneral().trim();
-    if (!exp || !general) return;
+    if (!exp || exp.estadoActualizacion !== 'Enviado' || !general) return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -989,8 +979,11 @@ export class SupervisorDashboardComponent implements OnInit {
         );
         this.procesando.set(false);
         this.cerrarModalDevolver();
-        this.cerrarExpediente();
+        this.verExpediente(exp.documento);
         this.cargarPendientes();
+        this.mensajeExito.set(
+          res?.mensaje || 'Actualización devuelta al usuario con observaciones.',
+        );
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al devolver la actualización.'));
