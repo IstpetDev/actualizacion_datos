@@ -54,7 +54,7 @@
 
 **Objetivo:** Comprobar que los comandos documentados ejecutan pruebas reales y que los archivos compilan.\
 **Área y rama:** Documentación; `docs/guia-pruebas-selectivas`\
-**Archivos exclusivos:** `docs/specs/spec-0014/test-e2e.md`, `docs/specs/spec-0014/tasks.md`\
+**Archivos exclusivos:** `docs/specs/spec-0017/test-e2e.md`, `docs/specs/spec-0017/tasks.md`\
 **Entrada/contrato:** Guías de T-01 y T-02\
 **Salida para integración:** Matriz de resultados y limitaciones\
 **Dependencias:** T-02\

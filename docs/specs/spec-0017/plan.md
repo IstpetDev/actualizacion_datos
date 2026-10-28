@@ -37,8 +37,8 @@ No se introduce una decisión de arquitectura nueva.
 |---|---|---|---|
 | Guía de agentes | `AGENTS.md` | Regla breve de ejecución local y referencia | T-01 |
 | Guía de contribución | `CONTRIBUTING.md` | Comandos y organización por backend y frontend | T-02 |
-| Evidencia de proceso | `docs/specs/spec-0014/test-e2e.md` | Verificación de comandos de la guía | T-03 |
-| Control de tareas | `docs/specs/spec-0014/tasks.md` | Estado y evidencias | T-01 a T-03 |
+| Evidencia de proceso | `docs/specs/spec-0017/test-e2e.md` | Verificación de comandos de la guía | T-03 |
+| Control de tareas | `docs/specs/spec-0017/tasks.md` | Estado y evidencias | T-01 a T-03 |
 
 ## Datos y migración
 

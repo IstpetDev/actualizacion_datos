@@ -1,6 +1,6 @@
 # Ejecución y organización de pruebas para agentes — Spec
 
-**ID:** spec-0014\
+**ID:** spec-0017\
 **Versión:** 0.1\
 **Estado:** Aprobado (v0.1, 2026-10-28)\
 **Revisor funcional:** Solicitante\
@@ -109,5 +109,7 @@ No se capturan ni persisten datos nuevos. Los ejemplos de pruebas usan datos fic
 **Ajustes solicitados:** Ninguno
 
 **Corrección técnica posterior a la aprobación:** el ejemplo de filtro por clase se precisó con el nombre completo para evitar coincidencias parciales con otras clases `*CuentaBancariaTests`. No cambia el alcance ni los requisitos aprobados.
+
+**Renumeración:** esta iniciativa se aprobó como `spec-0014` en la conversación del 2026-10-28. Al actualizar la rama se comprobó que `develop` ya usaba ese número para la gestión de avisos de protección de datos. Se asignó el siguiente número libre, `spec-0017`, sin cambiar el alcance aprobado.
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
