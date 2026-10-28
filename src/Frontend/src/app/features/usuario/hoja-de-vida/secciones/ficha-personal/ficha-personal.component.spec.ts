@@ -2,9 +2,10 @@ import { casosFicha } from '../../servicios/casos-validacion.fixture';
 import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../../../api-client';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { signal } from '@angular/core';
+import { of, Subject, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { ArchivosClient, ElementoCatalogoDto } from '../../../../../api-client';
+import { ArchivosClient, ElementoCatalogoDto, FichaPersonalDto } from '../../../../../api-client';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
 import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.service';
 import { FichaPersonalComponent } from './ficha-personal.component';
@@ -18,7 +19,10 @@ describe('FichaPersonalComponent', () => {
     ficha: ReturnType<typeof vi.fn>;
     guardarFichaPersonal: Mock;
     obtenerMarcaParaItem: Mock;
+    mensajeExito: ReturnType<typeof signal<string>>;
+    error: ReturnType<typeof signal<string>>;
   };
+  let fichaActual: ReturnType<typeof signal<FichaPersonalDto | undefined>>;
   let catalogosMock: {
     obtener: Mock;
     paises: Mock;
@@ -28,6 +32,7 @@ describe('FichaPersonalComponent', () => {
     provincias: Mock;
     cantones: Mock;
     parroquias: Mock;
+    discapacidades: Mock;
   };
 
   const mockProvincias: ElementoCatalogoDto[] = [
@@ -67,12 +72,15 @@ describe('FichaPersonalComponent', () => {
   ];
 
   beforeEach(async () => {
+    fichaActual = signal<FichaPersonalDto | undefined>(undefined);
     stateMock = {
       puedeEditar: vi.fn().mockReturnValue(true),
       guardando: vi.fn().mockReturnValue(false),
-      ficha: vi.fn().mockReturnValue(null),
+      ficha: vi.fn(() => fichaActual()),
       guardarFichaPersonal: vi.fn().mockReturnValue(of({})),
       obtenerMarcaParaItem: vi.fn().mockReturnValue(undefined),
+      mensajeExito: signal(''),
+      error: signal(''),
     };
 
     catalogosMock = {
@@ -84,6 +92,7 @@ describe('FichaPersonalComponent', () => {
       provincias: vi.fn().mockReturnValue(of(mockProvincias)),
       cantones: vi.fn().mockReturnValue(of(mockCantones)),
       parroquias: vi.fn().mockReturnValue(of(mockParroquias)),
+      discapacidades: vi.fn().mockReturnValue(of([{ id: 301, nombre: 'Tipo ficticio' }])),
     };
 
     await TestBed.configureTestingModule({
@@ -106,6 +115,126 @@ describe('FichaPersonalComponent', () => {
 
   it('debe_crearse_correctamente', () => {
     expect(component).toBeTruthy();
+  });
+
+  function cargarFicha(): void {
+    catalogosMock.obtener.mockImplementation((tipo: string) =>
+      of(tipo === 'Parroquia' ? mockParroquias : tipo === 'Canton' ? mockCantones : []),
+    );
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      parroquiaResidenciaId: 170150,
+      discapacidadId: 301,
+      porcentajeDiscapacidad: 25,
+      numeroCarnetDiscapacidad: 'CARNE-FICTICIO',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+  }
+
+  it('rehidrata los tres selectores y conserva residencia y discapacidad al volver a guardar', async () => {
+    cargarFicha();
+    await fixture.whenStable();
+    expect(component.provinciaResidenciaId()).toBe(17);
+    expect(component.cantonResidenciaId()).toBe(1701);
+    expect(component.cantonesResidencia()).toEqual(mockCantones);
+    expect(component.parroquiasResidencia()).toEqual(mockParroquias);
+    const parroquia = fixture.nativeElement.querySelector(
+      '[name="parroquiaResidenciaId"]',
+    ) as HTMLSelectElement;
+    expect(parroquia.disabled).toBe(false);
+    expect(parroquia.selectedOptions[0].textContent).toContain('Iñaquito');
+    const discapacidad = fixture.nativeElement.querySelector(
+      '[name="discapacidadId"]',
+    ) as HTMLSelectElement;
+    expect(discapacidad.selectedOptions[0].textContent).toContain('Tipo ficticio');
+    expect(component.tieneCambios()).toBe(false);
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        parroquiaResidenciaId: 170150,
+        discapacidadId: 301,
+        porcentajeDiscapacidad: 25,
+        numeroCarnetDiscapacidad: 'CARNE-FICTICIO',
+      }),
+    );
+  });
+
+  it('restaura la cascada al descartar y la limpia al cargar una ficha sin residencia', () => {
+    cargarFicha();
+    component.onProvinciaResidenciaChange(18);
+    component.descartarCambios();
+    expect(component.provinciaResidenciaId()).toBe(17);
+    expect(component.cantonResidenciaId()).toBe(1701);
+    expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+    expect(component.provinciaResidenciaId()).toBeUndefined();
+    expect(component.cantonResidenciaId()).toBeUndefined();
+    expect(component.parroquiasResidencia()).toEqual([]);
+  });
+
+  it('cancela rehidrataciones anteriores cuando se cambia manualmente la residencia', () => {
+    cargarFicha();
+    const pendientes = new Subject<ElementoCatalogoDto[]>();
+    catalogosMock.obtener.mockReturnValue(pendientes);
+    component.rehidratarResidencia();
+    component.onProvinciaResidenciaChange(18);
+    pendientes.next(mockParroquias);
+    pendientes.complete();
+    expect(component.provinciaResidenciaId()).toBe(18);
+    expect(component.cantonResidenciaId()).toBeUndefined();
+    expect(component.modelo.parroquiaResidenciaId).toBeUndefined();
+  });
+
+  it('conserva la parroquia y permite reintentar si falla su catálogo', () => {
+    cargarFicha();
+    catalogosMock.obtener.mockReturnValue(throwError(() => new Error('sin conexión')));
+    component.rehidratarResidencia();
+    fixture.detectChanges();
+    expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+    expect(fixture.nativeElement.textContent).toContain('No se pudo cargar la ubicación guardada');
+    cargarFicha();
+    expect(component.errorResidencia()).toBe('');
+    expect(component.cantonResidenciaId()).toBe(1701);
+  });
+
+  it('limpia porcentaje y carné al quitar discapacidad', () => {
+    cargarFicha();
+    component.onDiscapacidadChange(undefined);
+    expect(component.modelo.discapacidadId).toBeUndefined();
+    expect(component.modelo.porcentajeDiscapacidad).toBeUndefined();
+    expect(component.modelo.numeroCarnetDiscapacidad).toBeUndefined();
+  });
+
+  it('muestra confirmación y errores accesibles y conserva cambios tras un guardado fallido', () => {
+    stateMock.guardarFichaPersonal.mockImplementation(() => {
+      stateMock.mensajeExito.set('Ficha personal guardada exitosamente.');
+      return of({});
+    });
+    component.guardarFicha();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain(
+      'guardada exitosamente',
+    );
+    component.modelo.primerNombre = 'Ficticia';
+    stateMock.guardarFichaPersonal.mockImplementation(() => {
+      stateMock.mensajeExito.set('');
+      stateMock.error.set('No se pudo guardar la ficha personal.');
+      return throwError(() => new Error('fallo ficticio'));
+    });
+    component.guardarFicha();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain(
+      'No se pudo guardar',
+    );
+    expect(fixture.nativeElement.querySelector('[role="status"]')).toBeNull();
+    expect(component.tieneCambios()).toBe(true);
   });
 
   it('cascada_geografica_cambiar_provincia_carga_cantones', () => {

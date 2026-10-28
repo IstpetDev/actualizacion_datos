@@ -38,6 +38,7 @@ describe('HojaDeVidaComponent', () => {
     cargando: WritableSignal<boolean>;
     guardando: WritableSignal<boolean>;
     error: WritableSignal<string>;
+    mensajeExito: WritableSignal<string>;
     hojaDeVida: WritableSignal<HojaDeVidaDto | null>;
     ficha: WritableSignal<FichaPersonalDto | null>;
     estadoEdicion: WritableSignal<EstadoEdicionDto | null>;
@@ -83,6 +84,7 @@ describe('HojaDeVidaComponent', () => {
       cargando: signal(false),
       guardando: signal(false),
       error: signal(''),
+      mensajeExito: signal(''),
       hojaDeVida: signal(mockHdv),
       ficha: signal(null),
       estadoEdicion: signal<EstadoEdicionDto | null>({

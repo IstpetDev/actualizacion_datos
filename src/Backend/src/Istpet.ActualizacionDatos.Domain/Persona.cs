@@ -97,6 +97,11 @@ public class Persona : EntidadInstitucional
         }
     }
 
+    public void ActualizarNombre(string? nombre)
+    {
+        Nombre = string.IsNullOrWhiteSpace(nombre) ? null : nombre.Trim();
+    }
+
     public void AsignarTipoFuncionario(Guid? tipoFuncionarioId)
     {
         TipoFuncionarioId = tipoFuncionarioId;

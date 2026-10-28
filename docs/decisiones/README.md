@@ -68,3 +68,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0034](ADR-0034-exencion-superadmin-aviso-proteccion-datos.md) | Exención del aviso institucional de protección de datos para superadmin | Vigente |
 | [ADR-0035](ADR-0035-exencion-automatica-y-justificacion-capacitaciones-obligatorias.md) | Exención automática y justificación de nuevo ingreso en capacitaciones obligatorias | Vigente |
 | [ADR-0036](ADR-0036-gestion-politicas-proteccion-datos-superadmin.md) | Gestión y publicación de políticas y avisos de protección de datos en panel superadmin | Vigente |
+| [ADR-0037](ADR-0037-sincronizacion-nombre-desde-ficha.md) | Sincronización del nombre desde la ficha personal | Vigente por pedido explícito #125 |

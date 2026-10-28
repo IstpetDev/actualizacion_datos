@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
   CapacitacionesObligatoriasClient,
@@ -111,6 +111,17 @@ describe('HojaDeVidaStateService', () => {
     });
 
     service = TestBed.inject(HojaDeVidaStateService);
+  });
+
+  it('retira el éxito anterior al fallar otro guardado de ficha y libera el botón', () => {
+    service.mensajeExito.set('Ficha personal guardada exitosamente.');
+    hdvClientMock.guardarMiFichaPersonal.mockReturnValue(
+      throwError(() => ({ mensaje: 'Fallo ficticio' })),
+    );
+    service.guardarFichaPersonal({}).subscribe({ error: () => undefined });
+    expect(service.mensajeExito()).toBe('');
+    expect(service.error()).toBe('Fallo ficticio');
+    expect(service.guardando()).toBe(false);
   });
 
   it('debe_crearse_correctamente', () => {

@@ -4,6 +4,20 @@ using Istpet.ActualizacionDatos.Domain;
 
 public class PersonaTests
 {
+    [Theory]
+    [InlineData("  Ficticia Persona  ", "Ficticia Persona")]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    [InlineData(null, null)]
+    public void Actualizar_nombre_reemplaza_el_anterior_y_admite_borrador_vacio(string? nombre, string? esperado)
+    {
+        var persona = new Persona(Guid.NewGuid(), InstitucionId.Nuevo(), "0000000000", nombre: "Nombre ficticio anterior");
+
+        persona.ActualizarNombre(nombre);
+
+        Assert.Equal(esperado, persona.Nombre);
+    }
+
     [Fact]
     public void Crear_persona_con_datos_validos_inicializa_en_borrador_y_debe_cambiar_clave()
     {

@@ -163,6 +163,12 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         ficha.AsociarFoto(request.FotoArchivoId);
 
+        // ADR-0037: el nombre confirmado reemplaza al original de la nómina.
+        persona.ActualizarNombre(string.Join(" ", new[]
+        {
+            ficha.PrimerApellido, ficha.SegundoApellido, ficha.PrimerNombre, ficha.SegundoNombre
+        }.Where(parte => !string.IsNullOrWhiteSpace(parte))));
+
         await _context.SaveChangesAsync(ct);
         return MapearFicha(ficha);
     }
