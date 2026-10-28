@@ -584,6 +584,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               [requerido]="false"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.fotoArchivoId"
+              [claveDestino]="'foto:perfil'"
               (archivoIdChange)="onFotoSubida($event)"
               (archivoEliminado)="onFotoEliminada()"
             ></app-uploader-respaldo>

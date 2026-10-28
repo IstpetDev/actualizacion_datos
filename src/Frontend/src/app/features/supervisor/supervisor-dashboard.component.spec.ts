@@ -300,4 +300,32 @@ describe('SupervisorDashboardComponent', () => {
     });
     expect(component.descargandoPdf()).toBe(false);
   });
+
+  it('el_expediente_muestra_metadatos_completos_de_archivos_adjuntos_incluyendo_fecha_y_area', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    const archivoEl = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="archivo-22222222-2222-2222-2222-222222222222"]',
+    );
+    expect(archivoEl).not.toBeNull();
+    const texto = archivoEl?.textContent || '';
+    expect(texto).toContain('cedula.pdf');
+    expect(texto).toContain('cedula_frontal');
+    expect(texto).toContain('application/pdf');
+    expect(texto).toContain('Subido:');
+  });
+
+  it('descargarArchivo_soporta_FileResponse_sin_danar_bytes', () => {
+    archivosClientMock.descargarArchivo.mockReturnValue(
+      of({ data: new Blob(['test-binary']), fileName: 'cedula.pdf' }),
+    );
+
+    component.descargarArchivo('22222222-2222-2222-2222-222222222222', 'cedula.pdf');
+
+    expect(archivosClientMock.descargarArchivo).toHaveBeenCalledWith(
+      '22222222-2222-2222-2222-222222222222',
+    );
+    expect(component.error()).toBeNull();
+  });
 });
