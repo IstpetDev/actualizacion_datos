@@ -83,7 +83,7 @@ Resultado esperado:
 | RF-PLA-009 | Dada una sección con varios ítems (formación, experiencia, cursos, referencias), cuando se genera el documento, el sistema incluye **todos** los ítems de la persona, en un orden definido por la plantilla, y reparte las páginas necesarias sin partir un ítem entre dos páginas. | Sin priorizar | Formato de referencia |
 | RF-PLA-010 | Dada una sección sin datos, cuando se genera el documento, el sistema omite esa sección (comportamiento por defecto de la plantilla) y no deja títulos vacíos ni etiquetas sin valor. | Sin priorizar | Propuesta (PD-PLA-11) |
 | RF-PLA-011 | Dada una plantilla con un bloque de compromiso, cuando se genera el documento, el sistema escribe el texto configurado por la institución con el nombre y el documento de la persona, y deja el espacio de firma en blanco. | Sin priorizar | Formato de referencia; PD-PLA-04 |
-| RF-PLA-012 | Dada una persona con su hoja de vida en borrador o enviada, cuando pide la vista previa de su propio documento, el sistema lo genera marcado como «Vista previa, no oficial» en cada página; con la hoja aprobada, sin esa marca. | Sin priorizar | Propuesta (PD-PLA-10) |
+| RF-PLA-012 | Dada una persona con rol `usuario`, el sistema restringe la generación y descarga del PDF de su expediente; la descarga queda reservada para roles autorizados (`admin`, `supervisor`, `superadmin`). La interfaz oculta el botón de vista previa y el endpoint devuelve `403 Forbidden` ante solicitudes del usuario final. | Sin priorizar | Actualizado por Issue #145 (reemplaza PD-PLA-10) |
 | RF-PLA-013 | Dado un `admin` que exporta, cuando la persona está aprobada, el `.zip` incluye su documento PDF junto con sus respaldos, además de lo que ya incluye (RF-HDV-016). | Sin priorizar | RF-HDV-016 |
 | RF-PLA-014 | Dado cualquier rol, cuando genera o consulta documentos, plantillas elegidas o marca, el sistema opera solo sobre su institución aunque conozca identificadores de otra. | Sin priorizar | ADR-0004; RF-HDV-015 |
 | RF-PLA-015 | Dado un `usuario`, `supervisor` o `admin` sin permiso, cuando intenta crear, publicar o editar una plantilla global, el sistema lo rechaza; solo el `superadmin` las administra. Solo el `admin` de la institución cambia su plantilla elegida y su marca. | Sin priorizar | Roles de spec-0001; PD-PLA-05 |
@@ -118,13 +118,12 @@ Resultado esperado:
 - **Resultado:** PDF descargado.
 - **Variantes y errores:** persona sin foto (RF-PLA-008); sección sin datos omitida (RF-PLA-010); un nombre con `<script>` se ve como texto (RF-PLA-017); persona de otra institución se rechaza (RF-PLA-014).
 
-### Escenario 4 — Vista previa de la persona
+### Escenario 4 — Restricción de vista previa para el usuario final (Actualizado por Issue #145)
 
-- **Actor y precondición:** `usuario` con hoja en borrador.
-- **Disparador:** pide ver su documento.
-- **Secuencia:** el sistema lo genera con la marca de agua «Vista previa, no oficial» (RF-PLA-012).
-- **Resultado:** ve cómo quedaría; no queda en la auditoría de terceros ni se exporta.
-- **Variantes y errores:** con la hoja aprobada la marca no aparece.
+- **Actor y precondición:** `usuario` en su hoja de vida.
+- **Disparador:** visualiza la cabecera del expediente o intenta invocar la descarga de PDF.
+- **Secuencia:** el botón «Descargar vista previa (PDF)» no se muestra en la interfaz. Si se solicita directamente `GET /api/mis-datos/documento-hoja-de-vida`, el sistema rechaza la petición con `403 Forbidden` (RF-PLA-012).
+- **Resultado:** el usuario final no accede a la generación ni descarga del documento PDF. La generación y descarga quedan reservadas para roles autorizados (`admin`, `supervisor`, `superadmin`).
 
 ### Escenario 5 — Exportación masiva
 
@@ -185,7 +184,7 @@ Resultado esperado:
 - [ ] El PDF de una persona sale con la plantilla y la marca de su institución, con el perfil generado y sin texto fijo (RF-PLA-006, 007; escenario 3).
 - [ ] Persona sin foto, sección vacía y listas largas no rompen el documento ni parten un ítem entre páginas (RF-PLA-008, 009, 010).
 - [ ] Datos con apariencia de código se ven literales y nada externo se carga (RF-PLA-017).
-- [ ] La vista previa lleva la marca «no oficial» mientras la hoja no esté aprobada (RF-PLA-012; escenario 4).
+- [x] La vista previa y descarga del PDF está restringida para el rol usuario final (botón oculto en UI y 403 Forbidden en API), quedando la descarga disponible solo para roles autorizados (RF-PLA-012; escenario 4; issue #145).
 - [ ] El `.zip` incluye el PDF de cada persona aprobada y de ninguna otra (RF-PLA-013; escenario 5).
 - [ ] Una versión nueva no cambia el documento de una institución hasta que su `admin` la acepta (RF-PLA-019; escenario 6).
 - [ ] La auditoría registra generación, exportación y cambios sin datos personales (RF-PLA-016).
@@ -205,7 +204,7 @@ Resultado esperado:
 | PD-PLA-07 | **Anexos.** El formato separa los certificados con una portada «Anexos generales». **Propuesta:** el documento lleva la portada de anexos y los certificados siguen en el `.zip`, ordenados por sección; unirlos en un solo PDF queda para otra fase. | RF-PLA-013 | Revisor funcional |
 | PD-PLA-08 | **Fecha y número de registro** del formato: la persona puede tener varios títulos. **Propuesta:** el del título de mayor nivel, con la fecha de su registro. | Mapa de datos | Revisor funcional |
 | PD-PLA-09 | **Generación de PDF.** El backend no tiene ninguna librería de PDF. Se formula ADR-0033. **Propuesta del desarrollador:** QuestPDF bajo versión fija y licencia Community; ejecución nativa rápida en milisegundos sin navegador headless externo. | Plan y tareas | **Resuelto (2026-10-27): ADR-0033 Vigente** (QuestPDF 2026.9.1, Community). |
-| PD-PLA-10 | **Vista previa de la persona.** **Propuesta:** siempre disponible, con marca de agua mientras no esté aprobada, y sin dejar copia guardada. | RF-PLA-012 | Revisor funcional |
+| PD-PLA-10 | **Vista previa de la persona.** **Propuesta:** siempre disponible, con marca de agua mientras no esté aprobada, y sin dejar copia guardada. | RF-PLA-012 | **Reemplazado (2026-10-28, Issue #145):** Se restringe la generación y descarga del PDF al rol usuario final; reservado para roles autorizados (`admin`, `supervisor`, `superadmin`). |
 | PD-PLA-11 | **Sección sin datos.** **Propuesta:** se omite por completo; la plantilla puede indicar lo contrario. | RF-PLA-010 | Revisor funcional |
 | PD-PLA-12 | **Dónde viven los recursos de la plantilla inicial.** Las imágenes del formato de referencia incluyen menores y marca de una institución. **Propuesta:** no se guardan en el repositorio; la plantilla inicial usa imágenes neutras y la institución sube las suyas. | Pruebas y repositorio | Revisor funcional |
 | PD-PLA-13 | **Institución sin plantilla elegida.** **Propuesta:** se usa la predeterminada con marca neutra. Alternativa: bloquear hasta que el `admin` elija. | RF-PLA-018 | Revisor funcional |
@@ -226,3 +225,5 @@ Resultado esperado:
 **Decisiones posteriores a la aprobación (2026-10-27, quien desarrolla):** ADR-0032 y ADR-0033 pasan a Vigente (PD-PLA-01 y 09); métrica de PD-PLA-16 fijada. No cambian requisitos.
 
 Solo una aprobación explícita de esta versión habilita la creación de `plan.md`, `tasks.md` y `test-e2e.md`.
+
+**Modificación aprobada (2026-10-28, Issue #145):** Se aprueba el cambio sobre RF-PLA-012 y PD-PLA-10 para restringir la vista previa y descarga del PDF de la hoja de vida para el usuario final, reservando dicha función a roles autorizados (Supervisor, Admin, Superadmin) y aplicando rechazo 403 Forbidden en API y ocultamiento del botón en UI.
