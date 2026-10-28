@@ -90,7 +90,10 @@ public sealed class FabricaPruebas : WebApplicationFactory<Program>
             return new(true, null, fecha);
         }
 
-        public Task PublicarAsync(PublicarAvisoRequest solicitud, CancellationToken ct = default) =>
+        public Task<AvisoInstitucionalDto> PublicarAsync(PublicarAvisoRequest solicitud, string? actor = null, CancellationToken ct = default) =>
+            throw new NotSupportedException("Esta fábrica no verifica publicación ni aceptación versionada.");
+
+        public Task<List<AvisoInstitucionalDto>> ListarHistorialAsync(InstitucionId institucionId, CancellationToken ct = default) =>
             throw new NotSupportedException("Esta fábrica no verifica publicación ni aceptación versionada.");
     }
 }

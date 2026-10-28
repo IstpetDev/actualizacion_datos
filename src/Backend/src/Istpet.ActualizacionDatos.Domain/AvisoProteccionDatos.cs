@@ -46,6 +46,20 @@ public sealed class AvisoProteccionDatos : EntidadInstitucional
         ? 1 << ((int)rol - 1)
         : throw new ArgumentException("Rol destinatario inválido.");
 
+    public static RolUsuario[] DesempaquetarRoles(int mascara)
+    {
+        var roles = new List<RolUsuario>();
+        foreach (RolUsuario rol in Enum.GetValues<RolUsuario>())
+        {
+            if (rol == RolUsuario.Superadmin) continue;
+            if ((mascara & MascaraRol(rol)) != 0)
+            {
+                roles.Add(rol);
+            }
+        }
+        return [.. roles];
+    }
+
     public bool AplicaA(RolUsuario rol) => (RolesDestinatarios & MascaraRol(rol)) != 0;
 
     public void FinalizarVigencia(DateTime fechaUtc)

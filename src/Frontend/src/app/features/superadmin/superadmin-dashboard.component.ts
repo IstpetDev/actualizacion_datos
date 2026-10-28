@@ -10,13 +10,19 @@ import {
 import { AuthService } from '../../core/auth';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { PlantillasHojaDeVidaComponent } from './plantillas-hoja-de-vida.component';
+import { PoliticasProteccionDatosComponent } from './politicas-proteccion-datos.component';
 
-type TabSuperadmin = 'instituciones' | 'plantillas';
+type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
 
 @Component({
   selector: 'app-superadmin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, PlantillasHojaDeVidaComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PlantillasHojaDeVidaComponent,
+    PoliticasProteccionDatosComponent,
+  ],
   template: `
     <section class="dashboard-section" data-testid="superadmin-panel">
       <header class="section-header">
@@ -47,6 +53,15 @@ type TabSuperadmin = 'instituciones' | 'plantillas';
           data-testid="tab-plantillas"
         >
           Plantillas Globales
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="tabActiva() === 'politicas-datos'"
+          (click)="tabActiva.set('politicas-datos')"
+          data-testid="tab-politicas-datos"
+        >
+          Políticas de Protección de Datos
         </button>
       </nav>
 
@@ -144,6 +159,7 @@ type TabSuperadmin = 'instituciones' | 'plantillas';
                     <th>Nombre Institucional</th>
                     <th>ID Identificador</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,10 +178,20 @@ type TabSuperadmin = 'instituciones' | 'plantillas';
                           <span class="badge badge-secondary">Inactiva</span>
                         }
                       </td>
+                      <td>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-secondary"
+                          (click)="irAPoliticas(inst.id)"
+                          [attr.data-testid]="'btn-politicas-inst-' + inst.id"
+                        >
+                          Políticas
+                        </button>
+                      </td>
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="3" class="text-center empty-state">
+                      <td colspan="4" class="text-center empty-state">
                         No hay instituciones registradas en el sistema.
                       </td>
                     </tr>
@@ -175,8 +201,12 @@ type TabSuperadmin = 'instituciones' | 'plantillas';
             </div>
           </div>
         </div>
-      } @else {
+      } @else if (tabActiva() === 'plantillas') {
         <app-plantillas-hoja-de-vida />
+      } @else {
+        <app-politicas-proteccion-datos
+          [institucionInicialId]="institucionSeleccionadaParaPoliticas()"
+        />
       }
     </section>
   `,
@@ -366,6 +396,7 @@ export class SuperadminDashboardComponent implements OnInit {
 
   readonly tabActiva = signal<TabSuperadmin>('instituciones');
   readonly instituciones = signal<InstitucionDto[]>([]);
+  readonly institucionSeleccionadaParaPoliticas = signal<string | undefined>(undefined);
   readonly guardando = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
@@ -374,6 +405,11 @@ export class SuperadminDashboardComponent implements OnInit {
   adminDoc = '';
   adminNom = '';
   adminCor = '';
+
+  irAPoliticas(institucionId: string): void {
+    this.institucionSeleccionadaParaPoliticas.set(institucionId);
+    this.tabActiva.set('politicas-datos');
+  }
 
   ngOnInit(): void {
     this.cargarInstituciones();
