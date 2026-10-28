@@ -21,6 +21,7 @@ export class AuthService {
     const sesion: SesionUsuario = {
       id: datos.id,
       institucionId: datos.institucionId,
+      institucionNombre: datos.institucionNombre,
       cedula: datos.documento,
       nombre: datos.nombre ?? 'Usuario',
       rol,
@@ -164,6 +165,8 @@ export class AuthService {
       typeof candidato['cedula'] === 'string' &&
       typeof candidato['nombre'] === 'string' &&
       typeof candidato['institucionId'] === 'string' &&
+      (candidato['institucionNombre'] === undefined ||
+        typeof candidato['institucionNombre'] === 'string') &&
       (candidato['token'] === undefined || typeof candidato['token'] === 'string') &&
       esRolValido(candidato['rol'])
     );

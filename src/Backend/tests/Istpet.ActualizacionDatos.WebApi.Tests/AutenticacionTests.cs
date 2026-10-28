@@ -225,4 +225,26 @@ public sealed class AutenticacionTests : IDisposable
         var persona = await db.Personas.IgnoreQueryFilters().FirstAsync(p => p.Documento == "1700000066");
         Assert.True(persona.EstaBloqueado(DateTime.UtcNow));
     }
+
+    [Fact]
+    public async Task Login_y_sesion_incluyen_nombre_de_la_institucion_activa()
+    {
+        await SembrarUsuarioAsync("1700000077", accesoHabilitado: true);
+
+        // 1. Iniciar sesión
+        var loginResponse = await _cliente.PostAsJsonAsync("/api/auth/login", new LoginRequest("1700000077", "1700000077"));
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var loginDto = await loginResponse.Content.ReadFromJsonAsync<ResultadoLoginDto>();
+        Assert.NotNull(loginDto);
+        Assert.Equal("Instituto Tecnológico de Prueba", loginDto.InstitucionNombre);
+
+        // 2. Consultar sesión actual
+        var sesionResponse = await _cliente.GetAsync("/api/auth/sesion");
+        Assert.Equal(HttpStatusCode.OK, sesionResponse.StatusCode);
+
+        var sesionDto = await sesionResponse.Content.ReadFromJsonAsync<SesionUsuarioDto>();
+        Assert.NotNull(sesionDto);
+        Assert.Equal("Instituto Tecnológico de Prueba", sesionDto.InstitucionNombre);
+    }
 }

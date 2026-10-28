@@ -2,7 +2,13 @@
   <header class="app-header" role="banner">
     <div class="header-brand">
       <span class="brand-title">Actualización de Datos</span>
-      <span class="brand-badge">Institucional</span>
+      <span
+        class="brand-badge"
+        [title]="authService.sesion()?.institucionNombre || 'Institucional'"
+        data-testid="badge-institucion"
+      >
+        {{ authService.sesion()?.institucionNombre || 'Institucional' }}
+      </span>
     </div>
 
     <nav class="header-nav" role="navigation" aria-label="Navegación principal">
