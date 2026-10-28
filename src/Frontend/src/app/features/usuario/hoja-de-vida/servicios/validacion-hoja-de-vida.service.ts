@@ -138,12 +138,33 @@ export function fechaPolitica(fecha: Date | undefined): string {
   return fecha ? new Date(fecha).toISOString().slice(0, 10) : '';
 }
 
+export function normalizarCodigoSeccion(clave: string): string {
+  switch (clave) {
+    case 'ficha-personal':
+      return 'ficha';
+    case 'formacion-academica':
+      return 'formacion';
+    case 'experiencia-laboral':
+      return 'experiencia';
+    case 'documentos-personales':
+      return 'documentos';
+    default:
+      return clave;
+  }
+}
+
+export function estaSeccionAbierta(clave: string, seccionesAbiertas: string[]): boolean {
+  const normalizada = normalizarCodigoSeccion(clave);
+  return seccionesAbiertas.includes(normalizada) || seccionesAbiertas.includes(clave);
+}
+
 @Injectable({ providedIn: 'root' })
 export class ValidacionHojaDeVidaService {
   private readonly cliente = inject(ConfiguracionClient);
   readonly politica = signal<PoliticaValidacionDto | null>(null);
   readonly errorCarga = signal('');
   readonly erroresServidor = signal<ErroresCampos>({});
+  readonly seccionesAbiertas = signal<string[] | null>(null);
   private datosRechazados = '';
 
   private readonly formularios = new Map<string, () => boolean>();
@@ -151,8 +172,21 @@ export class ValidacionHojaDeVidaService {
     this.formularios.set(clave, invalido);
     destruccion.onDestroy(() => this.formularios.delete(clave));
   }
-  hayErrores(): boolean {
-    return !this.politica() || [...this.formularios.values()].some((invalido) => invalido());
+
+  actualizarSeccionesAbiertas(secciones: string[] | null | undefined): void {
+    this.seccionesAbiertas.set(secciones ?? null);
+  }
+
+  hayErrores(seccionesAbiertas?: string[]): boolean {
+    if (!this.politica()) return true;
+    const abiertas = seccionesAbiertas ?? this.seccionesAbiertas();
+    for (const [clave, invalido] of this.formularios.entries()) {
+      if (abiertas && !estaSeccionAbierta(clave, abiertas)) {
+        continue;
+      }
+      if (invalido()) return true;
+    }
+    return false;
   }
   constructor() {
     this.cargar();

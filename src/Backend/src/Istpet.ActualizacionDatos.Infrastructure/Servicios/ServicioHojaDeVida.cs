@@ -169,6 +169,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             ficha.PrimerApellido, ficha.SegundoApellido, ficha.PrimerNombre, ficha.SegundoNombre
         }.Where(parte => !string.IsNullOrWhiteSpace(parte))));
 
+        if (string.IsNullOrWhiteSpace(persona.Correo) && !string.IsNullOrWhiteSpace(ficha.CorreoInstitucional))
+        {
+            persona.ActualizarCorreo(ficha.CorreoInstitucional);
+        }
+
         await _context.SaveChangesAsync(ct);
         return MapearFicha(ficha);
     }
