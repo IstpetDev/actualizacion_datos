@@ -879,7 +879,9 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     fotoArchivoId: undefined,
   };
 
-  readonly marcaFicha = signal(this.state.obtenerMarcaParaItem('ficha', 'datos_personales'));
+  readonly marcaFicha = computed(() =>
+    this.state.obtenerMarcaParaItem('ficha', 'datos_personales'),
+  );
   readonly fotoGuardadaId = computed(() => this.state.ficha()?.fotoArchivoId);
 
   private snapshotModelo = '';

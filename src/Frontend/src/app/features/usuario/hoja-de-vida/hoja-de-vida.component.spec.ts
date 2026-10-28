@@ -1,3 +1,4 @@
+import { observacionesFicticias } from '../../revision-compartida/observaciones-revision.fixture';
 import politicaPrueba from './servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../api-client';
 import { provideHttpClient } from '@angular/common/http';
@@ -26,12 +27,17 @@ import {
 import { CatalogosCacheService } from './servicios/catalogos-cache.service';
 import { SeccionConCambios } from './servicios/seccion-con-cambios';
 import { HojaDeVidaStateService } from './servicios/hoja-de-vida-state.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { HojaDeVidaComponent } from './hoja-de-vida.component';
 
 describe('HojaDeVidaComponent', () => {
   let component: HojaDeVidaComponent;
   let fixture: ComponentFixture<HojaDeVidaComponent>;
   let httpTestingController: HttpTestingController;
+  let authServiceMock: {
+    tieneRol: Mock;
+    rolActual: WritableSignal<string>;
+  };
 
   let stateMock: {
     cargarTodo: Mock;
@@ -46,6 +52,7 @@ describe('HojaDeVidaComponent', () => {
     esDevuelto: WritableSignal<boolean>;
     observacionGeneralDevolucion: WritableSignal<string | undefined>;
     marcasObservacion: WritableSignal<MarcaObservacionDto[]>;
+    observaciones: WritableSignal<import('../../../api-client').ObservacionDto[]>;
     faltantes: WritableSignal<FaltanteEnvioDto[]>;
     titulos: WritableSignal<TituloAcademicoDto[]>;
     titulosEnCurso: WritableSignal<TituloEnCursoDto[]>;
@@ -98,6 +105,7 @@ describe('HojaDeVidaComponent', () => {
       esDevuelto: signal(false),
       observacionGeneralDevolucion: signal(undefined),
       marcasObservacion: signal([]),
+      observaciones: signal([]),
       faltantes: signal([]),
       titulos: signal([]),
       titulosEnCurso: signal([]),
@@ -115,6 +123,16 @@ describe('HojaDeVidaComponent', () => {
       registrarSeccion: vi.fn(),
       desregistrarSeccion: vi.fn(),
       actualizarEstadoCambios: vi.fn(),
+    };
+
+    const rolActualSignal = signal('usuario');
+    authServiceMock = {
+      tieneRol: vi.fn().mockImplementation((roles: string | string[]) => {
+        const rol = rolActualSignal();
+        const lista = Array.isArray(roles) ? roles : [roles];
+        return lista.includes(rol);
+      }),
+      rolActual: rolActualSignal,
     };
 
     const catalogosCacheMock = {
@@ -142,6 +160,7 @@ describe('HojaDeVidaComponent', () => {
           provide: ConfiguracionClient,
           useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
         },
+        { provide: AuthService, useValue: authServiceMock },
         { provide: HojaDeVidaStateService, useValue: stateMock },
         { provide: CatalogosCacheService, useValue: catalogosCacheMock },
         {
@@ -160,6 +179,18 @@ describe('HojaDeVidaComponent', () => {
     fixture = TestBed.createComponent(HojaDeVidaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('mantiene el historial visible al pasar de Devuelto a Enviado', () => {
+    stateMock.observaciones.set(observacionesFicticias);
+    stateMock.esDevuelto.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Indicación general ficticia 2');
+    stateMock.esDevuelto.set(false);
+    stateMock.hojaDeVida.set({ ...mockHdv, estadoActualizacion: 'Enviado', puedeEditar: false });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Corregir ficha ficticia 1');
+    expect(fixture.nativeElement.textContent).toContain('Estado del expediente: Enviado');
   });
 
   it('debe_crearse_y_llamar_a_cargarTodo', () => {
@@ -452,7 +483,33 @@ describe('HojaDeVidaComponent', () => {
     expect(punto?.textContent).toBe('•');
   });
 
-  it('permite_descargar_vista_previa_del_documento_pdf', () => {
+  it('usuario_final_no_ve_el_boton_de_descarga_vista_previa_pdf_y_no_puede_descargar', () => {
+    fixture.detectChanges();
+
+    expect(component.puedeDescargarPdf()).toBe(false);
+
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="btn-descargar-vista-previa-pdf"]',
+    );
+    expect(btn).toBeNull();
+
+    component.descargarVistaPreviaPdf();
+
+    expect(component.errorDescargaPdf()).toContain('No tiene permisos');
+    httpTestingController.expectNone('/api/mis-datos/documento-hoja-de-vida');
+  });
+
+  it('supervisor_o_admin_ve_el_boton_y_puede_descargar_vista_previa_pdf', () => {
+    authServiceMock.rolActual.set('supervisor');
+    fixture.detectChanges();
+
+    expect(component.puedeDescargarPdf()).toBe(true);
+
+    const btn = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="btn-descargar-vista-previa-pdf"]',
+    );
+    expect(btn).not.toBeNull();
+
     component.descargarVistaPreviaPdf();
     expect(component.descargandoPdf()).toBe(true);
 

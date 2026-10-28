@@ -49,7 +49,7 @@ La spec se entrega en **cuatro PR** a `develop`, cada uno con sus pruebas y la C
 - `superadmin`: `GET/POST /api/plantillas-hoja-de-vida`, `PUT /api/plantillas-hoja-de-vida/{id}`, `POST /api/plantillas-hoja-de-vida/{id}/publicar`, `POST /api/plantillas-hoja-de-vida/{id}/predeterminada`.
 - `admin`: `GET/PUT /api/configuracion/documento-hoja-de-vida` (marca y versión elegida; indica si hay una versión nueva sin aceptar o si no hay configuración propia).
 - `admin`, `supervisor`: `GET /api/personas/{id}/documento-hoja-de-vida` (PDF).
-- `usuario`: `GET /api/mis-datos/documento-hoja-de-vida` (vista previa).
+- `admin`, `supervisor`, `superadmin`: `GET /api/mis-datos/documento-hoja-de-vida` (restringido para rol `usuario` con 403 Forbidden según Issue #145).
 
 **Errores.** Campo fuera del catálogo: 400 con el código rechazado. Color inválido: 400. Persona de otra institución: 404. Sin rol: 403. Fallo de generación: 500 uniforme (ADR-0026) sin datos personales en el log.
 

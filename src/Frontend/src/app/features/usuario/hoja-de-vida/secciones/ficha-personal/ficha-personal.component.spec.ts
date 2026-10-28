@@ -123,6 +123,28 @@ describe('FichaPersonalComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('muestra la observación de ficha cuando llega después de crear el formulario', () => {
+    const marca = signal<import('../../../../../api-client').MarcaObservacionDto | undefined>(
+      undefined,
+    );
+    stateMock.obtenerMarcaParaItem.mockImplementation(() => marca());
+    fixture.destroy();
+    fixture = TestBed.createComponent(FichaPersonalComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="marca-observacion"]')).toBeNull();
+    marca.set({
+      id: 'marca-ficticia',
+      tipoDestino: 'campo',
+      claveDestino: 'datos_personales',
+      texto: 'Corregir ficha ficticia',
+    });
+    fixture.detectChanges();
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="marca-observacion"]').textContent,
+    ).toContain('Corregir ficha ficticia');
+  });
+
   function cargarFicha(): void {
     catalogosMock.obtener.mockImplementation((tipo: string) =>
       of(tipo === 'Parroquia' ? mockParroquias : tipo === 'Canton' ? mockCantones : []),
@@ -791,4 +813,4 @@ describe('FichaPersonalComponent', () => {
       expect(component.errorParroquia()).toBe('');
     });
   });
-  });
+});
