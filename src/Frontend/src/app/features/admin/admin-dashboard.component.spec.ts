@@ -16,6 +16,8 @@ import {
   PlantillasHojaDeVidaClient,
   RevisionClient,
   ResultadoCargaPersonasDto,
+  PersonalInstitucionalClient,
+  SupervisoresClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { AdminDashboardComponent } from './admin-dashboard.component';
@@ -127,6 +129,8 @@ describe('AdminDashboardComponent', () => {
         },
         { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: PersonalInstitucionalClient, useValue: {} },
+        { provide: SupervisoresClient, useValue: { listarSupervisores: () => of([]) } },
         {
           provide: ConfiguracionDocumentoClient,
           useValue: {
@@ -159,6 +163,16 @@ describe('AdminDashboardComponent', () => {
 
   afterEach(() => {
     httpMock.verify();
+  });
+
+  it('abre la sección de supervisores desde la navegación del panel', () => {
+    (
+      fixture.nativeElement.querySelector('[data-testid="tab-supervisores"]') as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    expect(component.tabActiva()).toBe('supervisores');
+    expect(fixture.nativeElement.querySelector('app-personal-institucional')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#rol-personal')).toBeNull();
   });
 
   it('debe_crearse_y_cargar_campana_activa_y_personas_al_iniciar', () => {
