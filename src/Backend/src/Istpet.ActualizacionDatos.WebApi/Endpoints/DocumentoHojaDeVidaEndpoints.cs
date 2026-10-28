@@ -29,7 +29,7 @@ internal static class DocumentoHojaDeVidaEndpoints
                 var descarga = await servicio.ObtenerMiDocumentoAsync(ct);
                 return Results.File(descarga.Contenido, descarga.TipoContenido, descarga.NombreOriginal);
             }))
-            .RequireAuthorization()
+            .RequireAuthorization(politica => politica.RequireRole(nameof(RolUsuario.Admin), nameof(RolUsuario.Supervisor), nameof(RolUsuario.Superadmin)))
             .WithTags("MisDatos")
             .WithName("DescargarMiDocumentoHojaDeVida")
             .Produces(StatusCodes.Status200OK, contentType: "application/pdf")

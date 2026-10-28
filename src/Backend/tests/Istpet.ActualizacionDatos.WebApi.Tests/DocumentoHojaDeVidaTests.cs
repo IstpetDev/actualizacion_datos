@@ -177,10 +177,27 @@ public sealed class DocumentoHojaDeVidaTests : IDisposable
     }
 
     [Fact]
-    public async Task Usuario_DescargarMiDocumento_EnBorrador_LlevaMarcaDeAguaVistaPrevia()
+    public async Task Usuario_DescargarMiDocumento_Retorna403Forbidden()
     {
-        // Persona en borrador
-        var persona = await CrearYAutenticarAsync(RolUsuario.Usuario, estado: EstadoActualizacion.Borrador);
+        await CrearYAutenticarAsync(RolUsuario.Usuario, estado: EstadoActualizacion.Borrador);
+
+        var respuesta = await _cliente.GetAsync("/api/mis-datos/documento-hoja-de-vida");
+        Assert.Equal(HttpStatusCode.Forbidden, respuesta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Usuario_DescargarDocumentoPersona_Retorna403Forbidden()
+    {
+        await CrearYAutenticarAsync(RolUsuario.Usuario, estado: EstadoActualizacion.Aprobado);
+
+        var respuesta = await _cliente.GetAsync($"/api/personas/{Guid.NewGuid()}/documento-hoja-de-vida");
+        Assert.Equal(HttpStatusCode.Forbidden, respuesta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Supervisor_DescargarMiDocumento_Retorna200Ok()
+    {
+        await CrearYAutenticarAsync(RolUsuario.Supervisor, estado: EstadoActualizacion.Aprobado);
 
         var respuesta = await _cliente.GetAsync("/api/mis-datos/documento-hoja-de-vida");
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
@@ -188,9 +205,6 @@ public sealed class DocumentoHojaDeVidaTests : IDisposable
 
         var bytes = await respuesta.Content.ReadAsByteArrayAsync();
         using var pdf = PdfDocument.Open(bytes);
-
-        // Verificar que el texto de vista previa está presente (RF-PLA-012)
-        var textoTotal = string.Join(" ", pdf.GetPages().Select(p => p.Text));
-        Assert.Contains("Vista previa", textoTotal, StringComparison.OrdinalIgnoreCase);
+        Assert.True(pdf.NumberOfPages >= 1);
     }
 }

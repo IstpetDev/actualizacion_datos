@@ -15,6 +15,7 @@ import { FichaPersonalComponent } from './secciones/ficha-personal/ficha-persona
 import { FormacionAcademicaComponent } from './secciones/formacion-academica/formacion-academica.component';
 import { ReferenciasComponent } from './secciones/referencias/referencias.component';
 import { HojaDeVidaStateService } from './servicios/hoja-de-vida-state.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { descargarBlob, extraerNombreArchivo } from '../../../core/util/descarga-archivo.util';
 import { mensajeError } from '../../../core/auth/mensaje-error';
 
@@ -72,15 +73,17 @@ export type TabSeccionHojaVida =
 
         <!-- Botón de Envío Superior (siempre visible para comodidad) -->
         <div class="header-acciones">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            (click)="descargarVistaPreviaPdf()"
-            [disabled]="descargandoPdf() || cargando()"
-            data-testid="btn-descargar-vista-previa-pdf"
-          >
-            {{ descargandoPdf() ? 'Generando PDF...' : 'Descargar vista previa (PDF)' }}
-          </button>
+          @if (puedeDescargarPdf()) {
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="descargarVistaPreviaPdf()"
+              [disabled]="descargandoPdf() || cargando()"
+              data-testid="btn-descargar-vista-previa-pdf"
+            >
+              {{ descargandoPdf() ? 'Generando PDF...' : 'Descargar vista previa (PDF)' }}
+            </button>
+          }
           @if (puedeEditar()) {
             <button
               type="button"
@@ -533,8 +536,13 @@ export type TabSeccionHojaVida =
 export class HojaDeVidaComponent implements OnInit {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
+  private readonly authService = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+
+  readonly puedeDescargarPdf = computed(() => {
+    return this.authService.tieneRol(['supervisor', 'admin', 'superadmin']);
+  });
 
   hayErrores(): boolean {
     return this.validacion.hayErrores(this.seccionesAbiertas());
@@ -758,6 +766,11 @@ export class HojaDeVidaComponent implements OnInit {
   }
 
   descargarVistaPreviaPdf(): void {
+    if (!this.puedeDescargarPdf()) {
+      this.errorDescargaPdf.set('No tiene permisos para descargar el documento de hoja de vida.');
+      return;
+    }
+
     if (this.descargandoPdf()) return;
 
     this.descargandoPdf.set(true);
