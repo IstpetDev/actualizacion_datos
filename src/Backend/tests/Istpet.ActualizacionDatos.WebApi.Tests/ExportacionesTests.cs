@@ -592,7 +592,7 @@ public sealed partial class ExportacionesTests : IDisposable
     }
 
     [Fact]
-    public async Task Admin_puede_ver_borrador_incompleto_post_campana_y_supervisor_recibe_error_RF_CAP_016()
+    public async Task Admin_puede_ver_borrador_incompleto_post_campana_y_supervisor_consulta_solo_lectura_ADR_0039()
     {
         // Arrange
         Guid instId;
@@ -628,10 +628,15 @@ public sealed partial class ExportacionesTests : IDisposable
             await db.SaveChangesAsync();
         }
 
-        // 1. Supervisor intenta ver el borrador -> 400 Bad Request
+        // 1. Supervisor consulta el borrador -> 200 OK en modo solo lectura (ADR-0039)
         var reqSupervisor = CrearRequest(HttpMethod.Get, $"/api/revision/{documentoBorrador}", instId, "supervisor@ejemplo.test", RolUsuario.Supervisor);
         var resSupervisor = await _cliente.SendAsync(reqSupervisor);
-        Assert.Equal(HttpStatusCode.BadRequest, resSupervisor.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resSupervisor.StatusCode);
+
+        // Supervisor no puede aprobar el borrador -> 400 Bad Request
+        var reqAprobar = CrearRequest(HttpMethod.Post, $"/api/revision/{documentoBorrador}/aprobar", instId, "supervisor@ejemplo.test", RolUsuario.Supervisor);
+        var resAprobar = await _cliente.SendAsync(reqAprobar);
+        Assert.Equal(HttpStatusCode.BadRequest, resAprobar.StatusCode);
 
         // 2. Admin intenta ver el borrador -> 200 OK con marca 'Incompleto, no enviado'
         var reqAdmin = CrearRequest(HttpMethod.Get, $"/api/revision/{documentoBorrador}", instId, "admin@ejemplo.test", RolUsuario.Admin);

@@ -492,11 +492,12 @@ public sealed class FlujoRevisionTests : IDisposable
     }
 
     [Fact]
-    public async Task RF_FLU_006_Supervisor_no_ve_borradores_ni_personas_de_otra_institucion()
+    public async Task RF_REV_001_a_005_Supervisor_ve_borradores_avance_y_aislamiento_ADR_0039()
     {
         var (institucionId, _, _) = await InicializarDatosPruebaAsync();
 
-        // 1. La persona "1700000001" está en Borrador. La lista de pendientes no debe mostrarla
+        // 1. La persona "1700000001" tiene datos (Borrador) y "1700000002" no tiene datos (Sin Iniciar).
+        // La lista de pendientes muestra a ambas con su avance y estado correcto (RF-REV-001, RF-REV-002).
         var reqPendientes = new HttpRequestMessage(HttpMethod.Get, "/api/revision/pendientes");
         reqPendientes.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqPendientes.Headers.Add("X-Actor", "supervisor_01");
@@ -506,18 +507,47 @@ public sealed class FlujoRevisionTests : IDisposable
         Assert.Equal(HttpStatusCode.OK, resPendientes.StatusCode);
         var pendientes = await resPendientes.Content.ReadFromJsonAsync<List<ResumenRevisionPendienteDto>>();
         Assert.NotNull(pendientes);
-        Assert.Empty(pendientes);
+        Assert.Equal(2, pendientes.Count);
 
-        // 2. Si supervisor intenta consultar expediente de "1700000001" que está en borrador -> Error
+        var p1 = pendientes.Single(p => p.Documento == "1700000001");
+        Assert.Equal("Borrador", p1.EstadoActualizacion);
+        Assert.True(p1.SeccionesConDatos > 0);
+        Assert.True(p1.PorcentajeAvance > 0);
+
+        var p2 = pendientes.Single(p => p.Documento == "1700000002");
+        Assert.Equal("Sin Iniciar", p2.EstadoActualizacion);
+        Assert.Equal(0, p2.SeccionesConDatos);
+        Assert.Equal(0, p2.PorcentajeAvance);
+
+        // 2. Supervisor consulta expediente de "1700000001" en borrador -> 200 OK (solo lectura, RF-REV-003)
         var reqExpBorrador = new HttpRequestMessage(HttpMethod.Get, "/api/revision/1700000001");
         reqExpBorrador.Headers.Add("X-Institucion-Id", institucionId.ToString());
         reqExpBorrador.Headers.Add("X-Actor", "supervisor_01");
         reqExpBorrador.Headers.Add("X-Rol", "Supervisor");
 
         var resExpBorrador = await _cliente.SendAsync(reqExpBorrador);
-        Assert.Equal(HttpStatusCode.BadRequest, resExpBorrador.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resExpBorrador.StatusCode);
+        var exp = await resExpBorrador.Content.ReadFromJsonAsync<ExpedienteRevisionDto>();
+        Assert.NotNull(exp);
+        Assert.Equal("Borrador", exp.EstadoActualizacion);
 
-        // 3. Supervisor de OTRA institución intenta consultar -> 404 o rechazo
+        // 3. Supervisor intenta aprobar o devolver a "1700000001" (en borrador) -> 400 Bad Request (RF-REV-004)
+        var reqAprobar = new HttpRequestMessage(HttpMethod.Post, "/api/revision/1700000001/aprobar");
+        reqAprobar.Headers.Add("X-Institucion-Id", institucionId.ToString());
+        reqAprobar.Headers.Add("X-Actor", "supervisor_01");
+        reqAprobar.Headers.Add("X-Rol", "Supervisor");
+        var resAprobar = await _cliente.SendAsync(reqAprobar);
+        Assert.Equal(HttpStatusCode.BadRequest, resAprobar.StatusCode);
+
+        var reqDevolver = new HttpRequestMessage(HttpMethod.Post, "/api/revision/1700000001/devolver");
+        reqDevolver.Headers.Add("X-Institucion-Id", institucionId.ToString());
+        reqDevolver.Headers.Add("X-Actor", "supervisor_01");
+        reqDevolver.Headers.Add("X-Rol", "Supervisor");
+        reqDevolver.Content = JsonContent.Create(new DevolverActualizacionRequest("Observación"));
+        var resDevolver = await _cliente.SendAsync(reqDevolver);
+        Assert.Equal(HttpStatusCode.BadRequest, resDevolver.StatusCode);
+
+        // 4. Supervisor de OTRA institución intenta consultar -> 404 Not Found (aislamiento estricto, RF-REV-005, ADR-0004)
         var otraInstitucionId = Guid.NewGuid();
         var reqOtraInst = new HttpRequestMessage(HttpMethod.Get, "/api/revision/1700000001");
         reqOtraInst.Headers.Add("X-Institucion-Id", otraInstitucionId.ToString());

@@ -9466,6 +9466,10 @@ export interface ResumenRevisionPendienteDto {
     correo: string | undefined;
     estadoActualizacion: string;
     fechaCreacionUtc: Date;
+    totalSecciones?: number;
+    seccionesConDatos?: number;
+    porcentajeAvance?: number;
+    seccionesCompletadas?: string[] | undefined;
 
     [key: string]: any;
 }

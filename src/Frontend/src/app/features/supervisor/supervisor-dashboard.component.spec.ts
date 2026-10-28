@@ -371,6 +371,121 @@ describe('SupervisorDashboardComponent', () => {
     expect(component.error()).toBeNull();
   });
 
+  it('debe_mostrar_estados_y_avance_por_seccion_para_todas_las_personas_RF_REV_001_002', () => {
+    const listaCompleta: ResumenRevisionPendienteDto[] = [
+      {
+        id: 'p-1',
+        documento: '1700000001',
+        nombre: 'Usuario Sin Iniciar',
+        correo: 'sin.iniciar@ejemplo.test',
+        estadoActualizacion: 'Sin Iniciar',
+        fechaCreacionUtc: new Date(),
+        totalSecciones: 7,
+        seccionesConDatos: 0,
+        porcentajeAvance: 0,
+        seccionesCompletadas: [],
+      },
+      {
+        id: 'p-2',
+        documento: '1700000002',
+        nombre: 'Usuario Con Borrador',
+        correo: 'borrador@ejemplo.test',
+        estadoActualizacion: 'Borrador',
+        fechaCreacionUtc: new Date(),
+        totalSecciones: 7,
+        seccionesConDatos: 3,
+        porcentajeAvance: 42,
+        seccionesCompletadas: ['FichaPersonal', 'FormacionAcademica', 'CuentaBancaria'],
+      },
+    ];
+
+    component.pendientes.set(listaCompleta);
+    fixture.detectChanges();
+
+    const badgeSinIniciar = fixture.nativeElement.querySelector(
+      '[data-testid="badge-estado-1700000001"]',
+    );
+    expect(badgeSinIniciar).toBeTruthy();
+    expect(badgeSinIniciar.textContent.trim()).toBe('Sin Iniciar');
+    expect(badgeSinIniciar.classList.contains('badge-secondary')).toBe(true);
+
+    const avanceSinIniciar = fixture.nativeElement.querySelector(
+      '[data-testid="avance-1700000001"]',
+    );
+    expect(avanceSinIniciar.textContent).toContain('0/7 secciones (0%)');
+
+    const badgeBorrador = fixture.nativeElement.querySelector(
+      '[data-testid="badge-estado-1700000002"]',
+    );
+    expect(badgeBorrador).toBeTruthy();
+    expect(badgeBorrador.textContent.trim()).toBe('Borrador');
+    expect(badgeBorrador.classList.contains('badge-warning')).toBe(true);
+
+    const avanceBorrador = fixture.nativeElement.querySelector('[data-testid="avance-1700000002"]');
+    expect(avanceBorrador.textContent).toContain('3/7 secciones (42%)');
+  });
+
+  it('debe_filtrar_la_lista_de_personas_por_texto_o_cedula', () => {
+    const listaCompleta: ResumenRevisionPendienteDto[] = [
+      {
+        id: 'p-1',
+        documento: '1700000001',
+        nombre: 'Ana Docente',
+        correo: 'ana@ejemplo.test',
+        estadoActualizacion: 'Sin Iniciar',
+        fechaCreacionUtc: new Date(),
+      },
+      {
+        id: 'p-2',
+        documento: '1700000002',
+        nombre: 'Carlos Perez',
+        correo: 'carlos@ejemplo.test',
+        estadoActualizacion: 'Borrador',
+        fechaCreacionUtc: new Date(),
+      },
+    ];
+
+    component.pendientes.set(listaCompleta);
+    fixture.detectChanges();
+
+    expect(component.pendientesFiltrados().length).toBe(2);
+
+    component.filtroTexto.set('Carlos');
+    fixture.detectChanges();
+    expect(component.pendientesFiltrados().length).toBe(1);
+    expect(component.pendientesFiltrados()[0].documento).toBe('1700000002');
+
+    component.filtroTexto.set('1700000001');
+    fixture.detectChanges();
+    expect(component.pendientesFiltrados().length).toBe(1);
+    expect(component.pendientesFiltrados()[0].nombre).toBe('Ana Docente');
+  });
+
+  it('cuando_el_expediente_esta_en_borrador_deshabilita_aprobar_y_devolver_y_muestra_aviso_RF_REV_003_004', () => {
+    revisionClientMock.obtenerExpedienteParaRevision.mockReturnValue(
+      of({
+        ...expedienteMock,
+        estadoActualizacion: 'Borrador',
+      }),
+    );
+
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    const avisoModoLectura = fixture.nativeElement.querySelector(
+      '[data-testid="aviso-modo-lectura"]',
+    );
+    expect(avisoModoLectura).toBeTruthy();
+    expect(avisoModoLectura.textContent).toContain('Modo solo lectura');
+    expect(avisoModoLectura.textContent).toContain('Borrador');
+
+    const btnAprobar = fixture.nativeElement.querySelector('[data-testid="btn-aprobar"]');
+    expect((btnAprobar as HTMLButtonElement).disabled).toBe(true);
+
+    const btnDevolver = fixture.nativeElement.querySelector('[data-testid="btn-abrir-devolver"]');
+    expect((btnDevolver as HTMLButtonElement).disabled).toBe(true);
+  });
+
   describe('Issue #139: retiro auditado de adjuntos por supervisor', () => {
     it('muestra_boton_retirar_en_cada_archivo_del_expediente', () => {
       component.verExpediente('1700000001');
