@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -1291,6 +1291,60 @@ archivosGroup.MapDelete("/{id:guid}", async (
     }
 })
 .WithName("EliminarArchivo")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+archivosGroup.MapPost("/{id:guid}/retirar", async (
+    Guid id,
+    RetirarArchivoSupervisorRequest request,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EstaAutenticado(httpContext, contexto) || !EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("Solo un supervisor o administrador puede retirar adjuntos del expediente."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var actor = ObtenerDocumentoActual(httpContext, contexto);
+    if (string.IsNullOrWhiteSpace(actor))
+    {
+        return Results.Unauthorized();
+    }
+
+    var rol = contexto.RolActual;
+    if (rol == null)
+    {
+        var claimRol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+        if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
+        {
+            rol = r;
+        }
+        else
+        {
+            rol = RolUsuario.Supervisor;
+        }
+    }
+
+    try
+    {
+        await servicio.RetirarArchivoSupervisorAsync(id, request.Motivo, actor, rol.Value, ct);
+        return Results.Ok(new MensajeRespuesta("Archivo retirado correctamente del expediente."));
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("RetirarArchivoSupervisor")
+.WithSummary("Retirar auditadamente un adjunto por un supervisor o administrador con motivo obligatorio")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
