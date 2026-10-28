@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,7 +90,50 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        if (operation.OperationId is "DescargarArchivo" or "DescargarDocumentoHojaDeVidaPersona" or "DescargarMiDocumentoHojaDeVida" or "ExportarZip" or "ExportarExcel")
+        {
+            if (operation.Responses != null && operation.Responses.TryGetValue("200", out var res200))
+            {
+                var contentType = operation.OperationId switch
+                {
+                    "ExportarZip" => "application/zip",
+                    "ExportarExcel" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "DescargarDocumentoHojaDeVidaPersona" or "DescargarMiDocumentoHojaDeVida" => "application/pdf",
+                    _ => "application/octet-stream"
+                };
+
+                if (res200 is OpenApiResponse resp)
+                {
+                    resp.Content ??= new Dictionary<string, OpenApiMediaType>();
+                    resp.Content[contentType] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = JsonSchemaType.String,
+                            Format = "binary"
+                        }
+                    };
+                }
+                else if (res200.Content != null)
+                {
+                    res200.Content[contentType] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = JsonSchemaType.String,
+                            Format = "binary"
+                        }
+                    };
+                }
+            }
+        }
+        return Task.CompletedTask;
+    });
+});
 builder.Services.Configure<RouteHandlerOptions>(opciones => opciones.ThrowOnBadRequest = true);
 builder.Services.AddExceptionHandler<Istpet.ActualizacionDatos.WebApi.ValidacionJsonHandler>();
 builder.Services.AddExceptionHandler<ManejadorGlobalExcepciones>();
