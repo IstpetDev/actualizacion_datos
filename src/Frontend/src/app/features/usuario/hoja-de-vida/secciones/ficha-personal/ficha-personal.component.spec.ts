@@ -329,4 +329,100 @@ describe('FichaPersonalComponent', () => {
     expect(component.modelo.primerNombre).toBe(originalNombre);
     expect(component.tieneCambios()).toBe(false);
   });
+  describe('Issue #140: sincronizacion y conservacion de parroquia', () => {
+    it('seleccionar provincia, canton y parroquia conserva los tres selectores al guardar y recargar desde el primer intento', async () => {
+      component.onProvinciaResidenciaChange(17);
+      expect(component.provinciaResidenciaId()).toBe(17);
+      expect(component.cantonesResidencia()).toEqual(mockCantones);
+
+      component.onCantonResidenciaChange(1701);
+      expect(component.cantonResidenciaId()).toBe(1701);
+      expect(component.parroquiasResidencia()).toEqual(mockParroquias);
+
+      component.onParroquiaChange(170150);
+      expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+      expect(component.errorParroquia()).toBe('');
+      expect(component.residenciaInvalida()).toBe(false);
+
+      stateMock.guardarFichaPersonal.mockReturnValue(
+        of({ parroquiaResidenciaId: 170150 } as FichaPersonalDto),
+      );
+      component.guardarFicha();
+      expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+        expect.objectContaining({ parroquiaResidenciaId: 170150 }),
+      );
+
+      fichaActual.set({
+        personaId: 'persona-ficticia',
+        fechaActualizacionUtc: new Date(),
+        primerNombre: 'Persona',
+        primerApellido: 'Ficticia',
+        parroquiaResidenciaId: 170150,
+      } as FichaPersonalDto);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.provinciaResidenciaId()).toBe(17);
+      expect(component.cantonResidenciaId()).toBe(1701);
+      expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+      expect(component.parroquiasResidencia()).toEqual(mockParroquias);
+      expect(component.errorParroquia()).toBe('');
+    });
+
+    it('cambiar canton invalida de forma visible una parroquia previa y bloquea el guardado silencioso', async () => {
+      component.onProvinciaResidenciaChange(17);
+      component.onCantonResidenciaChange(1701);
+      component.onParroquiaChange(170150);
+      expect(component.residenciaInvalida()).toBe(false);
+
+      component.onCantonResidenciaChange(1702);
+      fixture.detectChanges();
+
+      expect(component.modelo.parroquiaResidenciaId).toBeUndefined();
+      expect(component.errorParroquia()).toContain('Seleccione una parroquia correspondiente al');
+      expect(component.residenciaInvalida()).toBe(true);
+
+      const errorSmall = fixture.nativeElement.querySelector('#error-modelo-parroquiaResidenciaId');
+      expect(errorSmall).not.toBeNull();
+      expect(errorSmall.textContent).toContain('Seleccione una parroquia');
+
+      stateMock.guardarFichaPersonal.mockClear();
+      component.guardarFicha();
+      expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+
+      component.onParroquiaChange(170150);
+      fixture.detectChanges();
+      expect(component.errorParroquia()).toBe('');
+      expect(component.residenciaInvalida()).toBe(false);
+      component.guardarFicha();
+      expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+        expect.objectContaining({ parroquiaResidenciaId: 170150 }),
+      );
+    });
+
+    it('cambiar provincia invalida de forma visible la parroquia previa', () => {
+      component.onProvinciaResidenciaChange(17);
+      component.onCantonResidenciaChange(1701);
+      component.onParroquiaChange(170150);
+
+      component.onProvinciaResidenciaChange(18);
+      expect(component.modelo.parroquiaResidenciaId).toBeUndefined();
+      expect(component.errorParroquia()).toContain('provincia elegida');
+      expect(component.residenciaInvalida()).toBe(true);
+    });
+
+    it('seleccionar el mismo canton o provincia no borra innecesariamente la parroquia ya seleccionada', () => {
+      component.onProvinciaResidenciaChange(17);
+      component.onCantonResidenciaChange(1701);
+      component.onParroquiaChange(170150);
+
+      component.onCantonResidenciaChange(1701);
+      expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+      expect(component.errorParroquia()).toBe('');
+
+      component.onProvinciaResidenciaChange(17);
+      expect(component.modelo.parroquiaResidenciaId).toBe(170150);
+      expect(component.errorParroquia()).toBe('');
+    });
+  });
 });

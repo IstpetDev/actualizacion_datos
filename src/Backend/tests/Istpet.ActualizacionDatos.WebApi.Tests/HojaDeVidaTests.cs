@@ -210,6 +210,48 @@ public sealed partial class HojaDeVidaTests : IDisposable
         Assert.Equal("Paredes", ficha.PrimerApellido);
         Assert.Equal("0998765432", ficha.Celular);
         Assert.Equal(1005, ficha.EtniaId);
+        Assert.Equal(1004, ficha.ParroquiaResidenciaId);
+    }
+
+    [Fact]
+    public async Task Ficha_personal_actualizar_conserva_parroquia_residencia_en_guardados_subsecuentes()
+    {
+        var (instId, _, _) = await ConfigurarDatosInicialesAsync();
+
+        var requestInicial = new GuardarFichaPersonalRequest(
+            PrimerNombre: "Carlos",
+            PrimerApellido: "Paredes",
+            SexoId: SexoHombre,
+            FechaNacimiento: new DateOnly(1988, 5, 12),
+            PaisNacimientoId: 1001,
+            EstadoCivilId: EstadoCivilSoltero,
+            PaisNacionalidadId: 1001,
+            ParroquiaResidenciaId: 1004,
+            CallePrincipal: "Av. Naciones Unidas",
+            Celular: "0998765432",
+            CorreoInstitucional: "carlos.paredes@ejemplo.test");
+
+        var respuesta1 = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", instId, Documento, cuerpo: requestInicial);
+        Assert.Equal(HttpStatusCode.OK, respuesta1.StatusCode);
+        var guardada1 = await respuesta1.Content.ReadFromJsonAsync<FichaPersonalDto>();
+        Assert.NotNull(guardada1);
+        Assert.Equal(1004, guardada1.ParroquiaResidenciaId);
+
+        // Segundo guardado actualizando otro campo sin perder parroquia
+        var requestModificado = requestInicial with { CallePrincipal = "Av. Amazonas 123" };
+        var respuesta2 = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", instId, Documento, cuerpo: requestModificado);
+        Assert.Equal(HttpStatusCode.OK, respuesta2.StatusCode);
+        var guardada2 = await respuesta2.Content.ReadFromJsonAsync<FichaPersonalDto>();
+        Assert.NotNull(guardada2);
+        Assert.Equal(1004, guardada2.ParroquiaResidenciaId);
+        Assert.Equal("Av. Amazonas 123", guardada2.CallePrincipal);
+
+        // Consulta posterior confirma persistencia
+        var respuestaGet = await EnviarAsync(HttpMethod.Get, "/api/mis-datos/hoja-de-vida/ficha", instId, Documento);
+        Assert.Equal(HttpStatusCode.OK, respuestaGet.StatusCode);
+        var ficha = await respuestaGet.Content.ReadFromJsonAsync<FichaPersonalDto>();
+        Assert.NotNull(ficha);
+        Assert.Equal(1004, ficha.ParroquiaResidenciaId);
     }
 
     [Fact]
