@@ -1,4 +1,4 @@
-namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
+﻿namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 
 using System.Security.Cryptography;
 using Istpet.ActualizacionDatos.Application;
@@ -371,6 +371,106 @@ public class ServicioArchivos : IServicioArchivos
             ?? throw new ReglaNegocioException("El archivo no existe o no pertenece a la persona.");
 
         await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+        _context.ArchivosAdjuntos.Remove(archivo);
+
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task RetirarArchivoSupervisorAsync(
+        Guid archivoId,
+        string motivo,
+        string actorSolicitante,
+        RolUsuario rolSolicitante,
+        CancellationToken ct = default)
+    {
+        if (rolSolicitante is not (RolUsuario.Supervisor or RolUsuario.Admin or RolUsuario.Superadmin))
+        {
+            throw new UnauthorizedAccessException("Solo un supervisor o administrador puede retirar adjuntos del expediente.");
+        }
+
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 5)
+        {
+            throw new ReglaNegocioException("Debe ingresar un motivo obligatorio para retirar el archivo (mínimo 5 caracteres).");
+        }
+
+        var archivo = await _context.ArchivosAdjuntos
+            .FirstOrDefaultAsync(a => a.Id == archivoId, ct)
+            ?? throw new ReglaNegocioException("El archivo solicitado no existe o no pertenece a la institución.");
+
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Id == archivo.PersonaId, ct);
+
+        // 1. Registrar auditoría inmutable
+        var detalleAuditoria = $"Retiro del archivo {archivo.Id} ({archivo.NombreOriginal}, Hash: {archivo.HashSha256}) de la persona {(persona?.Documento ?? archivo.PersonaId.ToString())}. Motivo: {motivo.Trim()}";
+        _context.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            actorSolicitante,
+            "RetiroAdjuntoSupervisor",
+            archivo.InstitucionId,
+            DateTime.UtcNow,
+            detalle: detalleAuditoria));
+
+        // 2. Desvincular referencias en secciones
+        var fichas = await _context.FichasPersonales
+            .Where(f => f.PersonaId == archivo.PersonaId && f.FotoArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var f in fichas)
+        {
+            f.AsociarFoto(null);
+        }
+
+        var docs = await _context.DocumentosPersonales
+            .Where(d => d.PersonaId == archivo.PersonaId && d.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var d in docs)
+        {
+            d.AsociarArchivo(null);
+        }
+
+        var titulos = await _context.TitulosAcademicos
+            .Where(t => t.PersonaId == archivo.PersonaId && t.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var t in titulos)
+        {
+            t.AsociarArchivo(null);
+        }
+
+        var titulosEnCurso = await _context.TitulosEnCurso
+            .Where(tc => tc.PersonaId == archivo.PersonaId && tc.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var tc in titulosEnCurso)
+        {
+            tc.AsociarArchivo(null);
+        }
+
+        var capacitaciones = await _context.Capacitaciones
+            .Where(c => c.PersonaId == archivo.PersonaId && c.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var c in capacitaciones)
+        {
+            c.AsociarArchivo(null);
+        }
+
+        var experiencias = await _context.ExperienciasLaborales
+            .Where(e => e.PersonaId == archivo.PersonaId && e.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var e in experiencias)
+        {
+            e.AsociarArchivo(null);
+        }
+
+        var referencias = await _context.ReferenciasPersonales
+            .Where(r => r.PersonaId == archivo.PersonaId && r.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var r in referencias)
+        {
+            r.AsociarArchivo(null);
+        }
+
+        // 3. Eliminar físicamente del disco (ADR-0039)
+        await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+
+        // 4. Remover registro de la base de datos
         _context.ArchivosAdjuntos.Remove(archivo);
 
         await _context.SaveChangesAsync(ct);

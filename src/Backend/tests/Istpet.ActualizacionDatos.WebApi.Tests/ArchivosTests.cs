@@ -1,10 +1,11 @@
-namespace Istpet.ActualizacionDatos.WebApi.Tests;
+﻿namespace Istpet.ActualizacionDatos.WebApi.Tests;
 
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using Istpet.ActualizacionDatos.Application.Modelos;
+using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
@@ -568,5 +569,159 @@ public sealed class ArchivosTests : IDisposable
         var tituloItem = archivos.FirstOrDefault(a => a.NombreOriginal == "titulo_ingenieria.pdf");
         Assert.NotNull(tituloItem);
         Assert.Equal("Formación Académica: Ingeniería en Sistemas", tituloItem.ClaveDestino);
+    }
+    [Fact]
+    public async Task Retirar_archivo_supervisor_sin_motivo_o_motivo_corto_retorna_400()
+    {
+        var (instId, u1, _, sup) = await InicializarDatosPruebaAsync();
+
+        var archivoId = Guid.NewGuid();
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            db.ArchivosAdjuntos.Add(new ArchivoAdjunto(
+                archivoId,
+                new InstitucionId(instId),
+                u1.Id,
+                "cedula.pdf",
+                "application/pdf",
+                100,
+                "hash-123",
+                "rutas/cedula.bin",
+                "doc:cedula",
+                DateTime.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        // Intento 1: motivo vacío
+        var reqVacio = CrearRequest(HttpMethod.Post, $"/api/archivos/{archivoId}/retirar", instId, sup.Documento, RolUsuario.Supervisor);
+        reqVacio.Content = JsonContent.Create(new RetirarArchivoSupervisorRequest("   "));
+        var respVacio = await _cliente.SendAsync(reqVacio);
+        Assert.Equal(HttpStatusCode.BadRequest, respVacio.StatusCode);
+
+        // Intento 2: motivo menor a 5 caracteres
+        var reqCorto = CrearRequest(HttpMethod.Post, $"/api/archivos/{archivoId}/retirar", instId, sup.Documento, RolUsuario.Supervisor);
+        reqCorto.Content = JsonContent.Create(new RetirarArchivoSupervisorRequest("mala"));
+        var respCorto = await _cliente.SendAsync(reqCorto);
+        Assert.Equal(HttpStatusCode.BadRequest, respCorto.StatusCode);
+    }
+
+    [Fact]
+    public async Task Retirar_archivo_como_usuario_sin_rol_supervisor_o_admin_retorna_403()
+    {
+        var (instId, u1, _, _) = await InicializarDatosPruebaAsync();
+        var archivoId = Guid.NewGuid();
+
+        var req = CrearRequest(HttpMethod.Post, $"/api/archivos/{archivoId}/retirar", instId, u1.Documento, RolUsuario.Usuario);
+        req.Content = JsonContent.Create(new RetirarArchivoSupervisorRequest("Motivo de usuario no autorizado"));
+        var resp = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Retirar_archivo_supervisor_otra_institucion_retorna_400()
+    {
+        var (instA, uA, _, _) = await InicializarDatosPruebaAsync();
+        var (instB, _, _, supB) = await InicializarDatosPruebaAsync();
+
+        var archivoId = Guid.NewGuid();
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            db.ArchivosAdjuntos.Add(new ArchivoAdjunto(
+                archivoId,
+                new InstitucionId(instA),
+                uA.Id,
+                "doc_a.pdf",
+                "application/pdf",
+                50,
+                "hash-a",
+                "rutas/doc_a.bin",
+                null,
+                DateTime.UtcNow));
+            await db.SaveChangesAsync();
+        }
+
+        var req = CrearRequest(HttpMethod.Post, $"/api/archivos/{archivoId}/retirar", instB, supB.Documento, RolUsuario.Supervisor);
+        req.Content = JsonContent.Create(new RetirarArchivoSupervisorRequest("Motivo para retirar archivo ajeno"));
+        var resp = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [Fact]
+    public async Task Retirar_archivo_supervisor_valido_elimina_fisicamente_desvincula_y_registra_auditoria()
+    {
+        var (instId, u1, _, sup) = await InicializarDatosPruebaAsync();
+
+        // 1. Subir archivo físico real
+        var pdfBytes = "%PDF-1.4 ficticio para prueba de retiro"u8.ToArray();
+        Guid archivoId;
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var almacen = scope.ServiceProvider.GetRequiredService<IAlmacenArchivos>();
+            archivoId = Guid.NewGuid();
+            using var ms = new MemoryStream(pdfBytes);
+            await almacen.GuardarAsync(new InstitucionId(instId), u1.Id, archivoId, ms);
+
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var arch = new ArchivoAdjunto(
+                archivoId,
+                new InstitucionId(instId),
+                u1.Id,
+                "respaldo_titulo.pdf",
+                "application/pdf",
+                pdfBytes.Length,
+                "hash-titulo-ficticio",
+                $"rutas/{archivoId}.bin",
+                "titulo",
+                DateTime.UtcNow);
+            db.ArchivosAdjuntos.Add(arch);
+
+            var titulo = new TituloAcademico(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                u1.Id,
+                new DatosTituloAcademico("Licenciatura Ficticia", 1, NombreInstitucionOtra: "Instituto Ficticio"));
+            titulo.AsociarArchivo(archivoId);
+            db.TitulosAcademicos.Add(titulo);
+
+            await db.SaveChangesAsync();
+        }
+
+        // 2. Supervisor retira el archivo
+        var motivo = "Documento con firmas borrosas e ilegibles.";
+        var req = CrearRequest(HttpMethod.Post, $"/api/archivos/{archivoId}/retirar", instId, sup.Documento, RolUsuario.Supervisor);
+        req.Content = JsonContent.Create(new RetirarArchivoSupervisorRequest(motivo));
+        var resp = await _cliente.SendAsync(req);
+        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
+
+        // 3. Verificar estado en base de datos y almacén físico
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var almacen = scope.ServiceProvider.GetRequiredService<IAlmacenArchivos>();
+
+            // ArchivoAdjunto eliminado
+            var archBd = await db.ArchivosAdjuntos.IgnoreQueryFilters().FirstOrDefaultAsync(a => a.Id == archivoId);
+            Assert.Null(archBd);
+
+            // TituloAcademico desvinculado
+            var tituloBd = await db.TitulosAcademicos.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.PersonaId == u1.Id);
+            Assert.NotNull(tituloBd);
+            Assert.Null(tituloBd.ArchivoId);
+
+            // Auditoria registrada
+            var auditoria = await db.Auditorias.IgnoreQueryFilters().FirstOrDefaultAsync(a =>
+                a.Accion == "RetiroAdjuntoSupervisor" &&
+                a.InstitucionId == new InstitucionId(instId));
+            Assert.NotNull(auditoria);
+            Assert.Equal(sup.Documento, auditoria.Actor);
+            Assert.Contains(motivo, auditoria.Detalle);
+            Assert.Contains(archivoId.ToString(), auditoria.Detalle);
+
+            // Archivo físico eliminado de disco (Opción B)
+            var existeFisico = await almacen.ExisteAsync(new InstitucionId(instId), u1.Id, archivoId);
+            Assert.False(existeFisico);
+        }
     }
 }

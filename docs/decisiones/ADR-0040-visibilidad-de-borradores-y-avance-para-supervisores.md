@@ -1,4 +1,4 @@
-# ADR-0039 — Visibilidad de borradores y avance institucional para supervisores
+# ADR-0040 — Visibilidad de borradores y avance institucional para supervisores
 
 - **Estado:** Vigente por autorización del solicitante en la implementación del issue #143 (2026-10-28).
 - **Fecha:** 2026-10-28
