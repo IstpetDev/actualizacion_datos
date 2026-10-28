@@ -1,7 +1,7 @@
 import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ModalCambiosSinGuardarComponent } from './componentes/modal-cambios-sin-guardar.component';
 import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
@@ -83,7 +83,7 @@ export type TabSeccionHojaVida =
             <button
               type="button"
               class="btn btn-primary"
-              [disabled]="guardando() || cargando() || validacion.hayErrores()"
+              [disabled]="guardando() || cargando() || hayErrores()"
               (click)="validarYEnviar()"
               data-testid="btn-enviar-revision-top"
             >
@@ -216,7 +216,7 @@ export type TabSeccionHojaVida =
               <button
                 type="button"
                 class="btn btn-primary btn-lg"
-                [disabled]="guardando() || validacion.hayErrores()"
+                [disabled]="guardando() || hayErrores()"
                 (click)="validarYEnviar()"
                 data-testid="btn-enviar-revision"
               >
@@ -236,7 +236,7 @@ export type TabSeccionHojaVida =
 
       <!-- Modal de Advertencia por Cambios sin Guardar (Issue #90) -->
       <app-modal-cambios-sin-guardar
-        [guardarDeshabilitado]="validacion.hayErrores()"
+        [guardarDeshabilitado]="hayErrores()"
         [abierto]="mostrarModalCambios()"
         [guardando]="guardando()"
         [mensajeError]="errorCambios()"
@@ -519,6 +519,16 @@ export class HojaDeVidaComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
 
+  hayErrores(): boolean {
+    return this.validacion.hayErrores(this.seccionesAbiertas());
+  }
+
+  constructor() {
+    effect(() => {
+      this.validacion.actualizarSeccionesAbiertas(this.seccionesAbiertas());
+    });
+  }
+
   readonly descargandoPdf = signal<boolean>(false);
   readonly errorDescargaPdf = signal<string | null>(null);
 
@@ -709,7 +719,7 @@ export class HojaDeVidaComponent implements OnInit {
   }
 
   validarYEnviar(): void {
-    if (this.validacion.hayErrores()) return;
+    if (this.hayErrores()) return;
     this.state.obtenerFaltantes().subscribe({
       next: (faltantes: FaltanteEnvioDto[]) => {
         if (faltantes && faltantes.length > 0) {

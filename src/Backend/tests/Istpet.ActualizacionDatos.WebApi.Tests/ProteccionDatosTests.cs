@@ -445,7 +445,7 @@ public sealed class ProteccionDatosTests : IDisposable
     }
 
     [Fact]
-    public async Task Aceptar_no_sustituye_la_verificacion_de_correo_al_enviar()
+    public async Task Aceptar_no_sustituye_la_completitud_de_hoja_de_vida_al_enviar()
     {
         var persona = await CuentaAsync();
         await PublicarAsync(persona);
@@ -460,7 +460,8 @@ public sealed class ProteccionDatosTests : IDisposable
         }
         var respuesta = await cliente.PostAsync("/api/mis-datos/enviar", null);
         Assert.Equal(HttpStatusCode.BadRequest, respuesta.StatusCode);
-        Assert.Contains("verificar su correo", (await respuesta.Content.ReadFromJsonAsync<MensajeRespuesta>())!.Mensaje, StringComparison.Ordinal);
+        var cuerpo = await respuesta.Content.ReadFromJsonAsync<EnvioIncompletoRespuesta>();
+        Assert.Contains("incompleta", cuerpo!.Mensaje, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, await EvidenciasAsync());
     }
 

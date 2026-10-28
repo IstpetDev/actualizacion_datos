@@ -40,7 +40,15 @@ public class ValidadorCompletitudEnvio : IValidadorCompletitudEnvio
             var faltantes = await regla.EvaluarAsync(personaId, ct);
             if (faltantes is { Count: > 0 })
             {
-                todos.AddRange(faltantes);
+                foreach (var f in faltantes)
+                {
+                    if (CodigosSeccion.IntentarParsear(f.Seccion, out var sec) && !abiertas.Contains(sec))
+                    {
+                        continue;
+                    }
+
+                    todos.Add(f);
+                }
             }
         }
 

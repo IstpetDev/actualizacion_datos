@@ -59,29 +59,40 @@ public static class CodigosSeccion
         {
             case Ficha:
             case "fichapersonal":
+            case "ficha-personal":
                 seccion = SeccionHojaDeVida.FichaPersonal;
                 return true;
             case Formacion:
             case "formacionacademica":
+            case "formacion-academica":
+            case "titulos":
+            case "titulos-en-curso":
                 seccion = SeccionHojaDeVida.FormacionAcademica;
                 return true;
             case Capacitaciones:
+            case "capacitacion":
                 seccion = SeccionHojaDeVida.Capacitaciones;
                 return true;
             case Experiencia:
             case "experiencialaboral":
+            case "experiencia-laboral":
+            case "experiencias":
                 seccion = SeccionHojaDeVida.ExperienciaLaboral;
                 return true;
             case Referencias:
+            case "referencia":
                 seccion = SeccionHojaDeVida.Referencias;
                 return true;
             case Documentos:
             case "documentospersonales":
+            case "documentos-personales":
+            case "documento":
                 seccion = SeccionHojaDeVida.DocumentosPersonales;
                 return true;
             case CuentaBancaria:
             case "cuentabancaria":
             case "cuenta_bancaria":
+            case "cuenta":
                 seccion = SeccionHojaDeVida.CuentaBancaria;
                 return true;
             default:

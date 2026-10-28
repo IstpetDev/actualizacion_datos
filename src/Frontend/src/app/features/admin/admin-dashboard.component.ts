@@ -18,8 +18,10 @@ import { AuthService } from '../../core/auth';
 import { EstadoCuentasBancariasComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
 import { ConfiguracionRequisitosComponent } from './configuracion/configuracion-requisitos.component';
 import { InformeNominaComponent } from './nomina/informe-nomina.component';
+import { PersonalInstitucionalComponent } from '../personal-institucional/personal-institucional.component';
 
-type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cuentas';
+type TabAdmin =
+  'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cuentas' | 'supervisores';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -30,6 +32,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
     EstadoCuentasBancariasComponent,
     InformeNominaComponent,
     ConfiguracionRequisitosComponent,
+    PersonalInstitucionalComponent,
   ],
   template: `
     <section class="dashboard-section" data-testid="admin-panel">
@@ -57,11 +60,25 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
           <option value="exportacion">Exportación de Datos</option>
           <option value="configuracion">Configuración de Requisitos</option>
           <option value="cuentas">Cuentas Bancarias</option>
+          <option value="supervisores">Supervisores</option>
         </select>
       </div>
 
       <!-- Pestañas de Navegación -->
       <nav class="admin-tabs" role="tablist" aria-label="Secciones del panel de administración">
+        <button
+          type="button"
+          class="tab-btn"
+          role="tab"
+          id="tab-btn-supervisores"
+          aria-controls="panel-supervisores"
+          [attr.aria-selected]="tabActiva() === 'supervisores'"
+          [class.active]="tabActiva() === 'supervisores'"
+          (click)="cambiarTab('supervisores')"
+          data-testid="tab-supervisores"
+        >
+          Supervisores
+        </button>
         <button
           type="button"
           class="tab-btn"
@@ -138,6 +155,12 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
       @if (error()) {
         <div class="alert alert-danger" role="alert" data-testid="mensaje-error">
           {{ error() }}
+        </div>
+      }
+
+      @if (tabActiva() === 'supervisores') {
+        <div role="tabpanel" id="panel-supervisores" aria-labelledby="tab-btn-supervisores">
+          <app-personal-institucional (asignado)="cargarDatosPersonas()" />
         </div>
       }
 
@@ -524,6 +547,7 @@ type TabAdmin = 'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cue
                     (ngModelChange)="cambiarFilasPorPagina($event)"
                     data-testid="select-filas-por-pagina"
                   >
+                    <option [ngValue]="10">10 por pág.</option>
                     <option [ngValue]="25">25 por pág.</option>
                     <option [ngValue]="50">50 por pág.</option>
                     <option [ngValue]="100">100 por pág.</option>
@@ -1493,7 +1517,7 @@ export class AdminDashboardComponent implements OnInit {
   // Paginación y filtros de personas
   readonly filtroBusqueda = signal<string>('');
   readonly paginaActual = signal<number>(1);
-  readonly filasPorPagina = signal<number>(25);
+  readonly filasPorPagina = signal<number>(10);
 
   readonly personasFiltradas = computed(() => {
     const texto = this.filtroBusqueda().trim().toLowerCase();

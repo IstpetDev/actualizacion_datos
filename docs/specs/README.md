@@ -59,3 +59,5 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0012](spec-0012/spec.md) | Panel de admin: unificar pantallas, paginación, botones responsive y cuentas bancarias, issue #83 | Implementado (2026-10-27) |
 | [spec-0013](spec-0013/spec.md) | Documento de hoja de vida desde plantillas globales, issue #101 | Aprobado v0.1 (2026-10-27) |
 | [spec-0014](spec-0014/spec.md) | Gestión de políticas y avisos de protección de datos en panel superadmin, issue #120 | Aprobado (2026-10-28) |
+| [spec-0015](spec-0015/spec.md) | Persistencia y sincronización de ficha personal, issue #125 | Alcance autorizado por el solicitante (2026-10-28) |
+| [spec-0016](spec-0016/spec.md) | Gestión de administradores y supervisores por institución, issue #129 | Alcance autorizado por el solicitante (2026-10-28) |

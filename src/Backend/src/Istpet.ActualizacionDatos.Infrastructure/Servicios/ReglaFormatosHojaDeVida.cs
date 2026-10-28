@@ -21,8 +21,11 @@ public sealed class ReglaFormatosHojaDeVida(AplicacionDbContext contexto, IServi
             foreach (var (campo, motivos) in ValidacionHojaDeVida.Evaluar(datos, regla, politica))
                 faltantes.Add(new(seccion, $"formato.{campo}", $"Revise {campo}: {string.Join(" ", motivos)}", id));
         }
-        var ficha = await contexto.FichasPersonales.SingleOrDefaultAsync(f => f.PersonaId == personaId, ct);
-        if (ficha is not null) Revisar(ficha, "ficha", "ficha");
+        if (abiertas.Contains(SeccionHojaDeVida.FichaPersonal))
+        {
+            var ficha = await contexto.FichasPersonales.SingleOrDefaultAsync(f => f.PersonaId == personaId, ct);
+            if (ficha is not null) Revisar(ficha, "ficha", "ficha");
+        }
 
         if (abiertas.Contains(SeccionHojaDeVida.FormacionAcademica))
         {

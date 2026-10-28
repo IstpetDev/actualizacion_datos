@@ -78,19 +78,15 @@ public sealed class SeccionesTests : IDisposable
         db.Campanas.Add(new Campana(Guid.NewGuid(), id, "Campaña Activa", DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(10), activa: true));
 
         // Catálogos básicos necesarios
-        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 1))
+        if (!await db.ElementosCatalogo.AnyAsync(e => e.Id == 1001))
         {
             db.ElementosCatalogo.AddRange(
-                new ElementoCatalogo(1, TipoCatalogo.Sexo, "M", "Masculino"),
-                new ElementoCatalogo(11, TipoCatalogo.EstadoCivil, "SOLTERO", "Soltero/a"),
-                new ElementoCatalogo(21, TipoCatalogo.TipoSangre, "OPOS", "O+"),
-                new ElementoCatalogo(31, TipoCatalogo.Pais, "EC", "Ecuador"),
-                new ElementoCatalogo(41, TipoCatalogo.Provincia, "PICH", "Pichincha", padreId: 31),
-                new ElementoCatalogo(51, TipoCatalogo.Canton, "QUITO", "Quito", padreId: 41),
-                new ElementoCatalogo(61, TipoCatalogo.Parroquia, "IQUITO", "Iñaquito", padreId: 51),
-                new ElementoCatalogo(71, TipoCatalogo.TipoCuentaBancaria, "AHORROS", "Ahorros"),
-                new ElementoCatalogo(80, TipoCatalogo.NivelAcademico, "TERCER_NIVEL", "Tercer Nivel"),
-                new ElementoCatalogo(81, TipoCatalogo.GradoAcademico, "LICENCIATURA", "Licenciatura", padreId: 80)
+                new ElementoCatalogo(1001, TipoCatalogo.Pais, "EC", "Ecuador"),
+                new ElementoCatalogo(1002, TipoCatalogo.Provincia, "PICH", "Pichincha", padreId: 1001),
+                new ElementoCatalogo(1003, TipoCatalogo.Canton, "QUITO", "Quito", padreId: 1002),
+                new ElementoCatalogo(1004, TipoCatalogo.Parroquia, "IQUITO", "Iñaquito", padreId: 1003),
+                new ElementoCatalogo(1080, TipoCatalogo.NivelAcademico, "TERCER_NIVEL", "Tercer Nivel"),
+                new ElementoCatalogo(1081, TipoCatalogo.GradoAcademico, "LICENCIATURA", "Licenciatura", padreId: 1080)
             );
         }
 
@@ -372,6 +368,119 @@ public sealed class SeccionesTests : IDisposable
         {
             Assert.Equal(3, seccion.TotalPersonas);
             Assert.Equal(seccion.TotalPersonas, seccion.PersonasCompletas + seccion.PersonasIncompletas);
+        }
+    }
+
+    [Fact]
+    public async Task Envio_revision_exitoso_cuando_solo_ficha_personal_esta_habilitada()
+    {
+        var inst = await CrearInstitucionAsync();
+
+        // 1. Cerrar todas las secciones excepto FichaPersonal
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/formacion", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/capacitaciones", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/experiencia", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/referencias", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/documentos", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/cuenta-bancaria", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+
+        // 2. Aceptar tratamiento de datos
+        await using (var db = Contexto(inst))
+        {
+            var p = await db.Personas.SingleAsync(x => x.Documento == UsuarioDoc);
+            p.AceptarTratamientoDatos(DateTime.UtcNow);
+            await db.SaveChangesAsync();
+        }
+
+        // 3. Completar Ficha Personal
+        var reqFicha = new GuardarFichaPersonalRequest(
+            PrimerNombre: "Usuario",
+            PrimerApellido: "Ficticio",
+            SexoId: 1,
+            FechaNacimiento: new DateOnly(1990, 1, 1),
+            PaisNacimientoId: 1001,
+            EstadoCivilId: 11,
+            PaisNacionalidadId: 1001,
+            ParroquiaResidenciaId: 1004,
+            CallePrincipal: "Calle Falsa 123",
+            Celular: "0990000000",
+            CorreoInstitucional: "usuario@ejemplo.test");
+
+        var respFicha = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", inst, UsuarioDoc, RolUsuario.Usuario, reqFicha);
+        Assert.True(respFicha.IsSuccessStatusCode, await respFicha.Content.ReadAsStringAsync());
+
+        // 4. Validar faltantes de envío: debe estar completo y sin faltantes
+        var respFaltantes = await EnviarAsync(HttpMethod.Get, "/api/mis-datos/hoja-de-vida/faltantes", inst, UsuarioDoc, RolUsuario.Usuario);
+        Assert.Equal(HttpStatusCode.OK, respFaltantes.StatusCode);
+        var faltantes = await respFaltantes.Content.ReadFromJsonAsync<ResultadoValidacionEnvioDto>();
+        Assert.NotNull(faltantes);
+        Assert.True(faltantes.Completo);
+        Assert.Empty(faltantes.Faltantes);
+
+        // 5. Enviar a revisión: debe responder 200 OK
+        var respEnviar = await EnviarAsync(HttpMethod.Post, "/api/mis-datos/enviar", inst, UsuarioDoc, RolUsuario.Usuario);
+        Assert.Equal(HttpStatusCode.OK, respEnviar.StatusCode);
+
+        // 6. Verificar que la persona quedó en estado Enviado
+        await using (var db = Contexto(inst))
+        {
+            var p = await db.Personas.SingleAsync(x => x.Documento == UsuarioDoc);
+            Assert.Equal(EstadoActualizacion.Enviado, p.EstadoActualizacion);
+        }
+    }
+
+    [Fact]
+    public async Task Envio_revision_sincroniza_correo_institucional_de_ficha_si_persona_carecia_de_correo()
+    {
+        var inst = await CrearInstitucionAsync();
+
+        // Cerrar secciones complementarias para aislar el flujo de la ficha
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/formacion", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/capacitaciones", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/experiencia", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/referencias", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/documentos", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+        await EnviarAsync(HttpMethod.Put, "/api/configuracion/secciones/cuenta-bancaria", inst, AdminDoc, RolUsuario.Admin, new CambiarEstadoSeccionRequest(false));
+
+        // Persona sin correo inicial pero con tratamiento aceptado
+        await using (var db = Contexto(inst))
+        {
+            var p = await db.Personas.SingleAsync(x => x.Documento == UsuarioDoc);
+            p.AceptarTratamientoDatos(DateTime.UtcNow);
+            // Vaciar el correo asignado previamente
+            var pType = typeof(Persona);
+            var correoProp = pType.GetProperty("Correo");
+            correoProp?.SetValue(p, null);
+            await db.SaveChangesAsync();
+        }
+
+        // Guardar ficha personal con correo institucional
+        var reqFicha = new GuardarFichaPersonalRequest(
+            PrimerNombre: "Usuario",
+            PrimerApellido: "Ficticio",
+            SexoId: 1,
+            FechaNacimiento: new DateOnly(1990, 1, 1),
+            PaisNacimientoId: 1001,
+            EstadoCivilId: 11,
+            PaisNacionalidadId: 1001,
+            ParroquiaResidenciaId: 1004,
+            CallePrincipal: "Calle Falsa 123",
+            Celular: "0990000000",
+            CorreoInstitucional: "usuario@ejemplo.test");
+
+        var respFicha = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", inst, UsuarioDoc, RolUsuario.Usuario, reqFicha);
+        Assert.True(respFicha.IsSuccessStatusCode, await respFicha.Content.ReadAsStringAsync());
+
+        // Enviar a revisión
+        var respEnviar = await EnviarAsync(HttpMethod.Post, "/api/mis-datos/enviar", inst, UsuarioDoc, RolUsuario.Usuario);
+        Assert.Equal(HttpStatusCode.OK, respEnviar.StatusCode);
+
+        // Validar que se sincronizó el correo en Persona y cambió el estado a Enviado
+        await using (var db = Contexto(inst))
+        {
+            var p = await db.Personas.SingleAsync(x => x.Documento == UsuarioDoc);
+            Assert.Equal("usuario@ejemplo.test", p.Correo);
+            Assert.Equal(EstadoActualizacion.Enviado, p.EstadoActualizacion);
         }
     }
 }
