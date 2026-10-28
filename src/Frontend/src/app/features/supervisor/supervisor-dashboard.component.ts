@@ -1,7 +1,7 @@
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   API_BASE_URL,
@@ -60,8 +60,19 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
         </div>
       }
 
-      <!-- Vista principal: Lista de solicitudes pendientes -->
+      <!-- Vista principal: Lista de solicitudes y personas de la institución -->
       @if (!expedienteSeleccionado()) {
+        <div class="filtro-busqueda">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por documento, nombre o estado..."
+            [ngModel]="filtroTexto()"
+            (ngModelChange)="filtroTexto.set($event)"
+            data-testid="input-filtro-supervisor"
+          />
+        </div>
+
         <div class="table-container">
           <table class="data-table" data-testid="tabla-pendientes">
             <thead>
@@ -70,12 +81,13 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Estado</th>
+                <th>Avance</th>
                 <th>Fecha Envío</th>
                 <th class="text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
-              @for (item of pendientes(); track item.id) {
+              @for (item of pendientesFiltrados(); track item.id) {
                 <tr [attr.data-testid]="'fila-pendiente-' + item.documento">
                   <td>
                     <strong>{{ item.documento }}</strong>
@@ -83,9 +95,36 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                   <td>{{ item.nombre || '—' }}</td>
                   <td>{{ item.correo || '—' }}</td>
                   <td>
-                    <span class="badge badge-warning">{{ item.estadoActualizacion }}</span>
+                    <span
+                      class="badge"
+                      [ngClass]="obtenerClaseBadge(item.estadoActualizacion)"
+                      [attr.data-testid]="'badge-estado-' + item.documento"
+                    >
+                      {{ item.estadoActualizacion }}
+                    </span>
                   </td>
-                  <td>{{ item.fechaCreacionUtc | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="avance-cell" [attr.data-testid]="'avance-' + item.documento">
+                    <div class="barra-avance-fondo">
+                      <div
+                        class="barra-avance-relleno"
+                        [class.completo]="(item.porcentajeAvance || 0) >= 100"
+                        [style.width.%]="item.porcentajeAvance || 0"
+                      ></div>
+                    </div>
+                    <span class="avance-texto">
+                      {{ item.seccionesConDatos || 0 }}/{{ item.totalSecciones || 7 }} secciones ({{
+                        item.porcentajeAvance || 0
+                      }}%)
+                    </span>
+                  </td>
+                  <td>
+                    {{
+                      item.estadoActualizacion === 'Enviado' ||
+                      item.estadoActualizacion === 'Aprobado'
+                        ? (item.fechaCreacionUtc | date: 'dd/MM/yyyy HH:mm')
+                        : '—'
+                    }}
+                  </td>
                   <td class="text-right">
                     <button
                       type="button"
@@ -100,8 +139,8 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="6" class="text-center empty-state">
-                    No hay solicitudes pendientes de revisión en este momento.
+                  <td colspan="7" class="text-center empty-state">
+                    No hay solicitudes ni personas registradas para mostrar.
                   </td>
                 </tr>
               }
@@ -137,26 +176,47 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
               >
                 {{ descargandoPdf() ? 'Descargando PDF...' : 'Descargar Hoja de Vida (PDF)' }}
               </button>
-              <button
-                type="button"
-                class="btn btn-danger"
-                (click)="abrirModalDevolver()"
-                [disabled]="procesando()"
-                data-testid="btn-abrir-devolver"
-              >
-                Devolver con Observaciones
-              </button>
-              <button
-                type="button"
-                class="btn btn-success"
-                (click)="aprobar()"
-                [disabled]="procesando()"
-                data-testid="btn-aprobar"
-              >
-                {{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}
-              </button>
+              @if (esExpedienteEnviado()) {
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="abrirModalDevolver()"
+                  [disabled]="procesando()"
+                  data-testid="btn-abrir-devolver"
+                >
+                  Devolver con Observaciones
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-success"
+                  (click)="aprobar()"
+                  [disabled]="procesando()"
+                  data-testid="btn-aprobar"
+                >
+                  {{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}
+                </button>
+              }
             </div>
           </div>
+
+          @if (!esExpedienteEnviado()) {
+            <div class="aviso-modo-lectura" role="status" data-testid="aviso-modo-lectura">
+              <strong>Modo solo lectura:</strong>
+              @if (
+                expedienteSeleccionado()?.estadoActualizacion === 'Borrador' ||
+                expedienteSeleccionado()?.estadoActualizacion === 'Sin Iniciar'
+              ) {
+                El expediente se encuentra en estado
+                <em>{{ expedienteSeleccionado()?.estadoActualizacion }}</em
+                >. No puede ser aprobado ni devuelto hasta que la persona formalice su envío.
+              } @else if (expedienteSeleccionado()?.estadoActualizacion === 'Devuelto') {
+                El expediente se encuentra en estado <em>Devuelto</em> a la espera de que el usuario
+                envíe las correcciones solicitadas.
+              } @else if (expedienteSeleccionado()?.estadoActualizacion === 'Aprobado') {
+                El expediente se encuentra <em>Aprobado</em> y cerrado para la campaña activa.
+              }
+            </div>
+          }
 
           <div class="expediente-grid">
             <!-- Datos Personales -->
@@ -818,6 +878,41 @@ export class SupervisorDashboardComponent implements OnInit {
   private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
 
   readonly pendientes = signal<ResumenRevisionPendienteDto[]>([]);
+  readonly filtroTexto = signal<string>('');
+
+  readonly pendientesFiltrados = computed(() => {
+    const filtro = this.filtroTexto().trim().toLowerCase();
+    if (!filtro) return this.pendientes();
+    return this.pendientes().filter(
+      (p) =>
+        p.documento?.toLowerCase().includes(filtro) ||
+        p.nombre?.toLowerCase().includes(filtro) ||
+        p.correo?.toLowerCase().includes(filtro) ||
+        p.estadoActualizacion?.toLowerCase().includes(filtro),
+    );
+  });
+
+  readonly esExpedienteEnviado = computed(() => {
+    return this.expedienteSeleccionado()?.estadoActualizacion === 'Enviado';
+  });
+
+  obtenerClaseBadge(estado?: string): string {
+    const normalizado = (estado || '').toLowerCase();
+    switch (normalizado) {
+      case 'sin iniciar':
+        return 'badge-secondary';
+      case 'borrador':
+        return 'badge-warning';
+      case 'enviado':
+        return 'badge-info';
+      case 'devuelto':
+        return 'badge-danger';
+      case 'aprobado':
+        return 'badge-success';
+      default:
+        return 'badge-secondary';
+    }
+  }
   readonly cargando = signal<boolean>(false);
   readonly procesando = signal<boolean>(false);
   readonly cargandoExpediente = signal<boolean>(false);

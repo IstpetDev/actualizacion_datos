@@ -29,7 +29,11 @@ public sealed record ResumenRevisionPendienteDto(
     string? Nombre,
     string? Correo,
     string EstadoActualizacion,
-    DateTime FechaCreacionUtc);
+    DateTime FechaCreacionUtc,
+    int TotalSecciones = 0,
+    int SeccionesConDatos = 0,
+    int PorcentajeAvance = 0,
+    List<string>? SeccionesCompletadas = null);
 
 public sealed record ExpedienteRevisionDto(
     Guid Id,
