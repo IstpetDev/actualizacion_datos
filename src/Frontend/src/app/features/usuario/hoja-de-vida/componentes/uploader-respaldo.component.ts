@@ -1,8 +1,17 @@
 import { mensajeError } from '../../../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
-import { Component, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { finalize } from 'rxjs';
-import { ArchivosClient, FileResponse } from '../../../../api-client';
+import { API_BASE_URL, ArchivosClient, FileResponse } from '../../../../api-client';
 import { descargarBlob } from '../../../../core/util/descarga-archivo.util';
 
 const LIMITE_ALERTA_BYTES = 5 * 1024 * 1024; // 5 MB (ADR-0006)
@@ -24,56 +33,195 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
         <span class="uploader-ayuda">{{ ayuda() }}</span>
       </div>
 
-      <!-- Estado: Archivo ya asignado -->
-      @if (archivoId(); as id) {
-        <div class="archivo-cargado-badge" data-testid="archivo-asignado">
-          <div class="archivo-info">
-            <span class="archivo-icono">📄</span>
-            <span class="archivo-nombre">{{ nombreArchivo() || 'Documento adjunto' }}</span>
-          </div>
-          <div class="archivo-acciones">
-            <button
-              type="button"
-              class="btn-enlace"
-              (click)="descargarArchivo(id)"
-              [disabled]="descargando()"
-              data-testid="btn-descargar-respaldo"
-            >
-              {{ descargando() ? 'Descargando...' : 'Ver / Descargar' }}
-            </button>
-            @if (puedeEditar()) {
-              <button
-                type="button"
-                class="btn-quitar"
-                (click)="quitarArchivo()"
-                [disabled]="subiendo() || descargando()"
-                title="Quitar archivo"
-                data-testid="btn-quitar-respaldo"
-              >
-                ✕
-              </button>
-            }
-          </div>
-        </div>
-      }
+      <!-- Modo con vista previa de imagen (fotografía) -->
+      @if (mostrarVistaPrevia() || soloImagenes()) {
+        <!-- Caso con imagen para mostrar (vista previa local o persistida) -->
+        @if (vistaPreviaUrl() || archivoId()) {
+          <div class="foto-card" data-testid="foto-previa-contenedor">
+            <div class="foto-marco">
+              <img
+                [src]="vistaPreviaUrl() || (archivoId() ? obtenerUrlDescarga(archivoId()!) : '')"
+                [alt]="
+                  esSeleccionPendiente()
+                    ? 'Vista previa de la foto seleccionada'
+                    : 'Foto de perfil guardada'
+                "
+                class="foto-img"
+                [attr.data-testid]="
+                  esSeleccionPendiente() ? 'foto-vista-previa' : 'foto-persistida'
+                "
+              />
+            </div>
+            <div class="foto-detalles">
+              <div class="foto-estados">
+                @if (esSeleccionPendiente()) {
+                  <span class="badge-estado badge-pendiente" data-testid="badge-pendiente">
+                    Foto seleccionada (sin guardar)
+                  </span>
+                } @else {
+                  <span class="badge-estado badge-guardada" data-testid="badge-guardada">
+                    Foto guardada
+                  </span>
+                }
+              </div>
 
-      <!-- Control de selección de archivo cuando puede editar -->
-      @if (puedeEditar()) {
-        <div class="input-file-wrapper" [class.oculto]="!!archivoId()">
+              <div class="foto-acciones">
+                @if (!esSeleccionPendiente() && archivoId(); as id) {
+                  <a
+                    [href]="obtenerUrlDescarga(id)"
+                    (click)="descargarArchivo(id, $event)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-enlace"
+                    data-testid="btn-descargar-foto"
+                  >
+                    {{ descargando() ? 'Descargando...' : 'Ver / Descargar' }}
+                  </a>
+                }
+
+                @if (puedeEditar()) {
+                  <button
+                    type="button"
+                    class="btn-accion btn-reemplazar"
+                    (click)="abrirSelectorFoto()"
+                    [disabled]="subiendo()"
+                    data-testid="btn-reemplazar-foto"
+                  >
+                    {{ esSeleccionPendiente() ? 'Cambiar selección' : 'Reemplazar foto' }}
+                  </button>
+
+                  @if (esSeleccionPendiente()) {
+                    <button
+                      type="button"
+                      class="btn-accion btn-cancelar"
+                      (click)="cancelarSeleccion()"
+                      [disabled]="subiendo()"
+                      data-testid="btn-cancelar-seleccion"
+                    >
+                      Cancelar selección
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-accion btn-quitar"
+                      (click)="quitarArchivo()"
+                      [disabled]="subiendo()"
+                      title="Quitar foto"
+                      data-testid="btn-quitar-foto"
+                    >
+                      Quitar foto
+                    </button>
+                  }
+                }
+              </div>
+
+              @if (subiendo()) {
+                <span class="subiendo-indicador">Subiendo archivo...</span>
+              }
+            </div>
+          </div>
+        } @else {
+          <!-- Caso sin imagen registrada ni seleccionada -->
+          @if (puedeEditar()) {
+            <div class="foto-vacia-card" data-testid="foto-vacia">
+              <div class="foto-placeholder-silueta" aria-hidden="true">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#94a3b8"
+                  stroke-width="1.5"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div class="foto-vacia-acciones">
+                <button
+                  type="button"
+                  class="btn-accion btn-seleccionar"
+                  (click)="abrirSelectorFoto()"
+                  [disabled]="subiendo()"
+                  data-testid="btn-seleccionar-foto"
+                >
+                  Seleccionar foto
+                </button>
+                @if (subiendo()) {
+                  <span class="subiendo-indicador">Subiendo archivo...</span>
+                }
+              </div>
+            </div>
+          } @else {
+            <p class="sin-foto-aviso">Sin foto de perfil registrada.</p>
+          }
+        }
+
+        <!-- Input file para modo fotografía -->
+        @if (puedeEditar()) {
           <input
+            #inputArchivoFoto
             type="file"
-            [accept]="
-              soloImagenes() ? 'image/png,image/jpeg,image/webp' : '.pdf,image/png,image/jpeg'
-            "
+            accept="image/png,image/jpeg,image/webp"
             (change)="onArchivoSeleccionado($event)"
             [disabled]="subiendo()"
-            class="input-file"
+            class="input-file-oculto"
             data-testid="input-archivo"
+            aria-label="Seleccionar imagen de fotografía"
           />
-          @if (subiendo()) {
-            <span class="subiendo-indicador">Subiendo archivo...</span>
-          }
-        </div>
+        }
+      } @else {
+        <!-- Modo estándar para documentos adjuntos / PDFs -->
+        @if (archivoId(); as id) {
+          <div class="archivo-cargado-badge" data-testid="archivo-asignado">
+            <div class="archivo-info">
+              <span class="archivo-icono">📄</span>
+              <span class="archivo-nombre">{{ nombreArchivo() || 'Documento adjunto' }}</span>
+            </div>
+            <div class="archivo-acciones">
+              <a
+                [href]="obtenerUrlDescarga(id)"
+                (click)="descargarArchivo(id, $event)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-enlace"
+                data-testid="btn-descargar-respaldo"
+              >
+                {{ descargando() ? 'Descargando...' : 'Ver / Descargar' }}
+              </a>
+              @if (puedeEditar()) {
+                <button
+                  type="button"
+                  class="btn-quitar"
+                  (click)="quitarArchivo()"
+                  [disabled]="subiendo() || descargando()"
+                  title="Quitar archivo"
+                  data-testid="btn-quitar-respaldo"
+                >
+                  ✕
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (puedeEditar()) {
+          <div class="input-file-wrapper" [class.oculto]="!!archivoId()">
+            <input
+              type="file"
+              [accept]="
+                soloImagenes() ? 'image/png,image/jpeg,image/webp' : '.pdf,image/png,image/jpeg'
+              "
+              (change)="onArchivoSeleccionado($event)"
+              [disabled]="subiendo()"
+              class="input-file"
+              data-testid="input-archivo"
+            />
+            @if (subiendo()) {
+              <span class="subiendo-indicador">Subiendo archivo...</span>
+            }
+          </div>
+        }
       }
 
       <!-- Alertas de tamaño y errores -->
@@ -191,13 +339,153 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
       .text-danger {
         color: #dc2626;
       }
+
+      /* Estilos para vista previa de fotografía */
+      .foto-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 1.25rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .foto-marco {
+        width: 120px;
+        height: 140px;
+        flex-shrink: 0;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #e2e8f0;
+        border: 1px solid #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .foto-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .foto-detalles {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+        flex: 1;
+      }
+      .foto-estados {
+        display: flex;
+        align-items: center;
+      }
+      .badge-estado {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+      .badge-pendiente {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+      }
+      .badge-guardada {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+      .foto-acciones {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .btn-accion {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border-radius: 5px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
+      }
+      .btn-reemplazar {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #334155;
+      }
+      .btn-reemplazar:hover:not(:disabled) {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+      }
+      .btn-cancelar {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #e11d48;
+      }
+      .btn-cancelar:hover:not(:disabled) {
+        background: #ffe4e6;
+      }
+      .btn-quitar {
+        background: transparent;
+        border: none;
+        color: #ef4444;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+      }
+      .btn-quitar:hover:not(:disabled) {
+        text-decoration: underline;
+      }
+      .foto-vacia-card {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .foto-placeholder-silueta {
+        width: 80px;
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f1f5f9;
+        border-radius: 6px;
+      }
+      .btn-seleccionar {
+        background: var(--ammi-primary, #1d1e1c);
+        color: #ffffff;
+        border: 1px solid var(--ammi-primary, #1d1e1c);
+      }
+      .btn-seleccionar:hover:not(:disabled) {
+        background: var(--ammi-primary-hover, #0f100e);
+      }
+      .input-file-oculto {
+        display: none;
+      }
+      .sin-foto-aviso {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-style: italic;
+        margin: 0.5rem 0;
+      }
     `,
   ],
 })
 export class UploaderRespaldoComponent {
   private readonly archivosClient = inject(ArchivosClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+
+  readonly inputArchivoFoto = viewChild<ElementRef<HTMLInputElement>>('inputArchivoFoto');
 
   readonly archivoId = input<string | undefined>(undefined);
+  readonly archivoIdGuardado = input<string | undefined>(undefined);
   readonly nombreArchivo = input<string | undefined>(undefined);
   readonly claveDestino = input<string | undefined>(undefined);
   readonly puedeEditar = input<boolean>(true);
@@ -205,6 +493,7 @@ export class UploaderRespaldoComponent {
   readonly etiqueta = input<string>('Archivo de respaldo');
   readonly ayuda = input<string>('Formatos permitidos: PDF, JPG, PNG (máx. 10 MB)');
   readonly soloImagenes = input<boolean>(false);
+  readonly mostrarVistaPrevia = input<boolean>(false);
 
   readonly archivoIdChange = output<string>();
   readonly archivoEliminado = output<void>();
@@ -213,6 +502,23 @@ export class UploaderRespaldoComponent {
   readonly descargando = signal(false);
   readonly error = signal('');
   readonly avisoTamanio = signal('');
+  readonly vistaPreviaUrl = signal<string | null>(null);
+  readonly esSeleccionPendiente = signal(false);
+
+  constructor() {
+    effect(() => {
+      const id = this.archivoId();
+      const guardado = this.archivoIdGuardado();
+      if (id && guardado && id === guardado) {
+        this.esSeleccionPendiente.set(false);
+        this.vistaPreviaUrl.set(null);
+      }
+    });
+  }
+
+  abrirSelectorFoto(): void {
+    this.inputArchivoFoto()?.nativeElement.click();
+  }
 
   onArchivoSeleccionado(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
@@ -224,8 +530,9 @@ export class UploaderRespaldoComponent {
 
     // Validación de tipo imagen si aplica
     if (this.soloImagenes()) {
+      const esPdf = archivo.type === 'application/pdf' || /\.pdf$/i.test(archivo.name);
       const esImagen =
-        archivo.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(archivo.name);
+        (archivo.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(archivo.name)) && !esPdf;
       if (!esImagen) {
         this.error.set('Formato inválido. Solo se admiten imágenes (JPG, PNG).');
         inputEl.value = '';
@@ -247,7 +554,50 @@ export class UploaderRespaldoComponent {
       );
     }
 
+    // Generar vista previa local si mostrarVistaPrevia o soloImagenes está activo
+    if (this.mostrarVistaPrevia() || this.soloImagenes()) {
+      this.generarVistaPreviaLocal(archivo);
+    }
+
     this.subirArchivo(archivo, inputEl);
+  }
+
+  private generarVistaPreviaLocal(archivo: File): void {
+    this.esSeleccionPendiente.set(true);
+
+    if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
+      try {
+        const url = URL.createObjectURL(archivo);
+        if (url) {
+          this.vistaPreviaUrl.set(url);
+          return;
+        }
+      } catch {
+        // Fallback a FileReader si ocurre un error
+      }
+    }
+
+    if (typeof FileReader !== 'undefined') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.vistaPreviaUrl.set(reader.result as string);
+      };
+      reader.readAsDataURL(archivo);
+    }
+  }
+
+  cancelarSeleccion(): void {
+    this.error.set('');
+    this.avisoTamanio.set('');
+    this.vistaPreviaUrl.set(null);
+    this.esSeleccionPendiente.set(false);
+
+    const guardado = this.archivoIdGuardado();
+    if (guardado) {
+      this.archivoIdChange.emit(guardado);
+    } else {
+      this.archivoEliminado.emit();
+    }
   }
 
   private subirArchivo(archivo: File, inputEl: HTMLInputElement): void {
@@ -278,7 +628,10 @@ export class UploaderRespaldoComponent {
       });
   }
 
-  descargarArchivo(id: string): void {
+  descargarArchivo(id: string, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
     if (this.descargando()) return;
     this.descargando.set(true);
     this.error.set('');
@@ -302,9 +655,15 @@ export class UploaderRespaldoComponent {
     });
   }
 
+  obtenerUrlDescarga(id: string): string {
+    return `${this.baseUrl}/api/archivos/${encodeURIComponent(id)}/descargar`;
+  }
+
   quitarArchivo(): void {
     this.error.set('');
     this.avisoTamanio.set('');
+    this.vistaPreviaUrl.set(null);
+    this.esSeleccionPendiente.set(false);
     this.archivoEliminado.emit();
   }
 }

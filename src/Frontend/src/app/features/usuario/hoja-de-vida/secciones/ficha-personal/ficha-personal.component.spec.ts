@@ -92,7 +92,13 @@ describe('FichaPersonalComponent', () => {
       provincias: vi.fn().mockReturnValue(of(mockProvincias)),
       cantones: vi.fn().mockReturnValue(of(mockCantones)),
       parroquias: vi.fn().mockReturnValue(of(mockParroquias)),
-      discapacidades: vi.fn().mockReturnValue(of([{ id: 301, nombre: 'Tipo ficticio' }])),
+      discapacidades: vi.fn().mockReturnValue(
+        of([
+          { id: 301, codigo: 'FICTICIA', nombre: 'Tipo ficticio' },
+          { id: 307, codigo: '7', nombre: 'No aplica' },
+          { id: 308, codigo: 'NINGUNA', nombre: 'Ninguna' },
+        ]),
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -204,12 +210,296 @@ describe('FichaPersonalComponent', () => {
     expect(component.cantonResidenciaId()).toBe(1701);
   });
 
-  it('limpia porcentaje y carné al quitar discapacidad', () => {
+  it('guarda los tres detalles vacíos al responder No', () => {
     cargarFicha();
-    component.onDiscapacidadChange(undefined);
+    component.onPoseeDiscapacidadChange(false);
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        discapacidadId: undefined,
+        porcentajeDiscapacidad: undefined,
+        numeroCarnetDiscapacidad: undefined,
+      }),
+    );
     expect(component.modelo.discapacidadId).toBeUndefined();
     expect(component.modelo.porcentajeDiscapacidad).toBeUndefined();
     expect(component.modelo.numeroCarnetDiscapacidad).toBeUndefined();
+  });
+
+  function responder(posee: boolean): void {
+    component.onPoseeDiscapacidadChange(posee);
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+  }
+
+  function establecerDiscapacidad(datos: Partial<FichaPersonalDto>): void {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      ...datos,
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+  }
+
+  it('presenta No y oculta los detalles cuando no hay discapacidad', async () => {
+    await fixture.whenStable();
+    expect(
+      (fixture.nativeElement.querySelector('#poseeDiscapacidadNo') as HTMLInputElement).checked,
+    ).toBe(true);
+    expect(fixture.nativeElement.querySelector('#discapacidadId')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#porcentajeDiscapacidad')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#numeroCarnetDiscapacidad')).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('No necesita llenar detalles');
+  });
+
+  it('los controles Sí y No cambian la respuesta y los campos visibles', async () => {
+    await fixture.whenStable();
+    (fixture.nativeElement.querySelector('#poseeDiscapacidadSi') as HTMLInputElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(fixture.nativeElement.querySelector('#discapacidadId')).not.toBeNull();
+    (fixture.nativeElement.querySelector('#poseeDiscapacidadNo') as HTMLInputElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(component.poseeDiscapacidad()).toBe(false);
+    expect(fixture.nativeElement.querySelector('#discapacidadId')).toBeNull();
+  });
+
+  it('Sí exige tipo, elimina Ninguna y No aplica, y bloquea todos los caminos de guardado', () => {
+    responder(true);
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(component.tieneCambios()).toBe(true);
+    const opciones = Array.from(
+      fixture.nativeElement.querySelectorAll(
+        '#discapacidadId option',
+      ) as NodeListOf<HTMLOptionElement>,
+    ).map((opcion) => opcion.textContent);
+    expect(opciones.join(' ')).toContain('Tipo ficticio');
+    expect(opciones.join(' ')).not.toMatch(/Ninguna|No aplica|Sin discapacidad/);
+    expect(fixture.nativeElement.querySelector('#error-discapacidad').textContent).toContain(
+      'Seleccione un tipo',
+    );
+    expect(
+      (
+        fixture.nativeElement.querySelector(
+          '[data-testid="btn-guardar-ficha"]',
+        ) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+    expect(component.validacion.hayErrores()).toBe(true);
+    component.guardarFicha();
+    component.guardarCambios().subscribe((guardado) => expect(guardado).toBe(false));
+    expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+  });
+
+  it('Sí guarda un tipo válido sin hacer obligatorios porcentaje ni carné', () => {
+    responder(true);
+    component.onDiscapacidadChange(301);
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ discapacidadId: 301 }),
+    );
+    expect(component.formularioInvalido()).toBe(false);
+  });
+
+  it.each([-1, 101, 1.5])('Sí rechaza porcentaje inválido %s', async (porcentaje) => {
+    cargarFicha();
+    await fixture.whenStable();
+    const campo = fixture.nativeElement.querySelector(
+      '#porcentajeDiscapacidad',
+    ) as HTMLInputElement;
+    campo.value = String(porcentaje);
+    campo.dispatchEvent(new Event('input', { bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('#error-porcentaje').textContent).toContain(
+      'entero',
+    );
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+  });
+
+  it('mantiene el límite del carné y admite porcentaje cero con un tipo válido', () => {
+    responder(true);
+    component.onDiscapacidadChange(301);
+    component.modelo.porcentajeDiscapacidad = 0;
+    component.modelo.numeroCarnetDiscapacidad = 'X'.repeat(31);
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+    component.modelo.numeroCarnetDiscapacidad = 'CARNE-FICTICIO';
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        porcentajeDiscapacidad: 0,
+        numeroCarnetDiscapacidad: 'CARNE-FICTICIO',
+      }),
+    );
+  });
+
+  it('conserva los detalles al alternar No y Sí antes de guardar', () => {
+    cargarFicha();
+    responder(false);
+    expect(component.poseeDiscapacidad()).toBe(false);
+    expect(fixture.nativeElement.querySelector('#discapacidadId')).toBeNull();
+    responder(true);
+    expect(component.modelo.discapacidadId).toBe(301);
+    expect(component.modelo.porcentajeDiscapacidad).toBe(25);
+    expect(component.modelo.numeroCarnetDiscapacidad).toBe('CARNE-FICTICIO');
+    expect(component.tieneCambios()).toBe(false);
+  });
+
+  it('descartar restaura la respuesta y los detalles originales', () => {
+    cargarFicha();
+    responder(false);
+    expect(component.tieneCambios()).toBe(true);
+    component.descartarCambios();
+    fixture.detectChanges();
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(component.modelo.discapacidadId).toBe(301);
+    expect(component.modelo.numeroCarnetDiscapacidad).toBe('CARNE-FICTICIO');
+    expect(component.tieneCambios()).toBe(false);
+  });
+
+  it('recarga No después de guardar sin discapacidad y Sí con sus detalles', () => {
+    establecerDiscapacidad({ discapacidadId: undefined });
+    expect(component.poseeDiscapacidad()).toBe(false);
+    establecerDiscapacidad({
+      discapacidadId: 301,
+      porcentajeDiscapacidad: 35,
+      numeroCarnetDiscapacidad: 'CARNE-FICTICIO',
+    });
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(component.modelo.porcentajeDiscapacidad).toBe(35);
+    expect(component.modelo.numeroCarnetDiscapacidad).toBe('CARNE-FICTICIO');
+    expect(component.tieneCambios()).toBe(false);
+  });
+
+  it('muestra la indicación de seleccionar tipo después de recargar valores null de la API', async () => {
+    establecerDiscapacidad(
+      JSON.parse(
+        '{"discapacidadId":null,"porcentajeDiscapacidad":null,"numeroCarnetDiscapacidad":null}',
+      ),
+    );
+    responder(true);
+    await fixture.whenStable();
+    const selector = fixture.nativeElement.querySelector('#discapacidadId') as HTMLSelectElement;
+    expect(selector.selectedOptions[0].textContent).toContain('Seleccione un tipo de discapacidad');
+    expect(component.formularioInvalido()).toBe(true);
+  });
+
+  it('presenta No para No aplica antiguo sin detalles y lo normaliza solo al guardar', () => {
+    establecerDiscapacidad({ discapacidadId: 307 });
+    expect(component.poseeDiscapacidad()).toBe(false);
+    expect(component.modelo.discapacidadId).toBe(307);
+    expect(component.tieneCambios()).toBe(false);
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ discapacidadId: undefined }),
+    );
+  });
+
+  it.each([307, 999, undefined])(
+    'preserva datos históricos de un tipo inválido %s y exige revisión',
+    (discapacidadId) => {
+      establecerDiscapacidad({
+        discapacidadId,
+        porcentajeDiscapacidad: 0,
+        numeroCarnetDiscapacidad: 'CARNE-ANTIGUO-FICTICIO',
+      });
+      expect(component.poseeDiscapacidad()).toBe(true);
+      expect(component.modelo.porcentajeDiscapacidad).toBe(0);
+      expect(component.modelo.numeroCarnetDiscapacidad).toBe('CARNE-ANTIGUO-FICTICIO');
+      component.guardarFicha();
+      expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+      component.onDiscapacidadChange(301);
+      component.guardarFicha();
+      expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          discapacidadId: 301,
+          porcentajeDiscapacidad: 0,
+          numeroCarnetDiscapacidad: 'CARNE-ANTIGUO-FICTICIO',
+        }),
+      );
+    },
+  );
+
+  it('una carga tardía reconoce No aplica sin reescribir otros cambios', () => {
+    const pendiente = new Subject<ElementoCatalogoDto[]>();
+    catalogosMock.discapacidades.mockReturnValue(pendiente);
+    component.cargarDiscapacidades();
+    establecerDiscapacidad({ discapacidadId: 707 });
+    component.modelo.callePrincipal = 'Cambio ficticio pendiente';
+    pendiente.next([{ id: 707, codigo: '7', nombre: 'No aplica' } as ElementoCatalogoDto]);
+    pendiente.complete();
+    fixture.detectChanges();
+    expect(component.poseeDiscapacidad()).toBe(false);
+    expect(component.modelo.callePrincipal).toBe('Cambio ficticio pendiente');
+    expect(component.modelo.discapacidadId).toBe(707);
+    expect(component.tieneCambios()).toBe(true);
+  });
+
+  it('una carga tardía respeta una respuesta elegida por la persona', () => {
+    const pendiente = new Subject<ElementoCatalogoDto[]>();
+    catalogosMock.discapacidades.mockReturnValue(pendiente);
+    component.cargarDiscapacidades();
+    responder(true);
+    pendiente.next([
+      { id: 301, codigo: 'FICTICIA', nombre: 'Tipo ficticio' } as ElementoCatalogoDto,
+    ]);
+    pendiente.complete();
+    fixture.detectChanges();
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(component.formularioInvalido()).toBe(true);
+    expect(component.tieneCambios()).toBe(true);
+  });
+
+  it('reconoce la respuesta antigua como No aunque se haya elegido Sí durante la carga', () => {
+    const pendiente = new Subject<ElementoCatalogoDto[]>();
+    catalogosMock.discapacidades.mockReturnValue(pendiente);
+    component.cargarDiscapacidades();
+    establecerDiscapacidad({ discapacidadId: 707 });
+    responder(false);
+    responder(true);
+    pendiente.next([{ id: 707, codigo: '7', nombre: 'No aplica' } as ElementoCatalogoDto]);
+    pendiente.complete();
+    expect(component.poseeDiscapacidad()).toBe(true);
+    expect(component.tieneCambios()).toBe(true);
+    component.descartarCambios();
+    expect(component.poseeDiscapacidad()).toBe(false);
+    expect(component.modelo.discapacidadId).toBe(707);
+  });
+
+  it('si falla el catálogo preserva datos y permite reintentar sin guardar Sí a ciegas', () => {
+    cargarFicha();
+    catalogosMock.discapacidades.mockReturnValueOnce(throwError(() => new Error('Fallo ficticio')));
+    component.cargarDiscapacidades();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('No se pudieron cargar los tipos');
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).not.toHaveBeenCalled();
+    component.cargarDiscapacidades();
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ discapacidadId: 301, porcentajeDiscapacidad: 25 }),
+    );
+  });
+
+  it('No permite guardar aun con detalles ocultos inválidos y un fallo conserva el borrador', () => {
+    cargarFicha();
+    component.modelo.porcentajeDiscapacidad = 101;
+    responder(false);
+    expect(component.formularioInvalido()).toBe(false);
+    stateMock.guardarFichaPersonal.mockReturnValueOnce(
+      throwError(() => new Error('Fallo ficticio')),
+    );
+    component.guardarFicha();
+    expect(component.modelo.porcentajeDiscapacidad).toBe(101);
+    expect(component.tieneCambios()).toBe(true);
+    responder(true);
+    expect(component.modelo.numeroCarnetDiscapacidad).toBe('CARNE-FICTICIO');
+    expect(component.formularioInvalido()).toBe(true);
   });
 
   it('muestra confirmación y errores accesibles y conserva cambios tras un guardado fallido', () => {
@@ -327,6 +617,81 @@ describe('FichaPersonalComponent', () => {
 
     component.descartarCambios();
     expect(component.modelo.primerNombre).toBe(originalNombre);
+    expect(component.tieneCambios()).toBe(false);
+  });
+  it('muestra_foto_persistida_cuando_la_ficha_cargada_tiene_fotoArchivoId', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-guardada-abc',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    expect(component.fotoGuardadaId()).toBe('foto-guardada-abc');
+    expect(component.modelo.fotoArchivoId).toBe('foto-guardada-abc');
+
+    const img = fixture.nativeElement.querySelector(
+      '[data-testid="foto-persistida"]',
+    ) as HTMLImageElement;
+    expect(img).not.toBeNull();
+    expect(img.src).toContain('/api/archivos/foto-guardada-abc/descargar');
+
+    const enlaceDescarga = fixture.nativeElement.querySelector(
+      '[data-testid="btn-descargar-foto"]',
+    ) as HTMLAnchorElement;
+    expect(enlaceDescarga).not.toBeNull();
+    expect(enlaceDescarga.href).toContain('/api/archivos/foto-guardada-abc/descargar');
+  });
+
+  it('permite_subir_nueva_foto_y_guardarla_en_la_ficha', () => {
+    component.ngOnInit();
+    component.onFotoSubida('nueva-foto-xyz');
+    expect(component.modelo.fotoArchivoId).toBe('nueva-foto-xyz');
+    expect(component.tieneCambios()).toBe(true);
+
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ fotoArchivoId: 'nueva-foto-xyz' }),
+    );
+  });
+
+  it('permite_eliminar_foto_y_guardar_la_ficha_sin_foto', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-a-eliminar',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    component.onFotoEliminada();
+    expect(component.modelo.fotoArchivoId).toBeUndefined();
+
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ fotoArchivoId: undefined }),
+    );
+  });
+
+  it('descarta_cambios_de_foto_restaurando_la_foto_guardada', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-original',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    component.onFotoSubida('foto-cambiada-temporal');
+    expect(component.modelo.fotoArchivoId).toBe('foto-cambiada-temporal');
+    expect(component.tieneCambios()).toBe(true);
+
+    component.descartarCambios();
+    expect(component.modelo.fotoArchivoId).toBe('foto-original');
     expect(component.tieneCambios()).toBe(false);
   });
 });
