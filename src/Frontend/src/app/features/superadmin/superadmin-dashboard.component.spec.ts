@@ -1,7 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { type Mock, vi } from 'vitest';
-import { InstitucionDto, InstitucionesClient, PlantillasHojaDeVidaClient } from '../../api-client';
+import {
+  InstitucionDto,
+  InstitucionesClient,
+  PlantillasHojaDeVidaClient,
+  SuperadminProteccionDatosClient,
+} from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { SuperadminDashboardComponent } from './superadmin-dashboard.component';
 
@@ -14,6 +19,10 @@ describe('SuperadminDashboardComponent', () => {
   };
   let plantillasClientMock: {
     listarPlantillasHojaDeVida: Mock;
+  };
+  let superadminProteccionDatosClientMock: {
+    listarAvisosProteccionDatosInstitucion: Mock;
+    publicarAvisoProteccionDatosInstitucion: Mock;
   };
   let authServiceMock: {
     sesion: Mock;
@@ -45,6 +54,11 @@ describe('SuperadminDashboardComponent', () => {
       listarPlantillasHojaDeVida: vi.fn().mockReturnValue(of([])),
     };
 
+    superadminProteccionDatosClientMock = {
+      listarAvisosProteccionDatosInstitucion: vi.fn().mockReturnValue(of([])),
+      publicarAvisoProteccionDatosInstitucion: vi.fn().mockReturnValue(of({})),
+    };
+
     authServiceMock = {
       sesion: vi.fn().mockReturnValue({
         documento: 'superadmin',
@@ -58,6 +72,7 @@ describe('SuperadminDashboardComponent', () => {
       providers: [
         { provide: InstitucionesClient, useValue: institucionesClientMock },
         { provide: PlantillasHojaDeVidaClient, useValue: plantillasClientMock },
+        { provide: SuperadminProteccionDatosClient, useValue: superadminProteccionDatosClientMock },
         { provide: AuthService, useValue: authServiceMock },
       ],
     }).compileComponents();
@@ -105,5 +120,20 @@ describe('SuperadminDashboardComponent', () => {
     component.tabActiva.set('plantillas');
     fixture.detectChanges();
     expect(component.tabActiva()).toBe('plantillas');
+  });
+
+  it('permite_cambiar_a_la_pestana_de_politicas_de_proteccion_de_datos', () => {
+    expect(component.tabActiva()).toBe('instituciones');
+    component.tabActiva.set('politicas-datos');
+    fixture.detectChanges();
+    expect(component.tabActiva()).toBe('politicas-datos');
+  });
+
+  it('permite_navegar_a_politicas_desde_el_boton_de_la_tabla', () => {
+    component.irAPoliticas('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+    expect(component.tabActiva()).toBe('politicas-datos');
+    expect(component.institucionSeleccionadaParaPoliticas()).toBe(
+      'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    );
   });
 });

@@ -67,3 +67,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0033](ADR-0033-motor-generacion-pdf.md) | Motor de generación de PDF en .NET | Vigente |
 | [ADR-0034](ADR-0034-exencion-superadmin-aviso-proteccion-datos.md) | Exención del aviso institucional de protección de datos para superadmin | Vigente |
 | [ADR-0035](ADR-0035-exencion-automatica-y-justificacion-capacitaciones-obligatorias.md) | Exención automática y justificación de nuevo ingreso en capacitaciones obligatorias | Vigente |
+| [ADR-0036](ADR-0036-gestion-politicas-proteccion-datos-superadmin.md) | Gestión y publicación de políticas y avisos de protección de datos en panel superadmin | Vigente |

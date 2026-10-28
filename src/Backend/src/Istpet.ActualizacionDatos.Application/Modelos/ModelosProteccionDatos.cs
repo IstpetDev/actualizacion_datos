@@ -15,3 +15,13 @@ public sealed record PublicarAvisoRequest(Guid InstitucionId, string Version, st
     string Responsable, string Contenido, string DeclaracionAceptacion, string FuenteOficial,
     string EvidenciaAprobacion, RolUsuario[] RolesDestinatarios, DateTime VigenteDesdeUtc,
     DateTime? VigenteHastaUtc, bool AprobacionInstitucionalConfirmada);
+
+public sealed record AvisoInstitucionalDto(Guid Id, Guid InstitucionId, string Version, string Titulo,
+    string Responsable, string Contenido, string DeclaracionAceptacion, string FuenteOficial,
+    string EvidenciaAprobacion, RolUsuario[] RolesDestinatarios, DateTime VigenteDesdeUtc,
+    DateTime? VigenteHastaUtc, bool EsVigente);
+
+public sealed record PublicarAvisoInstitucionalRequest(string Version, string Titulo,
+    string Responsable, string Contenido, string DeclaracionAceptacion, string FuenteOficial,
+    string EvidenciaAprobacion, RolUsuario[] RolesDestinatarios, DateTime VigenteDesdeUtc,
+    DateTime? VigenteHastaUtc, bool AprobacionInstitucionalConfirmada);

@@ -6955,6 +6955,174 @@ export class CuentaBancariaClient {
 @Injectable({
     providedIn: 'root'
 })
+export class SuperadminProteccionDatosClient {
+    private http: HttpClient;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(@Inject(HttpClient) http: HttpClient, @Optional() @Inject(API_BASE_URL) baseUrl?: string) {
+        this.http = http;
+        this.baseUrl = baseUrl ?? "";
+    }
+
+    /**
+     * @return OK
+     */
+    listarAvisosProteccionDatosInstitucion(id: string): Observable<AvisoInstitucionalDto[]> {
+        let url_ = this.baseUrl + "/api/superadmin/instituciones/{id}/avisos-proteccion-datos";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processListarAvisosProteccionDatosInstitucion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processListarAvisosProteccionDatosInstitucion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<AvisoInstitucionalDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<AvisoInstitucionalDto[]>;
+        }));
+    }
+
+    protected processListarAvisosProteccionDatosInstitucion(response: HttpResponseBase): Observable<AvisoInstitucionalDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AvisoInstitucionalDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return Created
+     */
+    publicarAvisoProteccionDatosInstitucion(id: string, body: PublicarAvisoInstitucionalRequest): Observable<AvisoInstitucionalDto> {
+        let url_ = this.baseUrl + "/api/superadmin/instituciones/{id}/avisos-proteccion-datos";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processPublicarAvisoProteccionDatosInstitucion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processPublicarAvisoProteccionDatosInstitucion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<AvisoInstitucionalDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<AvisoInstitucionalDto>;
+        }));
+    }
+
+    protected processPublicarAvisoProteccionDatosInstitucion(response: HttpResponseBase): Observable<AvisoInstitucionalDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result201: any = null;
+            result201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as AvisoInstitucionalDto;
+            return _observableOf(result201);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+}
+
+@Injectable({
+    providedIn: 'root'
+})
 export class ConfiguracionSeccionesClient {
     private http: HttpClient;
     private baseUrl: string;
@@ -7953,6 +8121,24 @@ export interface AuditoriaDto {
     [key: string]: any;
 }
 
+export interface AvisoInstitucionalDto {
+    id: string;
+    institucionId: string;
+    version: string;
+    titulo: string;
+    responsable: string;
+    contenido: string;
+    declaracionAceptacion: string;
+    fuenteOficial: string;
+    evidenciaAprobacion: string;
+    rolesDestinatarios: number[];
+    vigenteDesdeUtc: Date;
+    vigenteHastaUtc: Date | undefined;
+    esVigente: boolean;
+
+    [key: string]: any;
+}
+
 export interface AvisoProteccionDatosDto {
     id: string;
     version: string;
@@ -8663,6 +8849,22 @@ export interface PoliticaValidacionDto {
     fechaNacimientoMinima: Date;
     fechaNacimientoMaxima: Date;
     reglas: { [key: string]: { [key: string]: ReglaCampoDto; }; };
+
+    [key: string]: any;
+}
+
+export interface PublicarAvisoInstitucionalRequest {
+    version: string;
+    titulo: string;
+    responsable: string;
+    contenido: string;
+    declaracionAceptacion: string;
+    fuenteOficial: string;
+    evidenciaAprobacion: string;
+    rolesDestinatarios: number[];
+    vigenteDesdeUtc: Date;
+    vigenteHastaUtc: Date | undefined;
+    aprobacionInstitucionalConfirmada: boolean;
 
     [key: string]: any;
 }
