@@ -89,5 +89,9 @@ internal static class AccesoEndpoints
         {
             return Results.BadRequest(new MensajeRespuesta(ex.Message));
         }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new MensajeRespuesta(ex.Message));
+        }
     }
 }

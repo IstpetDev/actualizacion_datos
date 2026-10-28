@@ -38,6 +38,7 @@ describe('HojaDeVidaComponent', () => {
     cargando: WritableSignal<boolean>;
     guardando: WritableSignal<boolean>;
     error: WritableSignal<string>;
+    mensajeExito: WritableSignal<string>;
     hojaDeVida: WritableSignal<HojaDeVidaDto | null>;
     ficha: WritableSignal<FichaPersonalDto | null>;
     estadoEdicion: WritableSignal<EstadoEdicionDto | null>;
@@ -83,6 +84,7 @@ describe('HojaDeVidaComponent', () => {
       cargando: signal(false),
       guardando: signal(false),
       error: signal(''),
+      mensajeExito: signal(''),
       hojaDeVida: signal(mockHdv),
       ficha: signal(null),
       estadoEdicion: signal<EstadoEdicionDto | null>({
@@ -221,6 +223,48 @@ describe('HojaDeVidaComponent', () => {
     expect(stateMock.obtenerFaltantes).toHaveBeenCalled();
     expect(stateMock.enviarRevision).toHaveBeenCalledTimes(1);
     expect(component.mostrarModalFaltantes()).toBe(false);
+  });
+
+  it('hayErrores_no_bloquea_envio_si_los_errores_pertenecen_a_modulos_deshabilitados', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+
+    const destruccionMock = { onDestroy: vi.fn() } as unknown as import('@angular/core').DestroyRef;
+
+    // Registrar formulario de módulo deshabilitado con errores (ej. formación)
+    component.validacion.registrarFormulario('formacion-academica', () => true, destruccionMock);
+    fixture.detectChanges();
+
+    // Como formación está deshabilitada, hayErrores debe ser false y el botón debe permitir enviar
+    expect(component.hayErrores()).toBe(false);
+
+    stateMock.obtenerFaltantes.mockReturnValue(of([]));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    component.validarYEnviar();
+    expect(stateMock.obtenerFaltantes).toHaveBeenCalled();
+  });
+
+  it('hayErrores_bloquea_envio_si_el_modulo_abierto_tiene_errores', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+
+    const destruccionMock = { onDestroy: vi.fn() } as unknown as import('@angular/core').DestroyRef;
+
+    // Registrar formulario de módulo habilitado con error (ficha-personal)
+    component.validacion.registrarFormulario('ficha-personal', () => true, destruccionMock);
+    fixture.detectChanges();
+
+    expect(component.hayErrores()).toBe(true);
+
+    component.validarYEnviar();
+    expect(stateMock.obtenerFaltantes).not.toHaveBeenCalled();
   });
   it('bloquea_cambio_de_pestana_si_hay_cambios_sin_guardar_y_muestra_modal', () => {
     stateMock.tieneCambiosSinGuardar.mockReturnValue(true);

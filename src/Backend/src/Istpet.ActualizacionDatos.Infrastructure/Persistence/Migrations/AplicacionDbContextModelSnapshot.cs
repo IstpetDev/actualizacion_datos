@@ -1960,8 +1960,8 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnName("intentos_fallidos");
 
                     b.Property<string>("Nombre")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(403)
+                        .HasColumnType("character varying(403)")
                         .HasColumnName("nombre");
 
                     b.Property<string>("PasswordHash")

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Rol, SesionUsuario } from './auth.models';
-import { AutenticacionClient } from '../../api-client';
+import { AutenticacionClient, SesionUsuarioDto } from '../../api-client';
 import { AuthService } from './auth.service';
 
 const CLAVE_STORAGE_SESION = 'istpet_actualizacion_datos_sesion';
@@ -12,6 +12,7 @@ describe('AuthService', () => {
     nombre: 'Docente de Prueba',
     rol: 'usuario',
     institucionId: 'inst-1',
+    institucionNombre: 'Instituto Tecnológico de Prueba',
     token: 'jwt-token-ficticio',
   };
 
@@ -129,5 +130,25 @@ describe('AuthService', () => {
 
     expect(service.estaAutenticado()).toBe(false);
     expect(window.sessionStorage.getItem(CLAVE_STORAGE_SESION)).toBeNull();
+  });
+
+  it('recibirSesion_asigna_institucionNombre_al_modelo_de_sesion', () => {
+    const service = TestBed.inject(AuthService);
+    const dto: SesionUsuarioDto = {
+      id: 'usr-2',
+      institucionId: 'inst-2',
+      institucionNombre: 'Instituto Tecnológico de Prueba',
+      documento: '1700000002',
+      nombre: 'Usuario Prueba',
+      correo: 'usuario@ejemplo.test',
+      rol: 'Usuario',
+      debeCambiarContrasena: false,
+      correoVerificado: true,
+      requiereAceptarProteccionDatos: false,
+    };
+
+    const sesion = service.recibirSesion(dto);
+    expect(sesion.institucionNombre).toBe('Instituto Tecnológico de Prueba');
+    expect(service.sesion()?.institucionNombre).toBe('Instituto Tecnológico de Prueba');
   });
 });

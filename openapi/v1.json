@@ -5000,6 +5000,441 @@
         }
       }
     },
+    "/api/superadmin/instituciones/{id}/avisos-proteccion-datos": {
+      "get": {
+        "tags": [
+          "SuperadminProteccionDatos"
+        ],
+        "operationId": "ListarAvisosProteccionDatosInstitucion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AvisoInstitucionalDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SuperadminProteccionDatos"
+        ],
+        "operationId": "PublicarAvisoProteccionDatosInstitucion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicarAvisoInstitucionalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvisoInstitucionalDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instituciones/{id}/personal": {
+      "get": {
+        "tags": [
+          "PersonalInstitucional"
+        ],
+        "operationId": "ListarPersonalInstitucion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PersonalInstitucional"
+        ],
+        "operationId": "AsignarPersonalInstitucion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarPersonalInstitucionalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/personas/supervisores": {
+      "get": {
+        "tags": [
+          "Supervisores"
+        ],
+        "operationId": "ListarSupervisores",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Supervisores"
+        ],
+        "operationId": "AsignarSupervisor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarPersonalInstitucionalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/configuracion/secciones": {
       "get": {
         "tags": [
@@ -5919,6 +6354,34 @@
           }
         }
       },
+      "AsignarPersonalInstitucionalRequest": {
+        "required": [
+          "documento",
+          "rol"
+        ],
+        "type": "object",
+        "properties": {
+          "documento": {
+            "type": "string"
+          },
+          "rol": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "AsignarTipoFuncionarioMasivoRequest": {
         "required": [
           "tipoFuncionarioId"
@@ -6000,6 +6463,75 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AvisoInstitucionalDto": {
+        "required": [
+          "id",
+          "institucionId",
+          "version",
+          "titulo",
+          "responsable",
+          "contenido",
+          "declaracionAceptacion",
+          "fuenteOficial",
+          "evidenciaAprobacion",
+          "rolesDestinatarios",
+          "vigenteDesdeUtc",
+          "vigenteHastaUtc",
+          "esVigente"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "responsable": {
+            "type": "string"
+          },
+          "contenido": {
+            "type": "string"
+          },
+          "declaracionAceptacion": {
+            "type": "string"
+          },
+          "fuenteOficial": {
+            "type": "string"
+          },
+          "evidenciaAprobacion": {
+            "type": "string"
+          },
+          "rolesDestinatarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RolUsuario"
+            }
+          },
+          "vigenteDesdeUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vigenteHastaUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "esVigente": {
+            "type": "boolean"
           }
         }
       },
@@ -9029,6 +9561,65 @@
           }
         }
       },
+      "PublicarAvisoInstitucionalRequest": {
+        "required": [
+          "version",
+          "titulo",
+          "responsable",
+          "contenido",
+          "declaracionAceptacion",
+          "fuenteOficial",
+          "evidenciaAprobacion",
+          "rolesDestinatarios",
+          "vigenteDesdeUtc",
+          "vigenteHastaUtc",
+          "aprobacionInstitucionalConfirmada"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "titulo": {
+            "type": "string"
+          },
+          "responsable": {
+            "type": "string"
+          },
+          "contenido": {
+            "type": "string"
+          },
+          "declaracionAceptacion": {
+            "type": "string"
+          },
+          "fuenteOficial": {
+            "type": "string"
+          },
+          "evidenciaAprobacion": {
+            "type": "string"
+          },
+          "rolesDestinatarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RolUsuario"
+            }
+          },
+          "vigenteDesdeUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vigenteHastaUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "aprobacionInstitucionalConfirmada": {
+            "type": "boolean"
+          }
+        }
+      },
       "PublicarVersionDto": {
         "required": [
           "descripcionCambio"
@@ -9437,6 +10028,12 @@
           "requiereAceptarProteccionDatos": {
             "type": "boolean",
             "default": true
+          },
+          "institucionNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9496,6 +10093,9 @@
             "format": "date-time"
           }
         }
+      },
+      "RolUsuario": {
+        "type": "integer"
       },
       "SeccionConfiguracionDto": {
         "required": [
@@ -9628,6 +10228,12 @@
           "requiereAceptarProteccionDatos": {
             "type": "boolean",
             "default": true
+          },
+          "institucionNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10041,6 +10647,15 @@
     },
     {
       "name": "CuentaBancaria"
+    },
+    {
+      "name": "SuperadminProteccionDatos"
+    },
+    {
+      "name": "PersonalInstitucional"
+    },
+    {
+      "name": "Supervisores"
     },
     {
       "name": "ConfiguracionSecciones"

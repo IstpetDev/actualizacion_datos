@@ -14,7 +14,8 @@ public sealed record ResultadoLoginDto(
     string Rol,
     bool DebeCambiarContrasena,
     bool CorreoVerificado,
-    bool RequiereAceptarProteccionDatos = true);
+    bool RequiereAceptarProteccionDatos = true,
+    string? InstitucionNombre = null);
 
 public sealed record CambiarContrasenaRequest(
     string? ContrasenaActual,
@@ -35,4 +36,5 @@ public sealed record SesionUsuarioDto(
     string Rol,
     bool DebeCambiarContrasena,
     bool CorreoVerificado,
-    bool RequiereAceptarProteccionDatos = true);
+    bool RequiereAceptarProteccionDatos = true,
+    string? InstitucionNombre = null);

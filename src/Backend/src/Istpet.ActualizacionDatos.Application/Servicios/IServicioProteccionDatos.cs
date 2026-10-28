@@ -9,5 +9,6 @@ public interface IServicioProteccionDatos
         RolUsuario rol, CancellationToken ct = default);
     Task<EstadoProteccionDatosDto> AceptarAsync(Guid personaId, InstitucionId institucionId,
         RolUsuario rol, AceptarAvisoRequest solicitud, CancellationToken ct = default);
-    Task PublicarAsync(PublicarAvisoRequest solicitud, CancellationToken ct = default);
+    Task<AvisoInstitucionalDto> PublicarAsync(PublicarAvisoRequest solicitud, string? actor = null, CancellationToken ct = default);
+    Task<List<AvisoInstitucionalDto>> ListarHistorialAsync(InstitucionId institucionId, CancellationToken ct = default);
 }

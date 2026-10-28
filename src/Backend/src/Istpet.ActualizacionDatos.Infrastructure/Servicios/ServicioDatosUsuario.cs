@@ -90,6 +90,13 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
         if (!proteccion.Aceptado)
             throw new ProteccionDatosException("Debe aceptar el aviso vigente de protección de datos antes de enviar a revisión.", "ACEPTACION_PROTECCION_DATOS_PENDIENTE");
 
+        // Si la persona no tiene correo asignado directamente pero registró correo institucional en su ficha personal, sincronizarlo
+        var ficha = await _context.FichasPersonales.FirstOrDefaultAsync(f => f.PersonaId == persona.Id, ct);
+        if (string.IsNullOrWhiteSpace(persona.Correo) && !string.IsNullOrWhiteSpace(ficha?.CorreoInstitucional))
+        {
+            persona.ActualizarCorreo(ficha.CorreoInstitucional);
+        }
+
         // Precondiciones básicas de la persona antes de validar completitud de la hoja de vida
         if (!persona.TratamientoDatosAceptado)
         {
@@ -106,9 +113,6 @@ public class ServicioDatosUsuario : IServicioDatosUsuario
         {
             persona.EnviarARevision(ahoraUtc);
         }
-
-        if (!persona.CorreoVerificado)
-            throw new ReglaNegocioException("Debe verificar su correo antes de enviar a revisión.");
 
         // RF-HDV-009, T-04: Validar completitud antes de enviar a revisión
         var validacion = await _validadorCompletitud.ValidarAsync(persona.Id, ct);

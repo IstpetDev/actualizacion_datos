@@ -16,6 +16,8 @@ import {
   PlantillasHojaDeVidaClient,
   RevisionClient,
   ResultadoCargaPersonasDto,
+  PersonalInstitucionalClient,
+  SupervisoresClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { AdminDashboardComponent } from './admin-dashboard.component';
@@ -127,6 +129,8 @@ describe('AdminDashboardComponent', () => {
         },
         { provide: RevisionClient, useValue: { listarEstadosCuentasBancarias: () => of([]) } },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: PersonalInstitucionalClient, useValue: {} },
+        { provide: SupervisoresClient, useValue: { listarSupervisores: () => of([]) } },
         {
           provide: ConfiguracionDocumentoClient,
           useValue: {
@@ -159,6 +163,16 @@ describe('AdminDashboardComponent', () => {
 
   afterEach(() => {
     httpMock.verify();
+  });
+
+  it('abre la sección de supervisores desde la navegación del panel', () => {
+    (
+      fixture.nativeElement.querySelector('[data-testid="tab-supervisores"]') as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    expect(component.tabActiva()).toBe('supervisores');
+    expect(fixture.nativeElement.querySelector('app-personal-institucional')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#rol-personal')).toBeNull();
   });
 
   it('debe_crearse_y_cargar_campana_activa_y_personas_al_iniciar', () => {
@@ -533,6 +547,20 @@ describe('AdminDashboardComponent', () => {
     expect(component.personasFiltradas().length).toBe(3);
   });
 
+  it('el_selector_de_filas_incluye_la_opcion_de_10_elementos', () => {
+    component.cambiarTab('personas');
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector(
+      '[data-testid="select-filas-por-pagina"]',
+    ) as HTMLSelectElement;
+    expect(select).not.toBeNull();
+    const options = Array.from(select.options).map((o) => o.textContent?.trim());
+    expect(options).toContain('10 por pág.');
+    expect(options).toContain('25 por pág.');
+    expect(options).toContain('50 por pág.');
+    expect(options).toContain('100 por pág.');
+  });
+
   it('paginacion_de_personas_muestra_bloques_y_navega_entre_paginas', () => {
     const lista30: PersonaDto[] = Array.from({ length: 30 }, (_, i) => ({
       ...personasMock[0],
@@ -542,6 +570,24 @@ describe('AdminDashboardComponent', () => {
     }));
 
     component.personas.set(lista30);
+
+    // Por defecto inicia en 10 filas por página
+    expect(component.filasPorPagina()).toBe(10);
+    expect(component.totalPaginas()).toBe(3);
+    expect(component.paginaActual()).toBe(1);
+    expect(component.personasPaginadas().length).toBe(10);
+    expect(component.indicePrimerElemento()).toBe(1);
+    expect(component.indiceUltimoElemento()).toBe(10);
+
+    component.paginaSiguiente();
+    expect(component.paginaActual()).toBe(2);
+    expect(component.personasPaginadas().length).toBe(10);
+    expect(component.indicePrimerElemento()).toBe(11);
+    expect(component.indiceUltimoElemento()).toBe(20);
+
+    component.paginaAnterior();
+    expect(component.paginaActual()).toBe(1);
+
     component.cambiarFilasPorPagina(25);
 
     expect(component.totalPaginas()).toBe(2);

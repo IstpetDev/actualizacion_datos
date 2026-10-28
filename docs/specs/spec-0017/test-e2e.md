@@ -88,3 +88,11 @@ No hay interfaz nueva, permisos nuevos ni datos persistidos. Las verificaciones 
 - `dotnet build src/Backend --no-restore -m:1 --disable-build-servers -p:GenerarClienteAngular=false --verbosity quiet`: compilación correcta, cero advertencias y cero errores.
 - `pnpm --dir src/Frontend build --configuration development`: compilación correcta.
 - No se ejecutaron pruebas de integración con PostgreSQL: esta tarea solo cambió documentación y no modificó CI ni código del producto.
+
+## Verificación tras integrar `develop` (2026-10-28)
+
+- `dotnet test src/Backend --filter 'Categoria!=Integracion' -p:GenerarClienteAngular=false`: 135/135 `Domain.Tests`, 134/134 `Application.Tests` y 413/413 `WebApi.Tests`; 682 pruebas unitarias aprobadas.
+- `pnpm --dir src/Frontend test:ci`: 42 archivos y 450/450 pruebas aprobadas.
+- `dotnet build src/Backend --no-restore -m:1 --disable-build-servers -p:GenerarClienteAngular=false --verbosity quiet`: compilación correcta, cero advertencias y cero errores.
+- `pnpm --dir src/Frontend build --configuration development`: compilación correcta.
+- `git diff origin/develop --check`: sin errores. La diferencia con `develop` se limita a la guía y `spec-0017`.

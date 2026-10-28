@@ -26,7 +26,7 @@ public class PersonaConfiguracion : IEntityTypeConfiguration<Persona>
             .HasColumnName("documento");
 
         builder.Property(p => p.Nombre)
-            .HasMaxLength(200)
+            .HasMaxLength(403)
             .HasColumnName("nombre");
 
         builder.Property(p => p.Correo)

@@ -430,7 +430,8 @@ auth.MapPost("/verificar-codigo-correo", async (VerificarCodigoCorreoRequest req
 .RequireAuthorization();
 
 // --- Endpoints Instituciones (RF-MUL-001, RF-MUL-004) ---
-var instituciones = app.MapGroup("/api/instituciones").WithTags("Instituciones");
+var instituciones = app.MapGroup("/api/instituciones").WithTags("Instituciones")
+    .RequireAuthorization(politica => politica.RequireRole(nameof(RolUsuario.Superadmin)));
 
 instituciones.MapPost("/", async (CrearInstitucionRequest request, IServicioInstituciones servicio, CancellationToken ct) =>
 {
@@ -1369,6 +1370,8 @@ app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
 app.MapProteccionDatos();
+app.MapSuperadminProteccionDatos();
+app.MapPersonalInstitucional();
 app.MapSecciones();
 app.MapConfiguracionDocumento();
 app.MapPlantillasHojaDeVida();

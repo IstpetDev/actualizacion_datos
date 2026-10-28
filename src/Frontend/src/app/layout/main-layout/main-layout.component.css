@@ -43,6 +43,10 @@
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   letter-spacing: 0.04em;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .header-nav {
