@@ -11,8 +11,9 @@ import { AuthService } from '../../core/auth';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { PlantillasHojaDeVidaComponent } from './plantillas-hoja-de-vida.component';
 import { PoliticasProteccionDatosComponent } from './politicas-proteccion-datos.component';
+import { PersonalInstitucionalComponent } from '../personal-institucional/personal-institucional.component';
 
-type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
+type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos' | 'personal';
 
 @Component({
   selector: 'app-superadmin-dashboard',
@@ -22,6 +23,7 @@ type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
     FormsModule,
     PlantillasHojaDeVidaComponent,
     PoliticasProteccionDatosComponent,
+    PersonalInstitucionalComponent,
   ],
   template: `
     <section class="dashboard-section" data-testid="superadmin-panel">
@@ -29,13 +31,21 @@ type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
         <div class="header-titles">
           <h1 class="section-title">Panel Global de Plataforma (Superadmin)</h1>
           <p class="section-subtitle">
-            Gestión multitenant de instituciones educativas y provisión de administradores
-            iniciales.
+            Gestión de instituciones educativas, administradores y supervisores.
           </p>
         </div>
       </header>
 
       <nav class="superadmin-tabs" role="tablist" aria-label="Secciones Superadmin">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="tabActiva() === 'personal'"
+          (click)="tabActiva.set('personal')"
+          data-testid="tab-personal"
+        >
+          Personal por institución
+        </button>
         <button
           type="button"
           class="tab-btn"
@@ -182,6 +192,14 @@ type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
                         <button
                           type="button"
                           class="btn btn-sm btn-secondary"
+                          (click)="irAPersonal(inst.id)"
+                          [attr.data-testid]="'btn-personal-inst-' + inst.id"
+                        >
+                          Administradores y supervisores
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-secondary"
                           (click)="irAPoliticas(inst.id)"
                           [attr.data-testid]="'btn-politicas-inst-' + inst.id"
                         >
@@ -201,6 +219,26 @@ type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
             </div>
           </div>
         </div>
+      } @else if (tabActiva() === 'personal') {
+        <div class="form-group">
+          <label for="institucion-personal">Institución</label>
+          <select
+            id="institucion-personal"
+            class="form-control"
+            [ngModel]="institucionPersonalId()"
+            (ngModelChange)="institucionPersonalId.set($event)"
+          >
+            <option [ngValue]="undefined">Seleccione una institución</option>
+            @for (inst of instituciones(); track inst.id) {
+              <option [ngValue]="inst.id">{{ inst.nombre }}</option>
+            }
+          </select>
+        </div>
+        @if (institucionPersonalId(); as id) {
+          <app-personal-institucional [institucionId]="id" />
+        } @else {
+          <p role="status">Seleccione una institución para gestionar su personal.</p>
+        }
       } @else if (tabActiva() === 'plantillas') {
         <app-plantillas-hoja-de-vida />
       } @else {
@@ -219,6 +257,7 @@ type TabSuperadmin = 'instituciones' | 'plantillas' | 'politicas-datos';
     }
     .superadmin-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
       border-bottom: 2px solid #e2e8f0;
       margin-bottom: 1.5rem;
@@ -397,6 +436,7 @@ export class SuperadminDashboardComponent implements OnInit {
   readonly tabActiva = signal<TabSuperadmin>('instituciones');
   readonly instituciones = signal<InstitucionDto[]>([]);
   readonly institucionSeleccionadaParaPoliticas = signal<string | undefined>(undefined);
+  readonly institucionPersonalId = signal<string | undefined>(undefined);
   readonly guardando = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
@@ -409,6 +449,11 @@ export class SuperadminDashboardComponent implements OnInit {
   irAPoliticas(institucionId: string): void {
     this.institucionSeleccionadaParaPoliticas.set(institucionId);
     this.tabActiva.set('politicas-datos');
+  }
+
+  irAPersonal(institucionId: string): void {
+    this.institucionPersonalId.set(institucionId);
+    this.tabActiva.set('personal');
   }
 
   ngOnInit(): void {

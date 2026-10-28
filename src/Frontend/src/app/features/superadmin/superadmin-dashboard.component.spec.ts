@@ -6,6 +6,8 @@ import {
   InstitucionesClient,
   PlantillasHojaDeVidaClient,
   SuperadminProteccionDatosClient,
+  PersonalInstitucionalClient,
+  SupervisoresClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
 import { SuperadminDashboardComponent } from './superadmin-dashboard.component';
@@ -74,6 +76,11 @@ describe('SuperadminDashboardComponent', () => {
         { provide: PlantillasHojaDeVidaClient, useValue: plantillasClientMock },
         { provide: SuperadminProteccionDatosClient, useValue: superadminProteccionDatosClientMock },
         { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: PersonalInstitucionalClient,
+          useValue: { listarPersonalInstitucion: () => of([]) },
+        },
+        { provide: SupervisoresClient, useValue: { listarSupervisores: () => of([]) } },
       ],
     }).compileComponents();
 
@@ -87,6 +94,19 @@ describe('SuperadminDashboardComponent', () => {
     expect(institucionesClientMock.listarInstituciones).toHaveBeenCalled();
     expect(component.instituciones().length).toBe(1);
     expect(component.instituciones()[0].nombre).toContain('Instituto Tecnológico');
+  });
+
+  it('abre la gestión de personal de la institución elegida en la tabla', () => {
+    const id = institucionesMock[0].id;
+    (
+      fixture.nativeElement.querySelector(
+        '[data-testid="btn-personal-inst-' + id + '"]',
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    expect(component.tabActiva()).toBe('personal');
+    expect(component.institucionPersonalId()).toBe(id);
+    expect(fixture.nativeElement.querySelector('app-personal-institucional')).not.toBeNull();
   });
 
   it('permite_registrar_una_nueva_institucion_con_administrador_inicial', () => {

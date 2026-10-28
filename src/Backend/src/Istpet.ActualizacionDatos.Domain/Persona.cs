@@ -102,6 +102,17 @@ public class Persona : EntidadInstitucional
         Nombre = string.IsNullOrWhiteSpace(nombre) ? null : nombre.Trim();
     }
 
+    public void AsignarRolInstitucional(RolUsuario rol)
+    {
+        if (rol is not (RolUsuario.Admin or RolUsuario.Supervisor) || Rol == RolUsuario.Superadmin)
+        {
+            throw new ReglaNegocioException("Solo se pueden asignar roles de administrador o supervisor a cuentas institucionales.");
+        }
+
+        Rol = rol;
+        HabilitarAcceso();
+    }
+
     public void AsignarTipoFuncionario(Guid? tipoFuncionarioId)
     {
         TipoFuncionarioId = tipoFuncionarioId;
