@@ -67,6 +67,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 [requerido]="req.esObligatorio"
                 [puedeEditar]="puedeEditar()"
                 [archivoId]="req.registrado?.archivoId"
+                [claveDestino]="'documento:' + req.tipoDocumentoId"
                 (archivoIdChange)="guardarArchivo(req, $event)"
               ></app-uploader-respaldo>
             </div>

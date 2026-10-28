@@ -1,4 +1,4 @@
-import {
+﻿import {
   ValidacionHojaDeVidaService,
   fechaPolitica,
 } from '../../servicios/validacion-hoja-de-vida.service';
@@ -348,7 +348,8 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 [attr.aria-describedby]="'error-modelo-parroquiaResidenciaId'"
                 id="parroquiaResidencia"
                 class="form-control"
-                [(ngModel)]="modelo.parroquiaResidenciaId"
+                [ngModel]="modelo.parroquiaResidenciaId"
+                (ngModelChange)="onParroquiaChange($event)"
                 [disabled]="!cantonResidenciaId()"
                 name="parroquiaResidenciaId"
                 required
@@ -359,7 +360,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
-              @if (validacion.mensaje(modelo, 'ficha', 'parroquiaResidenciaId'); as mensaje) {
+              @if (
+                errorParroquia() || validacion.mensaje(modelo, 'ficha', 'parroquiaResidenciaId');
+                as mensaje
+              ) {
                 <small id="error-modelo-parroquiaResidenciaId" class="text-danger" role="alert">{{
                   mensaje
                 }}</small>
@@ -650,6 +654,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               [requerido]="false"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.fotoArchivoId"
+              [claveDestino]="'foto:perfil'"
               [archivoIdGuardado]="fotoGuardadaId()"
               (archivoIdChange)="onFotoSubida($event)"
               (archivoEliminado)="onFotoEliminada()"
@@ -818,6 +823,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly mensajeExito = this.state.mensajeExito;
   readonly error = this.state.error;
   readonly errorResidencia = signal('');
+  readonly errorParroquia = signal('');
   private cargaResidencia?: Subscription;
 
   // Catálogos
@@ -892,7 +898,20 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     );
   }
 
+  residenciaInvalida(): boolean {
+    if (this.cantonResidenciaId() && !this.modelo.parroquiaResidenciaId) {
+      return true;
+    }
+    return !!this.errorParroquia();
+  }
+
   guardarCambios(): Observable<boolean> {
+    if (this.residenciaInvalida()) {
+      if (!this.errorParroquia()) {
+        this.errorParroquia.set('Seleccione una parroquia correspondiente al cantón.');
+      }
+      return of(false);
+    }
     if (!this.puedeEditar()) return of(true);
     if (this.formularioInvalido()) return of(false);
     const datos = this.datosParaGuardar();
@@ -920,6 +939,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
       } else {
         this.fechaNacimientoStr = '';
       }
+      this.errorParroquia.set('');
       this.rehidratarResidencia();
     }
     this.state.actualizarEstadoCambios?.();
@@ -930,6 +950,8 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
       const f = this.state.ficha();
       if (f) {
         untracked(() => {
+          const parroquiaPrevia = this.modelo.parroquiaResidenciaId;
+          const parroquiaNueva = f.parroquiaResidenciaId;
           this.modelo = {
             primerNombre: f.primerNombre ?? '',
             segundoNombre: f.segundoNombre,
@@ -964,7 +986,16 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
           this.fechaNacimientoStr = f.fechaNacimiento
             ? new Date(f.fechaNacimiento).toISOString().split('T')[0]
             : '';
-          this.rehidratarResidencia();
+          this.errorParroquia.set('');
+          const yaCargada =
+            !!parroquiaNueva &&
+            parroquiaPrevia === parroquiaNueva &&
+            !!this.cantonResidenciaId() &&
+            !!this.provinciaResidenciaId() &&
+            this.parroquiasResidencia().some((p) => p.id === parroquiaNueva);
+          if (!yaCargada) {
+            this.rehidratarResidencia();
+          }
           this.guardarSnapshot();
           this.state.actualizarEstadoCambios?.();
         });
@@ -1055,7 +1086,11 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   formularioInvalido(): boolean {
-    return !!this.errorDiscapacidad() || this.validacion.invalido(this.datosParaGuardar(), 'ficha');
+    return (
+      !!this.errorDiscapacidad() ||
+      this.residenciaInvalida() ||
+      this.validacion.invalido(this.datosParaGuardar(), 'ficha')
+    );
   }
 
   private datosParaGuardar(): GuardarFichaPersonalRequest {
@@ -1078,6 +1113,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   rehidratarResidencia(): void {
     this.cargaResidencia?.unsubscribe();
     this.errorResidencia.set('');
+    this.errorParroquia.set('');
     this.provinciaResidenciaId.set(undefined);
     this.cantonResidenciaId.set(undefined);
     this.cantonesResidencia.set([]);
@@ -1102,6 +1138,8 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
         this.cantonResidenciaId.set(canton.id);
         this.cantonesResidencia.set(cantones.filter((c) => c.padreId === canton.padreId));
         this.parroquiasResidencia.set(parroquias.filter((p) => p.padreId === canton.id));
+        this.modelo.parroquiaResidenciaId = parroquiaId;
+        this.errorParroquia.set('');
       },
       error: () =>
         this.errorResidencia.set('No se pudo cargar la ubicación guardada. Reintente la carga.'),
@@ -1109,32 +1147,65 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   onProvinciaResidenciaChange(provinciaId?: number): void {
+    if (provinciaId === this.provinciaResidenciaId() && this.cantonesResidencia().length > 0) {
+      return;
+    }
     this.cargaResidencia?.unsubscribe();
     this.errorResidencia.set('');
     this.provinciaResidenciaId.set(provinciaId);
     this.cantonResidenciaId.set(undefined);
+    const teniaParroquia = !!this.modelo.parroquiaResidenciaId;
     this.modelo.parroquiaResidenciaId = undefined;
     this.cantonesResidencia.set([]);
     this.parroquiasResidencia.set([]);
 
     if (provinciaId) {
+      if (teniaParroquia) {
+        this.errorParroquia.set('Seleccione cantón y parroquia para la provincia elegida.');
+      } else {
+        this.errorParroquia.set('');
+      }
       this.cargaResidencia = this.catalogos
         .cantones(provinciaId)
         .subscribe((c) => this.cantonesResidencia.set(c));
+    } else {
+      this.errorParroquia.set(teniaParroquia ? 'Seleccione provincia, cantón y parroquia.' : '');
     }
   }
 
   onCantonResidenciaChange(cantonId?: number): void {
+    if (cantonId === this.cantonResidenciaId() && this.parroquiasResidencia().length > 0) {
+      return;
+    }
     this.cargaResidencia?.unsubscribe();
     this.errorResidencia.set('');
     this.cantonResidenciaId.set(cantonId);
+    const teniaParroquia = !!this.modelo.parroquiaResidenciaId;
     this.modelo.parroquiaResidenciaId = undefined;
     this.parroquiasResidencia.set([]);
 
     if (cantonId) {
+      if (teniaParroquia) {
+        this.errorParroquia.set('Seleccione una parroquia correspondiente al cantón.');
+      } else {
+        this.errorParroquia.set('');
+      }
       this.cargaResidencia = this.catalogos
         .parroquias(cantonId)
         .subscribe((p) => this.parroquiasResidencia.set(p));
+    } else {
+      this.errorParroquia.set(teniaParroquia ? 'Seleccione cantón y parroquia.' : '');
+    }
+  }
+
+  onParroquiaChange(parroquiaId?: number): void {
+    this.modelo.parroquiaResidenciaId = parroquiaId;
+    if (parroquiaId) {
+      this.errorParroquia.set('');
+    } else if (this.cantonResidenciaId()) {
+      this.errorParroquia.set('Seleccione una parroquia correspondiente al cantón.');
+    } else {
+      this.errorParroquia.set('');
     }
   }
 
@@ -1157,6 +1228,12 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   guardarFicha(): void {
+    if (this.residenciaInvalida()) {
+      if (!this.errorParroquia()) {
+        this.errorParroquia.set('Seleccione una parroquia correspondiente al cantón.');
+      }
+      return;
+    }
     if (this.formularioInvalido()) return;
     if (!this.puedeEditar()) return;
     this.guardarCambios().subscribe();

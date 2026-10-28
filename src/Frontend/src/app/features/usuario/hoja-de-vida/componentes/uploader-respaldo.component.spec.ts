@@ -9,6 +9,7 @@ describe('UploaderRespaldoComponent', () => {
   let fixture: ComponentFixture<UploaderRespaldoComponent>;
   let archivosClientMock: {
     subirArchivo: Mock;
+    descargarArchivo: Mock;
   };
 
   const mockArchivoDto: ArchivoDto = {
@@ -26,6 +27,7 @@ describe('UploaderRespaldoComponent', () => {
   beforeEach(async () => {
     archivosClientMock = {
       subirArchivo: vi.fn(),
+      descargarArchivo: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -117,6 +119,42 @@ describe('UploaderRespaldoComponent', () => {
     component.onArchivoSeleccionado(event);
 
     expect(spy).toHaveBeenCalledWith('arch-123');
+  });
+
+  it('envia_claveDestino_al_subir_archivo_si_esta_definida', () => {
+    fixture.componentRef.setInput('claveDestino', 'foto:perfil');
+    fixture.detectChanges();
+
+    archivosClientMock.subirArchivo.mockReturnValue(of(mockArchivoDto));
+
+    const archivoValido = new File(['valid'], 'foto.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(archivoValido, 'size', { value: 2048 });
+
+    const event = {
+      target: {
+        files: [archivoValido],
+        value: 'dummy',
+      },
+    } as unknown as Event;
+
+    component.onArchivoSeleccionado(event);
+
+    expect(archivosClientMock.subirArchivo).toHaveBeenCalledWith(
+      'foto:perfil',
+      undefined,
+      expect.objectContaining({ fileName: 'foto.jpg' }),
+    );
+  });
+
+  it('descarga_archivo_con_exito_usando_el_cliente_de_archivos', () => {
+    archivosClientMock.descargarArchivo.mockReturnValue(
+      of({ data: new Blob(['pdf-content']), fileName: 'descarga.pdf' }),
+    );
+
+    component.descargarArchivo('arch-123');
+
+    expect(archivosClientMock.descargarArchivo).toHaveBeenCalledWith('arch-123');
+    expect(component.error()).toBe('');
   });
 
   it('previsualiza_foto_seleccionada_antes_de_guardar_cuando_el_archivo_es_valido', () => {

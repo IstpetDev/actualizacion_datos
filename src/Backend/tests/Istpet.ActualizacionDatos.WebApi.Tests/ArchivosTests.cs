@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
@@ -133,6 +134,36 @@ public sealed class ArchivosTests : IDisposable
         var content = new ByteArrayContent(bytes);
         content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
         return content;
+    }
+
+    private static (ByteArrayContent Content, byte[] Bytes) CrearJpgValidoConBytes(string payload = "foto-ficticia")
+    {
+        var cabecera = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var textoBytes = Encoding.UTF8.GetBytes(payload);
+        var todos = cabecera.Concat(textoBytes).ToArray();
+        var content = new ByteArrayContent(todos);
+        content.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        return (content, todos);
+    }
+
+    private static (ByteArrayContent Content, byte[] Bytes) CrearPngValidoConBytes(string payload = "png-ficticio")
+    {
+        var cabecera = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+        var textoBytes = Encoding.UTF8.GetBytes(payload);
+        var todos = cabecera.Concat(textoBytes).ToArray();
+        var content = new ByteArrayContent(todos);
+        content.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        return (content, todos);
+    }
+
+    private static (ByteArrayContent Content, byte[] Bytes) CrearPdfValidoConBytes(string payload = "pdf-ficticio")
+    {
+        var cabecera = Encoding.UTF8.GetBytes("%PDF-1.4\n");
+        var textoBytes = Encoding.UTF8.GetBytes(payload);
+        var todos = cabecera.Concat(textoBytes).ToArray();
+        var content = new ByteArrayContent(todos);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        return (content, todos);
     }
 
     [Fact]
@@ -410,5 +441,132 @@ public sealed class ArchivosTests : IDisposable
         var lista = await rLista.Content.ReadFromJsonAsync<List<ArchivoDto>>();
         Assert.NotNull(lista);
         Assert.Empty(lista);
+    }
+
+    [Fact]
+    public async Task Descarga_de_archivos_ficticios_jpg_png_y_pdf_conserva_bytes_nombre_tamano_y_mimetype_exactos()
+    {
+        var (instId, u1, _, _) = await InicializarDatosPruebaAsync();
+
+        var archivosAProbar = new (string Nombre, string MimeEsperado, ByteArrayContent Content, byte[] BytesOriginales)[]
+        {
+            ("perfil-ficticio.jpg", "image/jpeg", CrearJpgValidoConBytes("jpg-content-123").Content, CrearJpgValidoConBytes("jpg-content-123").Bytes),
+            ("captura-ficticia.png", "image/png", CrearPngValidoConBytes("png-content-456").Content, CrearPngValidoConBytes("png-content-456").Bytes),
+            ("antecedentes-ficticios.pdf", "application/pdf", CrearPdfValidoConBytes("pdf-content-789").Content, CrearPdfValidoConBytes("pdf-content-789").Bytes)
+        };
+
+        foreach (var (nombre, mimeEsperado, content, bytesEsperados) in archivosAProbar)
+        {
+            using var form = new MultipartFormDataContent();
+            form.Add(content, "archivo", nombre);
+            var reqSubida = CrearRequest(HttpMethod.Post, $"/api/archivos/subir?claveDestino=doc_{Path.GetFileNameWithoutExtension(nombre)}", instId, u1.Documento);
+            reqSubida.Content = form;
+            var rSubida = await _cliente.SendAsync(reqSubida);
+            Assert.Equal(HttpStatusCode.OK, rSubida.StatusCode);
+
+            var dto = await rSubida.Content.ReadFromJsonAsync<ArchivoDto>();
+            Assert.NotNull(dto);
+            Assert.Equal(nombre, dto.NombreOriginal);
+            Assert.Equal(mimeEsperado, dto.TipoContenido);
+            Assert.Equal(bytesEsperados.Length, dto.TamanoBytes);
+
+            // Descargar y validar integridad estricta de bytes
+            var reqDescarga = CrearRequest(HttpMethod.Get, $"/api/archivos/{dto.Id}/descargar", instId, u1.Documento);
+            var rDescarga = await _cliente.SendAsync(reqDescarga);
+            Assert.Equal(HttpStatusCode.OK, rDescarga.StatusCode);
+            Assert.Equal(mimeEsperado, rDescarga.Content.Headers.ContentType?.MediaType);
+            Assert.Contains(nombre, rDescarga.Content.Headers.ContentDisposition?.FileNameStar ?? rDescarga.Content.Headers.ContentDisposition?.FileName ?? "");
+
+            var bytesDescargados = await rDescarga.Content.ReadAsByteArrayAsync();
+            Assert.Equal(bytesEsperados.Length, bytesDescargados.Length);
+            Assert.True(bytesEsperados.SequenceEqual(bytesDescargados), $"Los bytes descargados de {nombre} no coinciden con los originales.");
+        }
+    }
+
+    [Fact]
+    public async Task ListarArchivosExpediente_no_incluye_adjuntos_duplicados_reemplazados_y_clasifica_areas()
+    {
+        var (instId, u1, _, sup) = await InicializarDatosPruebaAsync();
+
+        // 1. Subir primera foto (que luego será reemplazada) sin clave
+        Guid fotoViejaId;
+        using (var form1 = new MultipartFormDataContent())
+        {
+            var (jpg, _) = CrearJpgValidoConBytes("foto-vieja");
+            form1.Add(jpg, "archivo", "foto_antigua.jpg");
+            var req1 = CrearRequest(HttpMethod.Post, "/api/archivos/subir", instId, u1.Documento);
+            req1.Content = form1;
+            var r1 = await _cliente.SendAsync(req1);
+            var d1 = await r1.Content.ReadFromJsonAsync<ArchivoDto>();
+            fotoViejaId = d1!.Id;
+        }
+
+        // 2. Subir segunda foto (la definitiva) y asociarla a la ficha
+        Guid fotoNuevaId;
+        using (var form2 = new MultipartFormDataContent())
+        {
+            var (jpg, _) = CrearJpgValidoConBytes("foto-nueva");
+            form2.Add(jpg, "archivo", "foto_vigente.jpg");
+            var req2 = CrearRequest(HttpMethod.Post, "/api/archivos/subir?claveDestino=foto:perfil", instId, u1.Documento);
+            req2.Content = form2;
+            var r2 = await _cliente.SendAsync(req2);
+            var d2 = await r2.Content.ReadFromJsonAsync<ArchivoDto>();
+            fotoNuevaId = d2!.Id;
+        }
+
+        // Asociar fotoNueva a FichaPersonal en la base de datos
+        using (var scope = _fabrica.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AplicacionDbContext>();
+            var ficha = new FichaPersonal(new InstitucionId(instId), u1.Id);
+            ficha.AsociarFoto(fotoNuevaId);
+            db.FichasPersonales.Add(ficha);
+
+            // Asociar también un título con respaldo
+            var (pdf, _) = CrearPdfValidoConBytes("titulo-ing");
+            var archTitulo = new ArchivoAdjunto(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                u1.Id,
+                "titulo_ingenieria.pdf",
+                "application/pdf",
+                100,
+                "sha-ficticio",
+                "rutas/titulo.bin",
+                null,
+                DateTime.UtcNow);
+            db.ArchivosAdjuntos.Add(archTitulo);
+
+            var titulo = new TituloAcademico(
+                Guid.NewGuid(),
+                new InstitucionId(instId),
+                u1.Id,
+                new DatosTituloAcademico("Ingeniería en Sistemas", 1, NombreInstitucionOtra: "Universidad Ficticia"));
+            titulo.AsociarArchivo(archTitulo.Id);
+            db.TitulosAcademicos.Add(titulo);
+
+            await db.SaveChangesAsync();
+        }
+
+        // 3. Supervisor consulta expediente de u1
+        var reqExp = CrearRequest(HttpMethod.Get, $"/api/revision/{u1.Documento}/archivos", instId, sup.Documento, RolUsuario.Supervisor);
+        var rExp = await _cliente.SendAsync(reqExp);
+        Assert.Equal(HttpStatusCode.OK, rExp.StatusCode);
+
+        var archivos = await rExp.Content.ReadFromJsonAsync<List<ArchivoDto>>();
+        Assert.NotNull(archivos);
+
+        // La foto vieja no debe aparecer como duplicada en la lista del expediente
+        Assert.DoesNotContain(archivos, a => a.Id == fotoViejaId);
+
+        // La foto nueva y el título sí deben aparecer
+        var fotoItem = archivos.FirstOrDefault(a => a.Id == fotoNuevaId);
+        Assert.NotNull(fotoItem);
+        Assert.Equal("Fotografía Personal", fotoItem.ClaveDestino);
+        Assert.True(fotoItem.FechaSubidaUtc <= DateTime.UtcNow);
+
+        var tituloItem = archivos.FirstOrDefault(a => a.NombreOriginal == "titulo_ingenieria.pdf");
+        Assert.NotNull(tituloItem);
+        Assert.Equal("Formación Académica: Ingeniería en Sistemas", tituloItem.ClaveDestino);
     }
 }

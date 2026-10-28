@@ -1280,14 +1280,16 @@ export class MisDatosClient {
   /**
    * @return OK
    */
-  descargarMiDocumentoHojaDeVida(): Observable<void> {
+  descargarMiDocumentoHojaDeVida(): Observable<FileResponse> {
     let url_ = this.baseUrl + '/api/mis-datos/documento-hoja-de-vida';
     url_ = url_.replace(/[?&]$/, '');
 
     let options_: any = {
       observe: 'response',
       responseType: 'blob',
-      headers: new HttpHeaders({}),
+      headers: new HttpHeaders({
+        Accept: 'application/pdf',
+      }),
     };
 
     return this.http
@@ -1303,14 +1305,16 @@ export class MisDatosClient {
             try {
               return this.processDescargarMiDocumentoHojaDeVida(response_ as any);
             } catch (e) {
-              return _observableThrow(e) as any as Observable<void>;
+              return _observableThrow(e) as any as Observable<FileResponse>;
             }
-          } else return _observableThrow(response_) as any as Observable<void>;
+          } else return _observableThrow(response_) as any as Observable<FileResponse>;
         }),
       );
   }
 
-  protected processDescargarMiDocumentoHojaDeVida(response: HttpResponseBase): Observable<void> {
+  protected processDescargarMiDocumentoHojaDeVida(
+    response: HttpResponseBase,
+  ): Observable<FileResponse> {
     const status = response.status;
     const responseBlob =
       response instanceof HttpResponse
@@ -1325,12 +1329,31 @@ export class MisDatosClient {
         _headers[key] = response.headers.get(key);
       }
     }
-    if (status === 200) {
-      return blobToText(responseBlob).pipe(
-        _observableMergeMap((_responseText: string) => {
-          return _observableOf(null as any);
-        }),
-      );
+    if (status === 200 || status === 206) {
+      const contentDisposition = response.headers
+        ? response.headers.get('content-disposition')
+        : undefined;
+      let fileNameMatch = contentDisposition
+        ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition)
+        : undefined;
+      let fileName =
+        fileNameMatch && fileNameMatch.length > 1
+          ? fileNameMatch[3] || fileNameMatch[2]
+          : undefined;
+      if (fileName) {
+        fileName = decodeURIComponent(fileName);
+      } else {
+        fileNameMatch = contentDisposition
+          ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition)
+          : undefined;
+        fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+      }
+      return _observableOf({
+        fileName: fileName,
+        data: responseBlob as any,
+        status: status,
+        headers: _headers,
+      });
     } else if (status === 400) {
       return blobToText(responseBlob).pipe(
         _observableMergeMap((_responseText: string) => {
@@ -4537,7 +4560,7 @@ export class PersonasClient {
   /**
    * @return OK
    */
-  descargarDocumentoHojaDeVidaPersona(id: string): Observable<void> {
+  descargarDocumentoHojaDeVidaPersona(id: string): Observable<FileResponse> {
     let url_ = this.baseUrl + '/api/personas/{id}/documento-hoja-de-vida';
     if (id === undefined || id === null)
       throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -4547,7 +4570,9 @@ export class PersonasClient {
     let options_: any = {
       observe: 'response',
       responseType: 'blob',
-      headers: new HttpHeaders({}),
+      headers: new HttpHeaders({
+        Accept: 'application/pdf',
+      }),
     };
 
     return this.http
@@ -4563,16 +4588,16 @@ export class PersonasClient {
             try {
               return this.processDescargarDocumentoHojaDeVidaPersona(response_ as any);
             } catch (e) {
-              return _observableThrow(e) as any as Observable<void>;
+              return _observableThrow(e) as any as Observable<FileResponse>;
             }
-          } else return _observableThrow(response_) as any as Observable<void>;
+          } else return _observableThrow(response_) as any as Observable<FileResponse>;
         }),
       );
   }
 
   protected processDescargarDocumentoHojaDeVidaPersona(
     response: HttpResponseBase,
-  ): Observable<void> {
+  ): Observable<FileResponse> {
     const status = response.status;
     const responseBlob =
       response instanceof HttpResponse
@@ -4587,12 +4612,31 @@ export class PersonasClient {
         _headers[key] = response.headers.get(key);
       }
     }
-    if (status === 200) {
-      return blobToText(responseBlob).pipe(
-        _observableMergeMap((_responseText: string) => {
-          return _observableOf(null as any);
-        }),
-      );
+    if (status === 200 || status === 206) {
+      const contentDisposition = response.headers
+        ? response.headers.get('content-disposition')
+        : undefined;
+      let fileNameMatch = contentDisposition
+        ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition)
+        : undefined;
+      let fileName =
+        fileNameMatch && fileNameMatch.length > 1
+          ? fileNameMatch[3] || fileNameMatch[2]
+          : undefined;
+      if (fileName) {
+        fileName = decodeURIComponent(fileName);
+      } else {
+        fileNameMatch = contentDisposition
+          ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition)
+          : undefined;
+        fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+      }
+      return _observableOf({
+        fileName: fileName,
+        data: responseBlob as any,
+        status: status,
+        headers: _headers,
+      });
     } else if (status === 400) {
       return blobToText(responseBlob).pipe(
         _observableMergeMap((_responseText: string) => {
@@ -6813,7 +6857,7 @@ export class ArchivosClient {
   /**
    * @return OK
    */
-  descargarArchivo(id: string): Observable<void> {
+  descargarArchivo(id: string): Observable<FileResponse> {
     let url_ = this.baseUrl + '/api/archivos/{id}/descargar';
     if (id === undefined || id === null)
       throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -6823,7 +6867,9 @@ export class ArchivosClient {
     let options_: any = {
       observe: 'response',
       responseType: 'blob',
-      headers: new HttpHeaders({}),
+      headers: new HttpHeaders({
+        Accept: 'application/octet-stream',
+      }),
     };
 
     return this.http
@@ -6839,14 +6885,14 @@ export class ArchivosClient {
             try {
               return this.processDescargarArchivo(response_ as any);
             } catch (e) {
-              return _observableThrow(e) as any as Observable<void>;
+              return _observableThrow(e) as any as Observable<FileResponse>;
             }
-          } else return _observableThrow(response_) as any as Observable<void>;
+          } else return _observableThrow(response_) as any as Observable<FileResponse>;
         }),
       );
   }
 
-  protected processDescargarArchivo(response: HttpResponseBase): Observable<void> {
+  protected processDescargarArchivo(response: HttpResponseBase): Observable<FileResponse> {
     const status = response.status;
     const responseBlob =
       response instanceof HttpResponse
@@ -6861,12 +6907,31 @@ export class ArchivosClient {
         _headers[key] = response.headers.get(key);
       }
     }
-    if (status === 200) {
-      return blobToText(responseBlob).pipe(
-        _observableMergeMap((_responseText: string) => {
-          return _observableOf(null as any);
-        }),
-      );
+    if (status === 200 || status === 206) {
+      const contentDisposition = response.headers
+        ? response.headers.get('content-disposition')
+        : undefined;
+      let fileNameMatch = contentDisposition
+        ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition)
+        : undefined;
+      let fileName =
+        fileNameMatch && fileNameMatch.length > 1
+          ? fileNameMatch[3] || fileNameMatch[2]
+          : undefined;
+      if (fileName) {
+        fileName = decodeURIComponent(fileName);
+      } else {
+        fileNameMatch = contentDisposition
+          ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition)
+          : undefined;
+        fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+      }
+      return _observableOf({
+        fileName: fileName,
+        data: responseBlob as any,
+        status: status,
+        headers: _headers,
+      });
     } else if (status === 400) {
       return blobToText(responseBlob).pipe(
         _observableMergeMap((_responseText: string) => {
@@ -7161,7 +7226,7 @@ export class ExportacionesClient {
    * @param institucionId (optional)
    * @return OK
    */
-  exportarZip(institucionId?: string | undefined): Observable<void> {
+  exportarZip(institucionId?: string | undefined): Observable<FileResponse> {
     let url_ = this.baseUrl + '/api/exportaciones/zip?';
     if (institucionId === null)
       throw new globalThis.Error("The parameter 'institucionId' cannot be null.");
@@ -7172,7 +7237,9 @@ export class ExportacionesClient {
     let options_: any = {
       observe: 'response',
       responseType: 'blob',
-      headers: new HttpHeaders({}),
+      headers: new HttpHeaders({
+        Accept: 'application/zip',
+      }),
     };
 
     return this.http
@@ -7188,14 +7255,14 @@ export class ExportacionesClient {
             try {
               return this.processExportarZip(response_ as any);
             } catch (e) {
-              return _observableThrow(e) as any as Observable<void>;
+              return _observableThrow(e) as any as Observable<FileResponse>;
             }
-          } else return _observableThrow(response_) as any as Observable<void>;
+          } else return _observableThrow(response_) as any as Observable<FileResponse>;
         }),
       );
   }
 
-  protected processExportarZip(response: HttpResponseBase): Observable<void> {
+  protected processExportarZip(response: HttpResponseBase): Observable<FileResponse> {
     const status = response.status;
     const responseBlob =
       response instanceof HttpResponse
@@ -7210,12 +7277,31 @@ export class ExportacionesClient {
         _headers[key] = response.headers.get(key);
       }
     }
-    if (status === 200) {
-      return blobToText(responseBlob).pipe(
-        _observableMergeMap((_responseText: string) => {
-          return _observableOf(null as any);
-        }),
-      );
+    if (status === 200 || status === 206) {
+      const contentDisposition = response.headers
+        ? response.headers.get('content-disposition')
+        : undefined;
+      let fileNameMatch = contentDisposition
+        ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition)
+        : undefined;
+      let fileName =
+        fileNameMatch && fileNameMatch.length > 1
+          ? fileNameMatch[3] || fileNameMatch[2]
+          : undefined;
+      if (fileName) {
+        fileName = decodeURIComponent(fileName);
+      } else {
+        fileNameMatch = contentDisposition
+          ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition)
+          : undefined;
+        fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+      }
+      return _observableOf({
+        fileName: fileName,
+        data: responseBlob as any,
+        status: status,
+        headers: _headers,
+      });
     } else if (status === 400) {
       return blobToText(responseBlob).pipe(
         _observableMergeMap((_responseText: string) => {
@@ -7263,7 +7349,7 @@ export class ExportacionesClient {
    * @param institucionId (optional)
    * @return OK
    */
-  exportarExcel(institucionId?: string | undefined): Observable<void> {
+  exportarExcel(institucionId?: string | undefined): Observable<FileResponse> {
     let url_ = this.baseUrl + '/api/exportaciones/excel?';
     if (institucionId === null)
       throw new globalThis.Error("The parameter 'institucionId' cannot be null.");
@@ -7274,7 +7360,9 @@ export class ExportacionesClient {
     let options_: any = {
       observe: 'response',
       responseType: 'blob',
-      headers: new HttpHeaders({}),
+      headers: new HttpHeaders({
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
     };
 
     return this.http
@@ -7290,14 +7378,14 @@ export class ExportacionesClient {
             try {
               return this.processExportarExcel(response_ as any);
             } catch (e) {
-              return _observableThrow(e) as any as Observable<void>;
+              return _observableThrow(e) as any as Observable<FileResponse>;
             }
-          } else return _observableThrow(response_) as any as Observable<void>;
+          } else return _observableThrow(response_) as any as Observable<FileResponse>;
         }),
       );
   }
 
-  protected processExportarExcel(response: HttpResponseBase): Observable<void> {
+  protected processExportarExcel(response: HttpResponseBase): Observable<FileResponse> {
     const status = response.status;
     const responseBlob =
       response instanceof HttpResponse
@@ -7312,12 +7400,31 @@ export class ExportacionesClient {
         _headers[key] = response.headers.get(key);
       }
     }
-    if (status === 200) {
-      return blobToText(responseBlob).pipe(
-        _observableMergeMap((_responseText: string) => {
-          return _observableOf(null as any);
-        }),
-      );
+    if (status === 200 || status === 206) {
+      const contentDisposition = response.headers
+        ? response.headers.get('content-disposition')
+        : undefined;
+      let fileNameMatch = contentDisposition
+        ? /filename\*=(?:(\\?['"])(.*?)\1|(?:[^\s]+'.*?')?([^;\n]*))/g.exec(contentDisposition)
+        : undefined;
+      let fileName =
+        fileNameMatch && fileNameMatch.length > 1
+          ? fileNameMatch[3] || fileNameMatch[2]
+          : undefined;
+      if (fileName) {
+        fileName = decodeURIComponent(fileName);
+      } else {
+        fileNameMatch = contentDisposition
+          ? /filename="?([^"]*?)"?(;|$)/g.exec(contentDisposition)
+          : undefined;
+        fileName = fileNameMatch && fileNameMatch.length > 1 ? fileNameMatch[1] : undefined;
+      }
+      return _observableOf({
+        fileName: fileName,
+        data: responseBlob as any,
+        status: status,
+        headers: _headers,
+      });
     } else if (status === 400) {
       return blobToText(responseBlob).pipe(
         _observableMergeMap((_responseText: string) => {
@@ -14144,6 +14251,13 @@ export interface VincularCapacitacionObligatoriaRequest {
   capacitacionId: string;
 
   [key: string]: any;
+}
+
+export interface FileResponse {
+  data: Blob;
+  status: number;
+  fileName?: string;
+  headers?: { [name: string]: any };
 }
 
 export class SwaggerException extends Error {

@@ -11,7 +11,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { finalize } from 'rxjs';
-import { API_BASE_URL, ArchivosClient } from '../../../../api-client';
+import { API_BASE_URL, ArchivosClient, FileResponse } from '../../../../api-client';
+import { descargarBlob } from '../../../../core/util/descarga-archivo.util';
 
 const LIMITE_ALERTA_BYTES = 5 * 1024 * 1024; // 5 MB (ADR-0006)
 const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
@@ -68,12 +69,13 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
                 @if (!esSeleccionPendiente() && archivoId(); as id) {
                   <a
                     [href]="obtenerUrlDescarga(id)"
+                    (click)="descargarArchivo(id, $event)"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="btn-enlace"
                     data-testid="btn-descargar-foto"
                   >
-                    Ver / Descargar
+                    {{ descargando() ? 'Descargando...' : 'Ver / Descargar' }}
                   </a>
                 }
 
@@ -179,19 +181,20 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
             <div class="archivo-acciones">
               <a
                 [href]="obtenerUrlDescarga(id)"
+                (click)="descargarArchivo(id, $event)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="btn-enlace"
                 data-testid="btn-descargar-respaldo"
               >
-                Ver / Descargar
+                {{ descargando() ? 'Descargando...' : 'Ver / Descargar' }}
               </a>
               @if (puedeEditar()) {
                 <button
                   type="button"
                   class="btn-quitar"
                   (click)="quitarArchivo()"
-                  [disabled]="subiendo()"
+                  [disabled]="subiendo() || descargando()"
                   title="Quitar archivo"
                   data-testid="btn-quitar-respaldo"
                 >
@@ -283,6 +286,14 @@ const LIMITE_MAXIMO_BYTES = 10 * 1024 * 1024; // 10 MB (ADR-0006)
         font-size: 0.8125rem;
         text-decoration: underline;
         font-weight: 500;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+      }
+      .btn-enlace:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
       .btn-quitar {
         background: transparent;
@@ -476,6 +487,7 @@ export class UploaderRespaldoComponent {
   readonly archivoId = input<string | undefined>(undefined);
   readonly archivoIdGuardado = input<string | undefined>(undefined);
   readonly nombreArchivo = input<string | undefined>(undefined);
+  readonly claveDestino = input<string | undefined>(undefined);
   readonly puedeEditar = input<boolean>(true);
   readonly requerido = input<boolean>(true);
   readonly etiqueta = input<string>('Archivo de respaldo');
@@ -487,6 +499,7 @@ export class UploaderRespaldoComponent {
   readonly archivoEliminado = output<void>();
 
   readonly subiendo = signal(false);
+  readonly descargando = signal(false);
   readonly error = signal('');
   readonly avisoTamanio = signal('');
   readonly vistaPreviaUrl = signal<string | null>(null);
@@ -596,7 +609,7 @@ export class UploaderRespaldoComponent {
     };
 
     this.archivosClient
-      .subirArchivo(undefined, undefined, parametroArchivo)
+      .subirArchivo(this.claveDestino() || undefined, undefined, parametroArchivo)
       .pipe(
         finalize(() => {
           this.subiendo.set(false);
@@ -615,15 +628,42 @@ export class UploaderRespaldoComponent {
       });
   }
 
+  descargarArchivo(id: string, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (this.descargando()) return;
+    this.descargando.set(true);
+    this.error.set('');
+
+    this.archivosClient.descargarArchivo(id).subscribe({
+      next: (res: FileResponse | Blob) => {
+        this.descargando.set(false);
+        const blob = res instanceof Blob ? res : res?.data;
+        if (!blob) {
+          this.error.set('El archivo descargado está vacío.');
+          return;
+        }
+        const fileName = !(res instanceof Blob) ? res?.fileName : undefined;
+        const nombre = fileName || this.nombreArchivo() || 'archivo_adjunto';
+        descargarBlob(blob, nombre);
+      },
+      error: (err) => {
+        this.descargando.set(false);
+        this.error.set(mensajeError(err, 'Error al descargar el archivo.'));
+      },
+    });
+  }
+
+  obtenerUrlDescarga(id: string): string {
+    return `${this.baseUrl}/api/archivos/${encodeURIComponent(id)}/descargar`;
+  }
+
   quitarArchivo(): void {
     this.error.set('');
     this.avisoTamanio.set('');
     this.vistaPreviaUrl.set(null);
     this.esSeleccionPendiente.set(false);
     this.archivoEliminado.emit();
-  }
-
-  obtenerUrlDescarga(id: string): string {
-    return `${this.baseUrl}/api/archivos/${encodeURIComponent(id)}/descargar`;
   }
 }

@@ -9,6 +9,7 @@ import {
   ArchivoDto,
   DevolverActualizacionRequest,
   ExpedienteRevisionDto,
+  FileResponse,
   HojaDeVidaDto,
   MarcaObservacionItem,
   ResumenRevisionPendienteDto,
@@ -282,9 +283,10 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                     <div class="archivo-info">
                       <strong>{{ archivo.nombreOriginal }}</strong>
                       <span class="archivo-meta">
-                        {{ archivo.claveDestino || 'Documento' }} •
+                        {{ archivo.claveDestino || 'Documento General' }} •
                         {{ (archivo.tamanoBytes / 1024).toFixed(1) }} KB •
-                        {{ archivo.tipoContenido }}
+                        {{ archivo.tipoContenido }} • Subido:
+                        {{ archivo.fechaSubidaUtc | date: 'dd/MM/yyyy HH:mm' }}
                       </span>
                     </div>
                     <button
@@ -1094,22 +1096,15 @@ export class SupervisorDashboardComponent implements OnInit {
 
   descargarArchivo(archivoId: string, nombreOriginal: string): void {
     this.archivosClient.descargarArchivo(archivoId).subscribe({
-      next: (res: unknown) => {
-        const respuestaObj = res as { data?: Blob };
-        const blob =
-          respuestaObj?.data instanceof Blob
-            ? respuestaObj.data
-            : res instanceof Blob
-              ? res
-              : new Blob([String(res)]);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nombreOriginal || 'archivo_adjunto';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+      next: (res: FileResponse | Blob) => {
+        const blob = res instanceof Blob ? res : res?.data;
+        if (!blob) {
+          this.error.set('El archivo descargado está vacío.');
+          return;
+        }
+        const fileName = !(res instanceof Blob) ? res?.fileName : undefined;
+        const nombre = fileName || nombreOriginal || 'archivo_adjunto';
+        descargarBlob(blob, nombre);
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al descargar el archivo.'));
