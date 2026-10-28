@@ -58,3 +58,4 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0011](spec-0011/spec.md) | Aceptación de protección de datos al iniciar sesión, issue #99 | v0.2 aprobada; autorización rectoral confirmada por el solicitante (2026-10-27) |
 | [spec-0012](spec-0012/spec.md) | Panel de admin: unificar pantallas, paginación, botones responsive y cuentas bancarias, issue #83 | Implementado (2026-10-27) |
 | [spec-0013](spec-0013/spec.md) | Documento de hoja de vida desde plantillas globales, issue #101 | Aprobado v0.1 (2026-10-27) |
+| [spec-0014](spec-0014/spec.md) | Ejecución y organización de pruebas para agentes | Aprobado v0.1 (2026-10-28) |
