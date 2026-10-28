@@ -131,4 +131,36 @@ describe('Validación de hoja de vida', () => {
       ).length === 0,
     ).toBe(valido);
   });
+
+  it('hayErrores_omite_formularios_de_secciones_deshabilitadas', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        {
+          provide: ConfiguracionClient,
+          useValue: { obtenerPoliticaValidacion: () => of(politicaFicticia) },
+        },
+      ],
+    });
+    const servicio = TestBed.inject(ValidacionHojaDeVidaService);
+    const destruccionMock = { onDestroy: vi.fn() } as unknown as import('@angular/core').DestroyRef;
+
+    // Ficha válida
+    servicio.registrarFormulario('ficha-personal', () => false, destruccionMock);
+    // Formación inválida (con errores)
+    servicio.registrarFormulario('formacion-academica', () => true, destruccionMock);
+
+    // Sin filtro de secciones abiertas (o todas abiertas), hayErrores debe ser true
+    expect(servicio.hayErrores()).toBe(true);
+
+    // Si solo ficha está abierta, debe omitir formación y retornar false
+    expect(servicio.hayErrores(['ficha'])).toBe(false);
+
+    // Si se sincronizan las secciones abiertas en el servicio
+    servicio.actualizarSeccionesAbiertas(['ficha']);
+    expect(servicio.hayErrores()).toBe(false);
+
+    // Si formacion se vuelve a abrir, hayErrores retorna true
+    servicio.actualizarSeccionesAbiertas(['ficha', 'formacion']);
+    expect(servicio.hayErrores()).toBe(true);
+  });
 });
