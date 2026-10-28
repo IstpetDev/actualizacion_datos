@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import {
   DestroyRef,
   Component,
+  computed,
   effect,
   inject,
   OnDestroy,
@@ -645,9 +646,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               etiqueta="Foto de Perfil Personal"
               ayuda="Formatos permitidos: JPG, PNG (máx. 10 MB)"
               [soloImagenes]="true"
+              [mostrarVistaPrevia]="true"
               [requerido]="false"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.fotoArchivoId"
+              [archivoIdGuardado]="fotoGuardadaId()"
               (archivoIdChange)="onFotoSubida($event)"
               (archivoEliminado)="onFotoEliminada()"
             ></app-uploader-respaldo>
@@ -871,6 +874,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   };
 
   readonly marcaFicha = signal(this.state.obtenerMarcaParaItem('ficha', 'datos_personales'));
+  readonly fotoGuardadaId = computed(() => this.state.ficha()?.fotoArchivoId);
 
   private snapshotModelo = '';
   private snapshotPoseeDiscapacidad = false;

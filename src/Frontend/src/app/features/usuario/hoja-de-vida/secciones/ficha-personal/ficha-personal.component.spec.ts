@@ -619,4 +619,79 @@ describe('FichaPersonalComponent', () => {
     expect(component.modelo.primerNombre).toBe(originalNombre);
     expect(component.tieneCambios()).toBe(false);
   });
+  it('muestra_foto_persistida_cuando_la_ficha_cargada_tiene_fotoArchivoId', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-guardada-abc',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    expect(component.fotoGuardadaId()).toBe('foto-guardada-abc');
+    expect(component.modelo.fotoArchivoId).toBe('foto-guardada-abc');
+
+    const img = fixture.nativeElement.querySelector(
+      '[data-testid="foto-persistida"]',
+    ) as HTMLImageElement;
+    expect(img).not.toBeNull();
+    expect(img.src).toContain('/api/archivos/foto-guardada-abc/descargar');
+
+    const enlaceDescarga = fixture.nativeElement.querySelector(
+      '[data-testid="btn-descargar-foto"]',
+    ) as HTMLAnchorElement;
+    expect(enlaceDescarga).not.toBeNull();
+    expect(enlaceDescarga.href).toContain('/api/archivos/foto-guardada-abc/descargar');
+  });
+
+  it('permite_subir_nueva_foto_y_guardarla_en_la_ficha', () => {
+    component.ngOnInit();
+    component.onFotoSubida('nueva-foto-xyz');
+    expect(component.modelo.fotoArchivoId).toBe('nueva-foto-xyz');
+    expect(component.tieneCambios()).toBe(true);
+
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ fotoArchivoId: 'nueva-foto-xyz' }),
+    );
+  });
+
+  it('permite_eliminar_foto_y_guardar_la_ficha_sin_foto', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-a-eliminar',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    component.onFotoEliminada();
+    expect(component.modelo.fotoArchivoId).toBeUndefined();
+
+    component.guardarFicha();
+    expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+      expect.objectContaining({ fotoArchivoId: undefined }),
+    );
+  });
+
+  it('descarta_cambios_de_foto_restaurando_la_foto_guardada', () => {
+    fichaActual.set({
+      personaId: 'persona-ficticia',
+      fechaActualizacionUtc: new Date(),
+      primerNombre: 'Persona',
+      primerApellido: 'Ficticia',
+      fotoArchivoId: 'foto-original',
+    } as FichaPersonalDto);
+    fixture.detectChanges();
+
+    component.onFotoSubida('foto-cambiada-temporal');
+    expect(component.modelo.fotoArchivoId).toBe('foto-cambiada-temporal');
+    expect(component.tieneCambios()).toBe(true);
+
+    component.descartarCambios();
+    expect(component.modelo.fotoArchivoId).toBe('foto-original');
+    expect(component.tieneCambios()).toBe(false);
+  });
 });
