@@ -4,7 +4,16 @@ import {
 } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  DestroyRef,
+  Component,
+  computed,
+  effect,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, Subscription } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
@@ -581,9 +590,11 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               etiqueta="Foto de Perfil Personal"
               ayuda="Formatos permitidos: JPG, PNG (máx. 10 MB)"
               [soloImagenes]="true"
+              [mostrarVistaPrevia]="true"
               [requerido]="false"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.fotoArchivoId"
+              [archivoIdGuardado]="fotoGuardadaId()"
               (archivoIdChange)="onFotoSubida($event)"
               (archivoEliminado)="onFotoEliminada()"
             ></app-uploader-respaldo>
@@ -790,6 +801,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   };
 
   readonly marcaFicha = signal(this.state.obtenerMarcaParaItem('ficha', 'datos_personales'));
+  readonly fotoGuardadaId = computed(() => this.state.ficha()?.fotoArchivoId);
 
   private snapshotModelo = '';
 
