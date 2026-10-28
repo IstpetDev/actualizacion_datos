@@ -3,6 +3,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
+using Istpet.ActualizacionDatos.Application.Validacion;
 using Istpet.ActualizacionDatos.Domain;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -120,18 +121,15 @@ public class ServicioInstituciones : IServicioInstituciones
 
     public async Task<List<PersonaDto>> AsignarAdminsAsync(Guid institucionId, AsignarAdminsRequest request, CancellationToken ct = default)
     {
+        if (!_contextoInstitucion.EsSuperadmin)
+            throw new ReglaNegocioException("No tiene permisos para asignar administradores.");
+
         var id = new InstitucionId(institucionId);
         var institucion = await _context.Instituciones.FirstOrDefaultAsync(i => i.Id == id, ct)
             ?? throw new ReglaNegocioException($"La institución con ID {institucionId} no existe.");
 
         var resultado = new List<PersonaDto>();
         var documentosVistos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        // Se usa IgnoreQueryFilters para verificar y cargar en la institución específica
-        var personasExistentes = await _context.Personas
-            .IgnoreQueryFilters()
-            .Where(p => p.InstitucionId == id)
-            .ToListAsync(ct);
 
         foreach (var adminReq in request.Admins)
         {
@@ -146,26 +144,9 @@ public class ServicioInstituciones : IServicioInstituciones
                 continue;
             }
 
-            var existente = personasExistentes.FirstOrDefault(p => p.Documento.Equals(doc, StringComparison.OrdinalIgnoreCase));
-            if (existente == null)
-            {
-                var nuevoAdmin = new Persona(
-                    Guid.NewGuid(),
-                    id,
-                    doc,
-                    RolUsuario.Admin,
-                    adminReq.Nombre,
-                    adminReq.Correo,
-                    accesoHabilitado: true);
-
-                _context.Personas.Add(nuevoAdmin);
-                resultado.Add(MapearPersona(nuevoAdmin));
-            }
-            else
-            {
-                existente.HabilitarAcceso();
-                resultado.Add(MapearPersona(existente));
-            }
+            var persona = await AsignarSinGuardarAsync(id,
+                new AsignarPersonalInstitucionalRequest(doc, "Admin", adminReq.Nombre, adminReq.Correo), RolUsuario.Admin, ct);
+            resultado.Add(MapearPersona(persona));
         }
 
         var auditoria = new Auditoria(
@@ -179,6 +160,87 @@ public class ServicioInstituciones : IServicioInstituciones
 
         await _context.SaveChangesAsync(ct);
         return resultado;
+    }
+
+    public async Task<List<PersonaDto>> ListarPersonalAsync(Guid institucionId, CancellationToken ct = default)
+    {
+        var id = AsegurarGestionPermitida(institucionId);
+        await AsegurarInstitucionAsync(id, ct);
+        var personas = await _context.Personas.AsNoTracking()
+            .Where(p => p.InstitucionId == id &&
+                (p.Rol == RolUsuario.Supervisor || (_contextoInstitucion.EsSuperadmin && p.Rol == RolUsuario.Admin)))
+            .OrderBy(p => p.Nombre).ThenBy(p => p.Documento)
+            .ToListAsync(ct);
+
+        _context.Auditorias.Add(new Auditoria(Guid.NewGuid(), _contextoInstitucion.ActorActual ?? "admin",
+            "LISTAR_PERSONAL_INSTITUCIONAL", id, detalle: $"Consulta de {personas.Count} cuentas administrativas o de supervisión."));
+        await _context.SaveChangesAsync(ct);
+        return personas.Select(MapearPersona).ToList();
+    }
+
+    public async Task<PersonaDto> AsignarPersonalAsync(Guid institucionId, AsignarPersonalInstitucionalRequest request, CancellationToken ct = default)
+    {
+        var id = AsegurarGestionPermitida(institucionId);
+        var rol = string.Equals(request.Rol, "Admin", StringComparison.OrdinalIgnoreCase) ? RolUsuario.Admin :
+            string.Equals(request.Rol, "Supervisor", StringComparison.OrdinalIgnoreCase) ? RolUsuario.Supervisor :
+            throw new ValidacionCamposException(new() { ["rol"] = ["Seleccione Admin o Supervisor."] });
+        if (!_contextoInstitucion.EsSuperadmin && rol != RolUsuario.Supervisor)
+            throw new ReglaNegocioException("No tiene permisos para asignar administradores.");
+
+        await AsegurarInstitucionAsync(id, ct);
+        var persona = await AsignarSinGuardarAsync(id, request, rol, ct);
+        await _context.SaveChangesAsync(ct);
+        return MapearPersona(persona);
+    }
+
+    private InstitucionId AsegurarGestionPermitida(Guid institucionId)
+    {
+        var id = new InstitucionId(institucionId);
+        if (!_contextoInstitucion.EsSuperadmin &&
+            (_contextoInstitucion.RolActual != RolUsuario.Admin || _contextoInstitucion.InstitucionId != id))
+            throw new ReglaNegocioException("No tiene permisos para gestionar personal de esta institución.");
+        return id;
+    }
+
+    private async Task AsegurarInstitucionAsync(InstitucionId id, CancellationToken ct)
+    {
+        if (!await _context.Instituciones.AnyAsync(i => i.Id == id, ct))
+            throw new RecursoNoEncontradoException("La institución no existe.");
+    }
+
+    private async Task<Persona> AsignarSinGuardarAsync(InstitucionId id, AsignarPersonalInstitucionalRequest request, RolUsuario rol, CancellationToken ct)
+    {
+        var documento = request.Documento?.Trim();
+        var nombre = ValidacionHojaDeVida.NormalizarTexto(request.Nombre);
+        var correo = ValidacionHojaDeVida.NormalizarTexto(request.Correo);
+        var errores = new Dictionary<string, string[]>();
+        if (documento is not { Length: 10 } || !documento.All(char.IsAsciiDigit))
+            errores["documento"] = ["Ingrese un documento de diez dígitos."];
+        if (nombre is { Length: > 403 } || nombre?.Any(char.IsControl) == true)
+            errores["nombre"] = ["El nombre admite hasta 403 caracteres y no puede contener controles."];
+        var erroresCorreo = ValidacionHojaDeVida.Evaluar(new { CorreoInstitucional = correo }, "ficha", ValidacionHojaDeVida.Politica(id.Valor, []));
+        if (erroresCorreo.TryGetValue("correoInstitucional", out var mensajes)) errores["correo"] = mensajes;
+        if (errores.Count > 0) throw new ValidacionCamposException(errores);
+
+        var persona = await _context.Personas.SingleOrDefaultAsync(p => p.InstitucionId == id && p.Documento == documento, ct);
+        var anterior = persona?.Rol.ToString() ?? "Sin cuenta";
+        if (persona == null)
+        {
+            persona = new Persona(Guid.NewGuid(), id, documento!, rol, nombre, correo, accesoHabilitado: true);
+            _context.Personas.Add(persona);
+        }
+        else
+        {
+            if (persona.Rol == RolUsuario.Superadmin ||
+                (!_contextoInstitucion.EsSuperadmin && persona.Rol == RolUsuario.Admin))
+                throw new ReglaNegocioException("No tiene permisos para modificar esta cuenta administrativa.");
+            persona.AsignarRolInstitucional(rol);
+        }
+
+        _context.Auditorias.Add(new Auditoria(Guid.NewGuid(), _contextoInstitucion.ActorActual ?? "admin",
+            "ASIGNAR_PERSONAL_INSTITUCIONAL", id,
+            detalle: $"PersonaId={persona.Id}; rol anterior={anterior}; rol nuevo={rol}; acceso habilitado."));
+        return persona;
     }
 
     public async Task<List<PersonaDto>> HabilitarPersonasAsync(Guid institucionId, HabilitarPersonasRequest request, CancellationToken ct = default)

@@ -12,6 +12,13 @@ public sealed record CrearInstitucionRequest(
 public sealed record AsignarAdminsRequest(
     List<AdminInicialRequest> Admins);
 
+[System.Text.Json.Serialization.JsonUnmappedMemberHandling(System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
+public sealed record AsignarPersonalInstitucionalRequest(
+    string Documento,
+    string Rol,
+    string? Nombre = null,
+    string? Correo = null);
+
 public sealed record InstitucionDto(
     Guid Id,
     string Nombre,

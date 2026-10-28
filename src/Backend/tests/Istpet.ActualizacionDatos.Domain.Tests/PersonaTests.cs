@@ -5,6 +5,44 @@ using Istpet.ActualizacionDatos.Domain;
 public class PersonaTests
 {
     [Theory]
+    [InlineData(RolUsuario.Usuario, RolUsuario.Admin)]
+    [InlineData(RolUsuario.Usuario, RolUsuario.Supervisor)]
+    [InlineData(RolUsuario.Supervisor, RolUsuario.Admin)]
+    [InlineData(RolUsuario.Admin, RolUsuario.Supervisor)]
+    [InlineData(RolUsuario.Supervisor, RolUsuario.Supervisor)]
+    public void Asignar_rol_institucional_actualiza_rol_y_acceso_sin_alterar_la_cuenta(RolUsuario anterior, RolUsuario nuevo)
+    {
+        var persona = new Persona(Guid.NewGuid(), InstitucionId.Nuevo(), "0000000000", anterior,
+            "Persona Ficticia", "persona@ejemplo.test", passwordHash: "hash-ficticio", debeCambiarContrasena: false,
+            correoVerificado: true, estadoActualizacion: EstadoActualizacion.Enviado);
+
+        persona.AsignarRolInstitucional(nuevo);
+
+        Assert.Equal(nuevo, persona.Rol);
+        Assert.True(persona.AccesoHabilitado);
+        Assert.Equal("Persona Ficticia", persona.Nombre);
+        Assert.Equal("persona@ejemplo.test", persona.Correo);
+        Assert.Equal("hash-ficticio", persona.PasswordHash);
+        Assert.True(persona.CorreoVerificado);
+        Assert.False(persona.DebeCambiarContrasena);
+        Assert.Equal(EstadoActualizacion.Enviado, persona.EstadoActualizacion);
+    }
+
+    [Theory]
+    [InlineData(RolUsuario.Usuario, RolUsuario.Usuario)]
+    [InlineData(RolUsuario.Usuario, RolUsuario.Superadmin)]
+    [InlineData(RolUsuario.Usuario, (RolUsuario)999)]
+    [InlineData(RolUsuario.Superadmin, RolUsuario.Admin)]
+    [InlineData(RolUsuario.Superadmin, RolUsuario.Supervisor)]
+    public void Asignar_rol_rechaza_destinos_invalidos_y_protege_superadmin(RolUsuario anterior, RolUsuario nuevo)
+    {
+        var persona = new Persona(Guid.NewGuid(), InstitucionId.Nuevo(), "0000000000", anterior);
+        Assert.Throws<ReglaNegocioException>(() => persona.AsignarRolInstitucional(nuevo));
+        Assert.Equal(anterior, persona.Rol);
+        Assert.False(persona.AccesoHabilitado);
+    }
+
+    [Theory]
     [InlineData("  Ficticia Persona  ", "Ficticia Persona")]
     [InlineData("", null)]
     [InlineData("   ", null)]
