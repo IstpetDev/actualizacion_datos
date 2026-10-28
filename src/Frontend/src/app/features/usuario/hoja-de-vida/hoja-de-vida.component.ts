@@ -1,3 +1,4 @@
+import { ObservacionesRevisionComponent } from '../../revision-compartida/observaciones-revision.component';
 import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -25,6 +26,7 @@ export type TabSeccionHojaVida =
   standalone: true,
   imports: [
     CommonModule,
+    ObservacionesRevisionComponent,
     DatePipe,
     FichaPersonalComponent,
     MiCuentaBancariaComponent,
@@ -110,13 +112,19 @@ export type TabSeccionHojaVida =
             }
             @if (totalMarcas() > 0) {
               <p class="banner-conteo-marcas">
-                Existen <strong>{{ totalMarcas() }}</strong> observaciones específicas señaladas en
-                sus registros.
+                El historial contiene <strong>{{ totalMarcas() }}</strong> observaciones
+                específicas.
               </p>
             }
           </div>
         </div>
       }
+
+      <app-observaciones-revision
+        [observaciones]="observaciones()"
+        [hojaDeVida]="hojaDeVida()"
+        [estado]="hojaDeVida()?.estadoActualizacion || ''"
+      />
 
       <!-- Banner Informativo si está en Modo Solo Lectura (RF-HDV-010) -->
       @if (!puedeEditar() && !esDevuelto() && !cargando()) {
@@ -178,6 +186,15 @@ export type TabSeccionHojaVida =
 
         <!-- Contenido Activo de la Sección Seleccionada -->
         <main class="seccion-activa-wrapper">
+          @if (tabActiva() !== 'ficha') {
+            <app-observaciones-revision
+              [observaciones]="observaciones()"
+              [hojaDeVida]="hojaDeVida()"
+              [estado]="hojaDeVida()?.estadoActualizacion || ''"
+              tipoDestino="seccion"
+              [claveDestino]="tabActiva()"
+            />
+          }
           @switch (tabActiva()) {
             @case ('ficha') {
               <app-ficha-personal></app-ficha-personal>
@@ -630,6 +647,7 @@ export class HojaDeVidaComponent implements OnInit {
   readonly estadoEdicion = this.state.estadoEdicion;
   readonly puedeEditar = this.state.puedeEditar;
   readonly esDevuelto = this.state.esDevuelto;
+  readonly observaciones = this.state.observaciones;
   readonly observacionGeneralDevolucion = this.state.observacionGeneralDevolucion;
   readonly marcasObservacion = this.state.marcasObservacion;
   readonly faltantes = this.state.faltantes;

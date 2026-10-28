@@ -11,6 +11,7 @@ import {
   TituloAcademicoDto,
 } from '../../../../api-client';
 import { HojaDeVidaStateService } from './hoja-de-vida-state.service';
+import { observacionesFicticias } from '../../../revision-compartida/observaciones-revision.fixture';
 
 describe('HojaDeVidaStateService', () => {
   let service: HojaDeVidaStateService;
@@ -261,6 +262,40 @@ describe('HojaDeVidaStateService', () => {
     expect(misDatosClientMock.obtenerEstadoEdicion).toHaveBeenCalled();
     expect(misDatosClientMock.obtenerObservacionesMisDatos).toHaveBeenCalled();
     expect(service.hojaDeVida()).toEqual(mockHdvBorrador);
+  });
+
+  it('usa la última devolución y conserva las marcas y su contexto al guardar y reenviar', () => {
+    hdvClientMock.obtenerMiHojaDeVida.mockReturnValue(
+      of({ ...mockHdvBorrador, estadoActualizacion: 'Devuelto' }),
+    );
+    docsClientMock.listarMisDocumentosPersonales.mockReturnValue(of([]));
+    misDatosClientMock.obtenerObservacionesMisDatos.mockReturnValue(of(observacionesFicticias));
+    hdvClientMock.guardarMiFichaPersonal.mockReturnValue(of({ primerNombre: 'Persona Ficticia' }));
+    service.cargarTodo().subscribe();
+    expect(service.observacionGeneralDevolucion()).toBe('Indicación general ficticia 2');
+    expect(service.obtenerMarcaParaItem('ficha', 'datos_personales')?.texto).toBe(
+      'Corregir ficha ficticia 2',
+    );
+    expect(service.obtenerMarcaParaItem('titulo', 'tit-001')?.revision?.autor).toBe(
+      'Supervisor Ficticio 2',
+    );
+    service.guardarFichaPersonal({ primerNombre: 'Persona Ficticia' }).subscribe();
+    service.enviarRevision().subscribe();
+    expect(service.observaciones()).toEqual(observacionesFicticias);
+    expect(service.marcasObservacion()).toHaveLength(4);
+    expect(service.obtenerMarcaParaItem('titulo', 'tit-001')?.estadoExpediente).toBe('Enviado');
+  });
+
+  it('no sustituye el historial por vacío si falla cargar las observaciones', () => {
+    service.observaciones.set(observacionesFicticias);
+    hdvClientMock.obtenerMiHojaDeVida.mockReturnValue(of(mockHdvBorrador));
+    docsClientMock.listarMisDocumentosPersonales.mockReturnValue(of([]));
+    misDatosClientMock.obtenerObservacionesMisDatos.mockReturnValue(
+      throwError(() => ({ mensaje: 'Historial no disponible.' })),
+    );
+    service.cargarTodo().subscribe();
+    expect(service.observaciones()).toEqual(observacionesFicticias);
+    expect(service.error()).toBe('Historial no disponible.');
   });
 
   it('enviarRevision_actualiza_estado_a_Enviado', () => {

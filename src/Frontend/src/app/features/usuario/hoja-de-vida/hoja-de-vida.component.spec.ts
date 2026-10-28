@@ -1,3 +1,4 @@
+import { observacionesFicticias } from '../../revision-compartida/observaciones-revision.fixture';
 import politicaPrueba from './servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../api-client';
 import { provideHttpClient } from '@angular/common/http';
@@ -46,6 +47,7 @@ describe('HojaDeVidaComponent', () => {
     esDevuelto: WritableSignal<boolean>;
     observacionGeneralDevolucion: WritableSignal<string | undefined>;
     marcasObservacion: WritableSignal<MarcaObservacionDto[]>;
+    observaciones: WritableSignal<import('../../../api-client').ObservacionDto[]>;
     faltantes: WritableSignal<FaltanteEnvioDto[]>;
     titulos: WritableSignal<TituloAcademicoDto[]>;
     titulosEnCurso: WritableSignal<TituloEnCursoDto[]>;
@@ -98,6 +100,7 @@ describe('HojaDeVidaComponent', () => {
       esDevuelto: signal(false),
       observacionGeneralDevolucion: signal(undefined),
       marcasObservacion: signal([]),
+      observaciones: signal([]),
       faltantes: signal([]),
       titulos: signal([]),
       titulosEnCurso: signal([]),
@@ -160,6 +163,18 @@ describe('HojaDeVidaComponent', () => {
     fixture = TestBed.createComponent(HojaDeVidaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('mantiene el historial visible al pasar de Devuelto a Enviado', () => {
+    stateMock.observaciones.set(observacionesFicticias);
+    stateMock.esDevuelto.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Indicación general ficticia 2');
+    stateMock.esDevuelto.set(false);
+    stateMock.hojaDeVida.set({ ...mockHdv, estadoActualizacion: 'Enviado', puedeEditar: false });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Corregir ficha ficticia 1');
+    expect(fixture.nativeElement.textContent).toContain('Estado del expediente: Enviado');
   });
 
   it('debe_crearse_y_llamar_a_cargarTodo', () => {
