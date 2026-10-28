@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs';
+import { observacionesFicticias } from '../revision-compartida/observaciones-revision.fixture';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -150,6 +152,44 @@ describe('SupervisorDashboardComponent', () => {
     fixture = TestBed.createComponent(SupervisorDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('una consulta tardía no mezcla el historial con otro expediente seleccionado', () => {
+    const pendiente = new Subject<ExpedienteRevisionDto>();
+    revisionClientMock.obtenerExpedienteParaRevision
+      .mockReturnValueOnce(pendiente)
+      .mockReturnValueOnce(
+        of({ ...expedienteMock, documento: '0000000144', observaciones: observacionesFicticias }),
+      );
+    component.verExpediente('1700000001');
+    component.verExpediente('0000000144');
+    pendiente.next(expedienteMock);
+    pendiente.complete();
+    expect(component.expedienteSeleccionado()?.documento).toBe('0000000144');
+    expect(component.expedienteSeleccionado()?.observaciones).toEqual(observacionesFicticias);
+  });
+
+  it('conserva abierto el expediente devuelto con su historial y lo pasa a las secciones', () => {
+    component.verExpediente('1700000001');
+    const exp = component.expedienteSeleccionado()!;
+    revisionClientMock.obtenerExpedienteParaRevision.mockReturnValue(
+      of({ ...exp, estadoActualizacion: 'Devuelto', observaciones: observacionesFicticias }),
+    );
+    component.observacionGeneral.set('Indicación ficticia');
+    component.confirmarDevolucion();
+    fixture.detectChanges();
+    expect(component.expedienteSeleccionado()?.estadoActualizacion).toBe('Devuelto');
+    component.iniciarMarcaItem({
+      tipo: 'Item',
+      clave: 'titulo:registro-ficticio',
+      label: 'Título Ficticio',
+    });
+    expect(component.mostrarModalDevolver()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Indicación general ficticia 2');
+    expect(
+      (fixture.nativeElement.querySelector('[data-testid="btn-aprobar"]') as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it('debe_crearse_correctamente_y_cargar_pendientes_en_ngOnInit', () => {
@@ -419,7 +459,7 @@ describe('SupervisorDashboardComponent', () => {
     expect(component.pendientesFiltrados()[0].nombre).toBe('Ana Docente');
   });
 
-  it('cuando_el_expediente_esta_en_borrador_oculta_aprobar_y_devolver_y_muestra_aviso_RF_REV_003_004', () => {
+  it('cuando_el_expediente_esta_en_borrador_deshabilita_aprobar_y_devolver_y_muestra_aviso_RF_REV_003_004', () => {
     revisionClientMock.obtenerExpedienteParaRevision.mockReturnValue(
       of({
         ...expedienteMock,
@@ -438,9 +478,9 @@ describe('SupervisorDashboardComponent', () => {
     expect(avisoModoLectura.textContent).toContain('Borrador');
 
     const btnAprobar = fixture.nativeElement.querySelector('[data-testid="btn-aprobar"]');
-    expect(btnAprobar).toBeNull();
+    expect((btnAprobar as HTMLButtonElement).disabled).toBe(true);
 
     const btnDevolver = fixture.nativeElement.querySelector('[data-testid="btn-abrir-devolver"]');
-    expect(btnDevolver).toBeNull();
+    expect((btnDevolver as HTMLButtonElement).disabled).toBe(true);
   });
 });

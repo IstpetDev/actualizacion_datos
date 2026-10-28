@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ArchivoDto, HojaDeVidaDto } from '../../../api-client';
 import { ExpedienteSeccionesComponent } from './expediente-secciones.component';
+import { observacionesFicticias } from '../../revision-compartida/observaciones-revision.fixture';
 
 describe('ExpedienteSeccionesComponent', () => {
   let component: ExpedienteSeccionesComponent;
@@ -119,6 +120,21 @@ describe('ExpedienteSeccionesComponent', () => {
     fixture.componentRef.setInput('hojaDeVida', mockHdv);
     fixture.componentRef.setInput('archivos', mockArchivos);
     fixture.detectChanges();
+  });
+
+  it('muestra la ficha y el título observados en sus contextos sin perder las rondas', () => {
+    fixture.componentRef.setInput('observaciones', observacionesFicticias);
+    fixture.detectChanges();
+    const ficha = fixture.nativeElement.querySelector('[data-testid="panel-exp-ficha"]');
+    expect(ficha.textContent).toContain('Corregir ficha ficticia 2');
+    expect(ficha.textContent).toContain('Supervisor Ficticio 1');
+    expect(ficha.textContent).not.toContain('Corregir título');
+    component.cambiarTab('formacion');
+    fixture.detectChanges();
+    const titulo = fixture.nativeElement.querySelector('[data-testid="item-titulo-tit-001"]');
+    expect(titulo.textContent).toContain('Corregir título ficticio 2');
+    expect(titulo.textContent).toContain('Corregir título ficticio 1');
+    expect(titulo.textContent).not.toContain('Corregir ficha');
   });
 
   it('debe crearse correctamente y mostrar la ficha personal por defecto', () => {
