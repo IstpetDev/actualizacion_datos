@@ -1369,6 +1369,7 @@ app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
 app.MapProteccionDatos();
+app.MapSuperadminProteccionDatos();
 app.MapSecciones();
 app.MapConfiguracionDocumento();
 app.MapPlantillasHojaDeVida();

@@ -65,7 +65,36 @@ public sealed class ServicioProteccionDatos(AplicacionDbContext db, TimeProvider
         return estado;
     }
 
-    public async Task PublicarAsync(PublicarAvisoRequest solicitud, CancellationToken ct = default)
+    public async Task<List<AvisoInstitucionalDto>> ListarHistorialAsync(InstitucionId institucionId, CancellationToken ct = default)
+    {
+        if (!await db.Instituciones.AnyAsync(i => i.Id == institucionId, ct))
+            throw new RecursoNoEncontradoException("La institución del aviso no existe.");
+
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var avisos = await db.AvisosProteccionDatos.IgnoreQueryFilters().AsNoTracking()
+            .Where(a => a.InstitucionId == institucionId)
+            .OrderByDescending(a => a.VigenteDesdeUtc)
+            .ThenByDescending(a => a.Version)
+            .ToListAsync(ct);
+
+        return avisos.Select(a => new AvisoInstitucionalDto(
+            a.Id,
+            a.InstitucionId.Valor,
+            a.Version,
+            a.Titulo,
+            a.Responsable,
+            a.Contenido,
+            a.DeclaracionAceptacion,
+            a.FuenteOficial,
+            a.EvidenciaAprobacion,
+            AvisoProteccionDatos.DesempaquetarRoles(a.RolesDestinatarios),
+            a.VigenteDesdeUtc,
+            a.VigenteHastaUtc,
+            a.VigenteDesdeUtc <= ahora && (a.VigenteHastaUtc == null || ahora < a.VigenteHastaUtc)
+        )).ToList();
+    }
+
+    public async Task<AvisoInstitucionalDto> PublicarAsync(PublicarAvisoRequest solicitud, string? actor = null, CancellationToken ct = default)
     {
         if (!solicitud.AprobacionInstitucionalConfirmada)
             throw new ArgumentException("La publicación requiere la autorización explícita de la institución.");
@@ -80,7 +109,7 @@ public sealed class ServicioProteccionDatos(AplicacionDbContext db, TimeProvider
         await using var transaccion = await db.Database.BeginTransactionAsync(ct);
         await BloquearInstitucionAsync(institucion, ct);
         if (!await db.Instituciones.AnyAsync(i => i.Id == institucion, ct))
-            throw new ArgumentException("La institución del aviso no existe.");
+            throw new RecursoNoEncontradoException("La institución del aviso no existe.");
         if (await db.AvisosProteccionDatos.IgnoreQueryFilters().AnyAsync(a => a.InstitucionId == institucion && a.Version == aviso.Version, ct))
             throw new ReglaNegocioException("La versión ya fue publicada. Para corregirla debe crear otra versión.");
         var anteriores = await db.AvisosProteccionDatos.IgnoreQueryFilters()
@@ -93,8 +122,34 @@ public sealed class ServicioProteccionDatos(AplicacionDbContext db, TimeProvider
             anterior.FinalizarVigencia(aviso.VigenteDesdeUtc);
         }
         db.AvisosProteccionDatos.Add(aviso);
+
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var actorAuditoria = string.IsNullOrWhiteSpace(actor) ? "operador_cli" : actor.Trim();
+        db.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            actorAuditoria,
+            "PUBLICAR_AVISO_PROTECCION_DATOS",
+            institucion,
+            ahora,
+            detalle: $"Publicado aviso v{aviso.Version} para {aviso.Titulo}"));
+
         await db.SaveChangesAsync(ct);
         await transaccion.CommitAsync(ct);
+
+        return new AvisoInstitucionalDto(
+            aviso.Id,
+            aviso.InstitucionId.Valor,
+            aviso.Version,
+            aviso.Titulo,
+            aviso.Responsable,
+            aviso.Contenido,
+            aviso.DeclaracionAceptacion,
+            aviso.FuenteOficial,
+            aviso.EvidenciaAprobacion,
+            AvisoProteccionDatos.DesempaquetarRoles(aviso.RolesDestinatarios),
+            aviso.VigenteDesdeUtc,
+            aviso.VigenteHastaUtc,
+            aviso.VigenteDesdeUtc <= ahora && (aviso.VigenteHastaUtc == null || ahora < aviso.VigenteHastaUtc));
     }
 
     private async Task BloquearInstitucionAsync(InstitucionId institucionId, CancellationToken ct)
