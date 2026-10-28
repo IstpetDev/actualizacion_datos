@@ -204,6 +204,38 @@ internal static class HojaDeVidaEndpoints
             .Produces<HojaDeVidaDto>()
             .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
             .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound);
+
+        var grupoObligatorias = app.MapGroup("/api/mis-datos/capacitaciones-obligatorias").WithTags("CapacitacionesObligatorias");
+
+        grupoObligatorias.MapGet("/", (HttpContext http, IContextoInstitucion contexto, IServicioHojaDeVida servicio, CancellationToken ct) =>
+            DelDueno(http, contexto, async doc => Results.Ok(await servicio.ListarCapacitacionesObligatoriasAsync(doc, ct))))
+            .WithName("ObtenerMisCapacitacionesObligatorias")
+            .Produces<List<EstadoCapacitacionObligatoriaPersonaDto>>()
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        grupoObligatorias.MapPost("/{id:guid}/vincular", (Guid id, VincularCapacitacionObligatoriaRequest request, HttpContext http, IContextoInstitucion contexto, IServicioHojaDeVida servicio, CancellationToken ct) =>
+            DelDueno(http, contexto, async doc =>
+            {
+                await servicio.VincularCapacitacionObligatoriaAsync(doc, id, request, ct);
+                return Results.Ok(new MensajeRespuesta("Capacitación vinculada a la obligación institucional."));
+            }))
+            .WithName("VincularCapacitacionObligatoria")
+            .Produces<MensajeRespuesta>()
+            .ProducesEscritura()
+            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+            .Produces<MensajeRespuesta>(StatusCodes.Status409Conflict);
+
+        grupoObligatorias.MapPost("/{id:guid}/justificar-nuevo-ingreso", (Guid id, JustificarNuevoIngresoRequest request, HttpContext http, IContextoInstitucion contexto, IServicioHojaDeVida servicio, CancellationToken ct) =>
+            DelDueno(http, contexto, async doc =>
+            {
+                await servicio.JustificarNuevoIngresoAsync(doc, id, request, ct);
+                return Results.Ok(new MensajeRespuesta("Justificación de nuevo ingreso registrada."));
+            }))
+            .WithName("JustificarNuevoIngresoCapacitacionObligatoria")
+            .Produces<MensajeRespuesta>()
+            .ProducesEscritura()
+            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+            .Produces<MensajeRespuesta>(StatusCodes.Status409Conflict);
     }
 
     private static Task<IResult> DelDueno(HttpContext http, IContextoInstitucion contexto, Func<string, Task<IResult>> accion)

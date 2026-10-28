@@ -63,3 +63,7 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0029](ADR-0029-capacitaciones-obligatorias.md) | Modelo de las capacitaciones obligatorias de la institución | Vigente |
 | [ADR-0030](ADR-0030-avisos-versionados-y-aceptacion-de-acceso.md) | Avisos versionados y aceptación como condición de acceso | Vigente |
 | [ADR-0031](ADR-0031-auditoria-infraestructura-y-seguridad-en-despliegue.md) | Seguridad en origen, auditoría de infraestructura y verificación de despliegue | Vigente |
+| [ADR-0032](ADR-0032-formato-plantillas-hoja-de-vida.md) | Formato de las plantillas globales de hoja de vida | Vigente |
+| [ADR-0033](ADR-0033-motor-generacion-pdf.md) | Motor de generación de PDF en .NET | Vigente |
+| [ADR-0034](ADR-0034-exencion-superadmin-aviso-proteccion-datos.md) | Exención del aviso institucional de protección de datos para superadmin | Vigente |
+| [ADR-0035](ADR-0035-exencion-automatica-y-justificacion-capacitaciones-obligatorias.md) | Exención automática y justificación de nuevo ingreso en capacitaciones obligatorias | Vigente |

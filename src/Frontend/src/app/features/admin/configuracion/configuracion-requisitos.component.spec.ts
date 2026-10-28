@@ -3,9 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { type Mock, vi } from 'vitest';
 import {
+  ArchivosClient,
   ConfiguracionClient,
+  ConfiguracionDocumentoClient,
+  ConfiguracionSeccionesClient,
   PersonaDto,
   PersonasClient,
+  PlantillasHojaDeVidaClient,
   RequisitoDocumentoDto,
   TipoDocumentoDto,
   TipoFuncionarioDto,
@@ -30,6 +34,8 @@ describe('ConfiguracionRequisitosComponent', () => {
     crearRequisitoDocumento: Mock;
     actualizarRequisitoDocumento: Mock;
     eliminarRequisitoDocumento: Mock;
+    listarCapacitacionesObligatorias?: Mock;
+    obtenerCumplimientoCapacitacionesObligatorias?: Mock;
   };
   let personasClientMock: {
     listarPersonas: Mock;
@@ -114,6 +120,8 @@ describe('ConfiguracionRequisitosComponent', () => {
       crearRequisitoDocumento: vi.fn().mockReturnValue(of(mockRequisitos[0])),
       actualizarRequisitoDocumento: vi.fn().mockReturnValue(of(mockRequisitos[0])),
       eliminarRequisitoDocumento: vi.fn().mockReturnValue(of(undefined)),
+      listarCapacitacionesObligatorias: vi.fn().mockReturnValue(of([])),
+      obtenerCumplimientoCapacitacionesObligatorias: vi.fn().mockReturnValue(of([])),
     };
 
     personasClientMock = {
@@ -136,6 +144,34 @@ describe('ConfiguracionRequisitosComponent', () => {
         { provide: ConfiguracionClient, useValue: configClientMock },
         { provide: PersonasClient, useValue: personasClientMock },
         { provide: AuthService, useValue: authServiceMock },
+        {
+          provide: ConfiguracionSeccionesClient,
+          useValue: {
+            listarSeccionesConfiguracion: vi.fn().mockReturnValue(of([])),
+            cambiarEstadoSeccion: vi.fn().mockReturnValue(of({})),
+          },
+        },
+        {
+          provide: ConfiguracionDocumentoClient,
+          useValue: {
+            obtenerConfiguracionDocumento: vi.fn().mockReturnValue(of({})),
+            actualizarMarcaDocumento: vi.fn().mockReturnValue(of({})),
+            elegirPlantillaDocumento: vi.fn().mockReturnValue(of({})),
+            aceptarVersionDocumento: vi.fn().mockReturnValue(of({})),
+          },
+        },
+        {
+          provide: PlantillasHojaDeVidaClient,
+          useValue: {
+            listarPlantillasHojaDeVida: vi.fn().mockReturnValue(of([])),
+          },
+        },
+        {
+          provide: ArchivosClient,
+          useValue: {
+            subirArchivo: vi.fn().mockReturnValue(of({ id: 'mock-archivo-id' })),
+          },
+        },
       ],
     }).compileComponents();
 

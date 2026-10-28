@@ -5,6 +5,7 @@ using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -86,6 +87,12 @@ public sealed partial class ManejadorGlobalExcepciones(
                 "RECURSO_NO_ENCONTRADO",
                 null),
 
+            ConflictoEstadoException ex => (
+                StatusCodes.Status409Conflict,
+                ex.Message,
+                "CONFLICTO_ESTADO",
+                null),
+
             CuentaBancariaNoDisponibleException ex => (
                 StatusCodes.Status503ServiceUnavailable,
                 ex.Message,
@@ -97,6 +104,18 @@ public sealed partial class ManejadorGlobalExcepciones(
                 ex.Message,
                 "ENVIO_INCOMPLETO",
                 ex.Faltantes?.Count > 0 ? new Dictionary<string, string[]> { ["faltantes"] = ex.Faltantes.Select(f => $"{f.Seccion}: {f.Mensaje}").ToArray() } : null),
+
+            SeccionNoDisponibleException ex => (
+                StatusCodes.Status409Conflict,
+                ex.Message,
+                "SECCION_NO_DISPONIBLE",
+                null),
+
+            ReglaNegocioException ex when ex.Message.Contains("no puede cerrarse", StringComparison.OrdinalIgnoreCase) => (
+                StatusCodes.Status409Conflict,
+                ex.Message,
+                "SECCION_NO_MODIFICABLE",
+                null),
 
             ReglaNegocioException ex when ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase) ||
                                           ex.Message.Contains("no tiene permisos", StringComparison.OrdinalIgnoreCase) => (

@@ -1,8 +1,8 @@
 # Capacitaciones obligatorias de la institución — Spec
 
 **ID:** spec-0008; issue #92  
-**Versión:** 0.2  
-**Estado:** Aprobado (v0.2, 2026-10-27; ver «Revisión funcional»)  
+**Versión:** 0.3  
+**Estado:** Aprobado (v0.3, 2026-10-27; ver «Revisión funcional»)  
 **Revisor funcional:** Joseph Baño (solicitante del issue #92)  
 **Fecha:** 2026-10-27  
 **Áreas afectadas:** `src/Backend` y `src/Frontend`
@@ -167,7 +167,7 @@ Los requisitos siguientes son una **propuesta** que se apoya en las respuestas p
 | PD-CAP-02 | ¿Por tipo de funcionario, por cargo o por ambos? | RF-CAP-002, 008 | **Resuelto (v0.2, Joseph Baño, 2026-10-27):** cargo y tipo de funcionario son lo mismo; solo por tipo de funcionario o «todas». |
 | PD-CAP-03 | ¿«Todas las personas» incluye a quien no tiene tipo? | RF-CAP-002, 008 | **Resuelto (v0.2, 2026-10-27):** sí. |
 | PD-CAP-04 | ¿Por campaña o permanente? | Modelo | **Resuelto (v0.2, 2026-10-27):** permanente mientras esté activa; sin ligarse a campañas. |
-| PD-CAP-05 | Exoneraciones. | Alcance | **Resuelto (v0.2, 2026-10-27):** no hay; decisión de alcance. |
+| PD-CAP-05 | Exoneraciones e ingreso reciente. | Alcance | **Resuelto (v0.3, 2026-10-27; ADR-0035):** Exención automática si FechaIngresoInstitucion > FechaRealizacion y justificación manual por nuevo ingreso si no hay fecha en nómina; no bloquea el envío de funcionarios nuevos. |
 | PD-CAP-06 | ¿Qué pasa si se agrega una obligatoria con personas que ya enviaron o fueron aprobadas? | RF-CAP-012 | **Resuelto (v0.2, 2026-10-27):** no se devuelve ni cambia estado; queda pendiente y se exige en su siguiente envío. |
 | PD-CAP-07 | Recordatorios o avisos. | Alcance | **Resuelto (v0.2, 2026-10-27):** no hay; decisión de alcance. |
 | PD-CAP-08 | ¿Qué cuenta como cumplida? | RF-CAP-005, 009, 010 | **Resuelto (v0.2, 2026-10-27):** basta el certificado subido; las horas esperadas son informativas. |

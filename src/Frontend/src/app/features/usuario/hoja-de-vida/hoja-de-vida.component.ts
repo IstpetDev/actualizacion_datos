@@ -1,10 +1,11 @@
 import { ValidacionHojaDeVidaService } from './servicios/validacion-hoja-de-vida.service';
 import { CommonModule, DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ModalCambiosSinGuardarComponent } from './componentes/modal-cambios-sin-guardar.component';
 import { MiCuentaBancariaComponent } from '../../cuenta-bancaria/mi-cuenta-bancaria.component';
-import { FaltanteEnvioDto } from '../../../api-client';
+import { API_BASE_URL, FaltanteEnvioDto } from '../../../api-client';
 import { ModalFaltantesEnvioComponent } from './componentes/modal-faltantes-envio.component';
 import { CapacitacionesComponent } from './secciones/capacitaciones/capacitaciones.component';
 import { DocumentosPersonalesComponent } from './secciones/documentos-personales/documentos-personales.component';
@@ -13,6 +14,8 @@ import { FichaPersonalComponent } from './secciones/ficha-personal/ficha-persona
 import { FormacionAcademicaComponent } from './secciones/formacion-academica/formacion-academica.component';
 import { ReferenciasComponent } from './secciones/referencias/referencias.component';
 import { HojaDeVidaStateService } from './servicios/hoja-de-vida-state.service';
+import { descargarBlob, extraerNombreArchivo } from '../../../core/util/descarga-archivo.util';
+import { mensajeError } from '../../../core/auth/mensaje-error';
 
 export type TabSeccionHojaVida =
   'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
@@ -67,6 +70,15 @@ export type TabSeccionHojaVida =
 
         <!-- Botón de Envío Superior (siempre visible para comodidad) -->
         <div class="header-acciones">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="descargarVistaPreviaPdf()"
+            [disabled]="descargandoPdf() || cargando()"
+            data-testid="btn-descargar-vista-previa-pdf"
+          >
+            {{ descargandoPdf() ? 'Generando PDF...' : 'Descargar vista previa (PDF)' }}
+          </button>
           @if (puedeEditar()) {
             <button
               type="button"
@@ -130,127 +142,38 @@ export type TabSeccionHojaVida =
         </div>
       }
 
+      @if (errorDescargaPdf()) {
+        <div class="alert alert-danger" role="alert" data-testid="error-descarga-pdf">
+          {{ errorDescargaPdf() }}
+        </div>
+      }
+
       <!-- Navegación por Secciones Principales (Pestañas / Tabs) -->
       @if (!cargando() && hojaDeVida()) {
         <nav class="secciones-nav" role="tablist" aria-label="Secciones de Hoja de Vida">
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'ficha'"
-            (click)="intentarCambiarTab('ficha')"
-            data-testid="tab-ficha-personal"
-          >
-            <span class="tab-num">1</span>
-            <span class="tab-texto">Ficha Personal</span>
-            @if (tabActiva() === 'ficha' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
-
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'formacion'"
-            (click)="intentarCambiarTab('formacion')"
-            data-testid="tab-formacion-academica"
-          >
-            <span class="tab-num">2</span>
-            <span class="tab-texto">Formación Académica</span>
-            <span class="tab-badge">{{ titulos().length + titulosEnCurso().length }}</span>
-            @if (tabActiva() === 'formacion' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
-
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'capacitaciones'"
-            (click)="intentarCambiarTab('capacitaciones')"
-            data-testid="tab-capacitaciones"
-          >
-            <span class="tab-num">3</span>
-            <span class="tab-texto">Capacitaciones</span>
-            <span class="tab-badge">{{ capacitaciones().length }}</span>
-            @if (tabActiva() === 'capacitaciones' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
-
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'experiencia'"
-            (click)="intentarCambiarTab('experiencia')"
-            data-testid="tab-experiencia-laboral"
-          >
-            <span class="tab-num">4</span>
-            <span class="tab-texto">Experiencia Laboral</span>
-            <span class="tab-badge">{{ experiencias().length }}</span>
-            @if (tabActiva() === 'experiencia' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
-
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'referencias'"
-            (click)="intentarCambiarTab('referencias')"
-            data-testid="tab-referencias"
-          >
-            <span class="tab-num">5</span>
-            <span class="tab-texto">Referencias</span>
-            <span class="tab-badge">{{ referencias().length }}</span>
-            @if (tabActiva() === 'referencias' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
-
-          <button
-            type="button"
-            class="seccion-tab-btn"
-            [class.active]="tabActiva() === 'documentos'"
-            (click)="intentarCambiarTab('documentos')"
-            data-testid="tab-documentos-personales"
-          >
-            <span class="tab-num">6</span>
-            <span class="tab-texto">Documentación</span>
-            <span class="tab-badge">{{ documentosRequeridos().length }}</span>
-            @if (tabActiva() === 'documentos' && tieneCambios()) {
-              <span
-                class="tab-punto-cambios"
-                title="Cambios sin guardar"
-                aria-label="Cambios sin guardar"
-                >•</span
-              >
-            }
-          </button>
+          @for (tab of tabsDisponibles(); track tab.id; let idx = $index) {
+            <button
+              type="button"
+              class="seccion-tab-btn"
+              [class.active]="tabActiva() === tab.id"
+              (click)="intentarCambiarTab(tab.id)"
+              [attr.data-testid]="tab.testId"
+            >
+              <span class="tab-num">{{ idx + 1 }}</span>
+              <span class="tab-texto">{{ tab.texto }}</span>
+              @if (tab.badge !== undefined) {
+                <span class="tab-badge">{{ tab.badge }}</span>
+              }
+              @if (tabActiva() === tab.id && tieneCambios()) {
+                <span
+                  class="tab-punto-cambios"
+                  title="Cambios sin guardar"
+                  aria-label="Cambios sin guardar"
+                  >•</span
+                >
+              }
+            </button>
+          }
         </nav>
 
         <!-- Contenido Activo de la Sección Seleccionada -->
@@ -258,7 +181,9 @@ export type TabSeccionHojaVida =
           @switch (tabActiva()) {
             @case ('ficha') {
               <app-ficha-personal></app-ficha-personal>
-              <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
+              @if (esCuentaBancariaAbierta()) {
+                <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
+              }
             }
             @case ('formacion') {
               <app-formacion-academica></app-formacion-academica>
@@ -591,6 +516,12 @@ export type TabSeccionHojaVida =
 export class HojaDeVidaComponent implements OnInit {
   readonly validacion = inject(ValidacionHojaDeVidaService);
   private readonly state = inject(HojaDeVidaStateService);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+
+  readonly descargandoPdf = signal<boolean>(false);
+  readonly errorDescargaPdf = signal<string | null>(null);
+
   readonly tieneCambios = this.state.tieneCambiosSinGuardarSignal ?? signal(false);
   readonly mostrarModalCambios = signal(false);
   readonly errorCambios = signal('');
@@ -599,6 +530,7 @@ export class HojaDeVidaComponent implements OnInit {
 
   intentarCambiarTab(nuevaTab: TabSeccionHojaVida): void {
     if (this.tabActiva() === nuevaTab) return;
+    if (!this.tabsDisponibles().some((t) => t.id === nuevaTab)) return;
     if (this.state.tieneCambiosSinGuardar ? this.state.tieneCambiosSinGuardar() : false) {
       this.tabPendiente = nuevaTab;
       this.errorCambios.set('');
@@ -702,6 +634,73 @@ export class HojaDeVidaComponent implements OnInit {
   readonly campanaActiva = computed(() => this.estadoEdicion()?.campanaActiva);
   readonly totalMarcas = computed(() => this.marcasObservacion().length);
 
+  readonly seccionesAbiertas = computed<string[]>(() => {
+    return (
+      this.hojaDeVida()?.seccionesAbiertas ?? [
+        'ficha',
+        'formacion',
+        'capacitaciones',
+        'experiencia',
+        'referencias',
+        'documentos',
+        'cuenta-bancaria',
+      ]
+    );
+  });
+
+  readonly esCuentaBancariaAbierta = computed<boolean>(() => {
+    return this.seccionesAbiertas().includes('cuenta-bancaria');
+  });
+
+  readonly tabsDisponibles = computed(() => {
+    const abiertas = this.seccionesAbiertas();
+    const defs = [
+      {
+        id: 'ficha' as TabSeccionHojaVida,
+        codigo: 'ficha',
+        texto: 'Ficha Personal',
+        testId: 'tab-ficha-personal',
+        badge: undefined as number | undefined,
+      },
+      {
+        id: 'formacion' as TabSeccionHojaVida,
+        codigo: 'formacion',
+        texto: 'Formación Académica',
+        testId: 'tab-formacion-academica',
+        badge: this.titulos().length + this.titulosEnCurso().length,
+      },
+      {
+        id: 'capacitaciones' as TabSeccionHojaVida,
+        codigo: 'capacitaciones',
+        texto: 'Capacitaciones',
+        testId: 'tab-capacitaciones',
+        badge: this.capacitaciones().length,
+      },
+      {
+        id: 'experiencia' as TabSeccionHojaVida,
+        codigo: 'experiencia',
+        texto: 'Experiencia Laboral',
+        testId: 'tab-experiencia-laboral',
+        badge: this.experiencias().length,
+      },
+      {
+        id: 'referencias' as TabSeccionHojaVida,
+        codigo: 'referencias',
+        texto: 'Referencias',
+        testId: 'tab-referencias',
+        badge: this.referencias().length,
+      },
+      {
+        id: 'documentos' as TabSeccionHojaVida,
+        codigo: 'documentos',
+        texto: 'Documentación',
+        testId: 'tab-documentos-personales',
+        badge: this.documentosRequeridos().length,
+      },
+    ];
+    return defs.filter((t) => abiertas.includes(t.codigo));
+  });
+
   readonly tabActiva = signal<TabSeccionHojaVida>('ficha');
   readonly mostrarModalFaltantes = signal(false);
 
@@ -728,5 +727,37 @@ export class HojaDeVidaComponent implements OnInit {
         }
       },
     });
+  }
+
+  descargarVistaPreviaPdf(): void {
+    if (this.descargandoPdf()) return;
+
+    this.descargandoPdf.set(true);
+    this.errorDescargaPdf.set(null);
+
+    const url = `${this.baseUrl}/api/mis-datos/documento-hoja-de-vida`;
+    this.http
+      .get(url, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .subscribe({
+        next: (res) => {
+          const blob = res.body;
+          if (!blob) {
+            this.errorDescargaPdf.set('No se recibió el documento PDF.');
+            this.descargandoPdf.set(false);
+            return;
+          }
+          const nombreArchivo =
+            extraerNombreArchivo(res.headers.get('content-disposition')) || 'hoja-de-vida.pdf';
+          descargarBlob(blob, nombreArchivo);
+          this.descargandoPdf.set(false);
+        },
+        error: (err) => {
+          this.errorDescargaPdf.set(mensajeError(err, 'Error al generar la vista previa en PDF.'));
+          this.descargandoPdf.set(false);
+        },
+      });
   }
 }

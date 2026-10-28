@@ -1,6 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output, signal } from '@angular/core';
-import { ArchivoDto, HojaDeVidaDto } from '../../../api-client';
+import { Component, computed, input, output, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import {
+  ArchivoDto,
+  EstadoCapacitacionObligatoriaPersonaDto,
+  HojaDeVidaDto,
+} from '../../../api-client';
 
 export type TabExpediente =
   'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
@@ -8,7 +13,7 @@ export type TabExpediente =
 @Component({
   selector: 'app-expediente-secciones',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="expediente-secciones-container" data-testid="expediente-secciones">
       <!-- Navegación de pestañas de secciones -->
@@ -257,6 +262,81 @@ export type TabExpediente =
       <!-- SECCIÓN 3: CAPACITACIONES -->
       @if (tabActiva() === 'capacitaciones') {
         <div class="tab-panel" data-testid="panel-exp-capacitaciones">
+          @if (obligatorias().length > 0) {
+            <h4 class="subtitulo-seccion">Obligatorias de la Institución</h4>
+            <div class="items-lista mb-4" data-testid="lista-obligatorias-revision">
+              @for (ob of obligatorias(); track ob.id) {
+                <div class="item-card" [attr.data-testid]="'item-obligatoria-' + ob.id">
+                  <div class="item-header">
+                    <strong>{{ ob.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [ngClass]="{
+                        'badge-success': ob.estado === 'cargada',
+                        'badge-warning': ob.estado === 'observada',
+                        'badge-info':
+                          ob.estado === 'exento-nuevo-ingreso' ||
+                          ob.estado === 'justificada-nuevo-ingreso',
+                        'badge-secondary': ob.estado === 'pendiente',
+                      }"
+                      [attr.data-testid]="'badge-obligatoria-' + ob.id"
+                    >
+                      {{ ob.estado }}
+                    </span>
+                  </div>
+                  <div class="item-body">
+                    <p class="item-meta">
+                      @if (ob.horasEsperadas) {
+                        <span>Horas esperadas: {{ ob.horasEsperadas }}h • </span>
+                      }
+                      @if (ob.institucionOrganizadora) {
+                        <span>Organizadora: {{ ob.institucionOrganizadora }}</span>
+                      }
+                    </p>
+                    @if (ob.justificacionNuevoIngreso) {
+                      <p class="text-sm text-muted">
+                        Justificación: <em>{{ ob.justificacionNuevoIngreso }}</em>
+                      </p>
+                    }
+                  </div>
+                  <div class="item-actions">
+                    @if (ob.capacitacionId) {
+                      <button
+                        type="button"
+                        class="btn btn-warning btn-sm"
+                        (click)="onMarcarItem('capacitacion', ob.capacitacionId, ob.nombre)"
+                        [attr.data-testid]="'btn-marcar-obligatoria-' + ob.id"
+                      >
+                        ⚠️ Marcar Ítem
+                      </button>
+                    } @else if (ob.estado === 'pendiente') {
+                      <button
+                        type="button"
+                        class="btn btn-warning btn-sm"
+                        (click)="onMarcarObligatoriaPendiente(ob.id, ob.nombre)"
+                        [attr.data-testid]="'btn-marcar-obligatoria-pendiente-' + ob.id"
+                      >
+                        ⚠️ Marcar Faltante
+                      </button>
+
+                      @if (puedeVincularPorAyuda() && capacitacionesDisponibles().length > 0) {
+                        <button
+                          type="button"
+                          class="btn btn-primary btn-sm"
+                          (click)="abrirModalAyuda(ob)"
+                          [attr.data-testid]="'btn-vincular-ayuda-' + ob.id"
+                        >
+                          Vincular por ayuda
+                        </button>
+                      }
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <h4 class="subtitulo-seccion mt-4">Capacitaciones Registradas</h4>
           <div class="items-lista">
             @for (c of hojaDeVida().capacitaciones; track c.id) {
               <div class="item-card" [attr.data-testid]="'item-capacitacion-' + c.id">
@@ -447,9 +527,107 @@ export type TabExpediente =
           </div>
         </div>
       }
+      <!-- Modal Vincular por Ayuda -->
+      @if (modalAyudaObligatoria()) {
+        <div class="modal-backdrop" data-testid="modal-vincular-ayuda">
+          <div class="modal-card">
+            <h4>Vincular por ayuda del supervisor</h4>
+            <p>
+              Vincular una capacitación registrada de la persona a:
+              <strong>{{ modalAyudaObligatoria()!.nombre }}</strong>
+            </p>
+            <div class="form-group mb-3">
+              <label for="selectCapAyuda">Seleccionar Capacitación</label>
+              <select
+                id="selectCapAyuda"
+                class="form-control"
+                [ngModel]="capacitacionAyudaSeleccionada()"
+                (ngModelChange)="capacitacionAyudaSeleccionada.set($event)"
+                data-testid="select-ayuda-capacitacion"
+              >
+                <option value="">-- Seleccione una capacitación --</option>
+                @for (c of capacitacionesDisponibles(); track c.id) {
+                  <option [value]="c.id">
+                    {{ c.nombreEvento }} ({{ c.institucionOrganizadora }})
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="modal-botones">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarModalAyuda()">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                [disabled]="!capacitacionAyudaSeleccionada()"
+                (click)="confirmarVincularAyuda()"
+                data-testid="btn-confirmar-ayuda"
+              >
+                Confirmar Vínculo
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: `
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    .modal-card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .modal-card h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.125rem;
+      color: #0f172a;
+    }
+    .modal-card p {
+      font-size: 0.875rem;
+      color: #475569;
+      margin: 0 0 1rem 0;
+    }
+    .modal-botones {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background-color: #ffffff;
+    }
+    .mb-3 {
+      margin-bottom: 0.75rem;
+    }
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
     .expediente-secciones-container {
       margin-top: 1rem;
     }
@@ -624,11 +802,20 @@ export type TabExpediente =
 export class ExpedienteSeccionesComponent {
   readonly hojaDeVida = input.required<HojaDeVidaDto>();
   readonly archivos = input<ArchivoDto[]>([]);
+  readonly obligatorias = input<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
+  readonly puedeVincularPorAyuda = input<boolean>(true);
 
   readonly descargar = output<{ archivoId: string; nombreOriginal: string }>();
   readonly marcarItem = output<{ tipo: string; clave: string; label: string }>();
+  readonly vincularPorAyuda = output<{ obligatoriaId: string; capacitacionId: string }>();
 
   readonly tabActiva = signal<TabExpediente>('ficha');
+  readonly modalAyudaObligatoria = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
+  readonly capacitacionAyudaSeleccionada = signal<string>('');
+
+  readonly capacitacionesDisponibles = computed(() =>
+    (this.hojaDeVida().capacitaciones || []).filter((c) => !c.capacitacionObligatoriaId),
+  );
 
   cambiarTab(tab: TabExpediente): void {
     this.tabActiva.set(tab);
@@ -644,5 +831,34 @@ export class ExpedienteSeccionesComponent {
       clave: `${tipoItem}:${id}`,
       label,
     });
+  }
+
+  onMarcarObligatoriaPendiente(id: string, nombre: string): void {
+    this.marcarItem.emit({
+      tipo: 'Item',
+      clave: `capacitaciones.obligatoria.${id}`,
+      label: `Obligatoria: ${nombre}`,
+    });
+  }
+
+  abrirModalAyuda(ob: EstadoCapacitacionObligatoriaPersonaDto): void {
+    this.modalAyudaObligatoria.set(ob);
+    this.capacitacionAyudaSeleccionada.set('');
+  }
+
+  cerrarModalAyuda(): void {
+    this.modalAyudaObligatoria.set(null);
+    this.capacitacionAyudaSeleccionada.set('');
+  }
+
+  confirmarVincularAyuda(): void {
+    const ob = this.modalAyudaObligatoria();
+    const capId = this.capacitacionAyudaSeleccionada();
+    if (!ob || !capId) return;
+    this.vincularPorAyuda.emit({
+      obligatoriaId: ob.id,
+      capacitacionId: capId,
+    });
+    this.cerrarModalAyuda();
   }
 }

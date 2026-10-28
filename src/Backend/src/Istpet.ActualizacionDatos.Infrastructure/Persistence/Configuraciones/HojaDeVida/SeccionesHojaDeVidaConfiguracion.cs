@@ -77,6 +77,12 @@ public class CapacitacionConfiguracion : IEntityTypeConfiguration<Capacitacion>
         builder.Property(c => c.NumeroHoras).HasColumnName("numero_horas");
         builder.Property(c => c.Lugar).HasMaxLength(200).HasColumnName("lugar");
         builder.Property(c => c.FinanciadaPorInstitucion).IsRequired().HasColumnName("financiada_por_institucion");
+        builder.Property(c => c.CapacitacionObligatoriaId).HasColumnName("capacitacion_obligatoria_id");
+
+        builder.HasOne<CapacitacionObligatoria>()
+            .WithMany()
+            .HasForeignKey(c => c.CapacitacionObligatoriaId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         RelacionCatalogo(builder, c => c.TipoCapacitacionId, "tipo_capacitacion_id");
     }

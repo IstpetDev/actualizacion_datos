@@ -138,7 +138,8 @@ public sealed record GuardarCapacitacionRequest(
     int? NumeroHoras = null,
     string? Lugar = null,
     bool FinanciadaPorInstitucion = false,
-    Guid? ArchivoId = null);
+    Guid? ArchivoId = null,
+    Guid? CapacitacionObligatoriaId = null);
 
 public sealed record CapacitacionDto(
     Guid Id,
@@ -152,7 +153,8 @@ public sealed record CapacitacionDto(
     string? Lugar,
     bool FinanciadaPorInstitucion,
     Guid? ArchivoId,
-    DateTime FechaActualizacionUtc);
+    DateTime FechaActualizacionUtc,
+    Guid? CapacitacionObligatoriaId = null);
 
 public sealed record GuardarExperienciaLaboralRequest(
     string Empleador,
@@ -208,7 +210,9 @@ public sealed record HojaDeVidaDto(
     List<TituloEnCursoDto> TitulosEnCurso,
     List<CapacitacionDto> Capacitaciones,
     List<ExperienciaLaboralDto> Experiencias,
-    List<ReferenciaDto> Referencias);
+    List<ReferenciaDto> Referencias,
+    List<string>? SeccionesAbiertas = null,
+    List<EstadoCapacitacionObligatoriaPersonaDto>? CapacitacionesObligatorias = null);
 
 // --- Documentos personales (RF-HDV-007, 008, T-03) ---
 
@@ -324,3 +328,59 @@ public sealed record ResultadoAsignacionTipoMasivoDto(
     int TotalConTipo,
     int TotalSinTipo,
     string Mensaje);
+
+// --- Capacitaciones obligatorias (spec-0008, RF-CAP-001 a 020) ---
+
+public sealed record GuardarCapacitacionObligatoriaRequest(
+    string Nombre,
+    string? InstitucionOrganizadora = null,
+    int? HorasEsperadas = null,
+    DateOnly? FechaRealizacion = null,
+    Guid? TipoFuncionarioId = null,
+    bool Activo = true,
+    int Orden = 0);
+
+public sealed record CapacitacionObligatoriaDto(
+    Guid Id,
+    string Nombre,
+    string? InstitucionOrganizadora,
+    int? HorasEsperadas,
+    DateOnly? FechaRealizacion,
+    Guid? TipoFuncionarioId,
+    bool Activo,
+    int Orden);
+
+public sealed record EstadoCapacitacionObligatoriaPersonaDto(
+    Guid Id,
+    string Nombre,
+    string? InstitucionOrganizadora,
+    int? HorasEsperadas,
+    DateOnly? FechaRealizacion,
+    Guid? TipoFuncionarioId,
+    string Estado,
+    Guid? CapacitacionId,
+    string? JustificacionNuevoIngreso,
+    DateTime? FechaJustificacionUtc,
+    DateOnly? FechaIngresoInstitucion);
+
+public sealed record JustificarNuevoIngresoRequest(
+    string Justificacion);
+
+public sealed record VincularCapacitacionObligatoriaRequest(
+    Guid CapacitacionId);
+
+public sealed record PersonaPendienteCapacitacionDto(
+    Guid PersonaId,
+    string Nombre,
+    string Documento,
+    string? TipoFuncionarioNombre,
+    DateOnly? FechaIngresoInstitucion);
+
+public sealed record CumplimientoCapacitacionObligatoriaDto(
+    Guid CapacitacionObligatoriaId,
+    string Nombre,
+    int TotalAplica,
+    int TotalCumplida,
+    int TotalExentaOJustificada,
+    int TotalPendiente,
+    List<PersonaPendienteCapacitacionDto> PersonasPendientes);

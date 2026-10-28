@@ -1,5 +1,7 @@
 import politicaPrueba from './servicios/politica-validacion.fixture.json';
 import { ConfiguracionClient } from '../../../api-client';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -10,6 +12,7 @@ import {
   CatalogosClient,
   CuentaBancariaClient,
   DocumentoRequeridoDto,
+  EstadoCapacitacionObligatoriaPersonaDto,
   EstadoEdicionDto,
   ExperienciaLaboralDto,
   FaltanteEnvioDto,
@@ -28,6 +31,7 @@ import { HojaDeVidaComponent } from './hoja-de-vida.component';
 describe('HojaDeVidaComponent', () => {
   let component: HojaDeVidaComponent;
   let fixture: ComponentFixture<HojaDeVidaComponent>;
+  let httpTestingController: HttpTestingController;
 
   let stateMock: {
     cargarTodo: Mock;
@@ -45,6 +49,7 @@ describe('HojaDeVidaComponent', () => {
     titulos: WritableSignal<TituloAcademicoDto[]>;
     titulosEnCurso: WritableSignal<TituloEnCursoDto[]>;
     capacitaciones: WritableSignal<CapacitacionDto[]>;
+    capacitacionesObligatorias?: WritableSignal<EstadoCapacitacionObligatoriaPersonaDto[]>;
     experiencias: WritableSignal<ExperienciaLaboralDto[]>;
     referencias: WritableSignal<ReferenciaDto[]>;
     documentosRequeridos: WritableSignal<DocumentoRequeridoDto[]>;
@@ -95,6 +100,7 @@ describe('HojaDeVidaComponent', () => {
       titulos: signal([]),
       titulosEnCurso: signal([]),
       capacitaciones: signal([]),
+      capacitacionesObligatorias: signal([]),
       experiencias: signal([]),
       referencias: signal([]),
       documentosRequeridos: signal([]),
@@ -128,6 +134,8 @@ describe('HojaDeVidaComponent', () => {
     await TestBed.configureTestingModule({
       imports: [HojaDeVidaComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ConfiguracionClient,
           useValue: { obtenerPoliticaValidacion: () => of(politicaPrueba) },
@@ -146,6 +154,7 @@ describe('HojaDeVidaComponent', () => {
       ],
     }).compileComponents();
 
+    httpTestingController = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(HojaDeVidaComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -321,5 +330,95 @@ describe('HojaDeVidaComponent', () => {
     const resultado = component.puedeDesactivar();
     expect(resultado).not.toBe(true);
     expect(component.mostrarModalCambios()).toBe(true);
+  });
+
+  it('muestra_solo_pestanas_de_secciones_abiertas_y_numeracion_correlativa', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'referencias'],
+    });
+    fixture.detectChanges();
+
+    const tabs = (fixture.nativeElement as HTMLElement).querySelectorAll('.seccion-tab-btn');
+    expect(tabs.length).toBe(2);
+
+    expect(tabs[0].querySelector('.tab-num')?.textContent?.trim()).toBe('1');
+    expect(tabs[0].querySelector('.tab-texto')?.textContent?.trim()).toBe('Ficha Personal');
+
+    expect(tabs[1].querySelector('.tab-num')?.textContent?.trim()).toBe('2');
+    expect(tabs[1].querySelector('.tab-texto')?.textContent?.trim()).toBe('Referencias');
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="tab-formacion-academica"]',
+      ),
+    ).toBeNull();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="tab-capacitaciones"]'),
+    ).toBeNull();
+  });
+
+  it('con_una_sola_pestana_abierta_se_muestra_correctamente_y_bloquea_cambio_a_cerradas', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+
+    const tabs = (fixture.nativeElement as HTMLElement).querySelectorAll('.seccion-tab-btn');
+    expect(tabs.length).toBe(1);
+    expect(tabs[0].querySelector('.tab-num')?.textContent?.trim()).toBe('1');
+
+    component.intentarCambiarTab('formacion');
+    expect(component.tabActiva()).toBe('ficha');
+  });
+
+  it('cuenta_bancaria_se_muestra_u_oculta_segun_seccionesAbiertas', () => {
+    // 1. Con cuenta-bancaria abierta
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'cuenta-bancaria'],
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('app-mi-cuenta-bancaria'),
+    ).toBeTruthy();
+
+    // 2. Con cuenta-bancaria cerrada
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha'],
+    });
+    fixture.detectChanges();
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('app-mi-cuenta-bancaria'),
+    ).toBeNull();
+  });
+
+  it('no_se_pierde_aviso_de_cambios_sin_guardar_con_pestanas_filtradas', () => {
+    stateMock.hojaDeVida.set({
+      ...mockHdv,
+      seccionesAbiertas: ['ficha', 'referencias'],
+    });
+    stateMock.tieneCambiosSinGuardarSignal.set(true);
+    fixture.detectChanges();
+
+    const punto = (fixture.nativeElement as HTMLElement).querySelector('.tab-punto-cambios');
+    expect(punto).toBeTruthy();
+    expect(punto?.textContent).toBe('•');
+  });
+
+  it('permite_descargar_vista_previa_del_documento_pdf', () => {
+    component.descargarVistaPreviaPdf();
+    expect(component.descargandoPdf()).toBe(true);
+
+    const req = httpTestingController.expectOne('/api/mis-datos/documento-hoja-de-vida');
+    expect(req.request.method).toBe('GET');
+    req.flush(new Blob(['%PDF-1.4...']), {
+      headers: { 'content-disposition': 'attachment; filename="hoja-de-vida.pdf"' },
+    });
+
+    expect(component.descargandoPdf()).toBe(false);
+    expect(component.errorDescargaPdf()).toBeNull();
   });
 });

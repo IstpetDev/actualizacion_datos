@@ -257,4 +257,120 @@ public class HojaDeVidaTests
             Assert.Throws<ReglaNegocioException>(persona.AsegurarEdicionPermitida);
         }
     }
+
+    [Fact]
+    public void Ficha_personal_no_puede_cerrarse_en_dominio()
+    {
+        var exCrear = Assert.Throws<ReglaNegocioException>(() =>
+            new SeccionInstitucion(Institucion, SeccionHojaDeVida.FichaPersonal, habilitada: false, "admin"));
+        Assert.Equal("La ficha personal no puede cerrarse.", exCrear.Message);
+
+        var seccion = new SeccionInstitucion(Institucion, SeccionHojaDeVida.FichaPersonal, habilitada: true, "admin");
+        var exModificar = Assert.Throws<ReglaNegocioException>(() =>
+            seccion.CambiarEstado(habilitada: false, "admin"));
+        Assert.Equal("La ficha personal no puede cerrarse.", exModificar.Message);
+    }
+
+    [Theory]
+    [InlineData(SeccionHojaDeVida.FormacionAcademica)]
+    [InlineData(SeccionHojaDeVida.Capacitaciones)]
+    [InlineData(SeccionHojaDeVida.ExperienciaLaboral)]
+    [InlineData(SeccionHojaDeVida.Referencias)]
+    [InlineData(SeccionHojaDeVida.DocumentosPersonales)]
+    [InlineData(SeccionHojaDeVida.CuentaBancaria)]
+    public void Otras_secciones_pueden_abrirse_y_cerrarse_correctamente(SeccionHojaDeVida seccionTipo)
+    {
+        var seccion = new SeccionInstitucion(Institucion, seccionTipo, habilitada: false, "admin_user");
+        Assert.False(seccion.Habilitada);
+        Assert.Equal("admin_user", seccion.ModificadoPor);
+
+        seccion.CambiarEstado(habilitada: true, "otro_admin");
+        Assert.True(seccion.Habilitada);
+        Assert.Equal("otro_admin", seccion.ModificadoPor);
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_con_nombre_vacio_lanza_excepcion()
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "   "));
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_con_horas_cero_o_negativas_lanza_excepcion()
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Curso Obligatorio", horasEsperadas: 0));
+        Assert.Throws<ReglaNegocioException>(() =>
+            new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Curso Obligatorio", horasEsperadas: -5));
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_aplica_a_todas_las_personas_si_tipo_funcionario_es_nulo()
+    {
+        var obligatoria = new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Seguridad y Salud", tipoFuncionarioId: null);
+        Assert.True(obligatoria.AplicaA(null));
+        Assert.True(obligatoria.AplicaA(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_aplica_solo_a_su_tipo_de_funcionario()
+    {
+        var tipoDocente = Guid.NewGuid();
+        var tipoAdministrativo = Guid.NewGuid();
+        var obligatoria = new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Didáctica activa", tipoFuncionarioId: tipoDocente);
+
+        Assert.True(obligatoria.AplicaA(tipoDocente));
+        Assert.False(obligatoria.AplicaA(tipoAdministrativo));
+        Assert.False(obligatoria.AplicaA(null));
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_inactiva_no_aplica()
+    {
+        var obligatoria = new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Curso Inactivo", activo: false);
+        Assert.False(obligatoria.AplicaA(null));
+        Assert.False(obligatoria.AplicaA(Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void CapacitacionObligatoria_detecta_exencion_automatica_por_nuevo_ingreso()
+    {
+        var fechaCurso = new DateOnly(2026, 3, 15);
+        var obligatoria = new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Inducción 2026", fechaRealizacion: fechaCurso);
+
+        // Ingresó después -> Exento automático
+        Assert.True(obligatoria.EsExentoPorNuevoIngreso(new DateOnly(2026, 4, 1)));
+        // Ingresó el mismo día o antes -> No exento
+        Assert.False(obligatoria.EsExentoPorNuevoIngreso(new DateOnly(2026, 3, 15)));
+        Assert.False(obligatoria.EsExentoPorNuevoIngreso(new DateOnly(2026, 1, 10)));
+        // Sin fecha de ingreso o sin fecha de realización -> No exento
+        Assert.False(obligatoria.EsExentoPorNuevoIngreso(null));
+
+        var sinFechaCurso = new CapacitacionObligatoria(Guid.NewGuid(), Institucion, "Curso Permanente", fechaRealizacion: null);
+        Assert.False(sinFechaCurso.EsExentoPorNuevoIngreso(new DateOnly(2026, 4, 1)));
+    }
+
+    [Fact]
+    public void Capacitacion_vinculada_a_obligatoria_guarda_y_actualiza_vinculo()
+    {
+        var obligatoriaId = Guid.NewGuid();
+        var capacitacion = new Capacitacion(Guid.NewGuid(), Institucion, PersonaId,
+            new DatosCapacitacion("Curso", "Org", CapacitacionObligatoriaId: obligatoriaId));
+        Assert.Equal(obligatoriaId, capacitacion.CapacitacionObligatoriaId);
+
+        capacitacion.VincularCapacitacionObligatoria(null);
+        Assert.Null(capacitacion.CapacitacionObligatoriaId);
+    }
+
+    [Fact]
+    public void Persona_asigna_y_conserva_fecha_de_ingreso_institucional()
+    {
+        var persona = new Persona(Guid.NewGuid(), Institucion, "1700000001");
+        Assert.Null(persona.FechaIngresoInstitucion);
+
+        var fecha = new DateOnly(2025, 10, 1);
+        persona.AsignarFechaIngreso(fecha);
+        Assert.Equal(fecha, persona.FechaIngresoInstitucion);
+    }
 }

@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
+  CapacitacionesObligatoriasClient,
   DocumentosPersonalesClient,
   HojaDeVidaClient,
   HojaDeVidaDto,
@@ -29,6 +30,11 @@ describe('HojaDeVidaStateService', () => {
     obtenerEstadoEdicion: Mock;
     obtenerObservacionesMisDatos: Mock;
     enviarMisDatosARevision: Mock;
+  };
+  let capacitacionesClientMock: {
+    obtenerMisCapacitacionesObligatorias: Mock;
+    vincularCapacitacionObligatoria: Mock;
+    justificarNuevoIngresoCapacitacionObligatoria: Mock;
   };
 
   const mockHdvBorrador: HojaDeVidaDto = {
@@ -88,12 +94,19 @@ describe('HojaDeVidaStateService', () => {
       enviarMisDatosARevision: vi.fn().mockReturnValue(of({})),
     };
 
+    capacitacionesClientMock = {
+      obtenerMisCapacitacionesObligatorias: vi.fn().mockReturnValue(of([])),
+      vincularCapacitacionObligatoria: vi.fn().mockReturnValue(of({ mensaje: 'ok' })),
+      justificarNuevoIngresoCapacitacionObligatoria: vi.fn().mockReturnValue(of({ mensaje: 'ok' })),
+    };
+
     TestBed.configureTestingModule({
       providers: [
         HojaDeVidaStateService,
         { provide: HojaDeVidaClient, useValue: hdvClientMock },
         { provide: DocumentosPersonalesClient, useValue: docsClientMock },
         { provide: MisDatosClient, useValue: misDatosClientMock },
+        { provide: CapacitacionesObligatoriasClient, useValue: capacitacionesClientMock },
       ],
     });
 

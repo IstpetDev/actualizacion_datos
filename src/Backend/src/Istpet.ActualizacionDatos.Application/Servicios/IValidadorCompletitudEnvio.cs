@@ -2,6 +2,7 @@ namespace Istpet.ActualizacionDatos.Application.Servicios;
 
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 
 // RF-HDV-009, 018, 019, 023, 024 y, con T-10, la cuenta bancaria (PD-HDV-17). Implementa T-04.
 // Es el único lugar donde vive la obligatoriedad (ADR-0009): el dominio solo protege coherencias.
@@ -12,10 +13,11 @@ public interface IValidadorCompletitudEnvio
 
 /// <summary>
 /// Una regla de completitud. El validador ejecuta todas las registradas en el contenedor y junta sus faltantes;
-/// así T-10 (cuenta bancaria) agrega su regla sin editar el validador de T-04.
+/// ignora las de secciones cerradas (ADR-0028, spec-0010).
 /// </summary>
 public interface IReglaCompletitudEnvio
 {
+    SeccionHojaDeVida? Seccion => null;
     Task<IReadOnlyList<FaltanteEnvioDto>> EvaluarAsync(Guid personaId, CancellationToken ct = default);
 }
 
@@ -38,6 +40,18 @@ public sealed class EnvioIncompletoException : ReglaNegocioException
 public sealed class RecursoNoEncontradoException : ReglaNegocioException
 {
     public RecursoNoEncontradoException(string mensaje)
+        : base(mensaje)
+    {
+    }
+}
+
+/// <summary>
+/// La operación entra en conflicto con el estado actual del recurso (ej. nombre repetido o modificación no permitida).
+/// La API responde 409 Conflict.
+/// </summary>
+public sealed class ConflictoEstadoException : ReglaNegocioException
+{
+    public ConflictoEstadoException(string mensaje)
         : base(mensaje)
     {
     }

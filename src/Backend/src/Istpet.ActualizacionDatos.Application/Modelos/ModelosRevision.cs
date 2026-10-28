@@ -41,7 +41,8 @@ public sealed record ExpedienteRevisionDto(
     string? DatosPersonalesJson,
     bool TratamientoDatosAceptado,
     DateTime? FechaAceptacionTratamientoDatosUtc,
-    List<ObservacionDto> Observaciones);
+    List<ObservacionDto> Observaciones,
+    List<EstadoCapacitacionObligatoriaPersonaDto>? CapacitacionesObligatorias = null);
 
 public sealed record MisDatosDto(
     Guid Id,

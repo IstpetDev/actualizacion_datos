@@ -6,6 +6,7 @@ using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
@@ -124,7 +125,7 @@ app.UseStatusCodePages(async statusCodeContext =>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// La cookie autenticada es la autoridad. Las cabeceras nunca crean identidad ni cambian su institución.
+// La cookie autenticada es la autoridad. Solo Superadmin puede seleccionar otra institución mediante X-Institucion-Id (ADR-0034).
 app.Use(async (context, next) =>
 {
     var contexto = context.RequestServices.GetRequiredService<ContextoInstitucion>();
@@ -133,22 +134,47 @@ app.Use(async (context, next) =>
         var actor = context.User.FindFirst(ClaimTypes.Name)?.Value;
         var rolTexto = context.User.FindFirst(ClaimTypes.Role)?.Value;
         var institucion = context.User.FindFirst("institucion_id")?.Value;
-        var cabeceras = new[] { ("X-Actor", actor), ("X-Rol", rolTexto), ("X-Institucion-Id", institucion) };
-        if (!context.Request.Path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) &&
-            !context.Request.Path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase) &&
-            cabeceras.Any(c => context.Request.Headers.TryGetValue(c.Item1, out var valor) &&
-            !string.Equals(valor.ToString(), c.Item2, StringComparison.OrdinalIgnoreCase)))
+        var tieneRol = Enum.TryParse<RolUsuario>(rolTexto, out var rol);
+        var esSuperadmin = tieneRol && rol == RolUsuario.Superadmin;
+        var esRutaAuth = context.Request.Path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) ||
+                         context.Request.Path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase);
+
+        if (!esRutaAuth)
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El contexto solicitado no corresponde a la sesión autenticada.", "CONTEXTO_NO_AUTORIZADO"));
-            return;
+            var cabecerasIdentidad = new[] { ("X-Actor", actor), ("X-Rol", rolTexto) };
+            var identidadContradictoria = cabecerasIdentidad.Any(c =>
+                context.Request.Headers.TryGetValue(c.Item1, out var valor) &&
+                !string.Equals(valor.ToString(), c.Item2, StringComparison.OrdinalIgnoreCase));
+            var institucionContradictoria = !esSuperadmin &&
+                context.Request.Headers.TryGetValue("X-Institucion-Id", out var instValor) &&
+                !string.Equals(instValor.ToString(), institucion, StringComparison.OrdinalIgnoreCase);
+
+            if (identidadContradictoria || institucionContradictoria)
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El contexto solicitado no corresponde a la sesión autenticada.", "CONTEXTO_NO_AUTORIZADO"));
+                return;
+            }
+
+            if (esSuperadmin && context.Request.Headers.TryGetValue("X-Institucion-Id", out var instSuperadmin) &&
+                !string.IsNullOrWhiteSpace(instSuperadmin))
+            {
+                if (!Guid.TryParse(instSuperadmin.ToString(), out var instSeleccionada))
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    await context.Response.WriteAsJsonAsync(new MensajeRespuesta("El encabezado X-Institucion-Id no tiene un formato Guid válido.", "CONTEXTO_INVALIDO"));
+                    return;
+                }
+                institucion = instSeleccionada.ToString();
+            }
         }
+
         contexto.ActorActual = actor;
         if (Guid.TryParse(institucion, out var institucionId)) contexto.InstitucionId = new(institucionId);
-        if (Enum.TryParse<RolUsuario>(rolTexto, out var rol))
+        if (tieneRol)
         {
             contexto.RolActual = rol;
-            contexto.EsSuperadmin = rol == RolUsuario.Superadmin;
+            contexto.EsSuperadmin = esSuperadmin;
         }
     }
     await next();
@@ -946,6 +972,74 @@ revision.MapPost("/{documento}/devolver", async (string documento, DevolverActua
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces(StatusCodes.Status403Forbidden);
 
+revision.MapPost("/{documento}/capacitaciones-obligatorias/{obligatoriaId:guid}/vincular", async (
+    string documento,
+    Guid obligatoriaId,
+    VincularCapacitacionObligatoriaRequest request,
+    HttpContext httpContext,
+    IServicioRevision servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    var supervisor = ObtenerDocumentoActual(httpContext, contexto) ?? "supervisor";
+
+    try
+    {
+        await servicio.VincularCapacitacionObligatoriaPorAyudaAsync(documento, obligatoriaId, request, supervisor, ct);
+        return Results.Ok(new MensajeRespuesta("Capacitación vinculada por ayuda con éxito."));
+    }
+    catch (RecursoNoEncontradoException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+    catch (ConflictoEstadoException ex)
+    {
+        return Results.Conflict(new MensajeRespuesta(ex.Message));
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("VincularCapacitacionObligatoriaPorAyuda")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces<MensajeRespuesta>(StatusCodes.Status409Conflict)
+.Produces(StatusCodes.Status403Forbidden);
+
+revision.MapGet("/{documento}/capacitaciones-obligatorias", async (
+    string documento,
+    HttpContext httpContext,
+    IServicioHojaDeVida servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    try
+    {
+        var lista = await servicio.ListarCapacitacionesObligatoriasAsync(documento, ct);
+        return Results.Ok(lista);
+    }
+    catch (RecursoNoEncontradoException ex)
+    {
+        return Results.NotFound(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("ListarCapacitacionesObligatoriasRevision")
+.Produces<List<EstadoCapacitacionObligatoriaPersonaDto>>()
+.Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+.Produces(StatusCodes.Status403Forbidden);
+
 // --- Endpoints Auditoria (RF-DAT-004, RF-DAT-005) ---
 var auditoriaGroup = app.MapGroup("/api/auditoria").WithTags("Auditoria");
 
@@ -1006,6 +1100,10 @@ archivosGroup.MapPost("/subir", async (
 
         return Results.Ok(resultado);
     }
+    catch (SeccionNoDisponibleException ex)
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_DISPONIBLE"), statusCode: StatusCodes.Status409Conflict);
+    }
     catch (ReglaNegocioException ex) when (ex.Message.Contains("fuera del período", StringComparison.OrdinalIgnoreCase))
     {
         return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
@@ -1020,6 +1118,7 @@ archivosGroup.MapPost("/subir", async (
 .Produces<ArchivoDto>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces<MensajeRespuesta>(StatusCodes.Status409Conflict)
 .Produces(StatusCodes.Status401Unauthorized);
 
 archivosGroup.MapGet("/{id:guid}/descargar", async (
@@ -1270,6 +1369,10 @@ app.MapFlujoActualizacion();
 app.MapConfiguracionHojaDeVida();
 app.MapCuentaBancaria();
 app.MapProteccionDatos();
+app.MapSecciones();
+app.MapConfiguracionDocumento();
+app.MapPlantillasHojaDeVida();
+app.MapDocumentoHojaDeVida();
 
 await app.RunAsync();
 

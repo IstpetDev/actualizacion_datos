@@ -8,4 +8,5 @@ public interface IServicioRevision
     Task<ExpedienteRevisionDto> ObtenerExpedienteParaRevisionAsync(string documento, string actorSupervisor, CancellationToken ct = default);
     Task AprobarActualizacionAsync(string documento, string supervisor, CancellationToken ct = default);
     Task DevolverActualizacionAsync(string documento, DevolverActualizacionRequest request, string supervisor, CancellationToken ct = default);
+    Task VincularCapacitacionObligatoriaPorAyudaAsync(string documento, Guid obligatoriaId, VincularCapacitacionObligatoriaRequest request, string supervisor, CancellationToken ct = default);
 }

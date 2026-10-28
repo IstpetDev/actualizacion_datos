@@ -20,32 +20,50 @@ internal static class GeneradorExcelOpenXml
         int CantidadArchivos,
         bool TratamientoDatosAceptado,
         DateTime FechaCreacionUtc,
-        string Perfil = "");
+        string Perfil = "",
+        string EstadoCapacitacionesObligatorias = "");
+
+    public sealed record FilaCapacitacionObligatoria(
+        string Documento,
+        string Nombre,
+        string CapacitacionObligatoria,
+        string Aplica,
+        string Estado,
+        string Horas,
+        string FechaRealizacion);
 
     public static byte[] GenerarExcelPersonasAprobadas(
         string nombreInstitucion,
-        List<FilaExportacion> filas)
+        List<FilaExportacion> filas,
+        List<FilaCapacitacionObligatoria>? filasObligatorias = null)
     {
+        var tieneHojaObligatorias = filasObligatorias != null && filasObligatorias.Count > 0;
         using var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
         {
             // 1. [Content_Types].xml
-            EscribirEntrada(archive, "[Content_Types].xml", ObtenerContentTypesXml());
+            EscribirEntrada(archive, "[Content_Types].xml", ObtenerContentTypesXml(tieneHojaObligatorias));
 
             // 2. _rels/.rels
             EscribirEntrada(archive, "_rels/.rels", ObtenerRelsRaizXml());
 
             // 3. xl/workbook.xml
-            EscribirEntrada(archive, "xl/workbook.xml", ObtenerWorkbookXml(nombreInstitucion));
+            EscribirEntrada(archive, "xl/workbook.xml", ObtenerWorkbookXml(nombreInstitucion, tieneHojaObligatorias));
 
             // 4. xl/_rels/workbook.xml.rels
-            EscribirEntrada(archive, "xl/_rels/workbook.xml.rels", ObtenerWorkbookRelsXml());
+            EscribirEntrada(archive, "xl/_rels/workbook.xml.rels", ObtenerWorkbookRelsXml(tieneHojaObligatorias));
 
             // 5. xl/styles.xml
             EscribirEntrada(archive, "xl/styles.xml", ObtenerStylesXml());
 
             // 6. xl/worksheets/sheet1.xml
             EscribirEntrada(archive, "xl/worksheets/sheet1.xml", ObtenerWorksheetXml(filas));
+
+            // 7. xl/worksheets/sheet2.xml
+            if (tieneHojaObligatorias)
+            {
+                EscribirEntrada(archive, "xl/worksheets/sheet2.xml", ObtenerWorksheetObligatoriasXml(filasObligatorias!));
+            }
         }
 
         return memoryStream.ToArray();
@@ -59,14 +77,15 @@ internal static class GeneradorExcelOpenXml
         writer.Write(contenido);
     }
 
-    private static string ObtenerContentTypesXml() =>
-        """
+    private static string ObtenerContentTypesXml(bool tieneHojaObligatorias) =>
+        $"""
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
           <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
           <Default Extension="xml" ContentType="application/xml"/>
           <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
           <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+          {(tieneHojaObligatorias ? """<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>""" : "")}
           <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
         </Types>
         """;
@@ -79,27 +98,37 @@ internal static class GeneradorExcelOpenXml
         </Relationships>
         """;
 
-    private static string ObtenerWorkbookXml(string nombreInstitucion)
+    private static string ObtenerWorkbookXml(string nombreInstitucion, bool tieneHojaObligatorias)
     {
-        var nombreHoja = EscaparXml(string.IsNullOrWhiteSpace(nombreInstitucion) ? "Personas Aprobadas" : "Personas Aprobadas");
+        var nombreHoja = EscaparXml("Personas Aprobadas");
         return $"""
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
           <sheets>
             <sheet name="{nombreHoja}" sheetId="1" r:id="rId1"/>
+            {(tieneHojaObligatorias ? """<sheet name="Capacitaciones Obligatorias" sheetId="2" r:id="rId2"/>""" : "")}
           </sheets>
         </workbook>
         """;
     }
 
-    private static string ObtenerWorkbookRelsXml() =>
-        """
-        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-          <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-          <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-        </Relationships>
-        """;
+    private static string ObtenerWorkbookRelsXml(bool tieneHojaObligatorias) =>
+        tieneHojaObligatorias
+            ? """
+              <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+                <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+                <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+              </Relationships>
+              """
+            : """
+              <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+              <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+                <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+                <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+              </Relationships>
+              """;
 
     private static string ObtenerStylesXml() =>
         """
@@ -133,7 +162,7 @@ internal static class GeneradorExcelOpenXml
         var sb = new StringBuilder();
         sb.AppendLine("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
         sb.AppendLine("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">""");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"  <dimension ref=\"A1:H{totalFilas}\"/>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"  <dimension ref=\"A1:J{totalFilas}\"/>");
         sb.AppendLine("""
           <sheetViews>
             <sheetView tabSelected="1" workbookViewId="0">
@@ -149,6 +178,8 @@ internal static class GeneradorExcelOpenXml
             <col min="6" max="6" width="18" customWidth="1"/>
             <col min="7" max="7" width="28" customWidth="1"/>
             <col min="8" max="8" width="22" customWidth="1"/>
+            <col min="9" max="9" width="30" customWidth="1"/>
+            <col min="10" max="10" width="30" customWidth="1"/>
           </cols>
         """);
         sb.AppendLine("  <sheetData>");
@@ -164,6 +195,7 @@ internal static class GeneradorExcelOpenXml
         sb.AppendLine(CrearCeldaTexto("G1", "Tratamiento de Datos Aceptado", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("H1", "Fecha Registro (UTC)", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("I1", "Perfil profesional generado", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("J1", "Capacitaciones Obligatorias", estilo: 1));
         sb.AppendLine("    </row>");
 
         // Filas de datos
@@ -182,12 +214,67 @@ internal static class GeneradorExcelOpenXml
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"G{numFila}"), fila.TratamientoDatosAceptado ? "Sí" : "No"));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"H{numFila}"), fila.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"I{numFila}"), fila.Perfil));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"J{numFila}"), fila.EstadoCapacitacionesObligatorias));
             sb.AppendLine("    </row>");
         }
 
         sb.AppendLine("  </sheetData>");
         sb.AppendLine("</worksheet>");
 
+        return sb.ToString();
+    }
+
+    private static string ObtenerWorksheetObligatoriasXml(List<FilaCapacitacionObligatoria> filas)
+    {
+        var totalFilas = filas.Count + 1;
+        var sb = new StringBuilder();
+        sb.AppendLine("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
+        sb.AppendLine("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">""");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"  <dimension ref=\"A1:G{totalFilas}\"/>");
+        sb.AppendLine("""
+          <sheetViews>
+            <sheetView tabSelected="0" workbookViewId="0">
+              <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>
+            </sheetView>
+          </sheetViews>
+          <cols>
+            <col min="1" max="1" width="16" customWidth="1"/>
+            <col min="2" max="2" width="30" customWidth="1"/>
+            <col min="3" max="3" width="35" customWidth="1"/>
+            <col min="4" max="4" width="12" customWidth="1"/>
+            <col min="5" max="5" width="24" customWidth="1"/>
+            <col min="6" max="6" width="16" customWidth="1"/>
+            <col min="7" max="7" width="20" customWidth="1"/>
+          </cols>
+        """);
+        sb.AppendLine("  <sheetData>");
+        sb.AppendLine("    <row r=\"1\">");
+        sb.AppendLine(CrearCeldaTexto("A1", "Documento", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("B1", "Nombres y Apellidos", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("C1", "Capacitación Obligatoria", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("D1", "Aplica", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("E1", "Estado", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("F1", "Horas", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("G1", "Fecha Realización", estilo: 1));
+        sb.AppendLine("    </row>");
+
+        for (var i = 0; i < filas.Count; i++)
+        {
+            var fila = filas[i];
+            var numFila = i + 2;
+            sb.AppendLine(CultureInfo.InvariantCulture, $"    <row r=\"{numFila}\">");
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"A{numFila}"), fila.Documento));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"B{numFila}"), fila.Nombre));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"C{numFila}"), fila.CapacitacionObligatoria));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"D{numFila}"), fila.Aplica));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"E{numFila}"), fila.Estado));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"F{numFila}"), fila.Horas));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"G{numFila}"), fila.FechaRealizacion));
+            sb.AppendLine("    </row>");
+        }
+
+        sb.AppendLine("  </sheetData>");
+        sb.AppendLine("</worksheet>");
         return sb.ToString();
     }
 

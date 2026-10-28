@@ -234,4 +234,62 @@ describe('ExpedienteSeccionesComponent', () => {
       label: 'cedula_identidad.pdf',
     });
   });
+
+  it('debe mostrar bloque de obligatorias y permitir vincular por ayuda y marcar', () => {
+    fixture.componentRef.setInput('obligatorias', [
+      {
+        id: 'ob-99',
+        nombre: 'Seguridad en el Trabajo',
+        estado: 'pendiente',
+        horasEsperadas: 20,
+      },
+    ]);
+    component.cambiarTab('capacitaciones');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="lista-obligatorias-revision"]')).toBeTruthy();
+    expect(compiled.textContent).toContain('Seguridad en el Trabajo');
+    expect(compiled.textContent).toContain('pendiente');
+
+    // Marcar faltante
+    let marcaEmitida: { tipo: string; clave: string; label: string } | undefined;
+    component.marcarItem.subscribe((evt) => {
+      marcaEmitida = evt;
+    });
+
+    const btnMarcarFaltante = compiled.querySelector(
+      '[data-testid="btn-marcar-obligatoria-pendiente-ob-99"]',
+    ) as HTMLButtonElement;
+    expect(btnMarcarFaltante).toBeTruthy();
+    btnMarcarFaltante.click();
+    expect(marcaEmitida?.clave).toBe('capacitaciones.obligatoria.ob-99');
+
+    // Vincular por ayuda
+    let vinculoEmitido: { obligatoriaId: string; capacitacionId: string } | undefined;
+    component.vincularPorAyuda.subscribe((evt) => {
+      vinculoEmitido = evt;
+    });
+
+    const btnAyuda = compiled.querySelector(
+      '[data-testid="btn-vincular-ayuda-ob-99"]',
+    ) as HTMLButtonElement;
+    expect(btnAyuda).toBeTruthy();
+    btnAyuda.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[data-testid="modal-vincular-ayuda"]')).toBeTruthy();
+    component.capacitacionAyudaSeleccionada.set('cap-001');
+    fixture.detectChanges();
+
+    const btnConfirmar = compiled.querySelector(
+      '[data-testid="btn-confirmar-ayuda"]',
+    ) as HTMLButtonElement;
+    btnConfirmar.click();
+
+    expect(vinculoEmitido).toEqual({
+      obligatoriaId: 'ob-99',
+      capacitacionId: 'cap-001',
+    });
+  });
 });

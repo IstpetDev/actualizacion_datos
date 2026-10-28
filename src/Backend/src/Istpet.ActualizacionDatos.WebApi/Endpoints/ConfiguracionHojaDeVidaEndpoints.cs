@@ -31,6 +31,17 @@ internal static class ConfiguracionHojaDeVidaEndpoints
         MapRecurso<GuardarRequisitoDocumentoRequest, RequisitoDocumentoDto>(grupo, "requisitos", "RequisitosDocumento", "RequisitoDocumento",
             (s, ct) => s.ListarRequisitosAsync(ct), (s, r, ct) => s.CrearRequisitoAsync(r, ct),
             (s, id, r, ct) => s.ActualizarRequisitoAsync(id, r, ct), (s, id, ct) => s.EliminarRequisitoAsync(id, ct), r => r.Id);
+        MapRecurso<GuardarCapacitacionObligatoriaRequest, CapacitacionObligatoriaDto>(grupo, "capacitaciones-obligatorias", "CapacitacionesObligatorias", "CapacitacionObligatoria",
+            (s, ct) => s.ListarCapacitacionesObligatoriasAsync(ct), (s, r, ct) => s.CrearCapacitacionObligatoriaAsync(r, ct),
+            (s, id, r, ct) => s.ActualizarCapacitacionObligatoriaAsync(id, r, ct), (s, id, ct) => s.EliminarCapacitacionObligatoriaAsync(id, ct), c => c.Id);
+
+        grupo.MapGet("/capacitaciones-obligatorias/cumplimiento", (HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
+            EnInstitucion(http, contexto, async () => Results.Ok(await servicio.ObtenerCumplimientoObligatoriasAsync(ct))))
+            .WithName("ObtenerCumplimientoCapacitacionesObligatorias")
+            .Produces<List<CumplimientoCapacitacionObligatoriaDto>>()
+            .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden);
 
         app.MapPut("/api/personas/{id:guid}/tipo-funcionario", (Guid id, AsignarTipoFuncionarioRequest request, HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
                 EnInstitucion(http, contexto, async () =>

@@ -1,4 +1,3 @@
-import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -9,11 +8,15 @@ import {
   InstitucionesClient,
 } from '../../api-client';
 import { AuthService } from '../../core/auth';
+import { mensajeError } from '../../core/auth/mensaje-error';
+import { PlantillasHojaDeVidaComponent } from './plantillas-hoja-de-vida.component';
+
+type TabSuperadmin = 'instituciones' | 'plantillas';
 
 @Component({
   selector: 'app-superadmin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PlantillasHojaDeVidaComponent],
   template: `
     <section class="dashboard-section" data-testid="superadmin-panel">
       <header class="section-header">
@@ -26,130 +29,155 @@ import { AuthService } from '../../core/auth';
         </div>
       </header>
 
-      @if (mensajeExito()) {
-        <div class="alert alert-success" role="alert" data-testid="mensaje-exito">
-          {{ mensajeExito() }}
-        </div>
-      }
+      <nav class="superadmin-tabs" role="tablist" aria-label="Secciones Superadmin">
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="tabActiva() === 'instituciones'"
+          (click)="tabActiva.set('instituciones')"
+          data-testid="tab-instituciones"
+        >
+          Instituciones
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          [class.active]="tabActiva() === 'plantillas'"
+          (click)="tabActiva.set('plantillas')"
+          data-testid="tab-plantillas"
+        >
+          Plantillas Globales
+        </button>
+      </nav>
 
-      @if (error()) {
-        <div class="alert alert-danger" role="alert" data-testid="mensaje-error">
-          {{ error() }}
-        </div>
-      }
+      @if (tabActiva() === 'instituciones') {
+        @if (mensajeExito()) {
+          <div class="alert alert-success" role="alert" data-testid="mensaje-exito">
+            {{ mensajeExito() }}
+          </div>
+        }
 
-      <div class="grid-dos-columnas">
-        <!-- Formulario Crear Institución (RF-MUL-001) -->
-        <div class="card">
-          <h2 class="card-title">Registrar Nueva Institución</h2>
-          <form (ngSubmit)="crearInstitucion()" data-testid="form-crear-institucion">
-            <div class="form-group">
-              <label for="nombreInst">Nombre de la Institución:</label>
-              <input
-                id="nombreInst"
-                type="text"
-                class="form-control"
-                [(ngModel)]="nombreInstitucion"
-                name="nombreInst"
-                required
-                placeholder="Ej: Instituto Superior Tecnológico Ejemplo"
-                data-testid="input-nombre-institucion"
-              />
-            </div>
+        @if (error()) {
+          <div class="alert alert-danger" role="alert" data-testid="mensaje-error">
+            {{ error() }}
+          </div>
+        }
 
-            <h3 class="card-subtitle">Administrador Inicial de la Institución</h3>
-            <div class="form-row">
-              <div class="form-group col">
-                <label for="adminDoc">Cédula / Documento:</label>
+        <div class="grid-dos-columnas">
+          <!-- Formulario Crear Institución (RF-MUL-001) -->
+          <div class="card">
+            <h2 class="card-title">Registrar Nueva Institución</h2>
+            <form (ngSubmit)="crearInstitucion()" data-testid="form-crear-institucion">
+              <div class="form-group">
+                <label for="nombreInst">Nombre de la Institución:</label>
                 <input
-                  id="adminDoc"
+                  id="nombreInst"
                   type="text"
                   class="form-control"
-                  [(ngModel)]="adminDoc"
-                  name="adminDoc"
+                  [(ngModel)]="nombreInstitucion"
+                  name="nombreInst"
                   required
-                  placeholder="1700000000"
-                  data-testid="input-admin-doc"
+                  placeholder="Ej: Instituto Superior Tecnológico Ejemplo"
+                  data-testid="input-nombre-institucion"
                 />
               </div>
-              <div class="form-group col">
-                <label for="adminNom">Nombre:</label>
+
+              <h3 class="card-subtitle">Administrador Inicial de la Institución</h3>
+              <div class="form-row">
+                <div class="form-group col">
+                  <label for="adminDoc">Cédula / Documento:</label>
+                  <input
+                    id="adminDoc"
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="adminDoc"
+                    name="adminDoc"
+                    required
+                    placeholder="1700000000"
+                    data-testid="input-admin-doc"
+                  />
+                </div>
+                <div class="form-group col">
+                  <label for="adminNom">Nombre:</label>
+                  <input
+                    id="adminNom"
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="adminNom"
+                    name="adminNom"
+                    placeholder="Nombre y Apellido"
+                    data-testid="input-admin-nom"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="adminCor">Correo Electrónico:</label>
                 <input
-                  id="adminNom"
-                  type="text"
+                  id="adminCor"
+                  type="email"
                   class="form-control"
-                  [(ngModel)]="adminNom"
-                  name="adminNom"
-                  placeholder="Nombre y Apellido"
-                  data-testid="input-admin-nom"
+                  [(ngModel)]="adminCor"
+                  name="adminCor"
+                  placeholder="admin@ejemplo.test"
+                  data-testid="input-admin-cor"
                 />
               </div>
-            </div>
-            <div class="form-group">
-              <label for="adminCor">Correo Electrónico:</label>
-              <input
-                id="adminCor"
-                type="email"
-                class="form-control"
-                [(ngModel)]="adminCor"
-                name="adminCor"
-                placeholder="admin@ejemplo.test"
-                data-testid="input-admin-cor"
-              />
-            </div>
 
-            <button
-              type="submit"
-              class="btn btn-primary"
-              [disabled]="guardando() || !formularioValido()"
-              data-testid="btn-guardar-institucion"
-            >
-              {{ guardando() ? 'Registrando...' : 'Registrar Institución' }}
-            </button>
-          </form>
-        </div>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="guardando() || !formularioValido()"
+                data-testid="btn-guardar-institucion"
+              >
+                {{ guardando() ? 'Registrando...' : 'Registrar Institución' }}
+              </button>
+            </form>
+          </div>
 
-        <!-- Listado de Instituciones (RF-MUL-002) -->
-        <div class="card">
-          <h2 class="card-title">Instituciones Registradas</h2>
-          <div class="table-container">
-            <table class="data-table" data-testid="tabla-instituciones">
-              <thead>
-                <tr>
-                  <th>Nombre Institucional</th>
-                  <th>ID Identificador</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (inst of instituciones(); track inst.id) {
-                  <tr [attr.data-testid]="'fila-inst-' + inst.id">
-                    <td>
-                      <strong>{{ inst.nombre }}</strong>
-                    </td>
-                    <td>
-                      <small class="text-muted">{{ inst.id }}</small>
-                    </td>
-                    <td>
-                      @if (inst.activa) {
-                        <span class="badge badge-success">Activa</span>
-                      } @else {
-                        <span class="badge badge-secondary">Inactiva</span>
-                      }
-                    </td>
-                  </tr>
-                } @empty {
+          <!-- Listado de Instituciones (RF-MUL-002) -->
+          <div class="card">
+            <h2 class="card-title">Instituciones Registradas</h2>
+            <div class="table-container">
+              <table class="data-table" data-testid="tabla-instituciones">
+                <thead>
                   <tr>
-                    <td colspan="3" class="text-center empty-state">
-                      No hay instituciones registradas en el sistema.
-                    </td>
+                    <th>Nombre Institucional</th>
+                    <th>ID Identificador</th>
+                    <th>Estado</th>
                   </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (inst of instituciones(); track inst.id) {
+                    <tr [attr.data-testid]="'fila-inst-' + inst.id">
+                      <td>
+                        <strong>{{ inst.nombre }}</strong>
+                      </td>
+                      <td>
+                        <small class="text-muted">{{ inst.id }}</small>
+                      </td>
+                      <td>
+                        @if (inst.activa) {
+                          <span class="badge badge-success">Activa</span>
+                        } @else {
+                          <span class="badge badge-secondary">Inactiva</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="text-center empty-state">
+                        No hay instituciones registradas en el sistema.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      } @else {
+        <app-plantillas-hoja-de-vida />
+      }
     </section>
   `,
   styles: `
@@ -158,6 +186,27 @@ import { AuthService } from '../../core/auth';
       border: 1px solid #e2e8f0;
       border-radius: 0.5rem;
       padding: 1.5rem;
+    }
+    .superadmin-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      margin-bottom: -2px;
+    }
+    .tab-btn.active {
+      color: #2563eb;
+      border-bottom-color: #2563eb;
     }
     .section-header {
       margin-bottom: 1.5rem;
@@ -315,6 +364,7 @@ export class SuperadminDashboardComponent implements OnInit {
   protected readonly authService = inject(AuthService);
   private readonly institucionesClient = inject(InstitucionesClient);
 
+  readonly tabActiva = signal<TabSuperadmin>('instituciones');
   readonly instituciones = signal<InstitucionDto[]>([]);
   readonly guardando = signal<boolean>(false);
   readonly error = signal<string | null>(null);

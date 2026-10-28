@@ -1,5 +1,6 @@
 import { mensajeError } from '../../../core/auth/mensaje-error';
 import { DominiosCorreoComponent } from './dominios-correo.component';
+import { SeccionesComponent } from './secciones.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -15,13 +16,23 @@ import {
   TipoFuncionarioDto,
 } from '../../../api-client';
 import { AuthService } from '../../../core/auth';
+import { ConfiguracionDocumentoComponent } from './configuracion-documento.component';
+import { CapacitacionesObligatoriasConfigComponent } from './capacitaciones-obligatorias-config.component';
 
-type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones';
+type TabConfiguracion =
+  'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones' | 'documento' | 'capacitaciones';
 
 @Component({
   selector: 'app-configuracion-requisitos',
   standalone: true,
-  imports: [CommonModule, FormsModule, DominiosCorreoComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DominiosCorreoComponent,
+    SeccionesComponent,
+    ConfiguracionDocumentoComponent,
+    CapacitacionesObligatoriasConfigComponent,
+  ],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
       @if (!esAdmin()) {
@@ -62,6 +73,7 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
         }
 
         <app-dominios-correo />
+        <app-secciones-configuracion />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button
@@ -99,6 +111,24 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
             data-testid="tab-asignaciones"
           >
             4. Asignación a Personas ({{ personas().length }})
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'documento'"
+            (click)="cambiarTab('documento')"
+            data-testid="tab-formato-documento"
+          >
+            5. Plantilla y Marca (PDF)
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'capacitaciones'"
+            (click)="cambiarTab('capacitaciones')"
+            data-testid="tab-capacitaciones-obligatorias"
+          >
+            6. Capacitaciones Obligatorias
           </button>
         </nav>
 
@@ -828,6 +858,20 @@ type TabConfiguracion = 'funcionarios' | 'documentos' | 'requisitos' | 'asignaci
                 </div>
               }
             </div>
+          </div>
+        }
+
+        <!-- SUBTAB 5: FORMATO Y MARCA DE HOJA DE VIDA (RF-PLA-003, RF-PLA-004) -->
+        @if (tabActiva() === 'documento') {
+          <div class="subtab-panel" data-testid="panel-plantilla-documento">
+            <app-configuracion-documento />
+          </div>
+        }
+
+        <!-- SUBTAB 6: CAPACITACIONES OBLIGATORIAS (RF-CAP-001, RF-CAP-002, RF-CAP-010) -->
+        @if (tabActiva() === 'capacitaciones') {
+          <div class="subtab-panel" data-testid="panel-capacitaciones-obligatorias">
+            <app-capacitaciones-obligatorias-config />
           </div>
         }
       }

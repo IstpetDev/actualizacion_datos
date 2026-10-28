@@ -428,10 +428,12 @@ public sealed class CuentaBancariaTests : IDisposable
         await using var db = Contexto(inst);
         var persona = await db.Personas.SingleAsync(p => p.Documento == documento);
         using var scope = _fabrica.Services.CreateScope();
+        var contextoInst = new ContextoInstitucion(new InstitucionId(inst), esSuperadmin: false);
         var servicio = new ServicioCuentaBancaria(
             db,
             scope.ServiceProvider.GetRequiredService<IProtectorCuentaBancaria>(),
-            new ServicioCampanas(db, new ContextoInstitucion(new InstitucionId(inst), esSuperadmin: false)));
+            new ServicioCampanas(db, contextoInst),
+            new ServicioSecciones(db, contextoInst));
 
         var creada = await servicio.RegistrarPropuestaNominaAsync(persona.Id, new CuentaNominaPropuesta(Ahorros, numero, NombreBancoOtro: "Banco ficticio"));
         await db.SaveChangesAsync();

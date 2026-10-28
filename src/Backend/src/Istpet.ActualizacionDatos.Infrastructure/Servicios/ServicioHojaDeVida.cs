@@ -13,15 +13,18 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     private readonly AplicacionDbContext _context;
     private readonly IServicioCampanas _servicioCampanas;
     private readonly ValidadorCatalogos _validadorCatalogos;
+    private readonly IServicioSecciones _servicioSecciones;
 
     public ServicioHojaDeVida(
         AplicacionDbContext context,
         IServicioCampanas servicioCampanas,
-        ValidadorCatalogos validadorCatalogos)
+        ValidadorCatalogos validadorCatalogos,
+        IServicioSecciones servicioSecciones)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
         _validadorCatalogos = validadorCatalogos;
+        _servicioSecciones = servicioSecciones;
     }
 
     public async Task<HojaDeVidaDto> ObtenerAsync(string documento, CancellationToken ct = default)
@@ -67,6 +70,9 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             .ThenBy(r => r.NombresApellidos)
             .ToListAsync(ct);
 
+        var abiertasEnum = await _servicioSecciones.ObtenerSeccionesAbiertasAsync(persona.InstitucionId, ct);
+        var abiertasCodigos = abiertasEnum.Select(CodigosSeccion.ObtenerCodigo).ToList();
+
         return new HojaDeVidaDto(
             persona.Id,
             persona.Documento,
@@ -77,7 +83,9 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             enCurso.Select(MapearTituloEnCurso).ToList(),
             caps.Select(MapearCapacitacion).ToList(),
             exps.Select(MapearExperiencia).ToList(),
-            refs.Select(MapearReferencia).ToList());
+            refs.Select(MapearReferencia).ToList(),
+            abiertasCodigos,
+            await ListarCapacitacionesObligatoriasAsync(documento, ct));
     }
 
     public async Task<HojaDeVidaDto> ObtenerParaRevisionAsync(string documento, CancellationToken ct = default)
@@ -100,6 +108,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<FichaPersonalDto> GuardarFichaAsync(string documento, GuardarFichaPersonalRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FichaPersonal, ct);
         await ValidarFormatoAsync(request, "ficha", persona.InstitucionId, ct);
 
         if (request.SexoId.HasValue) await _validadorCatalogos.ValidarAsync(request.SexoId.Value, TipoCatalogo.Sexo, ct);
@@ -161,6 +170,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<TituloAcademicoDto> AgregarTituloAsync(string documento, GuardarTituloAcademicoRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         await ValidarFormatoAsync(request, "titulo", persona.InstitucionId, ct);
         await ValidarCatalogosTituloAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
@@ -189,6 +199,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<TituloAcademicoDto> ActualizarTituloAsync(string documento, Guid id, GuardarTituloAcademicoRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         await ValidarFormatoAsync(request, "titulo", persona.InstitucionId, ct);
         var titulo = await _context.TitulosAcademicos
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
@@ -216,6 +227,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task EliminarTituloAsync(string documento, Guid id, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         var titulo = await _context.TitulosAcademicos
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("El título académico no existe.");
@@ -227,6 +239,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<TituloEnCursoDto> AgregarTituloEnCursoAsync(string documento, GuardarTituloEnCursoRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         await ValidarFormatoAsync(request, "tituloEnCurso", persona.InstitucionId, ct);
         await ValidarCatalogosTituloEnCursoAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
@@ -259,6 +272,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<TituloEnCursoDto> ActualizarTituloEnCursoAsync(string documento, Guid id, GuardarTituloEnCursoRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         await ValidarFormatoAsync(request, "tituloEnCurso", persona.InstitucionId, ct);
         var enCurso = await _context.TitulosEnCurso
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
@@ -290,6 +304,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task EliminarTituloEnCursoAsync(string documento, Guid id, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.FormacionAcademica, ct);
         var enCurso = await _context.TitulosEnCurso
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("El título en curso no existe.");
@@ -301,6 +316,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<CapacitacionDto> AgregarCapacitacionAsync(string documento, GuardarCapacitacionRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
         await ValidarFormatoAsync(request, "capacitacion", persona.InstitucionId, ct);
         var participacion = ParsearTipoParticipacion(request.TipoParticipacion);
 
@@ -310,6 +326,12 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         }
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+
+        if (request.CapacitacionObligatoriaId.HasValue)
+        {
+            await ValidarObligatoriaAsync(request.CapacitacionObligatoriaId.Value, persona, ct);
+            await DesvincularPreviaMismaObligatoriaAsync(persona.Id, request.CapacitacionObligatoriaId.Value, null, ct);
+        }
 
         var capacitacion = new Capacitacion(
             Guid.NewGuid(),
@@ -324,7 +346,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.FechaFin,
                 request.NumeroHoras,
                 request.Lugar,
-                request.FinanciadaPorInstitucion));
+                request.FinanciadaPorInstitucion,
+                request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
         _context.Capacitaciones.Add(capacitacion);
@@ -336,6 +359,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<CapacitacionDto> ActualizarCapacitacionAsync(string documento, Guid id, GuardarCapacitacionRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
         await ValidarFormatoAsync(request, "capacitacion", persona.InstitucionId, ct);
         var capacitacion = await _context.Capacitaciones
             .FirstOrDefaultAsync(c => c.Id == id && c.PersonaId == persona.Id, ct)
@@ -350,6 +374,12 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
 
+        if (request.CapacitacionObligatoriaId.HasValue)
+        {
+            await ValidarObligatoriaAsync(request.CapacitacionObligatoriaId.Value, persona, ct);
+            await DesvincularPreviaMismaObligatoriaAsync(persona.Id, request.CapacitacionObligatoriaId.Value, capacitacion.Id, ct);
+        }
+
         capacitacion.Actualizar(new DatosCapacitacion(
             request.NombreEvento,
             request.InstitucionOrganizadora,
@@ -359,7 +389,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.FechaFin,
             request.NumeroHoras,
             request.Lugar,
-            request.FinanciadaPorInstitucion));
+            request.FinanciadaPorInstitucion,
+            request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
         await _context.SaveChangesAsync(ct);
@@ -370,6 +401,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task EliminarCapacitacionAsync(string documento, Guid id, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
         var capacitacion = await _context.Capacitaciones
             .FirstOrDefaultAsync(c => c.Id == id && c.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("La capacitación no existe.");
@@ -381,6 +413,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<ExperienciaLaboralDto> AgregarExperienciaAsync(string documento, GuardarExperienciaLaboralRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.ExperienciaLaboral, ct);
         await ValidarFormatoAsync(request, "experiencia", persona.InstitucionId, ct);
 
         if (request.PaisId.HasValue)
@@ -414,6 +447,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<ExperienciaLaboralDto> ActualizarExperienciaAsync(string documento, Guid id, GuardarExperienciaLaboralRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.ExperienciaLaboral, ct);
         await ValidarFormatoAsync(request, "experiencia", persona.InstitucionId, ct);
         var experiencia = await _context.ExperienciasLaborales
             .FirstOrDefaultAsync(e => e.Id == id && e.PersonaId == persona.Id, ct)
@@ -445,6 +479,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task EliminarExperienciaAsync(string documento, Guid id, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.ExperienciaLaboral, ct);
         var experiencia = await _context.ExperienciasLaborales
             .FirstOrDefaultAsync(e => e.Id == id && e.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("La experiencia laboral no existe.");
@@ -456,6 +491,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<ReferenciaDto> AgregarReferenciaAsync(string documento, GuardarReferenciaRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Referencias, ct);
         await ValidarFormatoAsync(request, "referencia", persona.InstitucionId, ct);
         var tipo = ParsearTipoReferencia(request.Tipo);
 
@@ -488,6 +524,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task<ReferenciaDto> ActualizarReferenciaAsync(string documento, Guid id, GuardarReferenciaRequest request, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Referencias, ct);
         await ValidarFormatoAsync(request, "referencia", persona.InstitucionId, ct);
         var referencia = await _context.ReferenciasPersonales
             .FirstOrDefaultAsync(r => r.Id == id && r.PersonaId == persona.Id, ct)
@@ -522,6 +559,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     public async Task EliminarReferenciaAsync(string documento, Guid id, CancellationToken ct = default)
     {
         var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Referencias, ct);
         var referencia = await _context.ReferenciasPersonales
             .FirstOrDefaultAsync(r => r.Id == id && r.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("La referencia no existe.");
@@ -549,6 +587,14 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         persona.AsegurarEdicionPermitida();
         return persona;
+    }
+
+    private async Task AsegurarSeccionAbiertaAsync(Persona persona, SeccionHojaDeVida seccion, CancellationToken ct)
+    {
+        if (!await _servicioSecciones.EstaAbiertaAsync(persona.InstitucionId, seccion, ct))
+        {
+            throw new SeccionNoDisponibleException();
+        }
     }
 
     private async Task AsegurarArchivoPropioAsync(Guid personaId, Guid? archivoId, bool esFoto, CancellationToken ct)
@@ -706,7 +752,222 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         c.Lugar,
         c.FinanciadaPorInstitucion,
         c.ArchivoId,
-        c.FechaActualizacionUtc);
+        c.FechaActualizacionUtc,
+        c.CapacitacionObligatoriaId);
+
+    public async Task<List<EstadoCapacitacionObligatoriaPersonaDto>> ListarCapacitacionesObligatoriasAsync(string documento, CancellationToken ct = default)
+    {
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Documento == documento, ct)
+            ?? throw new RecursoNoEncontradoException("La persona no existe en la institución.");
+
+        var obligatorias = await _context.CapacitacionesObligatorias
+            .Where(o => o.InstitucionId == persona.InstitucionId && o.Activo)
+            .OrderBy(o => o.Orden)
+            .ThenBy(o => o.Nombre)
+            .ToListAsync(ct);
+
+        var obligatoriasAplicables = obligatorias.Where(o => o.AplicaA(persona.TipoFuncionarioId)).ToList();
+        if (obligatoriasAplicables.Count == 0)
+        {
+            return [];
+        }
+
+        var capacitaciones = await _context.Capacitaciones
+            .Where(c => c.PersonaId == persona.Id && c.CapacitacionObligatoriaId != null)
+            .ToListAsync(ct);
+
+        var marcasObservadas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (persona.EstadoActualizacion == EstadoActualizacion.Devuelto)
+        {
+            var ultimaObservacion = await _context.Observaciones
+                .Where(o => o.PersonaId == persona.Id)
+                .OrderByDescending(o => o.FechaUtc)
+                .FirstOrDefaultAsync(ct);
+
+            if (ultimaObservacion != null)
+            {
+                var marcas = await _context.MarcasObservacion
+                    .Where(m => m.ObservacionId == ultimaObservacion.Id)
+                    .Select(m => m.ClaveDestino)
+                    .ToListAsync(ct);
+
+                foreach (var m in marcas)
+                {
+                    marcasObservadas.Add(m);
+                }
+            }
+        }
+
+        var justificaciones = ObtenerJustificacionesNuevoIngreso(persona.DatosPersonalesJson);
+
+        var resultado = new List<EstadoCapacitacionObligatoriaPersonaDto>();
+        foreach (var ob in obligatoriasAplicables)
+        {
+            var vinculada = capacitaciones.FirstOrDefault(c => c.CapacitacionObligatoriaId == ob.Id);
+            string estado;
+            Guid? capId = vinculada?.Id;
+            string? justificacion = null;
+            DateTime? fechaJustificacion = null;
+
+            if (vinculada != null)
+            {
+                var esObservada = marcasObservadas.Contains($"capacitacion:{vinculada.Id}") ||
+                                  marcasObservadas.Contains($"capacitacion_obligatoria:{ob.Id}") ||
+                                  marcasObservadas.Contains($"capacitaciones.obligatoria.{ob.Id}");
+                estado = esObservada ? "observada" : "cargada";
+            }
+            else if (ob.EsExentoPorNuevoIngreso(persona.FechaIngresoInstitucion))
+            {
+                estado = "exento-nuevo-ingreso";
+            }
+            else if (justificaciones.TryGetValue(ob.Id, out var itemJustificado))
+            {
+                estado = "justificada-nuevo-ingreso";
+                justificacion = itemJustificado.Justificacion;
+                fechaJustificacion = itemJustificado.FechaUtc;
+            }
+            else
+            {
+                estado = "pendiente";
+            }
+
+            resultado.Add(new EstadoCapacitacionObligatoriaPersonaDto(
+                ob.Id,
+                ob.Nombre,
+                ob.InstitucionOrganizadora,
+                ob.HorasEsperadas,
+                ob.FechaRealizacion,
+                ob.TipoFuncionarioId,
+                estado,
+                capId,
+                justificacion,
+                fechaJustificacion,
+                persona.FechaIngresoInstitucion));
+        }
+
+        return resultado;
+    }
+
+    public async Task VincularCapacitacionObligatoriaAsync(string documento, Guid obligatoriaId, VincularCapacitacionObligatoriaRequest request, CancellationToken ct = default)
+    {
+        var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
+
+        var ob = await ValidarObligatoriaAsync(obligatoriaId, persona, ct);
+
+        var capacitacion = await _context.Capacitaciones
+            .FirstOrDefaultAsync(c => c.Id == request.CapacitacionId && c.PersonaId == persona.Id, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación no existe o no pertenece a la persona.");
+
+        if (capacitacion.CapacitacionObligatoriaId.HasValue && capacitacion.CapacitacionObligatoriaId != obligatoriaId)
+        {
+            throw new ConflictoEstadoException("La capacitación ya se encuentra vinculada a otra obligación institucional.");
+        }
+
+        await DesvincularPreviaMismaObligatoriaAsync(persona.Id, obligatoriaId, capacitacion.Id, ct);
+
+        capacitacion.VincularCapacitacionObligatoria(obligatoriaId);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task JustificarNuevoIngresoAsync(string documento, Guid obligatoriaId, JustificarNuevoIngresoRequest request, CancellationToken ct = default)
+    {
+        var persona = await PersonaEditableAsync(documento, ct);
+        await AsegurarSeccionAbiertaAsync(persona, SeccionHojaDeVida.Capacitaciones, ct);
+
+        if (string.IsNullOrWhiteSpace(request.Justificacion) || request.Justificacion.Trim().Length > 500)
+        {
+            throw new ReglaNegocioException("La justificación es obligatoria y no puede superar 500 caracteres.");
+        }
+
+        await ValidarObligatoriaAsync(obligatoriaId, persona, ct);
+
+        var justificaciones = ObtenerJustificacionesNuevoIngreso(persona.DatosPersonalesJson);
+        justificaciones[obligatoriaId] = new JustificacionItem(request.Justificacion.Trim(), DateTime.UtcNow);
+
+        GuardarJustificacionesNuevoIngreso(persona, justificaciones);
+        await _context.SaveChangesAsync(ct);
+    }
+
+    private async Task<CapacitacionObligatoria> ValidarObligatoriaAsync(Guid obligatoriaId, Persona persona, CancellationToken ct)
+    {
+        var ob = await _context.CapacitacionesObligatorias
+            .FirstOrDefaultAsync(o => o.Id == obligatoriaId && o.InstitucionId == persona.InstitucionId && o.Activo, ct)
+            ?? throw new RecursoNoEncontradoException("La capacitación obligatoria no existe en la institución o está inactiva.");
+
+        if (!ob.AplicaA(persona.TipoFuncionarioId))
+        {
+            throw new RecursoNoEncontradoException("La capacitación obligatoria no aplica a su tipo de funcionario.");
+        }
+
+        return ob;
+    }
+
+    private async Task DesvincularPreviaMismaObligatoriaAsync(Guid personaId, Guid obligatoriaId, Guid? excluirCapacitacionId, CancellationToken ct)
+    {
+        var query = _context.Capacitaciones
+            .Where(c => c.PersonaId == personaId && c.CapacitacionObligatoriaId == obligatoriaId);
+
+        if (excluirCapacitacionId.HasValue)
+        {
+            query = query.Where(c => c.Id != excluirCapacitacionId.Value);
+        }
+
+        var previas = await query.ToListAsync(ct);
+        foreach (var p in previas)
+        {
+            p.VincularCapacitacionObligatoria(null);
+        }
+    }
+
+    private sealed record JustificacionItem(string Justificacion, DateTime FechaUtc);
+
+    private static Dictionary<Guid, JustificacionItem> ObtenerJustificacionesNuevoIngreso(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return [];
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("justificaciones_capacitaciones", out var prop))
+            {
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JustificacionItem>>(prop.GetRawText());
+                if (dict != null)
+                {
+                    return dict
+                        .Where(kvp => Guid.TryParse(kvp.Key, out _))
+                        .ToDictionary(kvp => Guid.Parse(kvp.Key), kvp => kvp.Value);
+                }
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+        return [];
+    }
+
+    private static void GuardarJustificacionesNuevoIngreso(Persona persona, Dictionary<Guid, JustificacionItem> justificaciones)
+    {
+        Dictionary<string, object?> root = [];
+        if (!string.IsNullOrWhiteSpace(persona.DatosPersonalesJson))
+        {
+            try
+            {
+                var parsed = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object?>>(persona.DatosPersonalesJson);
+                if (parsed != null)
+                {
+                    root = parsed;
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+            }
+        }
+
+        var dictStr = justificaciones.ToDictionary(k => k.Key.ToString(), v => v.Value);
+        root["justificaciones_capacitaciones"] = dictStr;
+        persona.ActualizarBorrador(System.Text.Json.JsonSerializer.Serialize(root));
+    }
 
     private static ExperienciaLaboralDto MapearExperiencia(ExperienciaLaboral e) => new(
         e.Id,

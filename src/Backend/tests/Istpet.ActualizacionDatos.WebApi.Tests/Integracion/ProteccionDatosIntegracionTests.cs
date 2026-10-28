@@ -32,8 +32,23 @@ public sealed class ProteccionDatosIntegracionTests
         var persona = new Persona(Guid.NewGuid(), institucionA, "0000000000", accesoHabilitado: true,
             debeCambiarContrasena: false, tratamientoDatosAceptado: true,
             fechaAceptacionTratamientoDatosUtc: reloj.Ahora.UtcDateTime.AddYears(-1));
-        db.Personas.Add(persona);
         await db.SaveChangesAsync();
+
+        var rolStr = persona.Rol.ToString();
+        var estadoStr = persona.EstadoActualizacion.ToString();
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO personas (
+                id, institucion_id, documento, acceso_habilitado, debe_cambiar_contrasena,
+                tratamiento_datos_aceptado, fecha_aceptacion_tratamiento_datos_utc,
+                rol, estado_actualizacion, intentos_fallidos, correo_verificado,
+                intentos_codigo_verificacion, fecha_creacion_utc
+            ) VALUES (
+                {persona.Id}, {institucionA.Valor}, {persona.Documento}, {persona.AccesoHabilitado}, {persona.DebeCambiarContrasena},
+                {persona.TratamientoDatosAceptado}, {persona.FechaAceptacionTratamientoDatosUtc},
+                {rolStr}, {estadoStr}, {persona.IntentosFallidos}, {persona.CorreoVerificado},
+                {persona.IntentosCodigoVerificacion}, {persona.FechaCreacionUtc}
+            )
+        """);
         await db.Database.MigrateAsync();
         var servicio = new ServicioProteccionDatos(db, reloj);
         Assert.False((await servicio.ObtenerEstadoAsync(persona.Id, institucionA, persona.Rol)).Aceptado);

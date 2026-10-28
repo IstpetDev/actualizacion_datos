@@ -3,6 +3,7 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using System.Reflection;
 using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.Documentos;
 using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence.Convertidores;
 using Microsoft.EntityFrameworkCore;
@@ -30,10 +31,17 @@ public class AplicacionDbContext : DbContext
     public DbSet<TituloAcademico> TitulosAcademicos => Set<TituloAcademico>();
     public DbSet<TituloEnCurso> TitulosEnCurso => Set<TituloEnCurso>();
     public DbSet<Capacitacion> Capacitaciones => Set<Capacitacion>();
+    public DbSet<CapacitacionObligatoria> CapacitacionesObligatorias => Set<CapacitacionObligatoria>();
     public DbSet<ExperienciaLaboral> ExperienciasLaborales => Set<ExperienciaLaboral>();
     public DbSet<ReferenciaPersonal> ReferenciasPersonales => Set<ReferenciaPersonal>();
     public DbSet<DocumentoPersonal> DocumentosPersonales => Set<DocumentoPersonal>();
     public DbSet<CuentaBancaria> CuentasBancarias => Set<CuentaBancaria>();
+    public DbSet<SeccionInstitucion> SeccionesInstitucion => Set<SeccionInstitucion>();
+
+    // Plantillas globales y configuración de documentos (spec-0013, ADR-0032)
+    public DbSet<PlantillaHojaDeVida> PlantillasHojaDeVida => Set<PlantillaHojaDeVida>();
+    public DbSet<VersionPlantillaHojaDeVida> VersionesPlantillaHojaDeVida => Set<VersionPlantillaHojaDeVida>();
+    public DbSet<ConfiguracionDocumentoInstitucion> ConfiguracionesDocumentoInstitucion => Set<ConfiguracionDocumentoInstitucion>();
 
     public AplicacionDbContext(
         DbContextOptions<AplicacionDbContext> options,

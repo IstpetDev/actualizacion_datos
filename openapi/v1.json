@@ -500,6 +500,109 @@
         }
       }
     },
+    "/api/personas/{id}/documento-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "Personas"
+        ],
+        "operationId": "DescargarDocumentoHojaDeVidaPersona",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/documento-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "MisDatos"
+        ],
+        "operationId": "DescargarMiDocumentoHojaDeVida",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -1700,6 +1803,134 @@
         }
       }
     },
+    "/api/revision/{documento}/capacitaciones-obligatorias/{obligatoriaId}/vincular": {
+      "post": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "VincularCapacitacionObligatoriaPorAyuda",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "obligatoriaId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VincularCapacitacionObligatoriaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/revision/{documento}/capacitaciones-obligatorias": {
+      "get": {
+        "tags": [
+          "Revision"
+        ],
+        "operationId": "ListarCapacitacionesObligatoriasRevision",
+        "parameters": [
+          {
+            "name": "documento",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstadoCapacitacionObligatoriaPersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/api/auditoria": {
       "get": {
         "tags": [
@@ -1789,6 +2020,16 @@
           },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -3223,6 +3464,200 @@
         }
       }
     },
+    "/api/mis-datos/capacitaciones-obligatorias": {
+      "get": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "ObtenerMisCapacitacionesObligatorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstadoCapacitacionObligatoriaPersonaDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/mis-datos/capacitaciones-obligatorias/{id}/vincular": {
+      "post": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "VincularCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VincularCapacitacionObligatoriaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mis-datos/capacitaciones-obligatorias/{id}/justificar-nuevo-ingreso": {
+      "post": {
+        "tags": [
+          "CapacitacionesObligatorias"
+        ],
+        "operationId": "JustificarNuevoIngresoCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JustificarNuevoIngresoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/mis-datos/documentos": {
       "get": {
         "tags": [
@@ -4081,6 +4516,287 @@
         }
       }
     },
+    "/api/configuracion/capacitaciones-obligatorias": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ListarCapacitacionesObligatorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CapacitacionObligatoriaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "CrearCapacitacionObligatoria",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarCapacitacionObligatoriaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacitacionObligatoriaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/capacitaciones-obligatorias/{id}": {
+      "put": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ActualizarCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuardarCapacitacionObligatoriaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapacitacionObligatoriaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Configuracion"
+        ],
+        "summary": "Da de baja el registro (Activo=false) conservando sus referencias.",
+        "operationId": "EliminarCapacitacionObligatoria",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/capacitaciones-obligatorias/cumplimiento": {
+      "get": {
+        "tags": [
+          "Configuracion"
+        ],
+        "operationId": "ObtenerCumplimientoCapacitacionesObligatorias",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CumplimientoCapacitacionObligatoriaDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/mis-datos/cuenta-bancaria": {
       "get": {
         "tags": [
@@ -4283,6 +4999,701 @@
           }
         }
       }
+    },
+    "/api/configuracion/secciones": {
+      "get": {
+        "tags": [
+          "ConfiguracionSecciones"
+        ],
+        "operationId": "ListarSeccionesConfiguracion",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeccionConfiguracionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/secciones/{codigo}": {
+      "put": {
+        "tags": [
+          "ConfiguracionSecciones"
+        ],
+        "operationId": "CambiarEstadoSeccion",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambiarEstadoSeccionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeccionConfiguracionDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ObtenerConfiguracionDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/marca": {
+      "put": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ActualizarMarcaDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarMarcaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/plantilla": {
+      "put": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "ElegirPlantillaDocumento",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElegirPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configuracion/documento-hoja-de-vida/aceptar-version": {
+      "post": {
+        "tags": [
+          "ConfiguracionDocumento"
+        ],
+        "operationId": "AceptarVersionDocumento",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfiguracionDocumentoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida": {
+      "get": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ListarPlantillasHojaDeVida",
+        "parameters": [
+          {
+            "name": "soloPublicadas",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlantillaResumenDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "CrearPlantillaHojaDeVida",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}": {
+      "get": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ObtenerPlantillaHojaDeVida",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "ActualizarPlantillaHojaDeVida",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPlantillaDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantillaDetalleDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}/publicar": {
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "PublicarVersionPlantilla",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicarVersionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionPlantillaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plantillas-hoja-de-vida/{id}/predeterminada": {
+      "post": {
+        "tags": [
+          "PlantillasHojaDeVida"
+        ],
+        "operationId": "MarcarPlantillaPredeterminada",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MensajeRespuesta"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4311,6 +5722,84 @@
         "properties": {
           "datosJson": {
             "type": "string"
+          }
+        }
+      },
+      "ActualizarMarcaDto": {
+        "required": [
+          "nombreVisible",
+          "logoArchivoId",
+          "portadaArchivoId",
+          "colorPrimario",
+          "colorSecundario",
+          "lema",
+          "textoCompromiso"
+        ],
+        "type": "object",
+        "properties": {
+          "nombreVisible": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "portadaArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "colorPrimario": {
+            "type": "string"
+          },
+          "colorSecundario": {
+            "type": "string"
+          },
+          "lema": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "textoCompromiso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ActualizarPlantillaDto": {
+        "required": [
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "configuracion"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
           }
         }
       },
@@ -4606,6 +6095,18 @@
           }
         }
       },
+      "CambiarEstadoSeccionRequest": {
+        "required": [
+          "habilitada"
+        ],
+        "type": "object",
+        "properties": {
+          "habilitada": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "CampanaDto": {
         "required": [
           "id",
@@ -4726,6 +6227,75 @@
           "fechaActualizacionUtc": {
             "type": "string",
             "format": "date-time"
+          },
+          "capacitacionObligatoriaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CapacitacionObligatoriaDto": {
+        "required": [
+          "id",
+          "nombre",
+          "institucionOrganizadora",
+          "horasEsperadas",
+          "fechaRealizacion",
+          "tipoFuncionarioId",
+          "activo",
+          "orden"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "horasEsperadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaRealizacion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "activo": {
+            "type": "boolean"
+          },
+          "orden": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -4739,6 +6309,140 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PersonaCargaItem"
+            }
+          }
+        }
+      },
+      "ConfiguracionDocumentoDto": {
+        "required": [
+          "institucionId",
+          "plantillaId",
+          "versionPlantillaId",
+          "nombrePlantilla",
+          "numeroVersion",
+          "nombreVisible",
+          "logoArchivoId",
+          "portadaArchivoId",
+          "colorPrimario",
+          "colorSecundario",
+          "lema",
+          "textoCompromiso",
+          "tieneConfiguracionPropia",
+          "hayNuevaVersionDisponible",
+          "ultimaVersionDisponibleId",
+          "ultimoNumeroVersionDisponible"
+        ],
+        "type": "object",
+        "properties": {
+          "institucionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "versionPlantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "nombrePlantilla": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numeroVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nombreVisible": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "portadaArchivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "colorPrimario": {
+            "type": "string"
+          },
+          "colorSecundario": {
+            "type": "string"
+          },
+          "lema": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "textoCompromiso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tieneConfiguracionPropia": {
+            "type": "boolean"
+          },
+          "hayNuevaVersionDisponible": {
+            "type": "boolean"
+          },
+          "ultimaVersionDisponibleId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ultimoNumeroVersionDisponible": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ConfiguracionPlantilla": {
+        "required": [
+          "disenoBase",
+          "secciones"
+        ],
+        "type": "object",
+        "properties": {
+          "disenoBase": {
+            "type": "string"
+          },
+          "secciones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeccionPlantillaConfig"
             }
           }
         }
@@ -4781,6 +6485,32 @@
             "items": {
               "$ref": "#/components/schemas/AdminInicialRequest"
             }
+          }
+        }
+      },
+      "CrearPlantillaDto": {
+        "required": [
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "configuracion"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
           }
         }
       },
@@ -4840,6 +6570,65 @@
           "fechaActualizacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "CumplimientoCapacitacionObligatoriaDto": {
+        "required": [
+          "capacitacionObligatoriaId",
+          "nombre",
+          "totalAplica",
+          "totalCumplida",
+          "totalExentaOJustificada",
+          "totalPendiente",
+          "personasPendientes"
+        ],
+        "type": "object",
+        "properties": {
+          "capacitacionObligatoriaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "totalAplica": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalCumplida": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalExentaOJustificada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPendiente": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "personasPendientes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonaPendienteCapacitacionDto"
+            }
           }
         }
       },
@@ -4986,6 +6775,25 @@
           }
         }
       },
+      "ElegirPlantillaDto": {
+        "required": [
+          "plantillaId"
+        ],
+        "type": "object",
+        "properties": {
+          "plantillaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionPlantillaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "ElementoCatalogoDto": {
         "required": [
           "id",
@@ -5066,6 +6874,90 @@
             "items": {
               "$ref": "#/components/schemas/FaltanteEnvioDto"
             }
+          }
+        }
+      },
+      "EstadoCapacitacionObligatoriaPersonaDto": {
+        "required": [
+          "id",
+          "nombre",
+          "institucionOrganizadora",
+          "horasEsperadas",
+          "fechaRealizacion",
+          "tipoFuncionarioId",
+          "estado",
+          "capacitacionId",
+          "justificacionNuevoIngreso",
+          "fechaJustificacionUtc",
+          "fechaIngresoInstitucion"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "horasEsperadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaRealizacion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "capacitacionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "justificacionNuevoIngreso": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaJustificacionUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "fechaIngresoInstitucion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
           }
         }
       },
@@ -5249,6 +7141,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ObservacionDto"
+            }
+          },
+          "capacitacionesObligatorias": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EstadoCapacitacionObligatoriaPersonaDto"
             }
           }
         }
@@ -5594,6 +7495,59 @@
           }
         }
       },
+      "GuardarCapacitacionObligatoriaRequest": {
+        "required": [
+          "nombre"
+        ],
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "institucionOrganizadora": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "horasEsperadas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaRealizacion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "tipoFuncionarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "activo": {
+            "type": "boolean",
+            "default": true
+          },
+          "orden": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          }
+        }
+      },
       "GuardarCapacitacionRequest": {
         "required": [
           "nombreEvento",
@@ -5654,6 +7608,13 @@
             "default": false
           },
           "archivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "capacitacionObligatoriaId": {
             "type": [
               "null",
               "string"
@@ -6416,6 +8377,24 @@
             "items": {
               "$ref": "#/components/schemas/ReferenciaDto"
             }
+          },
+          "seccionesAbiertas": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "capacitacionesObligatorias": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/EstadoCapacitacionObligatoriaPersonaDto"
+            }
           }
         }
       },
@@ -6445,6 +8424,17 @@
           "fechaCreacionUtc": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "JustificarNuevoIngresoRequest": {
+        "required": [
+          "justificacion"
+        ],
+        "type": "object",
+        "properties": {
+          "justificacion": {
+            "type": "string"
           }
         }
       },
@@ -6853,6 +8843,153 @@
           }
         }
       },
+      "PersonaPendienteCapacitacionDto": {
+        "required": [
+          "personaId",
+          "nombre",
+          "documento",
+          "tipoFuncionarioNombre",
+          "fechaIngresoInstitucion"
+        ],
+        "type": "object",
+        "properties": {
+          "personaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "documento": {
+            "type": "string"
+          },
+          "tipoFuncionarioNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaIngresoInstitucion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "PlantillaDetalleDto": {
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "esPredeterminada",
+          "configuracionBorrador",
+          "fechaCreacionUtc",
+          "fechaActualizacionUtc",
+          "versiones"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "esPredeterminada": {
+            "type": "boolean"
+          },
+          "configuracionBorrador": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versiones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VersionPlantillaDto"
+            }
+          }
+        }
+      },
+      "PlantillaResumenDto": {
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "disenoBase",
+          "esPredeterminada",
+          "totalVersiones",
+          "ultimaVersionPublicada",
+          "fechaCreacionUtc",
+          "fechaActualizacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "esPredeterminada": {
+            "type": "boolean"
+          },
+          "totalVersiones": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ultimaVersionPublicada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fechaCreacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaActualizacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PoliticaValidacionDto": {
         "required": [
           "institucionId",
@@ -6889,6 +9026,20 @@
                 "$ref": "#/components/schemas/ReglaCampoDto"
               }
             }
+          }
+        }
+      },
+      "PublicarVersionDto": {
+        "required": [
+          "descripcionCambio"
+        ],
+        "type": "object",
+        "properties": {
+          "descripcionCambio": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7346,6 +9497,89 @@
           }
         }
       },
+      "SeccionConfiguracionDto": {
+        "required": [
+          "codigo",
+          "nombre",
+          "habilitada",
+          "personasCompletas",
+          "personasIncompletas",
+          "totalPersonas",
+          "ultimaModificacionUtc",
+          "modificadoPor"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "habilitada": {
+            "type": "boolean"
+          },
+          "personasCompletas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "personasIncompletas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPersonas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ultimaModificacionUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "modificadoPor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SeccionPlantillaConfig": {
+        "required": [
+          "codigoSeccion",
+          "campos"
+        ],
+        "type": "object",
+        "properties": {
+          "codigoSeccion": {
+            "type": "string"
+          },
+          "campos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mostrarSiVacia": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "SesionUsuarioDto": {
         "required": [
           "id",
@@ -7695,6 +9929,64 @@
             "type": "string"
           }
         }
+      },
+      "VersionPlantillaDto": {
+        "required": [
+          "id",
+          "plantillaId",
+          "numeroVersion",
+          "disenoBase",
+          "configuracion",
+          "descripcionCambio",
+          "fechaPublicacionUtc"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "plantillaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "disenoBase": {
+            "type": "string"
+          },
+          "configuracion": {
+            "$ref": "#/components/schemas/ConfiguracionPlantilla"
+          },
+          "descripcionCambio": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fechaPublicacionUtc": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VincularCapacitacionObligatoriaRequest": {
+        "required": [
+          "capacitacionId"
+        ],
+        "type": "object",
+        "properties": {
+          "capacitacionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       }
     }
   },
@@ -7742,10 +10034,22 @@
       "name": "HojaDeVida"
     },
     {
+      "name": "CapacitacionesObligatorias"
+    },
+    {
       "name": "DocumentosPersonales"
     },
     {
       "name": "CuentaBancaria"
+    },
+    {
+      "name": "ConfiguracionSecciones"
+    },
+    {
+      "name": "ConfiguracionDocumento"
+    },
+    {
+      "name": "PlantillasHojaDeVida"
     }
   ]
 }

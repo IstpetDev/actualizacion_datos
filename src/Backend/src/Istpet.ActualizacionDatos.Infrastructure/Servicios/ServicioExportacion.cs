@@ -3,7 +3,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
 using Istpet.ActualizacionDatos.Application;
+using Istpet.ActualizacionDatos.Application.Documentos;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
@@ -19,16 +21,22 @@ public class ServicioExportacion : IServicioExportacion
     private readonly AplicacionDbContext _context;
     private readonly IAlmacenArchivos _almacenArchivos;
     private readonly IContextoInstitucion _contextoInstitucion;
+    private readonly IArmadorDatosDocumento _armadorDatos;
+    private readonly IServicioGeneracionPdfHojaDeVida _generadorPdf;
     private Dictionary<int, string>? _catalogosCv;
 
     public ServicioExportacion(
         AplicacionDbContext context,
         IAlmacenArchivos almacenArchivos,
-        IContextoInstitucion contextoInstitucion)
+        IContextoInstitucion contextoInstitucion,
+        IArmadorDatosDocumento armadorDatos,
+        IServicioGeneracionPdfHojaDeVida generadorPdf)
     {
         _context = context;
         _almacenArchivos = almacenArchivos;
         _contextoInstitucion = contextoInstitucion;
+        _armadorDatos = armadorDatos;
+        _generadorPdf = generadorPdf;
     }
 
     public async Task<DescargaArchivoDto> ExportarZipAsync(Guid? institucionId = null, CancellationToken ct = default)
@@ -61,6 +69,101 @@ public class ServicioExportacion : IServicioExportacion
         var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, leaveOpen: true))
         {
+            // Cargar configuración de documento y marca institucional para la exportación
+            var configInst = await _context.ConfiguracionesDocumentoInstitucion
+                .AsNoTracking()
+                .SingleOrDefaultAsync(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo), ct);
+
+            ConfiguracionPlantilla configuracionPlantilla;
+            if (configInst?.VersionPlantillaId.HasValue == true)
+            {
+                var version = await _context.VersionesPlantillaHojaDeVida
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(v => v.Id == configInst.VersionPlantillaId.Value, ct);
+
+                try
+                {
+                    configuracionPlantilla = !string.IsNullOrWhiteSpace(version?.ConfiguracionJson)
+                        ? JsonSerializer.Deserialize<ConfiguracionPlantilla>(version.ConfiguracionJson) ?? ConfiguracionPlantilla.Predeterminada()
+                        : ConfiguracionPlantilla.Predeterminada();
+                }
+                catch
+                {
+                    configuracionPlantilla = ConfiguracionPlantilla.Predeterminada();
+                }
+            }
+            else
+            {
+                configuracionPlantilla = ConfiguracionPlantilla.Predeterminada();
+            }
+
+            byte[]? logoBytes = null;
+            if (configInst?.LogoArchivoId.HasValue == true)
+            {
+                var archivoLogo = await _context.ArchivosAdjuntos
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(a => a.Id == configInst.LogoArchivoId.Value, ct);
+
+                if (archivoLogo != null)
+                {
+                    try
+                    {
+                        var stream = await _almacenArchivos.AbrirAsync(archivoLogo.InstitucionId, archivoLogo.PersonaId, archivoLogo.Id, ct);
+                        if (stream != null)
+                        {
+                            using (stream)
+                            using (var ms = new MemoryStream())
+                            {
+                                await stream.CopyToAsync(ms, ct);
+                                logoBytes = ms.ToArray();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        logoBytes = null;
+                    }
+                }
+            }
+
+            byte[]? portadaBytes = null;
+            if (configInst?.PortadaArchivoId.HasValue == true)
+            {
+                var archivoPortada = await _context.ArchivosAdjuntos
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(a => a.Id == configInst.PortadaArchivoId.Value, ct);
+
+                if (archivoPortada != null)
+                {
+                    try
+                    {
+                        var stream = await _almacenArchivos.AbrirAsync(archivoPortada.InstitucionId, archivoPortada.PersonaId, archivoPortada.Id, ct);
+                        if (stream != null)
+                        {
+                            using (stream)
+                            using (var ms = new MemoryStream())
+                            {
+                                await stream.CopyToAsync(ms, ct);
+                                portadaBytes = ms.ToArray();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        portadaBytes = null;
+                    }
+                }
+            }
+
+            var marca = new MarcaDocumento(
+                NombreVisible: configInst?.NombreVisible ?? institucionNombre,
+                LogoBytes: logoBytes,
+                PortadaBytes: portadaBytes,
+                ColorPrimario: configInst?.ColorPrimario ?? MarcaDocumento.Neutra.ColorPrimario,
+                ColorSecundario: configInst?.ColorSecundario ?? MarcaDocumento.Neutra.ColorSecundario,
+                Lema: configInst?.Lema,
+                TextoCompromiso: configInst?.TextoCompromiso);
+
             // 1. Generar index.md (inventario de la exportación)
             var contenidoIndice = ConstruirIndiceMarkdown(institucionNombre, institucionIdEfectivo, ahoraUtc, personasAprobadas, archivosPorPersona);
             var indexEntry = archive.CreateEntry($"{nombreCarpetaRaiz}/index.md", CompressionLevel.Optimal);
@@ -75,11 +178,30 @@ public class ServicioExportacion : IServicioExportacion
             {
                 var documentoSeguro = SanearSegmentoRuta(persona.Documento, persona.Id.ToString("N"));
                 var expediente = await ObtenerExpedienteAsync(persona, ct);
+
+                // HTML legado (PD-PLA-17)
                 var entradaCv = archive.CreateEntry($"{nombreCarpetaRaiz}/{documentoSeguro}/hoja-de-vida.html", CompressionLevel.Optimal);
                 using (var salidaCv = new StreamWriter(entradaCv.Open(), new UTF8Encoding(false)))
+                {
                     await salidaCv.WriteAsync(GeneradorCvHtml.Generar(expediente));
+                }
+
+                // PDF oficial desde plantilla y marca institucional (RF-PLA-013)
+                try
+                {
+                    var datosDoc = await _armadorDatos.ArmarDatosPersonaAsync(persona.Id, new InstitucionId(institucionIdEfectivo), ct);
+                    var bytesPdf = _generadorPdf.Generar(datosDoc, marca, configuracionPlantilla);
+                    var entradaPdf = archive.CreateEntry($"{nombreCarpetaRaiz}/{documentoSeguro}/hoja-de-vida.pdf", CompressionLevel.Optimal);
+                    using var streamSalidaPdf = entradaPdf.Open();
+                    await streamSalidaPdf.WriteAsync(bytesPdf, ct);
+                }
+                catch
+                {
+                    // Un fallo en una persona se ignora sin perder las demás (RF-PLA-013)
+                }
+
                 var archivosPersona = archivosPorPersona[persona.Id].ToList();
-                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "hoja-de-vida.html" };
+                var nombresUsados = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "hoja-de-vida.html", "hoja-de-vida.pdf" };
 
                 foreach (var archivo in archivosPersona)
                 {
@@ -136,14 +258,38 @@ public class ServicioExportacion : IServicioExportacion
     {
         var (institucionIdEfectivo, institucionNombre) = await ValidarYResolverInstitucionAsync(institucionId, ct);
 
-        // RF-EXP-001 / RF-EXP-004: Solo personas con datos aprobados de la institución
-        var personasAprobadas = await _context.Personas
-            .AsNoTracking()
-            .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) && p.EstadoActualizacion == EstadoActualizacion.Aprobado)
-            .OrderBy(p => p.Documento)
-            .ToListAsync(ct);
+        var ahoraUtc = DateTime.UtcNow;
 
-        var personasIds = personasAprobadas.Select(p => p.Id).ToList();
+        // Campañas para verificar vencimiento (RF-CAP-016 / T-10)
+        var campanas = await _context.Campanas
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo))
+            .ToListAsync(ct);
+        var campanaAbierta = campanas.Any(c => c.EstaAbiertaEn(ahoraUtc));
+        var hayCampanaVencida = campanas.Any(c => c.FechaFinUtc < ahoraUtc);
+
+        // RF-EXP-001 / RF-EXP-004: Solo personas con datos aprobados de la institución
+        // RF-CAP-016: Si la campaña ha vencido y no hay campaña abierta, el admin puede ver y exportar borradores incompletos
+        List<Persona> personas;
+        if (!campanaAbierta && hayCampanaVencida)
+        {
+            personas = await _context.Personas
+                .AsNoTracking()
+                .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) &&
+                           (p.EstadoActualizacion == EstadoActualizacion.Aprobado || p.EstadoActualizacion == EstadoActualizacion.Borrador))
+                .OrderBy(p => p.Documento)
+                .ToListAsync(ct);
+        }
+        else
+        {
+            personas = await _context.Personas
+                .AsNoTracking()
+                .Where(p => p.InstitucionId == new InstitucionId(institucionIdEfectivo) && p.EstadoActualizacion == EstadoActualizacion.Aprobado)
+                .OrderBy(p => p.Documento)
+                .ToListAsync(ct);
+        }
+
+        var personasIds = personas.Select(p => p.Id).ToList();
 
         var conteoArchivos = await _context.ArchivosAdjuntos
             .AsNoTracking()
@@ -153,23 +299,100 @@ public class ServicioExportacion : IServicioExportacion
             .ToDictionaryAsync(x => x.PersonaId, x => x.Total, ct);
 
         var perfiles = new Dictionary<Guid, string>();
-        foreach (var persona in personasAprobadas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
-        var filas = personasAprobadas.Select(p => new GeneradorExcelOpenXml.FilaExportacion(
+        foreach (var persona in personas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
+
+        // Cargar obligatorias activas y capacitaciones para reporte detallado (RF-CAP-011)
+        var obligatorias = await _context.CapacitacionesObligatorias
+            .AsNoTracking()
+            .Where(c => c.InstitucionId == new InstitucionId(institucionIdEfectivo) && c.Activo)
+            .OrderBy(c => c.Orden)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync(ct);
+
+        var capacitaciones = await _context.Capacitaciones
+            .AsNoTracking()
+            .Where(c => personasIds.Contains(c.PersonaId) && c.InstitucionId == new InstitucionId(institucionIdEfectivo))
+            .ToListAsync(ct);
+
+        var filasObligatorias = new List<GeneradorExcelOpenXml.FilaCapacitacionObligatoria>();
+        var resumenObligatoriasPorPersona = new Dictionary<Guid, string>();
+
+        foreach (var p in personas)
+        {
+            if (obligatorias.Count == 0)
+            {
+                resumenObligatoriasPorPersona[p.Id] = "—";
+                continue;
+            }
+
+            var totalAplica = 0;
+            var cumplidas = 0;
+
+            foreach (var ob in obligatorias)
+            {
+                var aplica = ob.AplicaA(p.TipoFuncionarioId);
+                if (!aplica)
+                {
+                    filasObligatorias.Add(new GeneradorExcelOpenXml.FilaCapacitacionObligatoria(
+                        p.Documento,
+                        p.Nombre ?? "—",
+                        ob.Nombre,
+                        "No",
+                        "No aplica",
+                        "—",
+                        ob.FechaRealizacion?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—"));
+                    continue;
+                }
+
+                totalAplica++;
+                var vinculada = capacitaciones.FirstOrDefault(c => c.PersonaId == p.Id && c.CapacitacionObligatoriaId == ob.Id);
+                string estadoTexto;
+                string horasTexto = vinculada?.NumeroHoras?.ToString(CultureInfo.InvariantCulture) ?? ob.HorasEsperadas?.ToString(CultureInfo.InvariantCulture) ?? "—";
+
+                if (vinculada != null)
+                {
+                    cumplidas++;
+                    estadoTexto = p.EstadoActualizacion == EstadoActualizacion.Aprobado ? "Aprobada" : "Cargada";
+                }
+                else if (ob.EsExentoPorNuevoIngreso(p.FechaIngresoInstitucion))
+                {
+                    cumplidas++;
+                    estadoTexto = "Exento (nuevo ingreso)";
+                }
+                else
+                {
+                    estadoTexto = "Pendiente";
+                }
+
+                filasObligatorias.Add(new GeneradorExcelOpenXml.FilaCapacitacionObligatoria(
+                    p.Documento,
+                    p.Nombre ?? "—",
+                    ob.Nombre,
+                    "Sí",
+                    estadoTexto,
+                    horasTexto,
+                    ob.FechaRealizacion?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "—"));
+            }
+
+            resumenObligatoriasPorPersona[p.Id] = totalAplica > 0 ? $"{cumplidas}/{totalAplica} cumplidas" : "Sin obligatorias aplicables";
+        }
+
+        var filas = personas.Select(p => new GeneradorExcelOpenXml.FilaExportacion(
             Documento: p.Documento,
             Nombre: p.Nombre ?? "—",
             Correo: p.Correo ?? "—",
             Rol: p.Rol.ToString(),
-            Estado: p.EstadoActualizacion.ToString(),
+            Estado: p.EstadoActualizacion == EstadoActualizacion.Borrador ? "Incompleto, no enviado" : p.EstadoActualizacion.ToString(),
             CantidadArchivos: conteoArchivos.GetValueOrDefault(p.Id, 0),
             TratamientoDatosAceptado: p.TratamientoDatosAceptado,
             FechaCreacionUtc: p.FechaCreacionUtc,
-            Perfil: perfiles[p.Id]
+            Perfil: perfiles[p.Id],
+            EstadoCapacitacionesObligatorias: resumenObligatoriasPorPersona.GetValueOrDefault(p.Id, "—")
         )).ToList();
 
-        var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas);
+        var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas, filasObligatorias);
         var memoryStream = new MemoryStream(bytesExcel);
 
-        var ahoraUtc = DateTime.UtcNow;
         var slugInstitucion = GenerarSlug(institucionNombre);
         var nombreArchivo = $"{slugInstitucion}_{ahoraUtc:yyyyMMdd_HHmmss}_datos.xlsx";
 
@@ -181,7 +404,7 @@ public class ServicioExportacion : IServicioExportacion
             "ExportacionExcel",
             new InstitucionId(institucionIdEfectivo),
             ahoraUtc,
-            detalle: $"Generación de reporte Excel para {institucionNombre} con {personasAprobadas.Count} personas aprobadas."));
+            detalle: $"Generación de reporte Excel para {institucionNombre} con {personas.Count} personas."));
         await _context.SaveChangesAsync(ct);
 
         return new DescargaArchivoDto(
