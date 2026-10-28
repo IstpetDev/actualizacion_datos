@@ -10028,6 +10028,12 @@
           "requiereAceptarProteccionDatos": {
             "type": "boolean",
             "default": true
+          },
+          "institucionNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -10222,6 +10228,12 @@
           "requiereAceptarProteccionDatos": {
             "type": "boolean",
             "default": true
+          },
+          "institucionNombre": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

@@ -547,6 +547,7 @@ type TabAdmin =
                     (ngModelChange)="cambiarFilasPorPagina($event)"
                     data-testid="select-filas-por-pagina"
                   >
+                    <option [ngValue]="10">10 por pág.</option>
                     <option [ngValue]="25">25 por pág.</option>
                     <option [ngValue]="50">50 por pág.</option>
                     <option [ngValue]="100">100 por pág.</option>
@@ -1516,7 +1517,7 @@ export class AdminDashboardComponent implements OnInit {
   // Paginación y filtros de personas
   readonly filtroBusqueda = signal<string>('');
   readonly paginaActual = signal<number>(1);
-  readonly filasPorPagina = signal<number>(25);
+  readonly filasPorPagina = signal<number>(10);
 
   readonly personasFiltradas = computed(() => {
     const texto = this.filtroBusqueda().trim().toLowerCase();

@@ -9333,6 +9333,7 @@ export interface ResultadoLoginDto {
     debeCambiarContrasena: boolean;
     correoVerificado: boolean;
     requiereAceptarProteccionDatos?: boolean;
+    institucionNombre?: string | undefined;
 
     [key: string]: any;
 }
@@ -9386,6 +9387,7 @@ export interface SesionUsuarioDto {
     debeCambiarContrasena: boolean;
     correoVerificado: boolean;
     requiereAceptarProteccionDatos?: boolean;
+    institucionNombre?: string | undefined;
 
     [key: string]: any;
 }

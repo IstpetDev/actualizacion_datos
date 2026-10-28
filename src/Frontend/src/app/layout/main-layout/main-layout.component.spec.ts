@@ -20,6 +20,7 @@ describe('MainLayoutComponent', () => {
     nombre: 'Administrador General',
     rol: 'admin',
     institucionId: 'inst-1',
+    institucionNombre: 'Instituto Tecnológico Superior',
   };
 
   beforeEach(async () => {
@@ -83,5 +84,15 @@ describe('MainLayoutComponent', () => {
 
     expect(authServiceMock.cerrarSesion).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('muestra_el_nombre_de_la_institucion_activa_en_la_cabecera', () => {
+    const fixture = TestBed.createComponent(MainLayoutComponent);
+    fixture.detectChanges();
+    const compilado = fixture.nativeElement as HTMLElement;
+
+    expect(compilado.querySelector('.brand-badge')?.textContent).toContain(
+      'Instituto Tecnológico Superior',
+    );
   });
 });

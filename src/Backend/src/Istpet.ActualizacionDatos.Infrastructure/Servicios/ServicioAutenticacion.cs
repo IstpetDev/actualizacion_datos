@@ -146,6 +146,11 @@ public class ServicioAutenticacion : IServicioAutenticacion
         await _context.SaveChangesAsync(ct);
 
         var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
+        var institucionNombre = await _context.Instituciones
+            .Where(i => i.Id == persona.InstitucionId)
+            .Select(i => i.Nombre)
+            .FirstOrDefaultAsync(ct);
+
         return new ResultadoLoginDto(
             persona.Id,
             persona.InstitucionId.Valor,
@@ -155,7 +160,8 @@ public class ServicioAutenticacion : IServicioAutenticacion
             persona.Rol.ToString(),
             persona.DebeCambiarContrasena,
             persona.CorreoVerificado,
-            !proteccion.Aceptado);
+            !proteccion.Aceptado,
+            institucionNombre);
     }
 
     public async Task CambiarContrasenaAsync(string documento, CambiarContrasenaRequest request, CancellationToken ct = default)
@@ -306,6 +312,11 @@ public class ServicioAutenticacion : IServicioAutenticacion
         }
 
         var proteccion = await _proteccion.ObtenerEstadoAsync(persona.Id, persona.InstitucionId, persona.Rol, ct);
+        var institucionNombre = await _context.Instituciones
+            .Where(i => i.Id == persona.InstitucionId)
+            .Select(i => i.Nombre)
+            .FirstOrDefaultAsync(ct);
+
         var restringida = persona.DebeCambiarContrasena || !proteccion.Aceptado;
         return new SesionUsuarioDto(
             persona.Id,
@@ -316,7 +327,8 @@ public class ServicioAutenticacion : IServicioAutenticacion
             persona.Rol.ToString(),
             persona.DebeCambiarContrasena,
             !restringida && persona.CorreoVerificado,
-            !proteccion.Aceptado);
+            !proteccion.Aceptado,
+            institucionNombre);
     }
 
     private static string CalcularHashSha256(string texto)
