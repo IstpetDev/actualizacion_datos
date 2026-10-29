@@ -53,17 +53,21 @@ public sealed partial class HojaDeVidaTests
             (await db.Instituciones.SingleAsync(i => i.Id == new InstitucionId(b.InstitucionId))).ConfigurarDominiosCorreo(["otra-ficticia.example"]);
             await db.SaveChangesAsync();
         }
-        var valido = new GuardarFichaPersonalRequest(PrimerNombre: "  Ficcio\u0301n  ", PrimerApellido: "D’Ensayo", Celular: "0900000000", TelefonoConvencional: "020000000", CodigoPostal: "000001", FechaNacimiento: new DateOnly(2000, 2, 29), CorreoInstitucional: "PERSONA@INSTITUCION-FICTICIA.EXAMPLE");
+        var valido = new GuardarFichaPersonalRequest(PrimerNombre: "  Ficcio\u0301n  ", PrimerApellido: "D’Ensayo", Celular: "0900000000", TelefonoConvencional: "020000000", CodigoPostal: "000001", FechaNacimiento: new DateOnly(2000, 2, 29), CorreoInstitucional: "PERSONA@INSTITUCION-FICTICIA.EXAMPLE", CorreoPersonal: "personal.ficticio@correo-personal.org");
         var guardar = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", a.InstitucionId, Documento, cuerpo: valido);
         Assert.Equal(HttpStatusCode.OK, guardar.StatusCode);
-        Assert.Equal("Ficción", (await guardar.Content.ReadFromJsonAsync<FichaPersonalDto>())!.PrimerNombre);
+        var guardado = await guardar.Content.ReadFromJsonAsync<FichaPersonalDto>();
+        Assert.Equal("Ficción", guardado!.PrimerNombre);
+        Assert.Equal("personal.ficticio@correo-personal.org", guardado.CorreoPersonal);
         var rechazado = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", a.InstitucionId, Documento, cuerpo: valido with { CorreoInstitucional = "persona@otra-ficticia.example" });
         Assert.Equal(HttpStatusCode.BadRequest, rechazado.StatusCode);
         Assert.Contains("@institucion-ficticia.example", (await rechazado.Content.ReadFromJsonAsync<MensajeRespuesta>())!.Errores!["correoInstitucional"][0]);
         var otro = await EnviarAsync(HttpMethod.Put, "/api/mis-datos/hoja-de-vida/ficha", b.InstitucionId, Documento, cuerpo: valido with { CorreoInstitucional = "persona@otra-ficticia.example" });
         Assert.Equal(HttpStatusCode.OK, otro.StatusCode);
         var leer = await EnviarAsync(HttpMethod.Get, "/api/mis-datos/hoja-de-vida/ficha", a.InstitucionId, Documento);
-        Assert.Equal(valido.CorreoInstitucional, (await leer.Content.ReadFromJsonAsync<FichaPersonalDto>())!.CorreoInstitucional);
+        var leido = await leer.Content.ReadFromJsonAsync<FichaPersonalDto>();
+        Assert.Equal(valido.CorreoInstitucional, leido!.CorreoInstitucional);
+        Assert.Equal("personal.ficticio@correo-personal.org", leido.CorreoPersonal);
     }
 
     [Fact]

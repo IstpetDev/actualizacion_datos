@@ -1,4 +1,4 @@
-﻿import {
+import {
   ValidacionHojaDeVidaService,
   fechaPolitica,
 } from '../../servicios/validacion-hoja-de-vida.service';
@@ -19,6 +19,7 @@ import { catchError, forkJoin, map, Observable, of, Subscription } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import { ElementoCatalogoDto, GuardarFichaPersonalRequest } from '../../../../../api-client';
+import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -158,8 +159,18 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               }
             </div>
             <div class="form-group">
-              <label for="paisNacimiento">País de nacimiento *</label
-              ><select
+              <label for="paisNacimiento">País de nacimiento *</label>
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1 input-busqueda-select"
+                placeholder="Buscar país..."
+                [ngModel]="filtroPaisNacimiento()"
+                (ngModelChange)="filtroPaisNacimiento.set($event)"
+                [disabled]="!puedeEditar()"
+                name="buscarPaisNacimiento"
+                data-testid="buscar-pais-nacimiento"
+              />
+              <select
                 [attr.aria-describedby]="'error-modelo-paisNacimientoId'"
                 id="paisNacimiento"
                 name="paisNacimientoId"
@@ -167,7 +178,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 class="form-control"
               >
                 <option [ngValue]="undefined">Seleccione...</option>
-                @for (item of paises(); track item.id) {
+                @for (item of paisesNacimientoFiltrados(); track item.id) {
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
@@ -257,6 +268,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <label for="paisNacionalidad"
                 >País de Nacionalidad <span class="text-danger">*</span></label
               >
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1 input-busqueda-select"
+                placeholder="Buscar país..."
+                [ngModel]="filtroPaisNacionalidad()"
+                (ngModelChange)="filtroPaisNacionalidad.set($event)"
+                [disabled]="!puedeEditar()"
+                name="buscarPaisNacionalidad"
+                data-testid="buscar-pais-nacionalidad"
+              />
               <select
                 [attr.aria-describedby]="'error-modelo-paisNacionalidadId'"
                 id="paisNacionalidad"
@@ -267,7 +288,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 data-testid="select-nacionalidad"
               >
                 <option [ngValue]="undefined">Seleccione país...</option>
-                @for (item of paises(); track item.id) {
+                @for (item of paisesNacionalidadFiltrados(); track item.id) {
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
@@ -309,6 +330,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <div class="grid-tres">
             <div class="form-group">
               <label for="provinciaResidencia">Provincia</label>
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1 input-busqueda-select"
+                placeholder="Buscar provincia..."
+                [ngModel]="filtroProvinciaResidencia()"
+                (ngModelChange)="filtroProvinciaResidencia.set($event)"
+                [disabled]="!puedeEditar()"
+                name="buscarProvinciaResidencia"
+                data-testid="buscar-provincia-residencia"
+              />
               <select
                 id="provinciaResidencia"
                 class="form-control"
@@ -318,7 +349,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 data-testid="select-provincia-residencia"
               >
                 <option [ngValue]="undefined">Seleccione provincia...</option>
-                @for (item of provinciasResidencia(); track item.id) {
+                @for (item of provinciasResidenciaFiltradas(); track item.id) {
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
@@ -326,6 +357,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 
             <div class="form-group">
               <label for="cantonResidencia">Cantón</label>
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1 input-busqueda-select"
+                placeholder="Buscar cantón..."
+                [ngModel]="filtroCantonResidencia()"
+                (ngModelChange)="filtroCantonResidencia.set($event)"
+                [disabled]="!puedeEditar() || !provinciaResidenciaId()"
+                name="buscarCantonResidencia"
+                data-testid="buscar-canton-residencia"
+              />
               <select
                 id="cantonResidencia"
                 class="form-control"
@@ -336,7 +377,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 data-testid="select-canton-residencia"
               >
                 <option [ngValue]="undefined">Seleccione cantón...</option>
-                @for (item of cantonesResidencia(); track item.id) {
+                @for (item of cantonesResidenciaFiltrados(); track item.id) {
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
@@ -344,6 +385,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 
             <div class="form-group">
               <label for="parroquiaResidencia">Parroquia <span class="text-danger">*</span></label>
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1 input-busqueda-select"
+                placeholder="Buscar parroquia..."
+                [ngModel]="filtroParroquiaResidencia()"
+                (ngModelChange)="filtroParroquiaResidencia.set($event)"
+                [disabled]="!puedeEditar() || !cantonResidenciaId()"
+                name="buscarParroquiaResidencia"
+                data-testid="buscar-parroquia-residencia"
+              />
               <select
                 [attr.aria-describedby]="'error-modelo-parroquiaResidenciaId'"
                 id="parroquiaResidencia"
@@ -356,7 +407,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 data-testid="select-parroquia-residencia"
               >
                 <option [ngValue]="undefined">Seleccione parroquia...</option>
-                @for (item of parroquiasResidencia(); track item.id) {
+                @for (item of parroquiasResidenciaFiltradas(); track item.id) {
                   <option [ngValue]="item.id">{{ item.nombre }}</option>
                 }
               </select>
@@ -468,7 +519,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
           <legend class="grupo-titulo">Datos de Contacto</legend>
 
-          <div class="grid-tres">
+          <div class="grid-cuatro">
             <div class="form-group">
               <label for="celular">Teléfono Celular <span class="text-danger">*</span></label>
               <input
@@ -522,6 +573,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               />
               @if (validacion.mensaje(modelo, 'ficha', 'correoInstitucional'); as mensaje) {
                 <small id="error-modelo-correoInstitucional" class="text-danger" role="alert">{{
+                  mensaje
+                }}</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="correoPersonal">Correo Personal</label>
+              <input
+                [attr.aria-describedby]="'error-modelo-correoPersonal'"
+                id="correoPersonal"
+                type="email"
+                class="form-control"
+                [(ngModel)]="modelo.correoPersonal"
+                name="correoPersonal"
+                placeholder="usuario@ejemplo.com"
+                data-testid="input-correo-personal"
+              />
+              @if (validacion.mensaje(modelo, 'ficha', 'correoPersonal'); as mensaje) {
+                <small id="error-modelo-correoPersonal" class="text-danger" role="alert">{{
                   mensaje
                 }}</small>
               }
@@ -848,6 +918,44 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly provinciaResidenciaId = signal<number | undefined>(undefined);
   readonly cantonResidenciaId = signal<number | undefined>(undefined);
 
+  // Filtros de búsqueda en selectores
+  readonly filtroPaisNacimiento = signal('');
+  readonly paisesNacimientoFiltrados = computed(() =>
+    filtrarCatalogo(this.paises(), this.filtroPaisNacimiento(), this.modelo.paisNacimientoId),
+  );
+
+  readonly filtroPaisNacionalidad = signal('');
+  readonly paisesNacionalidadFiltrados = computed(() =>
+    filtrarCatalogo(this.paises(), this.filtroPaisNacionalidad(), this.modelo.paisNacionalidadId),
+  );
+
+  readonly filtroProvinciaResidencia = signal('');
+  readonly provinciasResidenciaFiltradas = computed(() =>
+    filtrarCatalogo(
+      this.provinciasResidencia(),
+      this.filtroProvinciaResidencia(),
+      this.provinciaResidenciaId(),
+    ),
+  );
+
+  readonly filtroCantonResidencia = signal('');
+  readonly cantonesResidenciaFiltrados = computed(() =>
+    filtrarCatalogo(
+      this.cantonesResidencia(),
+      this.filtroCantonResidencia(),
+      this.cantonResidenciaId(),
+    ),
+  );
+
+  readonly filtroParroquiaResidencia = signal('');
+  readonly parroquiasResidenciaFiltradas = computed(() =>
+    filtrarCatalogo(
+      this.parroquiasResidencia(),
+      this.filtroParroquiaResidencia(),
+      this.modelo.parroquiaResidenciaId,
+    ),
+  );
+
   fechaNacimientoStr = '';
 
   modelo: GuardarFichaPersonalRequest = {
@@ -873,6 +981,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     telefonoConvencional: undefined,
     celular: undefined,
     correoInstitucional: undefined,
+    correoPersonal: undefined,
     discapacidadId: undefined,
     porcentajeDiscapacidad: undefined,
     numeroCarnetDiscapacidad: undefined,
@@ -977,6 +1086,7 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
             telefonoConvencional: f.telefonoConvencional,
             celular: f.celular,
             correoInstitucional: f.correoInstitucional,
+            correoPersonal: f.correoPersonal,
             discapacidadId: f.discapacidadId ?? undefined,
             porcentajeDiscapacidad: f.porcentajeDiscapacidad,
             numeroCarnetDiscapacidad: f.numeroCarnetDiscapacidad,

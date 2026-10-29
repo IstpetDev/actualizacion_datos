@@ -21,6 +21,7 @@ import { AuthService } from '../../core/auth';
 import { CuentaBancariaRevisionComponent } from '../cuenta-bancaria/estado-cuentas-bancarias.component';
 import { ExpedienteSeccionesComponent } from './revision/expediente-secciones.component';
 import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-archivo.util';
+import { coincideBusqueda } from '../../core/util/filtro-busqueda.util';
 
 @Component({
   selector: 'app-supervisor-dashboard',
@@ -938,14 +939,14 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   readonly filtroTexto = signal<string>('');
 
   readonly pendientesFiltrados = computed(() => {
-    const filtro = this.filtroTexto().trim().toLowerCase();
+    const filtro = this.filtroTexto().trim();
     if (!filtro) return this.pendientes();
     return this.pendientes().filter(
       (p) =>
-        p.documento?.toLowerCase().includes(filtro) ||
-        p.nombre?.toLowerCase().includes(filtro) ||
-        p.correo?.toLowerCase().includes(filtro) ||
-        p.estadoActualizacion?.toLowerCase().includes(filtro),
+        coincideBusqueda(p.documento, filtro) ||
+        coincideBusqueda(p.nombre, filtro) ||
+        coincideBusqueda(p.correo, filtro) ||
+        coincideBusqueda(p.estadoActualizacion, filtro),
     );
   });
 

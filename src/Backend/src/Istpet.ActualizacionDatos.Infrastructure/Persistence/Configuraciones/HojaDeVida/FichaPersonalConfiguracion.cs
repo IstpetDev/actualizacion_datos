@@ -47,6 +47,7 @@ public class FichaPersonalConfiguracion : IEntityTypeConfiguration<FichaPersonal
         builder.Property(f => f.TelefonoConvencional).HasMaxLength(20).HasColumnName("telefono_convencional");
         builder.Property(f => f.Celular).HasMaxLength(20).HasColumnName("celular");
         builder.Property(f => f.CorreoInstitucional).HasMaxLength(200).HasColumnName("correo_institucional");
+        builder.Property(f => f.CorreoPersonal).HasMaxLength(200).HasColumnName("correo_personal");
         builder.Property(f => f.PorcentajeDiscapacidad).HasColumnName("porcentaje_discapacidad");
         builder.Property(f => f.NumeroCarnetDiscapacidad).HasMaxLength(30).HasColumnName("numero_carnet_discapacidad");
         builder.Property(f => f.Perfil).HasMaxLength(2000).HasColumnName("perfil");

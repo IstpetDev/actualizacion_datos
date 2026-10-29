@@ -47,6 +47,7 @@ export function validarCampos(
           'Indique un celular de 10 dígitos con 09 o un convencional de 9 con prefijo del 02 al 07.',
         codigoPostal: 'Use solamente entre 1 y 6 dígitos.',
         correoInstitucional: 'Indique un correo válido con una sola @.',
+        correoPersonal: 'Indique un correo válido con una sola @.',
         montoBeca: 'Indique un monto no negativo con hasta 16 enteros y 2 decimales.',
       };
       error(
@@ -82,7 +83,7 @@ export function validarCampos(
           campo,
           'La fecha debe ser desde 1900 y corresponder a una persona con 18 años cumplidos.',
         );
-    } else if (regla.tipo === 'correo') {
+    } else if (regla.tipo === 'correo' || regla.tipo === 'correo_personal') {
       const partes = texto.split('@');
       const dominio =
         /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
@@ -95,6 +96,7 @@ export function validarCampos(
       )
         error(campo, 'Indique un correo válido con una sola @.');
       else if (
+        regla.tipo === 'correo' &&
         politica.dominiosCorreoPermitidos?.length &&
         !politica.dominiosCorreoPermitidos.some((d) => d.toLowerCase() === partes[1].toLowerCase())
       )

@@ -44,6 +44,7 @@ public static class ValidacionHojaDeVida
             ["celular"] = new(10, PatronCelular),
             ["telefonoConvencional"] = new(9, PatronConvencional),
             ["correoInstitucional"] = new(200, PatronCorreo, Tipo: "correo"),
+            ["correoPersonal"] = new(200, PatronCorreo, Tipo: "correo_personal"),
             ["porcentajeDiscapacidad"] = new(Minimo: 0, Maximo: 100, Entero: true),
             ["numeroCarnetDiscapacidad"] = new(30)
         },
@@ -136,12 +137,12 @@ public static class ValidacionHojaDeVida
                 errores[campo] = [regla.Entero ? $"Indique un número entero entre {regla.Minimo} y {regla.Maximo}." : "Indique un monto no negativo con hasta 16 enteros y 2 decimales."];
             else if (regla.Tipo == "nacimiento" && valor is DateOnly fecha && (fecha < politica.FechaNacimientoMinima || fecha > politica.FechaNacimientoMaxima))
                 errores[campo] = ["La fecha debe ser desde 1900 y corresponder a una persona con 18 años cumplidos."];
-            else if (regla.Tipo == "correo")
+            else if (regla.Tipo is "correo" or "correo_personal")
             {
                 var partes = texto.Split('@');
                 if (partes.Length != 2 || partes[0].Length > 64 || !Coincide(partes[1], PatronDominio))
                     errores[campo] = ["Indique un correo válido con una sola @."];
-                else if (politica.DominiosCorreoPermitidos.Length > 0 && !politica.DominiosCorreoPermitidos.Contains(partes[1], StringComparer.OrdinalIgnoreCase))
+                else if (regla.Tipo == "correo" && politica.DominiosCorreoPermitidos.Length > 0 && !politica.DominiosCorreoPermitidos.Contains(partes[1], StringComparer.OrdinalIgnoreCase))
                     errores[campo] = [$"Use su correo {string.Join(" o ", politica.DominiosCorreoPermitidos.Select(d => "@" + d))}."];
             }
             else if (regla.Tipo == "cuenta")
@@ -182,7 +183,7 @@ public static class ValidacionHojaDeVida
         "telefonoConvencional" => "Use 9 dígitos con prefijo del 02 al 07.",
         "telefono" => "Indique un celular de 10 dígitos con 09 o un convencional de 9 con prefijo del 02 al 07.",
         "codigoPostal" => "Use solamente entre 1 y 6 dígitos.",
-        "correoInstitucional" => "Indique un correo válido con una sola @.",
+        "correoInstitucional" or "correoPersonal" => "Indique un correo válido con una sola @.",
         "montoBeca" => "Indique un monto no negativo con hasta 16 enteros y 2 decimales.",
         _ => "Use letras, espacios, tildes, apóstrofe o guion, sin números ni otros símbolos."
     };

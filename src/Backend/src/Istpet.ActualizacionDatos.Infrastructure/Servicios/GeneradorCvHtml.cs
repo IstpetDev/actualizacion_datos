@@ -33,6 +33,7 @@ internal static class GeneradorCvHtml
             Texto("Primer nombre", ficha.PrimerNombre); Texto("Segundo nombre", ficha.SegundoNombre);
             Texto("Primer apellido", ficha.PrimerApellido); Texto("Segundo apellido", ficha.SegundoApellido);
             Texto("Nacimiento", ficha.FechaNacimiento); Texto("Correo institucional", ficha.CorreoInstitucional);
+            Texto("Correo personal", ficha.CorreoPersonal);
             Texto("Celular", ficha.Celular); Texto("Teléfono convencional", ficha.TelefonoConvencional);
             Texto("Calle principal", ficha.CallePrincipal); Texto("Calle secundaria", ficha.CalleSecundaria);
             Texto("Número de casa", ficha.NumeroCasa); Texto("Referencia de domicilio", ficha.ReferenciaDomicilio); Texto("Código postal", ficha.CodigoPostal);

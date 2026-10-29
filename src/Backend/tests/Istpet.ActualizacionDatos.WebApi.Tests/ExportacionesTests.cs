@@ -218,6 +218,7 @@ public sealed partial class ExportacionesTests : IDisposable
         {
             var xmlContent = await reader.ReadToEndAsync();
             Assert.Contains(pAprobada.Documento, xmlContent, StringComparison.Ordinal);
+            Assert.Contains("Correo Personal", xmlContent, StringComparison.Ordinal);
             Assert.DoesNotContain(pPendiente.Documento, xmlContent, StringComparison.Ordinal);
         }
 

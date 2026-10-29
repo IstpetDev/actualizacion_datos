@@ -296,6 +296,10 @@ public sealed class DisenoClasico : IDisenoBaseHojaDeVida
                     {
                         FilaDato(datosCol, "Correo Institucional:", p.CorreoInstitucional);
                     }
+                    if (!string.IsNullOrWhiteSpace(p.CorreoPersonal))
+                    {
+                        FilaDato(datosCol, "Correo Personal:", p.CorreoPersonal);
+                    }
                 }
 
                 if (cfg.Campos.Contains(CatalogoCamposDocumento.CamposDatosPersonales.RegistroSenescyt, StringComparer.OrdinalIgnoreCase)

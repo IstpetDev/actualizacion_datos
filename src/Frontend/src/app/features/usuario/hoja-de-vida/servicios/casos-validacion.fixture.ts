@@ -52,4 +52,8 @@ export const casosFicha: [string, string, boolean][] = [
   ['correoInstitucional', 'a..b@institucion-ficticia.example', false],
   ['correoInstitucional', 'a@institucion-ficticia.example.', false],
   ['correoInstitucional', 'a\n@institucion-ficticia.example', false],
+  ['correoPersonal', 'personal.ficticio@correo.com', true],
+  ['correoPersonal', 'OTRO.CORREO@GMAIL.COM', true],
+  ['correoPersonal', 'invalido-sin-arroba', false],
+  ['correoPersonal', 'a@b@c.com', false],
 ];
