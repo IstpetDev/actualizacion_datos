@@ -1,4 +1,4 @@
-﻿namespace Istpet.ActualizacionDatos.WebApi.Tests;
+namespace Istpet.ActualizacionDatos.WebApi.Tests;
 
 using System.Net;
 using System.Net.Http.Headers;

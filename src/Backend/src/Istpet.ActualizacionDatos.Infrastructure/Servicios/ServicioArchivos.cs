@@ -1,4 +1,4 @@
-﻿namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
+namespace Istpet.ActualizacionDatos.Infrastructure.Servicios;
 
 using System.Security.Cryptography;
 using Istpet.ActualizacionDatos.Application;
