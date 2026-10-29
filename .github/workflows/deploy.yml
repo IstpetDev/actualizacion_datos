@@ -94,27 +94,55 @@ jobs:
           sudo tailscale status || true
           sudo tailscale ping -c 5 "${HOST}" || true
 
-      # Se envía el .tar.gz tal cual: docker load acepta gzip y así viajan
-      # unas 3-4 veces menos datos que con la imagen descomprimida.
+      # Se copia cada .tar.gz con scp y se carga con docker load -i desde disco local
+      # (ADR-0041): evita depender del EOF de stdin en OpenSSH para Windows y separa
+      # en el log el tiempo de red (scp) del tiempo de importación en Docker.
       - name: Transferir imágenes Docker al servidor
         timeout-minutes: 10
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
+          ssh -n -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+            "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null; Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object Name -eq 'docker.exe' | Where-Object CommandLine -like '*load*' | Invoke-CimMethod -MethodName Terminate | Out-Null\""
           for archivo in imagen-backend.tar.gz imagen-frontend.tar.gz; do
-            echo "Transfiriendo ${archivo} ($(du -h "${archivo}" | cut -f1))..."
-            inicio=$(date +%s)
-            ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load" < "${archivo}"
-            echo "${archivo} cargado en $(( $(date +%s) - inicio )) s."
+            tamano=$(du -h "${archivo}" | cut -f1)
+            echo "Copiando ${archivo} (${tamano}) al servidor por SCP..."
+            inicio_scp=$(date +%s)
+            scp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${archivo}" "${USER}@${HOST}:${DIR}/${archivo}"
+            echo "${archivo} copiado por SCP en $(( $(date +%s) - inicio_scp )) s."
+
+            echo "Cargando ${archivo} en Docker del servidor..."
+            inicio_load=$(date +%s)
+            cargado=false
+            for intento in 1 2; do
+              if ssh -n -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load -i \"${DIR}/${archivo}\""; then
+                cargado=true
+                break
+              fi
+              echo "::warning::Intento ${intento} de docker load falló para ${archivo}."
+              if [ "$intento" -lt 2 ]; then
+                sleep 5
+              fi
+            done
+
+            ssh -n -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" \
+              "powershell -NoProfile -Command \"Remove-Item -LiteralPath '${DIR}/${archivo}' -Force -ErrorAction SilentlyContinue\"" || true
+
+            if [ "$cargado" != "true" ]; then
+              echo "::error::No se pudo cargar ${archivo} en Docker tras 2 intentos."
+              exit 1
+            fi
+            echo "${archivo} cargado en Docker en $(( $(date +%s) - inicio_load )) s."
           done
 
       - name: Sincronizar archivos de orquestación
+        timeout-minutes: 2
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
-          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "powershell -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
+          ssh -n -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${DIR}/deploy/nginx' | Out-Null\""
           scp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa docker-compose.prod.yml "${USER}@${HOST}:${DIR}/docker-compose.prod.yml"
           scp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa deploy/nginx/default.conf "${USER}@${HOST}:${DIR}/deploy/nginx/default.conf"
 

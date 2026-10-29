@@ -72,3 +72,4 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0038](ADR-0038-asignacion-roles-institucionales.md) | Asignación de roles institucionales | Vigente por pedido explícito #129 |
 | [ADR-0039](ADR-0039-retiro-auditado-de-adjuntos-por-supervisor.md) | Retiro auditado de adjuntos por supervisor con eliminación física | Vigente por pedido explícito #139 |
 | [ADR-0040](ADR-0040-visibilidad-de-borradores-y-avance-para-supervisores.md) | Visibilidad de borradores y avance institucional para supervisores | Vigente por pedido explícito #143 |
+| [ADR-0041](ADR-0041-transferencia-imagenes-scp-docker-load.md) | Transferencia de imágenes por SCP y carga local con `docker load -i` | Vigente por pedido explícito #161 |
