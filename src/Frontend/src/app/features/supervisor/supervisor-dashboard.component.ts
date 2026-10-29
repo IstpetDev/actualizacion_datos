@@ -1,7 +1,9 @@
+import { catchError, forkJoin, of, Subscription } from 'rxjs';
+import { ObservacionesRevisionComponent } from '../revision-compartida/observaciones-revision.component';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   API_BASE_URL,
@@ -9,6 +11,7 @@ import {
   ArchivoDto,
   DevolverActualizacionRequest,
   ExpedienteRevisionDto,
+  FileResponse,
   HojaDeVidaDto,
   MarcaObservacionItem,
   ResumenRevisionPendienteDto,
@@ -24,6 +27,7 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
   standalone: true,
   imports: [
     CommonModule,
+    ObservacionesRevisionComponent,
     FormsModule,
     CuentaBancariaRevisionComponent,
     ExpedienteSeccionesComponent,
@@ -60,8 +64,19 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
         </div>
       }
 
-      <!-- Vista principal: Lista de solicitudes pendientes -->
+      <!-- Vista principal: Lista de solicitudes y personas de la institución -->
       @if (!expedienteSeleccionado()) {
+        <div class="filtro-busqueda">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por documento, nombre o estado..."
+            [ngModel]="filtroTexto()"
+            (ngModelChange)="filtroTexto.set($event)"
+            data-testid="input-filtro-supervisor"
+          />
+        </div>
+
         <div class="table-container">
           <table class="data-table" data-testid="tabla-pendientes">
             <thead>
@@ -70,12 +85,13 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 <th>Nombre</th>
                 <th>Correo</th>
                 <th>Estado</th>
+                <th>Avance</th>
                 <th>Fecha Envío</th>
                 <th class="text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
-              @for (item of pendientes(); track item.id) {
+              @for (item of pendientesFiltrados(); track item.id) {
                 <tr [attr.data-testid]="'fila-pendiente-' + item.documento">
                   <td>
                     <strong>{{ item.documento }}</strong>
@@ -83,9 +99,36 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                   <td>{{ item.nombre || '—' }}</td>
                   <td>{{ item.correo || '—' }}</td>
                   <td>
-                    <span class="badge badge-warning">{{ item.estadoActualizacion }}</span>
+                    <span
+                      class="badge"
+                      [ngClass]="obtenerClaseBadge(item.estadoActualizacion)"
+                      [attr.data-testid]="'badge-estado-' + item.documento"
+                    >
+                      {{ item.estadoActualizacion }}
+                    </span>
                   </td>
-                  <td>{{ item.fechaCreacionUtc | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="avance-cell" [attr.data-testid]="'avance-' + item.documento">
+                    <div class="barra-avance-fondo">
+                      <div
+                        class="barra-avance-relleno"
+                        [class.completo]="(item.porcentajeAvance || 0) >= 100"
+                        [style.width.%]="item.porcentajeAvance || 0"
+                      ></div>
+                    </div>
+                    <span class="avance-texto">
+                      {{ item.seccionesConDatos || 0 }}/{{ item.totalSecciones || 7 }} secciones ({{
+                        item.porcentajeAvance || 0
+                      }}%)
+                    </span>
+                  </td>
+                  <td>
+                    {{
+                      item.estadoActualizacion === 'Enviado' ||
+                      item.estadoActualizacion === 'Aprobado'
+                        ? (item.fechaCreacionUtc | date: 'dd/MM/yyyy HH:mm')
+                        : '—'
+                    }}
+                  </td>
                   <td class="text-right">
                     <button
                       type="button"
@@ -100,8 +143,8 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="6" class="text-center empty-state">
-                    No hay solicitudes pendientes de revisión en este momento.
+                  <td colspan="7" class="text-center empty-state">
+                    No hay solicitudes ni personas registradas para mostrar.
                   </td>
                 </tr>
               }
@@ -141,7 +184,7 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 type="button"
                 class="btn btn-danger"
                 (click)="abrirModalDevolver()"
-                [disabled]="procesando()"
+                [disabled]="procesando() || !esExpedienteEnviado()"
                 data-testid="btn-abrir-devolver"
               >
                 Devolver con Observaciones
@@ -150,13 +193,32 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 type="button"
                 class="btn btn-success"
                 (click)="aprobar()"
-                [disabled]="procesando()"
+                [disabled]="procesando() || !esExpedienteEnviado()"
                 data-testid="btn-aprobar"
               >
                 {{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}
               </button>
             </div>
           </div>
+
+          @if (!esExpedienteEnviado()) {
+            <div class="aviso-modo-lectura" role="status" data-testid="aviso-modo-lectura">
+              <strong>Modo solo lectura:</strong>
+              @if (
+                expedienteSeleccionado()?.estadoActualizacion === 'Borrador' ||
+                expedienteSeleccionado()?.estadoActualizacion === 'Sin Iniciar'
+              ) {
+                El expediente se encuentra en estado
+                <em>{{ expedienteSeleccionado()?.estadoActualizacion }}</em
+                >. No puede ser aprobado ni devuelto hasta que la persona formalice su envío.
+              } @else if (expedienteSeleccionado()?.estadoActualizacion === 'Devuelto') {
+                El expediente se encuentra en estado <em>Devuelto</em> a la espera de que el usuario
+                envíe las correcciones solicitadas.
+              } @else if (expedienteSeleccionado()?.estadoActualizacion === 'Aprobado') {
+                El expediente se encuentra <em>Aprobado</em> y cerrado para la campaña activa.
+              }
+            </div>
+          }
 
           <div class="expediente-grid">
             <!-- Datos Personales -->
@@ -222,56 +284,49 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                     <div class="archivo-info">
                       <strong>{{ archivo.nombreOriginal }}</strong>
                       <span class="archivo-meta">
-                        {{ archivo.claveDestino || 'Documento' }} •
+                        {{ archivo.claveDestino || 'Documento General' }} •
                         {{ (archivo.tamanoBytes / 1024).toFixed(1) }} KB •
-                        {{ archivo.tipoContenido }}
+                        {{ archivo.tipoContenido }} • Subido:
+                        {{ archivo.fechaSubidaUtc | date: 'dd/MM/yyyy HH:mm' }}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      (click)="descargarArchivo(archivo.id, archivo.nombreOriginal)"
-                      [attr.data-testid]="'btn-descargar-' + archivo.id"
-                    >
-                      Descargar
-                    </button>
+                    <div class="archivo-acciones">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        (click)="descargarArchivo(archivo.id, archivo.nombreOriginal)"
+                        [attr.data-testid]="'btn-descargar-' + archivo.id"
+                      >
+                        Descargar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="iniciarRetiroArchivo(archivo)"
+                        [attr.data-testid]="'btn-retirar-' + archivo.id"
+                      >
+                        Retirar
+                      </button>
+                    </div>
                   </div>
                 } @empty {
                   <p class="text-muted">No se registran documentos adjuntos en este expediente.</p>
                 }
               </div>
 
-              <!-- Historial de Observaciones Previas -->
-              @if (expedienteSeleccionado()?.observaciones?.length) {
-                <h3 class="card-title mt-4">Observaciones Anteriores</h3>
-                <div class="observaciones-previas">
-                  @for (obs of expedienteSeleccionado()?.observaciones; track obs.id) {
-                    <div class="obs-item">
-                      <div class="obs-header">
-                        <strong>{{ obs.autor }}</strong>
-                        <span>{{ obs.fechaUtc | date: 'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
-                      <p class="obs-texto">{{ obs.texto }}</p>
-                      @if (obs.marcas?.length) {
-                        <ul class="marcas-previas">
-                          @for (m of obs.marcas; track m.id) {
-                            <li>
-                              <strong>[{{ m.tipoDestino }}] {{ m.claveDestino }}:</strong>
-                              {{ m.texto }}
-                            </li>
-                          }
-                        </ul>
-                      }
-                    </div>
-                  }
-                </div>
-              }
+              <app-observaciones-revision
+                [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
+                [hojaDeVida]="hojaDeVida()"
+                [archivos]="archivosExpediente()"
+                [estado]="expedienteSeleccionado()?.estadoActualizacion || ''"
+              />
             </section>
           </div>
 
           @if (hojaDeVida(); as hdv) {
             <app-expediente-secciones
               [hojaDeVida]="hdv"
+              [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
               [archivos]="archivosExpediente()"
               (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
               (marcarItem)="iniciarMarcaItem($event)"
@@ -399,6 +454,63 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
                 data-testid="btn-confirmar-devolver"
               >
                 {{ procesando() ? 'Devolviendo...' : 'Confirmar y Devolver' }}
+              </button>
+            </footer>
+          </div>
+        </div>
+      }
+
+      <!-- Modal para Retiro Auditado de Adjuntos (Issue #139, ADR-0039) -->
+      @if (archivoParaRetirar(); as arch) {
+        <div class="modal-backdrop" data-testid="modal-retiro-archivo">
+          <div class="modal-dialog">
+            <header class="modal-header">
+              <h3>Retirar Documento Adjunto</h3>
+              <button type="button" class="btn-cerrar" (click)="cancelarRetiroArchivo()">✕</button>
+            </header>
+            <div class="modal-body">
+              <p>
+                Está por retirar el archivo <strong>{{ arch.nombreOriginal }}</strong> del
+                expediente de {{ expedienteSeleccionado()?.nombre }}.
+              </p>
+              <p class="text-danger">
+                Esta acción es auditada e inmutable. El archivo será eliminado físicamente del
+                almacenamiento.
+              </p>
+              <div class="form-group">
+                <label for="motivoRetiro">Motivo del retiro (obligatorio):</label>
+                <textarea
+                  id="motivoRetiro"
+                  class="form-control"
+                  rows="3"
+                  [(ngModel)]="motivoRetiro"
+                  placeholder="Explique detalladamente el motivo por el cual se retira este adjunto..."
+                  data-testid="input-motivo-retiro"
+                ></textarea>
+                @if (errorRetiro()) {
+                  <p class="text-danger" role="alert" data-testid="error-retiro">
+                    {{ errorRetiro() }}
+                  </p>
+                }
+              </div>
+            </div>
+            <footer class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancelarRetiroArchivo()"
+                [disabled]="retirandoArchivo()"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                (click)="confirmarRetiroArchivo()"
+                [disabled]="retirandoArchivo() || !motivoRetiro.trim()"
+                data-testid="btn-confirmar-retiro"
+              >
+                {{ retirandoArchivo() ? 'Retirando...' : 'Confirmar Retiro' }}
               </button>
             </footer>
           </div>
@@ -637,6 +749,11 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
       border-radius: 0.375rem;
       padding: 0.75rem;
     }
+    .archivo-acciones {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
     .archivo-info {
       display: flex;
       flex-direction: column;
@@ -810,7 +927,7 @@ import { descargarBlob, extraerNombreArchivo } from '../../core/util/descarga-ar
     }
   `,
 })
-export class SupervisorDashboardComponent implements OnInit {
+export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService);
   private readonly revisionClient = inject(RevisionClient);
   private readonly archivosClient = inject(ArchivosClient);
@@ -818,6 +935,41 @@ export class SupervisorDashboardComponent implements OnInit {
   private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
 
   readonly pendientes = signal<ResumenRevisionPendienteDto[]>([]);
+  readonly filtroTexto = signal<string>('');
+
+  readonly pendientesFiltrados = computed(() => {
+    const filtro = this.filtroTexto().trim().toLowerCase();
+    if (!filtro) return this.pendientes();
+    return this.pendientes().filter(
+      (p) =>
+        p.documento?.toLowerCase().includes(filtro) ||
+        p.nombre?.toLowerCase().includes(filtro) ||
+        p.correo?.toLowerCase().includes(filtro) ||
+        p.estadoActualizacion?.toLowerCase().includes(filtro),
+    );
+  });
+
+  readonly esExpedienteEnviado = computed(() => {
+    return this.expedienteSeleccionado()?.estadoActualizacion === 'Enviado';
+  });
+
+  obtenerClaseBadge(estado?: string): string {
+    const normalizado = (estado || '').toLowerCase();
+    switch (normalizado) {
+      case 'sin iniciar':
+        return 'badge-secondary';
+      case 'borrador':
+        return 'badge-warning';
+      case 'enviado':
+        return 'badge-info';
+      case 'devuelto':
+        return 'badge-danger';
+      case 'aprobado':
+        return 'badge-success';
+      default:
+        return 'badge-secondary';
+    }
+  }
   readonly cargando = signal<boolean>(false);
   readonly procesando = signal<boolean>(false);
   readonly cargandoExpediente = signal<boolean>(false);
@@ -836,6 +988,12 @@ export class SupervisorDashboardComponent implements OnInit {
   nuevaMarcaClave = signal<string>('');
   nuevaMarcaTexto = signal<string>('');
   readonly marcas = signal<MarcaObservacionItem[]>([]);
+
+  private cargaExpediente?: Subscription;
+
+  ngOnDestroy(): void {
+    this.cargaExpediente?.unsubscribe();
+  }
 
   ngOnInit(): void {
     this.cargarPendientes();
@@ -858,42 +1016,33 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   verExpediente(documento: string): void {
+    this.cerrarExpediente();
     this.cargandoExpediente.set(true);
     this.error.set(null);
     this.mensajeExito.set(null);
-
-    this.revisionClient.obtenerExpedienteParaRevision(documento).subscribe({
-      next: (exp) => {
+    this.cargaExpediente = forkJoin({
+      exp: this.revisionClient.obtenerExpedienteParaRevision(documento),
+      hdv: this.revisionClient
+        .obtenerHojaDeVidaParaRevision(documento)
+        .pipe(catchError(() => of(null))),
+      archivos: this.revisionClient
+        .listarArchivosExpediente(documento)
+        .pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ exp, hdv, archivos }) => {
         this.expedienteSeleccionado.set(exp);
+        this.hojaDeVida.set(hdv);
+        this.archivosExpediente.set(archivos);
         try {
-          if (exp.datosPersonalesJson) {
-            this.datosPersonalesParsed.set(JSON.parse(exp.datosPersonalesJson));
-          } else {
-            this.datosPersonalesParsed.set(null);
-          }
+          this.datosPersonalesParsed.set(
+            exp.datosPersonalesJson ? JSON.parse(exp.datosPersonalesJson) : null,
+          );
         } catch {
           this.datosPersonalesParsed.set(null);
         }
-
-        // Cargar la hoja de vida estructurada por secciones (spec-0003, RF-HDV-011)
-        this.revisionClient.obtenerHojaDeVidaParaRevision(documento).subscribe({
-          next: (hdv) => this.hojaDeVida.set(hdv),
-          error: () => this.hojaDeVida.set(null),
-        });
-
-        // Cargar los archivos adjuntos del expediente
-        this.revisionClient.listarArchivosExpediente(documento).subscribe({
-          next: (archivos) => {
-            this.archivosExpediente.set(archivos);
-            this.cargandoExpediente.set(false);
-          },
-          error: () => {
-            this.archivosExpediente.set([]);
-            this.cargandoExpediente.set(false);
-          },
-        });
+        this.cargandoExpediente.set(false);
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.error.set(mensajeError(err, 'Error al obtener el expediente para revisión.'));
         this.cargandoExpediente.set(false);
       },
@@ -901,6 +1050,8 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   cerrarExpediente(): void {
+    this.cargaExpediente?.unsubscribe();
+    this.cargandoExpediente.set(false);
     this.expedienteSeleccionado.set(null);
     this.hojaDeVida.set(null);
     this.archivosExpediente.set([]);
@@ -908,6 +1059,7 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
+    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
     this.nuevaMarcaTipo.set(info.tipo || 'Item');
     this.nuevaMarcaClave.set(info.clave);
     this.nuevaMarcaTexto.set('');
@@ -916,7 +1068,7 @@ export class SupervisorDashboardComponent implements OnInit {
 
   aprobar(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp) return;
+    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -936,6 +1088,7 @@ export class SupervisorDashboardComponent implements OnInit {
   }
 
   abrirModalDevolver(): void {
+    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
     this.observacionGeneral.set('');
     this.marcas.set([]);
     this.nuevaMarcaClave.set('');
@@ -970,7 +1123,7 @@ export class SupervisorDashboardComponent implements OnInit {
   confirmarDevolucion(): void {
     const exp = this.expedienteSeleccionado();
     const general = this.observacionGeneral().trim();
-    if (!exp || !general) return;
+    if (!exp || exp.estadoActualizacion !== 'Enviado' || !general) return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -987,8 +1140,11 @@ export class SupervisorDashboardComponent implements OnInit {
         );
         this.procesando.set(false);
         this.cerrarModalDevolver();
-        this.cerrarExpediente();
+        this.verExpediente(exp.documento);
         this.cargarPendientes();
+        this.mensajeExito.set(
+          res?.mensaje || 'Actualización devuelta al usuario con observaciones.',
+        );
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al devolver la actualización.'));
@@ -999,22 +1155,15 @@ export class SupervisorDashboardComponent implements OnInit {
 
   descargarArchivo(archivoId: string, nombreOriginal: string): void {
     this.archivosClient.descargarArchivo(archivoId).subscribe({
-      next: (res: unknown) => {
-        const respuestaObj = res as { data?: Blob };
-        const blob =
-          respuestaObj?.data instanceof Blob
-            ? respuestaObj.data
-            : res instanceof Blob
-              ? res
-              : new Blob([String(res)]);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nombreOriginal || 'archivo_adjunto';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+      next: (res: FileResponse | Blob) => {
+        const blob = res instanceof Blob ? res : res?.data;
+        if (!blob) {
+          this.error.set('El archivo descargado está vacío.');
+          return;
+        }
+        const fileName = !(res instanceof Blob) ? res?.fileName : undefined;
+        const nombre = fileName || nombreOriginal || 'archivo_adjunto';
+        descargarBlob(blob, nombre);
       },
       error: (err) => {
         this.error.set(mensajeError(err, 'Error al descargar el archivo.'));
@@ -1024,6 +1173,54 @@ export class SupervisorDashboardComponent implements OnInit {
 
   obtenerClaves(obj: Record<string, unknown>): string[] {
     return Object.keys(obj || {});
+  }
+
+  readonly archivoParaRetirar = signal<ArchivoDto | null>(null);
+  motivoRetiro = '';
+  readonly retirandoArchivo = signal(false);
+  readonly errorRetiro = signal('');
+
+  iniciarRetiroArchivo(archivo: ArchivoDto): void {
+    this.archivoParaRetirar.set(archivo);
+    this.motivoRetiro = '';
+    this.errorRetiro.set('');
+  }
+
+  cancelarRetiroArchivo(): void {
+    this.archivoParaRetirar.set(null);
+    this.motivoRetiro = '';
+    this.errorRetiro.set('');
+  }
+
+  confirmarRetiroArchivo(): void {
+    const archivo = this.archivoParaRetirar();
+    if (!archivo) return;
+    const motivo = this.motivoRetiro.trim();
+    if (!motivo || motivo.length < 5) {
+      this.errorRetiro.set('Debe ingresar un motivo obligatorio (mínimo 5 caracteres).');
+      return;
+    }
+
+    this.retirandoArchivo.set(true);
+    this.errorRetiro.set('');
+    this.archivosClient.retirarArchivoSupervisor(archivo.id, { motivo }).subscribe({
+      next: () => {
+        this.retirandoArchivo.set(false);
+        this.archivoParaRetirar.set(null);
+        this.motivoRetiro = '';
+        this.mensajeExito.set('El adjunto ha sido retirado del expediente exitosamente.');
+        const exp = this.expedienteSeleccionado();
+        if (exp) {
+          this.revisionClient.listarArchivosExpediente(exp.documento).subscribe({
+            next: (archivos) => this.archivosExpediente.set(archivos),
+          });
+        }
+      },
+      error: (err) => {
+        this.retirandoArchivo.set(false);
+        this.errorRetiro.set(mensajeError(err, 'Error al retirar el archivo adjunto.'));
+      },
+    });
   }
 
   descargarDocumentoPdf(): void {

@@ -1,6 +1,11 @@
 import { mensajeError } from '../../../../core/auth/mensaje-error';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, finalize, forkJoin, map, Observable, of, tap } from 'rxjs';
+import {
+  coincideMarca,
+  MarcaConRevision,
+  ordenarObservaciones,
+} from '../../../revision-compartida/observaciones-revision';
 import { SeccionConCambios } from './seccion-con-cambios';
 import {
   CapacitacionDto,
@@ -20,7 +25,6 @@ import {
   GuardarTituloEnCursoRequest,
   HojaDeVidaClient,
   HojaDeVidaDto,
-  MarcaObservacionDto,
   MisDatosClient,
   ObservacionDto,
   ReferenciaDto,
@@ -44,7 +48,7 @@ export class HojaDeVidaStateService {
   readonly hojaDeVida = signal<HojaDeVidaDto | null>(null);
   readonly documentos = signal<DocumentoRequeridoDto[]>([]);
   readonly faltantes = signal<FaltanteEnvioDto[]>([]);
-  readonly marcasObservacion = signal<MarcaObservacionDto[]>([]);
+  readonly marcasObservacion = signal<MarcaConRevision[]>([]);
   readonly estadoEdicion = signal<EstadoEdicionDto | null>(null);
   readonly observaciones = signal<ObservacionDto[]>([]);
   readonly capacitacionesObligatorias = signal<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
@@ -112,7 +116,7 @@ export class HojaDeVidaStateService {
   );
 
   readonly observacionGeneralDevolucion = computed<string | undefined>(() => {
-    const ult = this.observaciones()[0];
+    const ult = ordenarObservaciones(this.observaciones())[0];
     return ult?.texto;
   });
 
@@ -142,7 +146,7 @@ export class HojaDeVidaStateService {
       estado: this.misDatosClient
         .obtenerEstadoEdicion()
         .pipe(catchError(() => of(null as unknown as EstadoEdicionDto))),
-      obs: this.misDatosClient.obtenerObservacionesMisDatos().pipe(catchError(() => of([]))),
+      obs: this.misDatosClient.obtenerObservacionesMisDatos(),
       obligatorias: this.capacitacionesObligatoriasClient
         .obtenerMisCapacitacionesObligatorias()
         .pipe(catchError(() => of([]))),
@@ -151,7 +155,9 @@ export class HojaDeVidaStateService {
         this.hojaDeVida.set(hdv);
         this.documentos.set(docs ?? []);
         this.estadoEdicion.set(estado);
-        const marcas: MarcaObservacionDto[] = (obs ?? []).flatMap((o) => o.marcas ?? []);
+        const marcas = ordenarObservaciones(obs ?? []).flatMap((o) =>
+          (o.marcas ?? []).map((m) => ({ ...m, revision: o })),
+        );
         this.marcasObservacion.set(marcas);
         this.observaciones.set(obs ?? []);
         this.capacitacionesObligatorias.set(obligatorias ?? []);
@@ -509,45 +515,10 @@ export class HojaDeVidaStateService {
   /**
    * Obtiene la marca de observación del supervisor para un ítem o sección dada
    */
-  obtenerMarcaParaItem(tipoDestino: string, claveDestino: string): MarcaObservacionDto | undefined {
-    const tipoLower = tipoDestino.toLowerCase();
-    const claveLower = claveDestino.toLowerCase();
-
-    return this.marcasObservacion().find((m) => {
-      const mTipo = m.tipoDestino?.toLowerCase();
-      const mClave = m.claveDestino?.toLowerCase();
-
-      // Coincidencia directa (campo o archivo previo)
-      if (mTipo === tipoLower && mClave === claveLower) {
-        return true;
-      }
-
-      // Coincidencia de marca por ítem (T-07: tipoDestino = 'item', claveDestino = 'tipo:id')
-      if (mTipo === 'item' && mClave) {
-        if (mClave === `${tipoLower}:${claveLower}`) {
-          return true;
-        }
-
-        // Variaciones con guion o guion bajo (p.ej. titulo_en_curso vs titulo-en-curso, experiencia_laboral vs experiencia)
-        const tipoNormalizado = tipoLower.replace(/[-_]/g, '');
-        const separador = mClave.indexOf(':');
-        if (separador > 0) {
-          const mPrefijo = mClave.substring(0, separador).replace(/[-_]/g, '');
-          const mId = mClave.substring(separador + 1);
-          if (
-            (mPrefijo === tipoNormalizado ||
-              (tipoNormalizado.startsWith('experiencia') && mPrefijo.startsWith('experiencia')) ||
-              (tipoNormalizado.startsWith('documento') && mPrefijo.startsWith('documento')) ||
-              (tipoNormalizado.startsWith('capacitacion') && mPrefijo.startsWith('curso')) ||
-              (tipoNormalizado.startsWith('curso') && mPrefijo.startsWith('capacitacion'))) &&
-            mId === claveLower
-          ) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    });
+  obtenerMarcaParaItem(tipoDestino: string, claveDestino: string): MarcaConRevision | undefined {
+    const marca = this.marcasObservacion().find((m) =>
+      coincideMarca(m, tipoDestino.toLowerCase(), claveDestino),
+    );
+    return marca ? { ...marca, estadoExpediente: this.estadoActualizacion() } : undefined;
   }
 }

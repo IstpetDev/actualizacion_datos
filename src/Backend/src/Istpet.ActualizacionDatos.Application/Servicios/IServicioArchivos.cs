@@ -9,4 +9,5 @@ public interface IServicioArchivos
     Task<DescargaArchivoDto> ObtenerArchivoParaDescargaAsync(Guid archivoId, string actorSolicitante, RolUsuario rolSolicitante, CancellationToken ct = default);
     Task<List<ArchivoDto>> ListarArchivosPersonaAsync(string documento, CancellationToken ct = default);
     Task EliminarArchivoAsync(Guid archivoId, string documento, CancellationToken ct = default);
+    Task RetirarArchivoSupervisorAsync(Guid archivoId, string motivo, string actorSolicitante, RolUsuario rolSolicitante, CancellationToken ct = default);
 }

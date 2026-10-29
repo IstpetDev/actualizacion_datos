@@ -208,16 +208,144 @@ public class ServicioArchivos : IServicioArchivos
             .OrderBy(a => a.FechaSubidaUtc)
             .ToListAsync(ct);
 
-        return archivos.Select(a => new ArchivoDto(
-            a.Id,
-            a.InstitucionId.Valor,
-            a.PersonaId,
-            a.NombreOriginal,
-            a.TipoContenido,
-            a.TamanoBytes,
-            a.HashSha256,
-            a.ClaveDestino,
-            a.FechaSubidaUtc)).ToList();
+        // Mapear áreas y referencias activas de la persona
+        var mapaAreas = new Dictionary<Guid, string>();
+
+        var fotoId = await _context.FichasPersonales
+            .Where(f => f.PersonaId == persona.Id && f.FotoArchivoId != null)
+            .Select(f => f.FotoArchivoId!.Value)
+            .FirstOrDefaultAsync(ct);
+        if (fotoId != Guid.Empty)
+        {
+            mapaAreas[fotoId] = "Fotografía Personal";
+        }
+
+        var docsPersonales = await (
+            from d in _context.DocumentosPersonales
+            join td in _context.TiposDocumento on d.TipoDocumentoId equals td.Id
+            where d.PersonaId == persona.Id && d.ArchivoId != null
+            select new { ArchivoId = d.ArchivoId!.Value, td.Nombre }
+        ).ToListAsync(ct);
+        foreach (var doc in docsPersonales)
+        {
+            mapaAreas[doc.ArchivoId] = string.IsNullOrWhiteSpace(doc.Nombre)
+                ? "Documento Personal"
+                : $"Documento Personal: {doc.Nombre}";
+        }
+
+        var titulos = await _context.TitulosAcademicos
+            .Where(t => t.PersonaId == persona.Id && t.ArchivoId != null)
+            .Select(t => new { ArchivoId = t.ArchivoId!.Value, t.NombreTitulo })
+            .ToListAsync(ct);
+        foreach (var t in titulos)
+        {
+            mapaAreas[t.ArchivoId] = string.IsNullOrWhiteSpace(t.NombreTitulo)
+                ? "Formación Académica"
+                : $"Formación Académica: {t.NombreTitulo}";
+        }
+
+        var titulosEnCurso = await _context.TitulosEnCurso
+            .Where(tc => tc.PersonaId == persona.Id && tc.ArchivoId != null)
+            .Select(tc => new { ArchivoId = tc.ArchivoId!.Value, tc.NombrePrograma })
+            .ToListAsync(ct);
+        foreach (var tc in titulosEnCurso)
+        {
+            mapaAreas[tc.ArchivoId] = string.IsNullOrWhiteSpace(tc.NombrePrograma)
+                ? "Título en Curso"
+                : $"Título en Curso: {tc.NombrePrograma}";
+        }
+
+        var capacitaciones = await _context.Capacitaciones
+            .Where(c => c.PersonaId == persona.Id && c.ArchivoId != null)
+            .Select(c => new { ArchivoId = c.ArchivoId!.Value, c.NombreEvento })
+            .ToListAsync(ct);
+        foreach (var c in capacitaciones)
+        {
+            mapaAreas[c.ArchivoId] = string.IsNullOrWhiteSpace(c.NombreEvento)
+                ? "Capacitación"
+                : $"Capacitación: {c.NombreEvento}";
+        }
+
+        var experiencias = await _context.ExperienciasLaborales
+            .Where(e => e.PersonaId == persona.Id && e.ArchivoId != null)
+            .Select(e => new { ArchivoId = e.ArchivoId!.Value, e.Empleador, e.Cargo })
+            .ToListAsync(ct);
+        foreach (var e in experiencias)
+        {
+            var detalle = !string.IsNullOrWhiteSpace(e.Empleador) ? e.Empleador : e.Cargo;
+            mapaAreas[e.ArchivoId] = string.IsNullOrWhiteSpace(detalle)
+                ? "Experiencia Laboral"
+                : $"Experiencia Laboral: {detalle}";
+        }
+
+        var referencias = await _context.ReferenciasPersonales
+            .Where(r => r.PersonaId == persona.Id && r.ArchivoId != null)
+            .Select(r => new { ArchivoId = r.ArchivoId!.Value, r.NombresApellidos })
+            .ToListAsync(ct);
+        foreach (var r in referencias)
+        {
+            mapaAreas[r.ArchivoId] = string.IsNullOrWhiteSpace(r.NombresApellidos)
+                ? "Referencia Personal"
+                : $"Referencia Personal: {r.NombresApellidos}";
+        }
+
+        var resultado = new List<ArchivoDto>();
+        foreach (var a in archivos)
+        {
+            string? areaClasificada;
+            if (mapaAreas.TryGetValue(a.Id, out var areaRef))
+            {
+                areaClasificada = areaRef;
+            }
+            else if (!string.IsNullOrWhiteSpace(a.ClaveDestino))
+            {
+                areaClasificada = FormatearClaveDestinoAmigable(a.ClaveDestino);
+            }
+            else
+            {
+                // Archivo sustituido / huérfano sin clave ni referencia vigente:
+                // Se excluye de la lista activa del expediente para no mostrar duplicados injustificados.
+                continue;
+            }
+
+            resultado.Add(new ArchivoDto(
+                a.Id,
+                a.InstitucionId.Valor,
+                a.PersonaId,
+                a.NombreOriginal,
+                a.TipoContenido,
+                a.TamanoBytes,
+                a.HashSha256,
+                areaClasificada,
+                a.FechaSubidaUtc));
+        }
+
+        return resultado;
+    }
+
+    private static string FormatearClaveDestinoAmigable(string clave)
+    {
+        var normalizada = clave.Trim().ToLowerInvariant();
+        if (normalizada == "foto:perfil" || normalizada == "foto" || normalizada == "ficha")
+            return "Fotografía Personal";
+        if (normalizada == "marca")
+            return "Marca Institucional";
+        if (normalizada.StartsWith("documento:", StringComparison.OrdinalIgnoreCase) ||
+            normalizada.StartsWith("doc:", StringComparison.OrdinalIgnoreCase))
+            return "Documento Personal";
+        if (normalizada.StartsWith("titulo:", StringComparison.OrdinalIgnoreCase) ||
+            normalizada.StartsWith("titulo-en-curso:", StringComparison.OrdinalIgnoreCase) ||
+            normalizada == "formacion")
+            return "Formación Académica";
+        if (normalizada.StartsWith("capacitacion:", StringComparison.OrdinalIgnoreCase))
+            return "Capacitación";
+        if (normalizada.StartsWith("experiencia:", StringComparison.OrdinalIgnoreCase))
+            return "Experiencia Laboral";
+        if (normalizada.StartsWith("referencia:", StringComparison.OrdinalIgnoreCase))
+            return "Referencia Personal";
+        if (normalizada.StartsWith("cuenta:", StringComparison.OrdinalIgnoreCase) || normalizada.Contains("cuenta"))
+            return "Cuenta Bancaria";
+        return clave;
     }
 
     public async Task EliminarArchivoAsync(Guid archivoId, string documento, CancellationToken ct = default)
@@ -243,6 +371,106 @@ public class ServicioArchivos : IServicioArchivos
             ?? throw new ReglaNegocioException("El archivo no existe o no pertenece a la persona.");
 
         await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+        _context.ArchivosAdjuntos.Remove(archivo);
+
+        await _context.SaveChangesAsync(ct);
+    }
+
+    public async Task RetirarArchivoSupervisorAsync(
+        Guid archivoId,
+        string motivo,
+        string actorSolicitante,
+        RolUsuario rolSolicitante,
+        CancellationToken ct = default)
+    {
+        if (rolSolicitante is not (RolUsuario.Supervisor or RolUsuario.Admin or RolUsuario.Superadmin))
+        {
+            throw new UnauthorizedAccessException("Solo un supervisor o administrador puede retirar adjuntos del expediente.");
+        }
+
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 5)
+        {
+            throw new ReglaNegocioException("Debe ingresar un motivo obligatorio para retirar el archivo (mínimo 5 caracteres).");
+        }
+
+        var archivo = await _context.ArchivosAdjuntos
+            .FirstOrDefaultAsync(a => a.Id == archivoId, ct)
+            ?? throw new ReglaNegocioException("El archivo solicitado no existe o no pertenece a la institución.");
+
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Id == archivo.PersonaId, ct);
+
+        // 1. Registrar auditoría inmutable
+        var detalleAuditoria = $"Retiro del archivo {archivo.Id} ({archivo.NombreOriginal}, Hash: {archivo.HashSha256}) de la persona {(persona?.Documento ?? archivo.PersonaId.ToString())}. Motivo: {motivo.Trim()}";
+        _context.Auditorias.Add(new Auditoria(
+            Guid.NewGuid(),
+            actorSolicitante,
+            "RetiroAdjuntoSupervisor",
+            archivo.InstitucionId,
+            DateTime.UtcNow,
+            detalle: detalleAuditoria));
+
+        // 2. Desvincular referencias en secciones
+        var fichas = await _context.FichasPersonales
+            .Where(f => f.PersonaId == archivo.PersonaId && f.FotoArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var f in fichas)
+        {
+            f.AsociarFoto(null);
+        }
+
+        var docs = await _context.DocumentosPersonales
+            .Where(d => d.PersonaId == archivo.PersonaId && d.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var d in docs)
+        {
+            d.AsociarArchivo(null);
+        }
+
+        var titulos = await _context.TitulosAcademicos
+            .Where(t => t.PersonaId == archivo.PersonaId && t.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var t in titulos)
+        {
+            t.AsociarArchivo(null);
+        }
+
+        var titulosEnCurso = await _context.TitulosEnCurso
+            .Where(tc => tc.PersonaId == archivo.PersonaId && tc.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var tc in titulosEnCurso)
+        {
+            tc.AsociarArchivo(null);
+        }
+
+        var capacitaciones = await _context.Capacitaciones
+            .Where(c => c.PersonaId == archivo.PersonaId && c.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var c in capacitaciones)
+        {
+            c.AsociarArchivo(null);
+        }
+
+        var experiencias = await _context.ExperienciasLaborales
+            .Where(e => e.PersonaId == archivo.PersonaId && e.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var e in experiencias)
+        {
+            e.AsociarArchivo(null);
+        }
+
+        var referencias = await _context.ReferenciasPersonales
+            .Where(r => r.PersonaId == archivo.PersonaId && r.ArchivoId == archivo.Id)
+            .ToListAsync(ct);
+        foreach (var r in referencias)
+        {
+            r.AsociarArchivo(null);
+        }
+
+        // 3. Eliminar físicamente del disco (ADR-0039)
+        await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+
+        // 4. Remover registro de la base de datos
         _context.ArchivosAdjuntos.Remove(archivo);
 
         await _context.SaveChangesAsync(ct);

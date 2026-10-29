@@ -49,6 +49,12 @@ public sealed class ServicioDocumentoHojaDeVida(
 
     public async Task<DescargaArchivoDto> ObtenerMiDocumentoAsync(CancellationToken ct = default)
     {
+        var rol = contexto.RolActual;
+        if (rol is not (RolUsuario.Admin or RolUsuario.Supervisor or RolUsuario.Superadmin))
+        {
+            throw new ReglaNegocioException("No tiene permisos para descargar el documento de hoja de vida.");
+        }
+
         var actor = contexto.ActorActual
             ?? throw new ReglaNegocioException("No se encontró el documento de identidad del usuario autenticado.");
 

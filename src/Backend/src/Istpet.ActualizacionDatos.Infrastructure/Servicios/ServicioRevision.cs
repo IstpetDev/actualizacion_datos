@@ -4,6 +4,7 @@ using Istpet.ActualizacionDatos.Application;
 using Istpet.ActualizacionDatos.Application.Modelos;
 using Istpet.ActualizacionDatos.Application.Servicios;
 using Istpet.ActualizacionDatos.Domain;
+using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,20 +29,171 @@ public class ServicioRevision : IServicioRevision
 
     public async Task<List<ResumenRevisionPendienteDto>> ListarPendientesRevisionAsync(CancellationToken ct = default)
     {
-        // RF-FLU-006: Solo actualizaciones enviadas de la institución; nunca muestra borradores.
-        var pendientes = await _context.Personas
-            .Where(p => p.EstadoActualizacion == EstadoActualizacion.Enviado)
-            .OrderBy(p => p.FechaCreacionUtc)
+        // RF-REV-001 / ADR-0039: Listar a todas las personas de la institución (rol Usuario) con su avance y estado efectivo
+        var personas = await _context.Personas
+            .Where(p => p.Rol == RolUsuario.Usuario)
+            .OrderBy(p => p.Nombre ?? p.Documento)
             .ToListAsync(ct);
 
-        return pendientes.Select(p => new ResumenRevisionPendienteDto(
-            p.Id,
-            p.Documento,
-            p.Nombre,
-            p.Correo,
-            p.EstadoActualizacion.ToString(),
-            p.FechaCreacionUtc)).ToList();
+        if (personas.Count == 0)
+        {
+            return [];
+        }
+
+        var personaIds = personas.Select(p => p.Id).ToList();
+
+        // Secciones deshabilitadas por institución (ADR-0028, spec-0010)
+        var institucionId = personas[0].InstitucionId;
+        var seccionesDeshabilitadas = (await _context.SeccionesInstitucion
+            .Where(s => s.InstitucionId == institucionId && !s.Habilitada)
+            .Select(s => s.Seccion)
+            .ToListAsync(ct)).ToHashSet();
+
+        // Mapeo de secciones activas (FichaPersonal siempre está activa por regla de negocio)
+        var totalSecciones = 7 - seccionesDeshabilitadas.Count;
+        if (totalSecciones < 1) totalSecciones = 1;
+
+        var conFicha = (await _context.FichasPersonales
+            .Where(f => personaIds.Contains(f.PersonaId))
+            .Select(f => f.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conTitulosAcademicos = (await _context.TitulosAcademicos
+            .Where(t => personaIds.Contains(t.PersonaId))
+            .Select(t => t.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conTitulosEnCurso = (await _context.TitulosEnCurso
+            .Where(t => personaIds.Contains(t.PersonaId))
+            .Select(t => t.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conCapacitaciones = (await _context.Capacitaciones
+            .Where(c => personaIds.Contains(c.PersonaId))
+            .Select(c => c.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conExperiencias = (await _context.ExperienciasLaborales
+            .Where(e => personaIds.Contains(e.PersonaId))
+            .Select(e => e.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conReferencias = (await _context.ReferenciasPersonales
+            .Where(r => personaIds.Contains(r.PersonaId))
+            .Select(r => r.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conDocumentos = (await _context.DocumentosPersonales
+            .Where(d => personaIds.Contains(d.PersonaId))
+            .Select(d => d.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var conCuentas = (await _context.CuentasBancarias
+            .Where(c => personaIds.Contains(c.PersonaId))
+            .Select(c => c.PersonaId)
+            .ToListAsync(ct)).ToHashSet();
+
+        var resultado = new List<ResumenRevisionPendienteDto>(personas.Count);
+
+        foreach (var p in personas)
+        {
+            var seccionesConDatos = new List<string>();
+
+            // 1. Ficha Personal (siempre habilitada)
+            if (conFicha.Contains(p.Id))
+            {
+                seccionesConDatos.Add("FichaPersonal");
+            }
+
+            // 2. Formación Académica
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.FormacionAcademica) &&
+                (conTitulosAcademicos.Contains(p.Id) || conTitulosEnCurso.Contains(p.Id)))
+            {
+                seccionesConDatos.Add("FormacionAcademica");
+            }
+
+            // 3. Capacitaciones
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.Capacitaciones) &&
+                conCapacitaciones.Contains(p.Id))
+            {
+                seccionesConDatos.Add("Capacitaciones");
+            }
+
+            // 4. Experiencia Laboral
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.ExperienciaLaboral) &&
+                conExperiencias.Contains(p.Id))
+            {
+                seccionesConDatos.Add("ExperienciaLaboral");
+            }
+
+            // 5. Referencias
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.Referencias) &&
+                conReferencias.Contains(p.Id))
+            {
+                seccionesConDatos.Add("Referencias");
+            }
+
+            // 6. Documentos Personales
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.DocumentosPersonales) &&
+                conDocumentos.Contains(p.Id))
+            {
+                seccionesConDatos.Add("DocumentosPersonales");
+            }
+
+            // 7. Cuenta Bancaria
+            if (!seccionesDeshabilitadas.Contains(SeccionHojaDeVida.CuentaBancaria) &&
+                conCuentas.Contains(p.Id))
+            {
+                seccionesConDatos.Add("CuentaBancaria");
+            }
+
+            var tieneDatos = seccionesConDatos.Count > 0 || p.TratamientoDatosAceptado;
+            string estadoEfectivo;
+
+            if (p.EstadoActualizacion == EstadoActualizacion.Borrador)
+            {
+                estadoEfectivo = tieneDatos ? "Borrador" : "Sin Iniciar";
+            }
+            else
+            {
+                estadoEfectivo = p.EstadoActualizacion.ToString();
+            }
+
+            var conteoConDatos = seccionesConDatos.Count;
+            var porcentaje = totalSecciones > 0 ? (conteoConDatos * 100) / totalSecciones : 0;
+            if (p.EstadoActualizacion == EstadoActualizacion.Enviado || p.EstadoActualizacion == EstadoActualizacion.Aprobado)
+            {
+                porcentaje = 100;
+            }
+
+            resultado.Add(new ResumenRevisionPendienteDto(
+                p.Id,
+                p.Documento,
+                p.Nombre,
+                p.Correo,
+                estadoEfectivo,
+                p.FechaCreacionUtc,
+                totalSecciones,
+                conteoConDatos,
+                porcentaje,
+                seccionesConDatos));
+        }
+
+        return resultado
+            .OrderBy(r => ObtenerPrioridadEstado(r.EstadoActualizacion))
+            .ThenBy(r => r.Nombre ?? r.Documento)
+            .ToList();
     }
+
+    private static int ObtenerPrioridadEstado(string estado) => estado switch
+    {
+        "Enviado" => 1,
+        "Devuelto" => 2,
+        "Borrador" => 3,
+        "Sin Iniciar" => 4,
+        "Aprobado" => 5,
+        _ => 6
+    };
 
     public async Task<ExpedienteRevisionDto> ObtenerExpedienteParaRevisionAsync(string documento, string actorSupervisor, CancellationToken ct = default)
     {
@@ -51,13 +203,16 @@ public class ServicioRevision : IServicioRevision
 
         var ahoraUtc = DateTime.UtcNow;
         var esBorradorIncompletoPostCampana = false;
+        var esBorradorSupervisor = false;
 
-        // RF-FLU-006 / RF-CAP-016:
-        // Si está en borrador, el supervisor nunca puede verla.
-        // El admin puede consultarla en modo solo lectura únicamente tras el fin de la campaña (marcada como «incompleto, no enviado»).
+        // RF-CAP-016 / ADR-0039 / spec-0018:
+        // Si está en borrador:
+        // - Admin post-campaña lo consulta marcado como «Incompleto, no enviado» (RF-CAP-016).
+        // - Supervisor o Admin puede consultarlo en modo solo lectura para seguimiento (ADR-0039).
         if (persona.EstadoActualizacion == EstadoActualizacion.Borrador)
         {
             var esAdmin = _contextoInstitucion.RolActual is RolUsuario.Admin or RolUsuario.Superadmin;
+            var esSupervisor = _contextoInstitucion.RolActual is RolUsuario.Supervisor;
             var campanas = await _context.Campanas
                 .AsNoTracking()
                 .Where(c => c.InstitucionId == persona.InstitucionId)
@@ -65,19 +220,29 @@ public class ServicioRevision : IServicioRevision
             var campanaAbierta = campanas.Any(c => c.EstaAbiertaEn(ahoraUtc));
             var hayCampanaVencida = campanas.Any(c => c.FechaFinUtc < ahoraUtc);
 
-            if (!esAdmin || campanaAbierta || !hayCampanaVencida)
+            if (esAdmin && !campanaAbierta && hayCampanaVencida)
             {
-                throw new ReglaNegocioException("Las solicitudes en borrador no están disponibles para revisión del supervisor.");
+                esBorradorIncompletoPostCampana = true;
             }
-
-            esBorradorIncompletoPostCampana = true;
+            else if (esSupervisor || esAdmin)
+            {
+                esBorradorSupervisor = true;
+            }
+            else
+            {
+                throw new ReglaNegocioException("No tiene permisos para consultar solicitudes en borrador.");
+            }
         }
 
-        // RF-DAT-004, RF-DAT-005, RF-CAP-016: Registrar en auditoría la consulta a datos de otra persona
-        var accionAuditoria = esBorradorIncompletoPostCampana ? "ConsultaBorradorIncompletoPostCampana" : "ConsultaRevision";
+        // RF-DAT-004, RF-DAT-005, RF-CAP-016, ADR-0039: Auditoría de consulta de expediente
+        var accionAuditoria = esBorradorIncompletoPostCampana
+            ? "ConsultaBorradorIncompletoPostCampana"
+            : (esBorradorSupervisor ? "ConsultaBorradorSupervisor" : "ConsultaRevision");
         var detalleAuditoria = esBorradorIncompletoPostCampana
             ? $"Consulta de borrador incompleto de {persona.Documento} tras vencer la campaña (solo lectura)."
-            : $"Consulta de expediente del usuario {persona.Documento} para revisión.";
+            : (esBorradorSupervisor
+                ? $"Consulta de borrador/avance del usuario {persona.Documento} por {actorSupervisor} (solo lectura)."
+                : $"Consulta de expediente del usuario {persona.Documento} para revisión.");
 
         _context.Auditorias.Add(new Auditoria(
             Guid.NewGuid(),
@@ -109,13 +274,37 @@ public class ServicioRevision : IServicioRevision
 
         var capacitacionesObligatorias = await _servicioHojaDeVida.ListarCapacitacionesObligatoriasAsync(persona.Documento, ct);
 
+        string estadoVisible;
+        if (esBorradorIncompletoPostCampana)
+        {
+            estadoVisible = "Incompleto, no enviado";
+        }
+        else if (persona.EstadoActualizacion == EstadoActualizacion.Borrador)
+        {
+            var tieneDatos = persona.TratamientoDatosAceptado ||
+                await _context.FichasPersonales.AnyAsync(f => f.PersonaId == persona.Id, ct) ||
+                await _context.TitulosAcademicos.AnyAsync(t => t.PersonaId == persona.Id, ct) ||
+                await _context.TitulosEnCurso.AnyAsync(t => t.PersonaId == persona.Id, ct) ||
+                await _context.Capacitaciones.AnyAsync(c => c.PersonaId == persona.Id, ct) ||
+                await _context.ExperienciasLaborales.AnyAsync(e => e.PersonaId == persona.Id, ct) ||
+                await _context.ReferenciasPersonales.AnyAsync(r => r.PersonaId == persona.Id, ct) ||
+                await _context.DocumentosPersonales.AnyAsync(d => d.PersonaId == persona.Id, ct) ||
+                await _context.CuentasBancarias.AnyAsync(c => c.PersonaId == persona.Id, ct);
+
+            estadoVisible = tieneDatos ? "Borrador" : "Sin Iniciar";
+        }
+        else
+        {
+            estadoVisible = persona.EstadoActualizacion.ToString();
+        }
+
         return new ExpedienteRevisionDto(
             persona.Id,
             persona.InstitucionId.Valor,
             persona.Documento,
             persona.Nombre,
             persona.Correo,
-            esBorradorIncompletoPostCampana ? "Incompleto, no enviado" : persona.EstadoActualizacion.ToString(),
+            estadoVisible,
             persona.DatosPersonalesJson,
             persona.TratamientoDatosAceptado,
             persona.FechaAceptacionTratamientoDatosUtc,

@@ -61,3 +61,7 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0014](spec-0014/spec.md) | Gestión de políticas y avisos de protección de datos en panel superadmin, issue #120 | Aprobado (2026-10-28) |
 | [spec-0015](spec-0015/spec.md) | Persistencia y sincronización de ficha personal, issue #125 | Alcance autorizado por el solicitante (2026-10-28) |
 | [spec-0016](spec-0016/spec.md) | Gestión de administradores y supervisores por institución, issue #129 | Alcance autorizado por el solicitante (2026-10-28) |
+| [spec-0017](spec-0017/spec.md) | Ejecución y organización de pruebas para agentes | Aprobado v0.1 (2026-10-28) |
+| [spec-0018](spec-0018/spec.md) | Conservar parroquia al guardar la ficha personal, issue #140 | Alcance autorizado por el solicitante (2026-10-28) |
+| [spec-0019](spec-0019/spec.md) | Retiro auditado de adjuntos por supervisor con eliminación física, issue #139 | Alcance autorizado por el solicitante (2026-10-28) |
+| [spec-0020](spec-0020/spec.md) | Visibilidad de borradores y avance institucional para supervisores, issue #143 | Alcance autorizado por el solicitante (2026-10-28) |

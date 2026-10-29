@@ -26,7 +26,11 @@ pnpm --dir src/Frontend format   # prettier --write; format:check solo verifica
 cp .env.example .env && docker compose up --build
 ```
 
-Ejecutar compilación y pruebas antes de dar una tarea por terminada, y reportar la salida real.
+### Pruebas durante el desarrollo
+
+Para iterar en local, ejecuta las pruebas de la clase de backend o del archivo/carpeta de frontend que cambiaste. Crea las nuevas pruebas junto a la unidad correspondiente según la [guía de pruebas locales](CONTRIBUTING.md#pruebas-locales). Si modificas contratos, código compartido, configuración o infraestructura de pruebas, amplía la ejecución a toda el área afectada. Antes de dar una tarea por terminada, compila las áreas modificadas, ejecuta las pruebas pertinentes y reporta el comando, la cantidad de pruebas y la salida real. Un filtro que ejecuta cero pruebas no verifica el cambio.
+
+Los filtros locales no cambian CI: mantiene los niveles y el filtro por rutas de [ADR-0005](docs/decisiones/ADR-0005-ci-por-niveles.md). En PR a `develop` corre unitarias del área afectada; integración corre en PR a `main` y en la ejecución completa semanal sobre `develop`.
 
 ## Ramas y commits
 

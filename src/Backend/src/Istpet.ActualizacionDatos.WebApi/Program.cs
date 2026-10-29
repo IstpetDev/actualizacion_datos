@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -89,7 +90,50 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        if (operation.OperationId is "DescargarArchivo" or "DescargarDocumentoHojaDeVidaPersona" or "DescargarMiDocumentoHojaDeVida" or "ExportarZip" or "ExportarExcel")
+        {
+            if (operation.Responses != null && operation.Responses.TryGetValue("200", out var res200))
+            {
+                var contentType = operation.OperationId switch
+                {
+                    "ExportarZip" => "application/zip",
+                    "ExportarExcel" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "DescargarDocumentoHojaDeVidaPersona" or "DescargarMiDocumentoHojaDeVida" => "application/pdf",
+                    _ => "application/octet-stream"
+                };
+
+                if (res200 is OpenApiResponse resp)
+                {
+                    resp.Content ??= new Dictionary<string, OpenApiMediaType>();
+                    resp.Content[contentType] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = JsonSchemaType.String,
+                            Format = "binary"
+                        }
+                    };
+                }
+                else if (res200.Content != null)
+                {
+                    res200.Content[contentType] = new OpenApiMediaType
+                    {
+                        Schema = new OpenApiSchema
+                        {
+                            Type = JsonSchemaType.String,
+                            Format = "binary"
+                        }
+                    };
+                }
+            }
+        }
+        return Task.CompletedTask;
+    });
+});
 builder.Services.Configure<RouteHandlerOptions>(opciones => opciones.ThrowOnBadRequest = true);
 builder.Services.AddExceptionHandler<Istpet.ActualizacionDatos.WebApi.ValidacionJsonHandler>();
 builder.Services.AddExceptionHandler<ManejadorGlobalExcepciones>();
@@ -1247,6 +1291,60 @@ archivosGroup.MapDelete("/{id:guid}", async (
     }
 })
 .WithName("EliminarArchivo")
+.Produces<MensajeRespuesta>()
+.Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
+.Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
+.Produces(StatusCodes.Status401Unauthorized);
+
+archivosGroup.MapPost("/{id:guid}/retirar", async (
+    Guid id,
+    RetirarArchivoSupervisorRequest request,
+    HttpContext httpContext,
+    IServicioArchivos servicio,
+    IContextoInstitucion contexto,
+    CancellationToken ct) =>
+{
+    if (!EstaAutenticado(httpContext, contexto) || !EsRolSupervisorOAdmin(httpContext, contexto))
+    {
+        return Results.Json(new MensajeRespuesta("Solo un supervisor o administrador puede retirar adjuntos del expediente."), statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var actor = ObtenerDocumentoActual(httpContext, contexto);
+    if (string.IsNullOrWhiteSpace(actor))
+    {
+        return Results.Unauthorized();
+    }
+
+    var rol = contexto.RolActual;
+    if (rol == null)
+    {
+        var claimRol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+        if (!string.IsNullOrEmpty(claimRol) && Enum.TryParse<RolUsuario>(claimRol, ignoreCase: true, out var r))
+        {
+            rol = r;
+        }
+        else
+        {
+            rol = RolUsuario.Supervisor;
+        }
+    }
+
+    try
+    {
+        await servicio.RetirarArchivoSupervisorAsync(id, request.Motivo, actor, rol.Value, ct);
+        return Results.Ok(new MensajeRespuesta("Archivo retirado correctamente del expediente."));
+    }
+    catch (UnauthorizedAccessException ex)
+    {
+        return Results.Json(new MensajeRespuesta(ex.Message), statusCode: StatusCodes.Status403Forbidden);
+    }
+    catch (ReglaNegocioException ex)
+    {
+        return Results.BadRequest(new MensajeRespuesta(ex.Message));
+    }
+})
+.WithName("RetirarArchivoSupervisor")
+.WithSummary("Retirar auditadamente un adjunto por un supervisor o administrador con motivo obligatorio")
 .Produces<MensajeRespuesta>()
 .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
 .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)

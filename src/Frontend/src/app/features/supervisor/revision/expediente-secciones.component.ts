@@ -1,3 +1,4 @@
+import { ObservacionesRevisionComponent } from '../../revision-compartida/observaciones-revision.component';
 import { CommonModule } from '@angular/common';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -5,6 +6,7 @@ import {
   ArchivoDto,
   EstadoCapacitacionObligatoriaPersonaDto,
   HojaDeVidaDto,
+  ObservacionDto,
 } from '../../../api-client';
 
 export type TabExpediente =
@@ -13,7 +15,7 @@ export type TabExpediente =
 @Component({
   selector: 'app-expediente-secciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ObservacionesRevisionComponent],
   template: `
     <div class="expediente-secciones-container" data-testid="expediente-secciones">
       <!-- Navegación de pestañas de secciones -->
@@ -79,6 +81,14 @@ export type TabExpediente =
       <!-- SECCIÓN 1: FICHA PERSONAL -->
       @if (tabActiva() === 'ficha') {
         <div class="tab-panel" data-testid="panel-exp-ficha">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="ficha"
+          />
           @if (hojaDeVida().ficha; as ficha) {
             <div class="ficha-grid">
               <div class="card-dato">
@@ -161,10 +171,27 @@ export type TabExpediente =
       <!-- SECCIÓN 2: FORMACIÓN ACADÉMICA -->
       @if (tabActiva() === 'formacion') {
         <div class="tab-panel" data-testid="panel-exp-formacion">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="formacion"
+          />
           <h4 class="subtitulo-seccion">Títulos Académicos Obtenidos</h4>
           <div class="items-lista">
             @for (t of hojaDeVida().titulos; track t.id) {
               <div class="item-card" [attr.data-testid]="'item-titulo-' + t.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="titulo"
+                  [claveDestino]="t.id"
+                  [archivoId]="t.archivoId"
+                />
                 <div class="item-header">
                   <strong>{{ t.nombreTitulo }}</strong>
                   @if (t.numeroRegistroSenescyt) {
@@ -197,6 +224,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('titulo', t.id, t.nombreTitulo)"
                     [attr.data-testid]="'btn-marcar-titulo-' + t.id"
                   >
@@ -213,6 +241,15 @@ export type TabExpediente =
           <div class="items-lista">
             @for (tc of hojaDeVida().titulosEnCurso; track tc.id) {
               <div class="item-card" [attr.data-testid]="'item-titulo-en-curso-' + tc.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="titulo-en-curso"
+                  [claveDestino]="tc.id"
+                  [archivoId]="tc.archivoId"
+                />
                 <div class="item-header">
                   <strong>{{ tc.nombrePrograma }}</strong>
                   <span class="badge badge-warning">En curso</span>
@@ -245,6 +282,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('titulo-en-curso', tc.id, tc.nombrePrograma)"
                     [attr.data-testid]="'btn-marcar-titulo-en-curso-' + tc.id"
                   >
@@ -262,11 +300,27 @@ export type TabExpediente =
       <!-- SECCIÓN 3: CAPACITACIONES -->
       @if (tabActiva() === 'capacitaciones') {
         <div class="tab-panel" data-testid="panel-exp-capacitaciones">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="capacitaciones"
+          />
           @if (obligatorias().length > 0) {
             <h4 class="subtitulo-seccion">Obligatorias de la Institución</h4>
             <div class="items-lista mb-4" data-testid="lista-obligatorias-revision">
               @for (ob of obligatorias(); track ob.id) {
                 <div class="item-card" [attr.data-testid]="'item-obligatoria-' + ob.id">
+                  <app-observaciones-revision
+                    [observaciones]="observaciones()"
+                    [hojaDeVida]="hojaDeVida()"
+                    [archivos]="archivos()"
+                    [estado]="hojaDeVida().estadoActualizacion"
+                    tipoDestino="capacitacion-obligatoria"
+                    [claveDestino]="ob.id"
+                  />
                   <div class="item-header">
                     <strong>{{ ob.nombre }}</strong>
                     <span
@@ -304,6 +358,7 @@ export type TabExpediente =
                       <button
                         type="button"
                         class="btn btn-warning btn-sm"
+                        [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                         (click)="onMarcarItem('capacitacion', ob.capacitacionId, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-' + ob.id"
                       >
@@ -313,6 +368,7 @@ export type TabExpediente =
                       <button
                         type="button"
                         class="btn btn-warning btn-sm"
+                        [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                         (click)="onMarcarObligatoriaPendiente(ob.id, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-pendiente-' + ob.id"
                       >
@@ -340,6 +396,15 @@ export type TabExpediente =
           <div class="items-lista">
             @for (c of hojaDeVida().capacitaciones; track c.id) {
               <div class="item-card" [attr.data-testid]="'item-capacitacion-' + c.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="capacitacion"
+                  [claveDestino]="c.id"
+                  [archivoId]="c.archivoId"
+                />
                 <div class="item-header">
                   <strong>{{ c.nombreEvento }}</strong>
                   <span class="badge badge-info">{{ c.numeroHoras || 0 }} horas</span>
@@ -368,6 +433,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('capacitacion', c.id, c.nombreEvento)"
                     [attr.data-testid]="'btn-marcar-capacitacion-' + c.id"
                   >
@@ -385,9 +451,26 @@ export type TabExpediente =
       <!-- SECCIÓN 4: EXPERIENCIA LABORAL -->
       @if (tabActiva() === 'experiencia') {
         <div class="tab-panel" data-testid="panel-exp-experiencia">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="experiencia"
+          />
           <div class="items-lista">
             @for (e of hojaDeVida().experiencias; track e.id) {
               <div class="item-card" [attr.data-testid]="'item-experiencia-' + e.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="experiencia"
+                  [claveDestino]="e.id"
+                  [archivoId]="e.archivoId"
+                />
                 <div class="item-header">
                   <strong>{{ e.cargo }}</strong>
                   <span
@@ -426,6 +509,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('experiencia', e.id, e.cargo + ' en ' + e.empleador)"
                     [attr.data-testid]="'btn-marcar-experiencia-' + e.id"
                   >
@@ -443,9 +527,25 @@ export type TabExpediente =
       <!-- SECCIÓN 5: REFERENCIAS -->
       @if (tabActiva() === 'referencias') {
         <div class="tab-panel" data-testid="panel-exp-referencias">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="referencias"
+          />
           <div class="items-lista">
             @for (r of hojaDeVida().referencias; track r.id) {
               <div class="item-card" [attr.data-testid]="'item-referencia-' + r.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="referencia"
+                  [claveDestino]="r.id"
+                />
                 <div class="item-header">
                   <strong>{{ r.nombresApellidos }}</strong>
                   <span class="badge badge-info">{{ r.tipo }}</span>
@@ -465,6 +565,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('referencia', r.id, r.nombresApellidos)"
                     [attr.data-testid]="'btn-marcar-referencia-' + r.id"
                   >
@@ -484,9 +585,25 @@ export type TabExpediente =
       <!-- SECCIÓN 6: DOCUMENTOS Y RESPALDOS -->
       @if (tabActiva() === 'documentos') {
         <div class="tab-panel" data-testid="panel-exp-documentos">
+          <app-observaciones-revision
+            [observaciones]="observaciones()"
+            [hojaDeVida]="hojaDeVida()"
+            [archivos]="archivos()"
+            [estado]="hojaDeVida().estadoActualizacion"
+            tipoDestino="seccion"
+            claveDestino="documentos"
+          />
           <div class="items-lista">
             @for (arc of archivos(); track arc.id) {
               <div class="item-card" [attr.data-testid]="'item-documento-' + arc.id">
+                <app-observaciones-revision
+                  [observaciones]="observaciones()"
+                  [hojaDeVida]="hojaDeVida()"
+                  [archivos]="archivos()"
+                  [estado]="hojaDeVida().estadoActualizacion"
+                  tipoDestino="archivo"
+                  [claveDestino]="arc.id"
+                />
                 <div class="item-header">
                   <strong>{{ arc.nombreOriginal }}</strong>
                   <span class="badge badge-secondary"
@@ -512,6 +629,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
                     (click)="onMarcarItem('documento', arc.id, arc.nombreOriginal)"
                     [attr.data-testid]="'btn-marcar-documento-' + arc.id"
                   >
@@ -801,6 +919,7 @@ export type TabExpediente =
 })
 export class ExpedienteSeccionesComponent {
   readonly hojaDeVida = input.required<HojaDeVidaDto>();
+  readonly observaciones = input<ObservacionDto[]>([]);
   readonly archivos = input<ArchivoDto[]>([]);
   readonly obligatorias = input<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
   readonly puedeVincularPorAyuda = input<boolean>(true);

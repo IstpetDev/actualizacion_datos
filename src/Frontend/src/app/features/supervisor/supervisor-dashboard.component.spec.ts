@@ -1,3 +1,5 @@
+import { Subject } from 'rxjs';
+import { observacionesFicticias } from '../revision-compartida/observaciones-revision.fixture';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -28,6 +30,7 @@ describe('SupervisorDashboardComponent', () => {
   };
   let archivosClientMock: {
     descargarArchivo: Mock;
+    retirarArchivoSupervisor: Mock;
   };
   let authServiceMock: {
     sesion: Mock;
@@ -124,6 +127,7 @@ describe('SupervisorDashboardComponent', () => {
 
     archivosClientMock = {
       descargarArchivo: vi.fn().mockReturnValue(of(new Blob(['test']))),
+      retirarArchivoSupervisor: vi.fn().mockReturnValue(of({ mensaje: 'Archivo retirado' })),
     };
 
     authServiceMock = {
@@ -150,6 +154,44 @@ describe('SupervisorDashboardComponent', () => {
     fixture = TestBed.createComponent(SupervisorDashboardComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('una consulta tardía no mezcla el historial con otro expediente seleccionado', () => {
+    const pendiente = new Subject<ExpedienteRevisionDto>();
+    revisionClientMock.obtenerExpedienteParaRevision
+      .mockReturnValueOnce(pendiente)
+      .mockReturnValueOnce(
+        of({ ...expedienteMock, documento: '0000000144', observaciones: observacionesFicticias }),
+      );
+    component.verExpediente('1700000001');
+    component.verExpediente('0000000144');
+    pendiente.next(expedienteMock);
+    pendiente.complete();
+    expect(component.expedienteSeleccionado()?.documento).toBe('0000000144');
+    expect(component.expedienteSeleccionado()?.observaciones).toEqual(observacionesFicticias);
+  });
+
+  it('conserva abierto el expediente devuelto con su historial y lo pasa a las secciones', () => {
+    component.verExpediente('1700000001');
+    const exp = component.expedienteSeleccionado()!;
+    revisionClientMock.obtenerExpedienteParaRevision.mockReturnValue(
+      of({ ...exp, estadoActualizacion: 'Devuelto', observaciones: observacionesFicticias }),
+    );
+    component.observacionGeneral.set('Indicación ficticia');
+    component.confirmarDevolucion();
+    fixture.detectChanges();
+    expect(component.expedienteSeleccionado()?.estadoActualizacion).toBe('Devuelto');
+    component.iniciarMarcaItem({
+      tipo: 'Item',
+      clave: 'titulo:registro-ficticio',
+      label: 'Título Ficticio',
+    });
+    expect(component.mostrarModalDevolver()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Indicación general ficticia 2');
+    expect(
+      (fixture.nativeElement.querySelector('[data-testid="btn-aprobar"]') as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it('debe_crearse_correctamente_y_cargar_pendientes_en_ngOnInit', () => {
@@ -299,5 +341,209 @@ describe('SupervisorDashboardComponent', () => {
       headers: { 'content-disposition': 'attachment; filename="hoja-de-vida-1700000001.pdf"' },
     });
     expect(component.descargandoPdf()).toBe(false);
+  });
+
+  it('el_expediente_muestra_metadatos_completos_de_archivos_adjuntos_incluyendo_fecha_y_area', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    const archivoEl = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="archivo-22222222-2222-2222-2222-222222222222"]',
+    );
+    expect(archivoEl).not.toBeNull();
+    const texto = archivoEl?.textContent || '';
+    expect(texto).toContain('cedula.pdf');
+    expect(texto).toContain('cedula_frontal');
+    expect(texto).toContain('application/pdf');
+    expect(texto).toContain('Subido:');
+  });
+
+  it('descargarArchivo_soporta_FileResponse_sin_danar_bytes', () => {
+    archivosClientMock.descargarArchivo.mockReturnValue(
+      of({ data: new Blob(['test-binary']), fileName: 'cedula.pdf' }),
+    );
+
+    component.descargarArchivo('22222222-2222-2222-2222-222222222222', 'cedula.pdf');
+
+    expect(archivosClientMock.descargarArchivo).toHaveBeenCalledWith(
+      '22222222-2222-2222-2222-222222222222',
+    );
+    expect(component.error()).toBeNull();
+  });
+
+  it('debe_mostrar_estados_y_avance_por_seccion_para_todas_las_personas_RF_REV_001_002', () => {
+    const listaCompleta: ResumenRevisionPendienteDto[] = [
+      {
+        id: 'p-1',
+        documento: '1700000001',
+        nombre: 'Usuario Sin Iniciar',
+        correo: 'sin.iniciar@ejemplo.test',
+        estadoActualizacion: 'Sin Iniciar',
+        fechaCreacionUtc: new Date(),
+        totalSecciones: 7,
+        seccionesConDatos: 0,
+        porcentajeAvance: 0,
+        seccionesCompletadas: [],
+      },
+      {
+        id: 'p-2',
+        documento: '1700000002',
+        nombre: 'Usuario Con Borrador',
+        correo: 'borrador@ejemplo.test',
+        estadoActualizacion: 'Borrador',
+        fechaCreacionUtc: new Date(),
+        totalSecciones: 7,
+        seccionesConDatos: 3,
+        porcentajeAvance: 42,
+        seccionesCompletadas: ['FichaPersonal', 'FormacionAcademica', 'CuentaBancaria'],
+      },
+    ];
+
+    component.pendientes.set(listaCompleta);
+    fixture.detectChanges();
+
+    const badgeSinIniciar = fixture.nativeElement.querySelector(
+      '[data-testid="badge-estado-1700000001"]',
+    );
+    expect(badgeSinIniciar).toBeTruthy();
+    expect(badgeSinIniciar.textContent.trim()).toBe('Sin Iniciar');
+    expect(badgeSinIniciar.classList.contains('badge-secondary')).toBe(true);
+
+    const avanceSinIniciar = fixture.nativeElement.querySelector(
+      '[data-testid="avance-1700000001"]',
+    );
+    expect(avanceSinIniciar.textContent).toContain('0/7 secciones (0%)');
+
+    const badgeBorrador = fixture.nativeElement.querySelector(
+      '[data-testid="badge-estado-1700000002"]',
+    );
+    expect(badgeBorrador).toBeTruthy();
+    expect(badgeBorrador.textContent.trim()).toBe('Borrador');
+    expect(badgeBorrador.classList.contains('badge-warning')).toBe(true);
+
+    const avanceBorrador = fixture.nativeElement.querySelector('[data-testid="avance-1700000002"]');
+    expect(avanceBorrador.textContent).toContain('3/7 secciones (42%)');
+  });
+
+  it('debe_filtrar_la_lista_de_personas_por_texto_o_cedula', () => {
+    const listaCompleta: ResumenRevisionPendienteDto[] = [
+      {
+        id: 'p-1',
+        documento: '1700000001',
+        nombre: 'Ana Docente',
+        correo: 'ana@ejemplo.test',
+        estadoActualizacion: 'Sin Iniciar',
+        fechaCreacionUtc: new Date(),
+      },
+      {
+        id: 'p-2',
+        documento: '1700000002',
+        nombre: 'Carlos Perez',
+        correo: 'carlos@ejemplo.test',
+        estadoActualizacion: 'Borrador',
+        fechaCreacionUtc: new Date(),
+      },
+    ];
+
+    component.pendientes.set(listaCompleta);
+    fixture.detectChanges();
+
+    expect(component.pendientesFiltrados().length).toBe(2);
+
+    component.filtroTexto.set('Carlos');
+    fixture.detectChanges();
+    expect(component.pendientesFiltrados().length).toBe(1);
+    expect(component.pendientesFiltrados()[0].documento).toBe('1700000002');
+
+    component.filtroTexto.set('1700000001');
+    fixture.detectChanges();
+    expect(component.pendientesFiltrados().length).toBe(1);
+    expect(component.pendientesFiltrados()[0].nombre).toBe('Ana Docente');
+  });
+
+  it('cuando_el_expediente_esta_en_borrador_deshabilita_aprobar_y_devolver_y_muestra_aviso_RF_REV_003_004', () => {
+    revisionClientMock.obtenerExpedienteParaRevision.mockReturnValue(
+      of({
+        ...expedienteMock,
+        estadoActualizacion: 'Borrador',
+      }),
+    );
+
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    const avisoModoLectura = fixture.nativeElement.querySelector(
+      '[data-testid="aviso-modo-lectura"]',
+    );
+    expect(avisoModoLectura).toBeTruthy();
+    expect(avisoModoLectura.textContent).toContain('Modo solo lectura');
+    expect(avisoModoLectura.textContent).toContain('Borrador');
+
+    const btnAprobar = fixture.nativeElement.querySelector('[data-testid="btn-aprobar"]');
+    expect((btnAprobar as HTMLButtonElement).disabled).toBe(true);
+
+    const btnDevolver = fixture.nativeElement.querySelector('[data-testid="btn-abrir-devolver"]');
+    expect((btnDevolver as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  describe('Issue #139: retiro auditado de adjuntos por supervisor', () => {
+    it('muestra_boton_retirar_en_cada_archivo_del_expediente', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      const btnRetirar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-retirar-22222222-2222-2222-2222-222222222222"]',
+      );
+      expect(btnRetirar).not.toBeNull();
+    });
+
+    it('iniciar_retiro_abre_modal_y_deshabilita_confirmar_sin_motivo', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      component.iniciarRetiroArchivo(archivosMock[0]);
+      fixture.detectChanges();
+
+      const modal = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="modal-retiro-archivo"]',
+      );
+      expect(modal).not.toBeNull();
+      expect(component.archivoParaRetirar()).toEqual(archivosMock[0]);
+
+      const btnConfirmar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-confirmar-retiro"]',
+      ) as HTMLButtonElement;
+      expect(btnConfirmar).not.toBeNull();
+      expect(btnConfirmar.disabled).toBe(true);
+
+      component.cancelarRetiroArchivo();
+      fixture.detectChanges();
+      expect(component.archivoParaRetirar()).toBeNull();
+    });
+
+    it('confirmar_retiro_con_motivo_llama_a_api_y_recarga_archivos', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      component.iniciarRetiroArchivo(archivosMock[0]);
+      component.motivoRetiro = 'Documento con firmas borrosas e ilegibles.';
+      fixture.detectChanges();
+
+      const btnConfirmar = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-confirmar-retiro"]',
+      ) as HTMLButtonElement;
+      expect(btnConfirmar.disabled).toBe(false);
+
+      revisionClientMock.listarArchivosExpediente.mockClear();
+      component.confirmarRetiroArchivo();
+
+      expect(archivosClientMock.retirarArchivoSupervisor).toHaveBeenCalledWith(
+        '22222222-2222-2222-2222-222222222222',
+        { motivo: 'Documento con firmas borrosas e ilegibles.' },
+      );
+      expect(revisionClientMock.listarArchivosExpediente).toHaveBeenCalledWith('1700000001');
+      expect(component.archivoParaRetirar()).toBeNull();
+      expect(component.mensajeExito()).toContain('El adjunto ha sido retirado');
+    });
   });
 });
