@@ -83,15 +83,30 @@ jobs:
           tailscale-authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      # Diagnóstico informativo: deja en el log si la VPN va directa o por relay (DERP),
+      # que es la causa habitual de transferencias lentas. No detiene el despliegue.
+      - name: Diagnosticar conexión con el servidor
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          sudo tailscale status || true
+          sudo tailscale ping -c 5 "${HOST}" || true
+
+      # Se envía el .tar.gz tal cual: docker load acepta gzip y así viajan
+      # unas 3-4 veces menos datos que con la imagen descomprimida.
       - name: Transferir imágenes Docker al servidor
+        timeout-minutes: 10
         env:
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
           for archivo in imagen-backend.tar.gz imagen-frontend.tar.gz; do
-            echo "Transfiriendo ${archivo}..."
-            gunzip -c "${archivo}" \
-              | ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load"
+            echo "Transfiriendo ${archivo} ($(du -h "${archivo}" | cut -f1))..."
+            inicio=$(date +%s)
+            ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_rsa "${USER}@${HOST}" "docker load" < "${archivo}"
+            echo "${archivo} cargado en $(( $(date +%s) - inicio )) s."
           done
 
       - name: Sincronizar archivos de orquestación

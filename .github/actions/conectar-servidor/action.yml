@@ -32,5 +32,7 @@ runs:
           'Host *' \
           '  StrictHostKeyChecking accept-new' \
           '  IdentityFile ~/.ssh/id_rsa' \
-          '  IdentitiesOnly yes' > ~/.ssh/config
+          '  IdentitiesOnly yes' \
+          '  ServerAliveInterval 15' \
+          '  ServerAliveCountMax 4' > ~/.ssh/config
         chmod 600 ~/.ssh/config
