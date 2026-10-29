@@ -1,5 +1,5 @@
 import { ValidacionHojaDeVidaService } from '../usuario/hoja-de-vida/servicios/validacion-hoja-de-vida.service';
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize, forkJoin, Observable } from 'rxjs';
 import {
@@ -9,6 +9,7 @@ import {
   ElementoCatalogoDto,
 } from '../../api-client';
 import { mensajeError } from '../../core/auth/mensaje-error';
+import { filtrarCatalogo } from '../../core/util/filtro-busqueda.util';
 import {
   catalogoOAlternativa,
   nuloSiNoHayContenido,
@@ -82,9 +83,18 @@ import {
             </select>
             @if (bancos().length) {
               <label for="banco">Banco</label>
+              <input
+                type="search"
+                class="form-control form-control-sm mb-1"
+                placeholder="Buscar banco..."
+                [ngModel]="filtroBanco()"
+                (ngModelChange)="filtroBanco.set($event)"
+                name="buscarBanco"
+                data-testid="input-buscar-banco"
+              />
               <select id="banco" name="banco" [(ngModel)]="bancoId">
                 <option [ngValue]="null">Otro (escribir el nombre)</option>
-                @for (banco of bancos(); track banco.id) {
+                @for (banco of bancosFiltrados(); track banco.id) {
                   <option [ngValue]="banco.id">{{ banco.nombre }}</option>
                 }
               </select>
@@ -162,6 +172,10 @@ export class MiCuentaBancariaComponent implements OnInit {
   readonly cuenta = signal<CuentaBancariaDto | null>(null);
   readonly tipos = signal<ElementoCatalogoDto[]>([]);
   readonly bancos = signal<ElementoCatalogoDto[]>([]);
+  readonly filtroBanco = signal('');
+  readonly bancosFiltrados = computed(() =>
+    filtrarCatalogo(this.bancos(), this.filtroBanco(), this.bancoId),
+  );
   readonly numeroCompleto = signal('');
   readonly cargando = signal(true);
   readonly ocupado = signal(false);

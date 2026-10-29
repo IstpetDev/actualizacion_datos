@@ -7916,6 +7916,7 @@
           "telefonoConvencional",
           "celular",
           "correoInstitucional",
+          "correoPersonal",
           "discapacidadId",
           "porcentajeDiscapacidad",
           "numeroCarnetDiscapacidad",
@@ -8084,6 +8085,12 @@
             ]
           },
           "correoInstitucional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correoPersonal": {
             "type": [
               "null",
               "string"
@@ -8579,6 +8586,12 @@
             ]
           },
           "correoInstitucional": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correoPersonal": {
             "type": [
               "null",
               "string"

@@ -79,6 +79,13 @@
         "multilinea": false,
         "tipo": "correo"
       },
+      "correoPersonal": {
+        "maximoCaracteres": 200,
+        "patron": "^[A-Za-z0-9!#$%\u0026\u0027*\u002B/=?^_\u0060{|}~-]\u002B(?:\\.[A-Za-z0-9!#$%\u0026\u0027*\u002B/=?^_\u0060{|}~-]\u002B)*@[A-Za-z0-9.-]\u002B$",
+        "entero": false,
+        "multilinea": false,
+        "tipo": "correo_personal"
+      },
       "porcentajeDiscapacidad": {
         "minimo": 0,
         "maximo": 100,

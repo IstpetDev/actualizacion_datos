@@ -31,6 +31,7 @@ public class GeneradorPdfHojaDeVidaTests
             Celular: "0991234567",
             TelefonoConvencional: "072888999",
             CorreoInstitucional: "carlos.perez@instituto.test",
+            CorreoPersonal: "carlos.personal@correo.test",
             RegistroSenescyt: new RegistroSenescytPrincipal("1005-2015-123456", new DateOnly(2015, 8, 12))
         );
 

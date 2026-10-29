@@ -1172,6 +1172,11 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("correo_institucional");
 
+                    b.Property<string>("CorreoPersonal")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("correo_personal");
+
                     b.Property<int?>("DiscapacidadId")
                         .HasColumnType("integer")
                         .HasColumnName("discapacidad_id");

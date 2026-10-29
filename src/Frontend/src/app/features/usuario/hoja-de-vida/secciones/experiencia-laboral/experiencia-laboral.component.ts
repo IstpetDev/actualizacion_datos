@@ -2,7 +2,7 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, inject, OnDestroy, OnInit, signal, computed } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import {
   ExperienciaLaboralDto,
   GuardarExperienciaLaboralRequest,
 } from '../../../../../api-client';
+import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -104,6 +105,15 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <div class="grid-dos mt-3">
             <div class="form-group">
               <label for="paisExperiencia">País</label>
+              <input
+                type="search"
+                class="form-control mb-1"
+                [ngModel]="filtroPais()"
+                (ngModelChange)="filtroPais.set($event)"
+                placeholder="Buscar país..."
+                data-testid="input-buscar-pais-experiencia"
+                aria-label="Filtrar catálogo de países para experiencia laboral"
+              />
               <select
                 [attr.aria-describedby]="'error-modelo-paisId'"
                 id="paisExperiencia"
@@ -112,7 +122,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 data-testid="select-pais-experiencia"
               >
                 <option [ngValue]="undefined">Seleccione país...</option>
-                @for (p of paises(); track p.id) {
+                @for (p of paisesFiltrados(); track p.id) {
                   <option [ngValue]="p.id">{{ p.nombre }}</option>
                 }
               </select>
@@ -532,6 +542,10 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   readonly experiencias = this.state.experiencias;
 
   readonly paises = signal<ElementoCatalogoDto[]>([]);
+  readonly filtroPais = signal('');
+  readonly paisesFiltrados = computed(() =>
+    filtrarCatalogo(this.paises(), this.filtroPais(), this.modelo.paisId),
+  );
   readonly mostrarFormulario = signal(false);
   readonly idEdicion = signal<string | undefined>(undefined);
   readonly errorFormulario = signal('');
@@ -608,6 +622,7 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   abrirFormulario(): void {
     this.idEdicion.set(undefined);
     this.errorFormulario.set('');
+    this.filtroPais.set('');
     this.fechaInicioStr = '';
     this.fechaFinStr = '';
     this.modelo = {
@@ -627,6 +642,7 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   editar(e: ExperienciaLaboralDto): void {
     this.idEdicion.set(e.id);
     this.errorFormulario.set('');
+    this.filtroPais.set('');
     this.modelo = {
       empleador: e.empleador,
       cargo: e.cargo,
@@ -646,6 +662,7 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   cancelarFormulario(): void {
     this.mostrarFormulario.set(false);
     this.idEdicion.set(undefined);
+    this.filtroPais.set('');
   }
 
   guardarObservable(): Observable<boolean> {

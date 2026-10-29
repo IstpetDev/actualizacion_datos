@@ -8952,6 +8952,7 @@ export interface FichaPersonalDto {
     telefonoConvencional: string | undefined;
     celular: string | undefined;
     correoInstitucional: string | undefined;
+    correoPersonal: string | undefined;
     discapacidadId: number | undefined;
     porcentajeDiscapacidad: number | undefined;
     numeroCarnetDiscapacidad: string | undefined;
@@ -9054,6 +9055,7 @@ export interface GuardarFichaPersonalRequest {
     telefonoConvencional?: string | undefined;
     celular?: string | undefined;
     correoInstitucional?: string | undefined;
+    correoPersonal?: string | undefined;
     discapacidadId?: number | undefined;
     porcentajeDiscapacidad?: number | undefined;
     numeroCarnetDiscapacidad?: string | undefined;

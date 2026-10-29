@@ -2,7 +2,7 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
 import { ValidacionHojaDeVidaService } from '../../servicios/validacion-hoja-de-vida.service';
 import { fechaSinHora } from '../../servicios/fecha-sin-hora';
 import { CommonModule } from '@angular/common';
-import { DestroyRef, Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { DestroyRef, Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
@@ -15,6 +15,7 @@ import {
   TituloAcademicoDto,
   TituloEnCursoDto,
 } from '../../../../../api-client';
+import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -165,6 +166,16 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <div class="grid-dos mt-3">
                 <div class="form-group">
                   <label for="universidad">Universidad / Institución de Educación Superior</label>
+                  <input
+                    type="search"
+                    class="form-control form-control-sm mb-1 input-busqueda-select"
+                    placeholder="Buscar universidad..."
+                    [ngModel]="filtroUniversidad()"
+                    (ngModelChange)="filtroUniversidad.set($event)"
+                    [disabled]="!puedeEditar()"
+                    name="buscarUniversidad"
+                    data-testid="buscar-universidad"
+                  />
                   <select
                     [attr.aria-describedby]="'error-modeloTitulo-universidadId'"
                     id="universidad"
@@ -173,7 +184,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     data-testid="select-universidad"
                   >
                     <option [ngValue]="undefined">Seleccione institución o ingrese otra...</option>
-                    @for (u of universidades(); track u.id) {
+                    @for (u of universidadesFiltradas(); track u.id) {
                       <option [ngValue]="u.id">{{ u.nombre }}</option>
                     }
                   </select>
@@ -1089,6 +1100,14 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
   readonly gradosAcademicos = signal<ElementoCatalogoDto[]>([]);
   readonly todosLosGrados = signal<ElementoCatalogoDto[]>([]);
   readonly universidades = signal<ElementoCatalogoDto[]>([]);
+  readonly filtroUniversidad = signal('');
+  readonly universidadesFiltradas = computed(() =>
+    filtrarCatalogo(
+      this.universidades(),
+      this.filtroUniversidad(),
+      this.modeloTitulo.universidadId,
+    ),
+  );
   readonly camposAmplios = signal<ElementoCatalogoDto[]>([]);
   readonly camposEspecificos = signal<ElementoCatalogoDto[]>([]);
   readonly camposDetallados = signal<ElementoCatalogoDto[]>([]);
