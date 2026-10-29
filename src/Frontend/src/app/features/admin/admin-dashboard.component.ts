@@ -19,6 +19,7 @@ import { EstadoCuentasBancariasComponent } from '../cuenta-bancaria/estado-cuent
 import { ConfiguracionRequisitosComponent } from './configuracion/configuracion-requisitos.component';
 import { InformeNominaComponent } from './nomina/informe-nomina.component';
 import { PersonalInstitucionalComponent } from '../personal-institucional/personal-institucional.component';
+import { coincideBusqueda } from '../../core/util/filtro-busqueda.util';
 
 type TabAdmin =
   'campanas' | 'personas' | 'exportacion' | 'configuracion' | 'cuentas' | 'supervisores';
@@ -1520,14 +1521,14 @@ export class AdminDashboardComponent implements OnInit {
   readonly filasPorPagina = signal<number>(10);
 
   readonly personasFiltradas = computed(() => {
-    const texto = this.filtroBusqueda().trim().toLowerCase();
+    const texto = this.filtroBusqueda().trim();
     const filtro = this.filtroAcceso();
     return this.personas().filter((p) => {
       const coincideTexto =
         !texto ||
-        (p.documento && p.documento.toLowerCase().includes(texto)) ||
-        (p.nombre && p.nombre.toLowerCase().includes(texto)) ||
-        (p.correo && p.correo.toLowerCase().includes(texto));
+        coincideBusqueda(p.documento, texto) ||
+        coincideBusqueda(p.nombre, texto) ||
+        coincideBusqueda(p.correo, texto);
 
       const coincideAcceso =
         filtro === 'todos' ||

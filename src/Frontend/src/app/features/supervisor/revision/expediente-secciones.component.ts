@@ -113,6 +113,12 @@ export type TabExpediente =
                 <span class="valor">{{ ficha.correoInstitucional || '—' }}</span>
               </div>
               <div class="card-dato">
+                <span class="label">Correo Personal:</span>
+                <span class="valor" data-testid="expediente-correo-personal">{{
+                  ficha.correoPersonal || '—'
+                }}</span>
+              </div>
+              <div class="card-dato">
                 <span class="label">Teléfonos:</span>
                 <span class="valor"
                   >Cel: {{ ficha.celular || '—' }} | Conv:

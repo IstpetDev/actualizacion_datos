@@ -54,6 +54,7 @@ public sealed record DatosPersonalesDocumento(
     string? Celular = null,
     string? TelefonoConvencional = null,
     string? CorreoInstitucional = null,
+    string? CorreoPersonal = null,
     RegistroSenescytPrincipal? RegistroSenescyt = null)
 {
     public string NombreCompleto =>

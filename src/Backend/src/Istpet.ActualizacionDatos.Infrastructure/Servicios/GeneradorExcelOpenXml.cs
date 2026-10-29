@@ -21,7 +21,8 @@ internal static class GeneradorExcelOpenXml
         bool TratamientoDatosAceptado,
         DateTime FechaCreacionUtc,
         string Perfil = "",
-        string EstadoCapacitacionesObligatorias = "");
+        string EstadoCapacitacionesObligatorias = "",
+        string CorreoPersonal = "—");
 
     public sealed record FilaCapacitacionObligatoria(
         string Documento,
@@ -162,7 +163,7 @@ internal static class GeneradorExcelOpenXml
         var sb = new StringBuilder();
         sb.AppendLine("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
         sb.AppendLine("""<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">""");
-        sb.AppendLine(CultureInfo.InvariantCulture, $"  <dimension ref=\"A1:J{totalFilas}\"/>");
+        sb.AppendLine(CultureInfo.InvariantCulture, $"  <dimension ref=\"A1:K{totalFilas}\"/>");
         sb.AppendLine("""
           <sheetViews>
             <sheetView tabSelected="1" workbookViewId="0">
@@ -173,13 +174,14 @@ internal static class GeneradorExcelOpenXml
             <col min="1" max="1" width="16" customWidth="1"/>
             <col min="2" max="2" width="30" customWidth="1"/>
             <col min="3" max="3" width="32" customWidth="1"/>
-            <col min="4" max="4" width="16" customWidth="1"/>
-            <col min="5" max="5" width="22" customWidth="1"/>
-            <col min="6" max="6" width="18" customWidth="1"/>
-            <col min="7" max="7" width="28" customWidth="1"/>
-            <col min="8" max="8" width="22" customWidth="1"/>
-            <col min="9" max="9" width="30" customWidth="1"/>
+            <col min="4" max="4" width="32" customWidth="1"/>
+            <col min="5" max="5" width="16" customWidth="1"/>
+            <col min="6" max="6" width="22" customWidth="1"/>
+            <col min="7" max="7" width="18" customWidth="1"/>
+            <col min="8" max="8" width="28" customWidth="1"/>
+            <col min="9" max="9" width="22" customWidth="1"/>
             <col min="10" max="10" width="30" customWidth="1"/>
+            <col min="11" max="11" width="30" customWidth="1"/>
           </cols>
         """);
         sb.AppendLine("  <sheetData>");
@@ -189,13 +191,14 @@ internal static class GeneradorExcelOpenXml
         sb.AppendLine(CrearCeldaTexto("A1", "Documento", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("B1", "Nombres y Apellidos", estilo: 1));
         sb.AppendLine(CrearCeldaTexto("C1", "Correo Institucional", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("D1", "Rol de Acceso", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("E1", "Estado de Actualización", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("F1", "Archivos Adjuntos", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("G1", "Tratamiento de Datos Aceptado", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("H1", "Fecha Registro (UTC)", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("I1", "Perfil profesional generado", estilo: 1));
-        sb.AppendLine(CrearCeldaTexto("J1", "Capacitaciones Obligatorias", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("D1", "Correo Personal", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("E1", "Rol de Acceso", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("F1", "Estado de Actualización", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("G1", "Archivos Adjuntos", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("H1", "Tratamiento de Datos Aceptado", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("I1", "Fecha Registro (UTC)", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("J1", "Perfil profesional generado", estilo: 1));
+        sb.AppendLine(CrearCeldaTexto("K1", "Capacitaciones Obligatorias", estilo: 1));
         sb.AppendLine("    </row>");
 
         // Filas de datos
@@ -208,13 +211,14 @@ internal static class GeneradorExcelOpenXml
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"A{numFila}"), fila.Documento));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"B{numFila}"), fila.Nombre));
             sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"C{numFila}"), fila.Correo));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"D{numFila}"), fila.Rol));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"E{numFila}"), fila.Estado));
-            sb.AppendLine(CrearCeldaNumero(string.Create(CultureInfo.InvariantCulture, $"F{numFila}"), fila.CantidadArchivos));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"G{numFila}"), fila.TratamientoDatosAceptado ? "Sí" : "No"));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"H{numFila}"), fila.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"I{numFila}"), fila.Perfil));
-            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"J{numFila}"), fila.EstadoCapacitacionesObligatorias));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"D{numFila}"), fila.CorreoPersonal));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"E{numFila}"), fila.Rol));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"F{numFila}"), fila.Estado));
+            sb.AppendLine(CrearCeldaNumero(string.Create(CultureInfo.InvariantCulture, $"G{numFila}"), fila.CantidadArchivos));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"H{numFila}"), fila.TratamientoDatosAceptado ? "Sí" : "No"));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"I{numFila}"), fila.FechaCreacionUtc.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"J{numFila}"), fila.Perfil));
+            sb.AppendLine(CrearCeldaTexto(string.Create(CultureInfo.InvariantCulture, $"K{numFila}"), fila.EstadoCapacitacionesObligatorias));
             sb.AppendLine("    </row>");
         }
 

@@ -33,6 +33,10 @@ public sealed class ValidacionHojaDeVidaTests
         { "CorreoInstitucional", "a..b@institucion-ficticia.example", false },
         { "CorreoInstitucional", "a@institucion-ficticia.example.", false },
         { "CorreoInstitucional", "a\n@institucion-ficticia.example", false },
+        { "CorreoPersonal", "persona.ficticia@gmail.com", true },
+        { "CorreoPersonal", "otro.correo@correo-personal.org", true },
+        { "CorreoPersonal", "invalido-sin-arroba", false },
+        { "CorreoPersonal", "invalido@dos@arrobas.com", false },
     };
 
     [Theory, MemberData(nameof(Casos))]

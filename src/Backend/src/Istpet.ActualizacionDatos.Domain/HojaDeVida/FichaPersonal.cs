@@ -25,6 +25,7 @@ public sealed record DatosFichaPersonal(
     string? TelefonoConvencional = null,
     string? Celular = null,
     string? CorreoInstitucional = null,
+    string? CorreoPersonal = null,
     int? DiscapacidadId = null,
     int? PorcentajeDiscapacidad = null,
     string? NumeroCarnetDiscapacidad = null,
@@ -63,6 +64,7 @@ public class FichaPersonal : EntidadInstitucional
     public string? TelefonoConvencional { get; private set; }
     public string? Celular { get; private set; }
     public string? CorreoInstitucional { get; private set; }
+    public string? CorreoPersonal { get; private set; }
 
     public int? DiscapacidadId { get; private set; }
     public int? PorcentajeDiscapacidad { get; private set; }
@@ -130,6 +132,7 @@ public class FichaPersonal : EntidadInstitucional
         TelefonoConvencional = Limpiar(datos.TelefonoConvencional);
         Celular = Limpiar(datos.Celular);
         CorreoInstitucional = Limpiar(datos.CorreoInstitucional);
+        CorreoPersonal = Limpiar(datos.CorreoPersonal);
 
         DiscapacidadId = datos.DiscapacidadId;
         PorcentajeDiscapacidad = datos.DiscapacidadId is null ? null : datos.PorcentajeDiscapacidad;

@@ -203,6 +203,7 @@ public sealed class ArmadorDatosDocumento(
             Celular: ficha?.Celular,
             TelefonoConvencional: ficha?.TelefonoConvencional,
             CorreoInstitucional: ficha?.CorreoInstitucional ?? persona.Correo,
+            CorreoPersonal: ficha?.CorreoPersonal,
             RegistroSenescyt: registroSenescytPrincipal);
 
         // Perfil profesional generado determinista (ADR-0025)

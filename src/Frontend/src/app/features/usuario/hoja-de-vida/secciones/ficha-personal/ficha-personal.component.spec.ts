@@ -813,4 +813,66 @@ describe('FichaPersonalComponent', () => {
       expect(component.errorParroquia()).toBe('');
     });
   });
+
+  describe('correo personal y filtros de búsqueda tolerantes a acentos', () => {
+    it('carga el correo personal existente y lo envía al guardar', () => {
+      const fichaConCorreo: FichaPersonalDto = {
+        personaId: 'p-1',
+        correoPersonal: 'correo.ficticio@ejemplo.test',
+        primerNombre: 'Carlos',
+        primerApellido: 'Mendoza',
+      } as unknown as FichaPersonalDto;
+
+      fichaActual.set(fichaConCorreo);
+      fixture.detectChanges();
+
+      expect(component.modelo.correoPersonal).toBe('correo.ficticio@ejemplo.test');
+
+      component.modelo.correoPersonal = 'nuevo.personal@ficticio.test';
+      component.guardarFicha();
+
+      expect(stateMock.guardarFichaPersonal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          correoPersonal: 'nuevo.personal@ficticio.test',
+        }),
+      );
+    });
+
+    it('filtra países insensible a tildes y mayúsculas manteniendo la opción seleccionada', () => {
+      component.paises.set([
+        { id: 1, nombre: 'Ecuador' } as ElementoCatalogoDto,
+        { id: 2, nombre: 'Perú' } as ElementoCatalogoDto,
+        { id: 3, nombre: 'Panamá' } as ElementoCatalogoDto,
+        { id: 4, nombre: 'México' } as ElementoCatalogoDto,
+        { id: 5, nombre: 'España' } as ElementoCatalogoDto,
+      ]);
+      component.modelo.paisNacimientoId = 1; // Ecuador seleccionado
+
+      // Buscar "peru" sin tilde
+      component.filtroPaisNacimiento.set('peru');
+      let filtrados = component.paisesNacimientoFiltrados();
+      const nombres = filtrados.map((p: ElementoCatalogoDto) => p.nombre);
+
+      expect(nombres).toContain('Perú');
+      expect(nombres).toContain('Ecuador'); // seleccionado se conserva
+      expect(nombres).not.toContain('España');
+
+      // Buscar "MEXICO" con mayúsculas y sin tilde
+      component.filtroPaisNacimiento.set('MEXICO');
+      filtrados = component.paisesNacimientoFiltrados();
+      expect(filtrados.some((p: ElementoCatalogoDto) => p.nombre === 'México')).toBe(true);
+    });
+
+    it('filtra provincias insensible a tildes', () => {
+      component.provinciasResidencia.set([
+        { id: 1, nombre: 'Pichincha' } as ElementoCatalogoDto,
+        { id: 2, nombre: 'Bolívar' } as ElementoCatalogoDto,
+        { id: 3, nombre: 'Guayas' } as ElementoCatalogoDto,
+      ]);
+      component.filtroProvinciaResidencia.set('bolivar');
+
+      const filtradas = component.provinciasResidenciaFiltradas();
+      expect(filtradas.map((p: ElementoCatalogoDto) => p.nombre)).toEqual(['Bolívar']);
+    });
+  });
 });

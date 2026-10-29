@@ -308,4 +308,20 @@ describe('ExpedienteSeccionesComponent', () => {
       capacitacionId: 'cap-001',
     });
   });
+
+  it('debe mostrar el correo personal en la ficha personal cuando esté presente', () => {
+    const hdvConCorreoPersonal: HojaDeVidaDto = {
+      ...mockHdv,
+      ficha: {
+        ...mockHdv.ficha,
+        correoPersonal: 'personal.inventado@ejemplo.test',
+      } as unknown as HojaDeVidaDto['ficha'],
+    };
+    fixture.componentRef.setInput('hojaDeVida', hdvConCorreoPersonal);
+    fixture.detectChanges();
+
+    const elem = fixture.nativeElement.querySelector('[data-testid="expediente-correo-personal"]');
+    expect(elem).toBeTruthy();
+    expect(elem.textContent).toContain('personal.inventado@ejemplo.test');
+  });
 });

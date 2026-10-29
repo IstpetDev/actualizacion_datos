@@ -298,6 +298,11 @@ public class ServicioExportacion : IServicioExportacion
             .Select(g => new { PersonaId = g.Key, Total = g.Count() })
             .ToDictionaryAsync(x => x.PersonaId, x => x.Total, ct);
 
+        var correosPersonales = await _context.FichasPersonales
+            .AsNoTracking()
+            .Where(f => personasIds.Contains(f.PersonaId))
+            .ToDictionaryAsync(f => f.PersonaId, f => f.CorreoPersonal ?? "—", ct);
+
         var perfiles = new Dictionary<Guid, string>();
         foreach (var persona in personas) perfiles[persona.Id] = (await ObtenerExpedienteAsync(persona, ct)).Perfil;
 
@@ -387,7 +392,8 @@ public class ServicioExportacion : IServicioExportacion
             TratamientoDatosAceptado: p.TratamientoDatosAceptado,
             FechaCreacionUtc: p.FechaCreacionUtc,
             Perfil: perfiles[p.Id],
-            EstadoCapacitacionesObligatorias: resumenObligatoriasPorPersona.GetValueOrDefault(p.Id, "—")
+            EstadoCapacitacionesObligatorias: resumenObligatoriasPorPersona.GetValueOrDefault(p.Id, "—"),
+            CorreoPersonal: correosPersonales.GetValueOrDefault(p.Id, "—")
         )).ToList();
 
         var bytesExcel = GeneradorExcelOpenXml.GenerarExcelPersonasAprobadas(institucionNombre, filas, filasObligatorias);

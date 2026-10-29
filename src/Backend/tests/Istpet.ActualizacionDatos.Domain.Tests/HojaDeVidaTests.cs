@@ -50,11 +50,12 @@ public class HojaDeVidaTests
     {
         var ficha = new FichaPersonal(Institucion, PersonaId);
 
-        ficha.Actualizar(new DatosFichaPersonal(PrimerNombre: "  Nombre Ficticio ", SegundoNombre: "   ", Celular: "0990000000"));
+        ficha.Actualizar(new DatosFichaPersonal(PrimerNombre: "  Nombre Ficticio ", SegundoNombre: "   ", Celular: "0990000000", CorreoPersonal: " personal.ficticio@correo.com "));
 
         Assert.Equal("Nombre Ficticio", ficha.PrimerNombre);
         Assert.Null(ficha.SegundoNombre);
         Assert.Equal("0990000000", ficha.Celular);
+        Assert.Equal("personal.ficticio@correo.com", ficha.CorreoPersonal);
     }
 
     [Fact]
