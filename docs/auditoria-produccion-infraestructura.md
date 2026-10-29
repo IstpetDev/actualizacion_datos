@@ -41,7 +41,7 @@ Documento técnico elaborado en atención al issue #105 y sustentado en el [ADR-
 El flujo se organiza en etapas encadenadas ([ADR-0015](decisiones/ADR-0015-despliegue-por-etapas.md)):
 
 1. **Construir (`construir`):** Runners efímeros de GitHub Actions compilan en paralelo las imágenes Docker de `backend` y `frontend` sin acceso a secretos, empaquetándolas en `imagen-backend.tar.gz` e `imagen-frontend.tar.gz`.
-2. **Transferir (`transferir`):** Conecta a la red privada vía Tailscale, carga las imágenes en el Docker Engine del servidor por SSH y transfiere `docker-compose.prod.yml` y la configuración de Nginx.
+2. **Transferir (`transferir`):** Conecta a la red privada vía Tailscale, copia las imágenes `.tar.gz` al servidor con `scp`, las importa localmente en el Docker Engine mediante `docker load -i` eliminando el archivo temporal ([ADR-0041](decisiones/ADR-0041-transferencia-imagenes-scp-docker-load.md)), y transfiere `docker-compose.prod.yml` y la configuración de Nginx.
 3. **Migrar (`migrar`):** 
    - Ejecuta `docker compose run --rm backend --migrar`. Si falla, el despliegue aborta inmediatamente sin afectar los contenedores en servicio.
    - Ejecuta `docker compose run --rm backend --cargar-catalogos` ([ADR-0021](decisiones/ADR-0021-carga-de-catalogos-en-produccion.md)) para asegurar que los 21 tipos de catálogos y sus relaciones estén íntegros antes del cambio.

@@ -56,3 +56,5 @@ Se adopta el **Despliegue Automático por Empuje a Red Privada (Opción B)** con
 - [ADR-0005](ADR-0005-ci-por-niveles.md) — CI por niveles y filtro por rutas.
 - [ADR-0006](ADR-0006-almacenamiento-de-archivos.md) — Almacenamiento de archivos.
 - [ADR-0007](ADR-0007-autenticacion-con-cedula.md) — Autenticación con cédula, cambio obligatorio y correo.
+- [ADR-0015](ADR-0015-despliegue-por-etapas.md) — Despliegue dividido en etapas.
+- [ADR-0041](ADR-0041-transferencia-imagenes-scp-docker-load.md) — Transferencia de imágenes por SCP y carga local con `docker load -i` (actualiza el punto 4 para evitar bloqueos por falta de `EOF` en `stdin` sobre OpenSSH para Windows).

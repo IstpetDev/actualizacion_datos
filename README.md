@@ -128,7 +128,7 @@ El destino de producción es Docker sobre un servidor en la red privada instituc
 1. **Disparador:** Se ejecuta automáticamente tras fusionar un PR a la rama `main` (o manualmente por `workflow_dispatch`).
 2. **Construcción:** El runner de GitHub Actions construye las imágenes Docker de backend y frontend, etiquetándolas con el SHA del commit (`${{ github.sha }}`) y `latest`.
 3. **Conexión privada:** El workflow se conecta de forma efímera a la red privada institucional mediante la acción oficial de **Tailscale** (`tailscale/github-action`).
-4. **Transferencia de imágenes:** Las imágenes se transfieren comprimidas por SSH directo (`docker save ... | gzip | ssh ... gunzip | docker load`) sin necesidad de un registro intermedio de imágenes.
+4. **Transferencia de imágenes:** Las imágenes empaquetadas (`.tar.gz`) se copian por `scp` al directorio de despliegue y se importan localmente con `docker load -i` eliminando el archivo temporal al finalizar ([ADR-0041](docs/decisiones/ADR-0041-transferencia-imagenes-scp-docker-load.md)), sin necesidad de un registro intermedio de imágenes ni dependencia del `EOF` de `stdin` sobre SSH en Windows.
 5. **Migraciones explícitas:** El contenedor del backend ejecuta `docker compose -f docker-compose.prod.yml run --rm backend --migrar`. Después ejecuta `docker compose -f docker-compose.prod.yml run --rm backend --cargar-catalogos` con los CSV incluidos en la imagen (ADR-0021). Si la migración o la carga falla, el despliegue se detiene sin iniciar los servicios nuevos. El arranque Production rechaza catálogos obligatorios incompletos.
 6. **Arranque y origen único:** Se recrean los servicios (`docker compose -f docker-compose.prod.yml up -d --remove-orphans`). Un proxy inverso Nginx local (`actualizacion_proxy`) unifica el Frontend y la API bajo el mismo origen, garantizando el cumplimiento de la cookie de sesión `SameSite=Strict` ([ADR-0007](docs/decisiones/ADR-0007-autenticacion-con-cedula.md)).
 7. **Exposición:** **Cloudflare Tunnel (`cloudflared`)** apunta al puerto local del proxy inverso (8088), publicando la aplicación en el dominio institucional sin abrir ningún puerto entrante en el router ni en el firewall.
@@ -159,7 +159,7 @@ Estas acciones las hace una persona con permisos de administración; el código 
 6. Configurar el **Environment `produccion`**:
    - En `Settings` → `Environments`, crear el entorno `produccion` y restringir el despliegue únicamente a la rama `main`.
    - Agregar los siguientes secretos en el entorno:
-     - `TAILSCALE_AUTHKEY`: Clave de autenticación efímera generada en la consola de Tailscale.
+     - `TAILSCALE_AUTHKEY`: Clave de autenticación generada en la consola de Tailscale con las opciones **Reusable** y **Ephemeral** activadas (y etiqueta de ACL, p. ej. `tag:ci`), para que los nodos de los runners se eliminen automáticamente al terminar cada job.
      - `SSH_HOST`: Dirección IP privada del servidor dentro de la red Tailscale (ej. `100.x.y.z`).
      - `SSH_USER`: Nombre del usuario de sistema en el servidor de producción.
      - `SSH_PRIVATE_KEY`: Clave privada SSH autorizada en el servidor para despliegues.
