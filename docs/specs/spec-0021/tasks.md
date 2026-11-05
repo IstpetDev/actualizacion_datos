@@ -2,7 +2,7 @@
 
 **Spec aprobado:** `spec.md` versión 0.1  
 **Plan:** `plan.md` versión 0.1  
-**Estado:** En ejecución
+**Estado:** Completado
 
 ## Matriz de dependencias
 

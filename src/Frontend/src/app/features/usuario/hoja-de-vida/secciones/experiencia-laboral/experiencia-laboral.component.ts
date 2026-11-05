@@ -8,10 +8,15 @@ import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
   ElementoCatalogoDto,
+  EstadoSubindiceSeccionPersonaDto,
   ExperienciaLaboralDto,
   GuardarExperienciaLaboralRequest,
 } from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
+import {
+  BloqueSubindicesSeccionComponent,
+  nombreSubindicePorId,
+} from '../../componentes/bloque-subindices-seccion.component';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -20,7 +25,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 @Component({
   selector: 'app-experiencia-laboral',
   standalone: true,
-  imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UploaderRespaldoComponent,
+    MarcaObservacionComponent,
+    BloqueSubindicesSeccionComponent,
+  ],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -53,12 +64,39 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         </div>
       </header>
 
+      <app-bloque-subindices-seccion
+        seccion="experiencia"
+        [subindices]="subindicesSeccion()"
+        [idsCumplidos]="idsSubindicesCumplidos()"
+        [puedeEditar]="puedeEditar()"
+        (cargarEnSubindice)="abrirParaSubindice($event)"
+      />
+
       <!-- Formulario Inline de Experiencia -->
       @if (mostrarFormulario()) {
         <div class="card-formulario-item" data-testid="form-experiencia">
           <h3 class="form-titulo-item">
             {{ idEdicion() ? 'Editar Experiencia Laboral' : 'Nueva Experiencia Laboral' }}
           </h3>
+
+          @if (subindicesActivos().length > 0) {
+            <div class="form-group" style="margin-bottom: 0.75rem">
+              <label for="subindiceExperiencia">Apartado / Subíndice de la sección</label>
+              <select
+                id="subindiceExperiencia"
+                class="form-control"
+                [(ngModel)]="modelo.subindiceSeccionId"
+                data-testid="select-subindice-experiencia"
+              >
+                <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                @for (sub of subindicesActivos(); track sub.id) {
+                  <option [ngValue]="sub.id">
+                    {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
 
           <div class="grid-dos">
             <div class="form-group">
@@ -282,6 +320,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <tr>
                 <td>
                   <strong>{{ e.empleador }}</strong>
+                  @if (nombreSubindice(e.subindiceSeccionId); as nomSub) {
+                    <div>
+                      <span class="badge badge-activo" data-testid="badge-subindice-experiencia">{{
+                        nomSub
+                      }}</span>
+                    </div>
+                  }
                   <app-marca-observacion
                     [marca]="obtenerMarca('experiencia_laboral', e.id)"
                   ></app-marca-observacion>
@@ -540,6 +585,19 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   readonly puedeEditar = this.state.puedeEditar;
   readonly guardando = this.state.guardando;
   readonly experiencias = this.state.experiencias;
+  readonly subindicesSeccion =
+    this.state.subindicesSeccion ?? signal<EstadoSubindiceSeccionPersonaDto[]>([]);
+  readonly subindicesActivos = computed(() =>
+    this.subindicesSeccion().filter((s) => s.seccion === 'experiencia' && s.activo),
+  );
+  readonly idsSubindicesCumplidos = computed(
+    () =>
+      new Set(
+        this.experiencias()
+          .filter((e) => !!e.subindiceSeccionId && !!e.archivoId)
+          .map((e) => e.subindiceSeccionId!),
+      ),
+  );
 
   readonly paises = signal<ElementoCatalogoDto[]>([]);
   readonly filtroPais = signal('');
@@ -653,10 +711,20 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
       paisId: e.paisId,
       funciones: e.funciones,
       archivoId: e.archivoId,
+      subindiceSeccionId: e.subindiceSeccionId,
     };
     this.fechaInicioStr = e.fechaInicio ? new Date(e.fechaInicio).toISOString().split('T')[0] : '';
     this.fechaFinStr = e.fechaFin ? new Date(e.fechaFin).toISOString().split('T')[0] : '';
     this.mostrarFormulario.set(true);
+  }
+
+  abrirParaSubindice(sub: EstadoSubindiceSeccionPersonaDto): void {
+    this.abrirFormulario();
+    this.modelo.subindiceSeccionId = sub.id;
+  }
+
+  nombreSubindice(id?: string): string | undefined {
+    return nombreSubindicePorId(this.subindicesSeccion(), id);
   }
 
   cancelarFormulario(): void {

@@ -5,9 +5,11 @@ import { FormsModule } from '@angular/forms';
 import {
   ArchivoDto,
   EstadoCapacitacionObligatoriaPersonaDto,
+  EstadoSubindiceSeccionPersonaDto,
   HojaDeVidaDto,
   ObservacionDto,
 } from '../../../api-client';
+import { nombreSubindicePorId } from '../../usuario/hoja-de-vida/componentes/bloque-subindices-seccion.component';
 
 export type TabExpediente =
   'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
@@ -185,6 +187,31 @@ export type TabExpediente =
             tipoDestino="seccion"
             claveDestino="formacion"
           />
+          @if (subindicesActivosDe('formacion').length > 0) {
+            <div class="items-lista mb-4" data-testid="subindices-revision-formacion">
+              @for (sub of subindicesActivosDe('formacion'); track sub.id) {
+                <div class="item-card">
+                  <div class="item-header">
+                    <strong>Subíndice: {{ sub.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [class.badge-success]="sub.estado === 'cargado'"
+                      [class.badge-warning]="sub.estado !== 'cargado' && sub.esObligatorio"
+                      [class.badge-secondary]="sub.estado !== 'cargado' && !sub.esObligatorio"
+                    >
+                      {{
+                        sub.estado === 'cargado'
+                          ? '✓ Cargado'
+                          : sub.esObligatorio
+                            ? '✕ Pendiente (Obligatorio)'
+                            : 'Opcional sin carga'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
           <h4 class="subtitulo-seccion">Títulos Académicos Obtenidos</h4>
           <div class="items-lista">
             @for (t of hojaDeVida().titulos; track t.id) {
@@ -200,9 +227,16 @@ export type TabExpediente =
                 />
                 <div class="item-header">
                   <strong>{{ t.nombreTitulo }}</strong>
-                  @if (t.numeroRegistroSenescyt) {
-                    <span class="badge badge-info">Senescyt: {{ t.numeroRegistroSenescyt }}</span>
-                  }
+                  <div>
+                    @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
+                      <span class="badge badge-info">{{ nomSub }}</span>
+                    }
+                    @if (t.numeroRegistroSenescyt) {
+                      <span class="badge badge-info ml-2"
+                        >Senescyt: {{ t.numeroRegistroSenescyt }}</span
+                      >
+                    }
+                  </div>
                 </div>
                 <div class="item-body">
                   <p class="item-meta">
@@ -258,7 +292,12 @@ export type TabExpediente =
                 />
                 <div class="item-header">
                   <strong>{{ tc.nombrePrograma }}</strong>
-                  <span class="badge badge-warning">En curso</span>
+                  <div>
+                    @if (nombreSubindice(tc.subindiceSeccionId); as nomSub) {
+                      <span class="badge badge-info">{{ nomSub }}</span>
+                    }
+                    <span class="badge badge-warning ml-2">En curso</span>
+                  </div>
                 </div>
                 <div class="item-body">
                   <p class="item-meta">
@@ -314,6 +353,31 @@ export type TabExpediente =
             tipoDestino="seccion"
             claveDestino="capacitaciones"
           />
+          @if (subindicesActivosDe('capacitaciones').length > 0) {
+            <div class="items-lista mb-4" data-testid="subindices-revision-capacitaciones">
+              @for (sub of subindicesActivosDe('capacitaciones'); track sub.id) {
+                <div class="item-card">
+                  <div class="item-header">
+                    <strong>Subíndice: {{ sub.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [class.badge-success]="sub.estado === 'cargado'"
+                      [class.badge-warning]="sub.estado !== 'cargado' && sub.esObligatorio"
+                      [class.badge-secondary]="sub.estado !== 'cargado' && !sub.esObligatorio"
+                    >
+                      {{
+                        sub.estado === 'cargado'
+                          ? '✓ Cargado'
+                          : sub.esObligatorio
+                            ? '✕ Pendiente (Obligatorio)'
+                            : 'Opcional sin carga'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
           @if (obligatorias().length > 0) {
             <h4 class="subtitulo-seccion">Obligatorias de la Institución</h4>
             <div class="items-lista mb-4" data-testid="lista-obligatorias-revision">
@@ -413,7 +477,12 @@ export type TabExpediente =
                 />
                 <div class="item-header">
                   <strong>{{ c.nombreEvento }}</strong>
-                  <span class="badge badge-info">{{ c.numeroHoras || 0 }} horas</span>
+                  <div>
+                    @if (nombreSubindice(c.subindiceSeccionId); as nomSub) {
+                      <span class="badge badge-info">{{ nomSub }}</span>
+                    }
+                    <span class="badge badge-info ml-2">{{ c.numeroHoras || 0 }} horas</span>
+                  </div>
                 </div>
                 <div class="item-body">
                   <p class="item-meta">
@@ -465,6 +534,31 @@ export type TabExpediente =
             tipoDestino="seccion"
             claveDestino="experiencia"
           />
+          @if (subindicesActivosDe('experiencia').length > 0) {
+            <div class="items-lista mb-4" data-testid="subindices-revision-experiencia">
+              @for (sub of subindicesActivosDe('experiencia'); track sub.id) {
+                <div class="item-card">
+                  <div class="item-header">
+                    <strong>Subíndice: {{ sub.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [class.badge-success]="sub.estado === 'cargado'"
+                      [class.badge-warning]="sub.estado !== 'cargado' && sub.esObligatorio"
+                      [class.badge-secondary]="sub.estado !== 'cargado' && !sub.esObligatorio"
+                    >
+                      {{
+                        sub.estado === 'cargado'
+                          ? '✓ Cargado'
+                          : sub.esObligatorio
+                            ? '✕ Pendiente (Obligatorio)'
+                            : 'Opcional sin carga'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
           <div class="items-lista">
             @for (e of hojaDeVida().experiencias; track e.id) {
               <div class="item-card" [attr.data-testid]="'item-experiencia-' + e.id">
@@ -479,13 +573,22 @@ export type TabExpediente =
                 />
                 <div class="item-header">
                   <strong>{{ e.cargo }}</strong>
-                  <span
-                    class="badge"
-                    [class.badge-success]="e.trabajaActualmente"
-                    [class.badge-secondary]="!e.trabajaActualmente"
-                  >
-                    {{ e.trabajaActualmente ? 'Trabaja actualmente' : 'Finalizado' }}
-                  </span>
+                  <div>
+                    @if (nombreSubindice(e.subindiceSeccionId); as nomSub) {
+                      <span
+                        class="badge badge-info"
+                        [attr.data-testid]="'badge-subindice-exp-' + e.id"
+                        >{{ nomSub }}</span
+                      >
+                    }
+                    <span
+                      class="badge ml-2"
+                      [class.badge-success]="e.trabajaActualmente"
+                      [class.badge-secondary]="!e.trabajaActualmente"
+                    >
+                      {{ e.trabajaActualmente ? 'Trabaja actualmente' : 'Finalizado' }}
+                    </span>
+                  </div>
                 </div>
                 <div class="item-body">
                   <p class="item-meta">
@@ -541,6 +644,31 @@ export type TabExpediente =
             tipoDestino="seccion"
             claveDestino="referencias"
           />
+          @if (subindicesActivosDe('referencias').length > 0) {
+            <div class="items-lista mb-4" data-testid="subindices-revision-referencias">
+              @for (sub of subindicesActivosDe('referencias'); track sub.id) {
+                <div class="item-card">
+                  <div class="item-header">
+                    <strong>Subíndice: {{ sub.nombre }}</strong>
+                    <span
+                      class="badge"
+                      [class.badge-success]="sub.estado === 'cargado'"
+                      [class.badge-warning]="sub.estado !== 'cargado' && sub.esObligatorio"
+                      [class.badge-secondary]="sub.estado !== 'cargado' && !sub.esObligatorio"
+                    >
+                      {{
+                        sub.estado === 'cargado'
+                          ? '✓ Cargado'
+                          : sub.esObligatorio
+                            ? '✕ Pendiente (Obligatorio)'
+                            : 'Opcional sin carga'
+                      }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
           <div class="items-lista">
             @for (r of hojaDeVida().referencias; track r.id) {
               <div class="item-card" [attr.data-testid]="'item-referencia-' + r.id">
@@ -554,7 +682,12 @@ export type TabExpediente =
                 />
                 <div class="item-header">
                   <strong>{{ r.nombresApellidos }}</strong>
-                  <span class="badge badge-info">{{ r.tipo }}</span>
+                  <div>
+                    @if (nombreSubindice(r.subindiceSeccionId); as nomSub) {
+                      <span class="badge badge-info">{{ nomSub }}</span>
+                    }
+                    <span class="badge badge-info ml-2">{{ r.tipo }}</span>
+                  </div>
                 </div>
                 <div class="item-body">
                   <p class="item-meta">
@@ -944,6 +1077,16 @@ export class ExpedienteSeccionesComponent {
 
   cambiarTab(tab: TabExpediente): void {
     this.tabActiva.set(tab);
+  }
+
+  subindicesActivosDe(seccion: string): EstadoSubindiceSeccionPersonaDto[] {
+    return (this.hojaDeVida().subindicesSeccion ?? []).filter(
+      (s) => s.seccion === seccion && s.activo,
+    );
+  }
+
+  nombreSubindice(id?: string): string | undefined {
+    return nombreSubindicePorId(this.hojaDeVida().subindicesSeccion, id);
   }
 
   onDescargar(archivoId: string, nombreOriginal: string): void {

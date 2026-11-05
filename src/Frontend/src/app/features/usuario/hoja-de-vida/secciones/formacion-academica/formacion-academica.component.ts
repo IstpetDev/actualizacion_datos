@@ -10,12 +10,17 @@ import { forkJoin } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import {
   ElementoCatalogoDto,
+  EstadoSubindiceSeccionPersonaDto,
   GuardarTituloAcademicoRequest,
   GuardarTituloEnCursoRequest,
   TituloAcademicoDto,
   TituloEnCursoDto,
 } from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
+import {
+  BloqueSubindicesSeccionComponent,
+  nombreSubindicePorId,
+} from '../../componentes/bloque-subindices-seccion.component';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -30,6 +35,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
     UploaderRespaldoComponent,
     MarcaObservacionComponent,
     ModalCambiosSinGuardarComponent,
+    BloqueSubindicesSeccionComponent,
   ],
   template: `
     @if (validacion.errorCarga()) {
@@ -50,6 +56,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </p>
         </div>
       </header>
+
+      <app-bloque-subindices-seccion
+        seccion="formacion"
+        [subindices]="subindicesSeccion()"
+        [idsCumplidos]="idsSubindicesCumplidos()"
+        [puedeEditar]="puedeEditar()"
+        (cargarEnSubindice)="abrirParaSubindice($event)"
+      />
 
       <!-- Sub-Pestañas de Formación -->
       <nav class="subtabs-nav" role="tablist">
@@ -95,6 +109,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <h3 class="form-titulo-item">
                 {{ idTituloEdicion() ? 'Editar Título Académico' : 'Nuevo Título Académico' }}
               </h3>
+
+              @if (subindicesActivos().length > 0) {
+                <div class="form-group" style="margin-bottom: 0.75rem">
+                  <label for="subindiceTitulo">Apartado / Subíndice de la sección</label>
+                  <select
+                    id="subindiceTitulo"
+                    class="form-control"
+                    [(ngModel)]="modeloTitulo.subindiceSeccionId"
+                    data-testid="select-subindice-titulo"
+                  >
+                    <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                    @for (sub of subindicesActivos(); track sub.id) {
+                      <option [ngValue]="sub.id">
+                        {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              }
 
               <div class="grid-dos">
                 <div class="form-group">
@@ -385,6 +418,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   <tr>
                     <td>
                       <strong>{{ t.nombreTitulo }}</strong>
+                      @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
+                        <div>
+                          <span class="badge badge-info" data-testid="badge-subindice-titulo">{{
+                            nomSub
+                          }}</span>
+                        </div>
+                      }
                       <!-- Marca de observación si existe -->
                       <app-marca-observacion
                         [marca]="obtenerMarca('titulo', t.id)"
@@ -457,6 +497,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <h3 class="form-titulo-item">
                 {{ idEnCursoEdicion() ? 'Editar Estudio en Curso' : 'Nuevo Estudio en Curso' }}
               </h3>
+
+              @if (subindicesActivos().length > 0) {
+                <div class="form-group" style="margin-bottom: 0.75rem">
+                  <label for="subindiceEnCurso">Apartado / Subíndice de la sección</label>
+                  <select
+                    id="subindiceEnCurso"
+                    class="form-control"
+                    [(ngModel)]="modeloEnCurso.subindiceSeccionId"
+                    data-testid="select-subindice-en-curso"
+                  >
+                    <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                    @for (sub of subindicesActivos(); track sub.id) {
+                      <option [ngValue]="sub.id">
+                        {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              }
 
               <div class="form-group">
                 <label for="nombrePrograma"
@@ -719,6 +778,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   <tr>
                     <td>
                       <strong>{{ c.nombrePrograma }}</strong>
+                      @if (nombreSubindice(c.subindiceSeccionId); as nomSub) {
+                        <div>
+                          <span class="badge badge-info" data-testid="badge-subindice-en-curso">{{
+                            nomSub
+                          }}</span>
+                        </div>
+                      }
                       <app-marca-observacion
                         [marca]="obtenerMarca('titulo_en_curso', c.id)"
                       ></app-marca-observacion>
@@ -1092,6 +1158,21 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
 
   readonly titulos = this.state.titulos;
   readonly titulosEnCurso = this.state.titulosEnCurso;
+  readonly subindicesSeccion =
+    this.state.subindicesSeccion ?? signal<EstadoSubindiceSeccionPersonaDto[]>([]);
+  readonly subindicesActivos = computed(() =>
+    this.subindicesSeccion().filter((s) => s.seccion === 'formacion' && s.activo),
+  );
+  readonly idsSubindicesCumplidos = computed(() => {
+    const ids = new Set<string>();
+    for (const t of this.titulos()) {
+      if (t.subindiceSeccionId && t.archivoId) ids.add(t.subindiceSeccionId);
+    }
+    for (const tc of this.titulosEnCurso()) {
+      if (tc.subindiceSeccionId && tc.archivoId) ids.add(tc.subindiceSeccionId);
+    }
+    return ids;
+  });
 
   readonly subtabActiva = signal<'obtenidos' | 'en-curso'>('obtenidos');
 
@@ -1244,6 +1325,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       numeroRegistroSenescyt: titulo.numeroRegistroSenescyt,
       fechaObtencion: titulo.fechaObtencion,
       archivoId: titulo.archivoId,
+      subindiceSeccionId: titulo.subindiceSeccionId,
     };
     this.restaurarCamposTitulo();
     if (titulo.fechaObtencion) {
@@ -1331,8 +1413,23 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       porcentajeBeca: enCurso.porcentajeBeca,
       montoBeca: enCurso.montoBeca,
       archivoId: enCurso.archivoId,
+      subindiceSeccionId: enCurso.subindiceSeccionId,
     };
     this.mostrarFormEnCurso.set(true);
+  }
+
+  abrirParaSubindice(sub: EstadoSubindiceSeccionPersonaDto): void {
+    if (this.subtabActiva() === 'en-curso') {
+      this.abrirFormEnCurso();
+      this.modeloEnCurso.subindiceSeccionId = sub.id;
+    } else {
+      this.abrirFormTitulo();
+      this.modeloTitulo.subindiceSeccionId = sub.id;
+    }
+  }
+
+  nombreSubindice(id?: string): string | undefined {
+    return nombreSubindicePorId(this.subindicesSeccion(), id);
   }
 
   cancelarFormEnCurso(): void {

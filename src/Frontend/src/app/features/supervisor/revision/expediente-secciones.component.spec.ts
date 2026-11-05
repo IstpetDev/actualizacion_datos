@@ -324,4 +324,38 @@ describe('ExpedienteSeccionesComponent', () => {
     expect(elem).toBeTruthy();
     expect(elem.textContent).toContain('personal.inventado@ejemplo.test');
   });
+
+  it('muestra subíndices requeridos y etiqueta de clasificación en experiencia laboral', () => {
+    const hdvConSubindices: HojaDeVidaDto = {
+      ...mockHdv,
+      experiencias: [
+        {
+          ...mockHdv.experiencias[0],
+          subindiceSeccionId: 'sub-docencia-1',
+        },
+      ],
+      subindicesSeccion: [
+        {
+          id: 'sub-docencia-1',
+          seccion: 'experiencia',
+          nombre: 'Título SENESCYT',
+          descripcion: undefined,
+          tipoFuncionarioId: undefined,
+          esObligatorio: true,
+          orden: 1,
+          activo: true,
+          estado: 'cargado',
+        },
+      ],
+    };
+    fixture.componentRef.setInput('hojaDeVida', hdvConSubindices);
+    component.cambiarTab('experiencia');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="subindices-revision-experiencia"]')).toBeTruthy();
+    expect(
+      compiled.querySelector('[data-testid="badge-subindice-exp-exp-001"]')?.textContent,
+    ).toContain('Título SENESCYT');
+  });
 });

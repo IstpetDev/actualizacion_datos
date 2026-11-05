@@ -11,7 +11,7 @@ Todos los datos empleados son estrictamente ficticios: institución `Institució
 
 | Dependencia | Configuración verificable | Estado previo |
 |---|---|---|
-| PostgreSQL 16 (Testcontainers) | `WebApiFactory` con migraciones EF Core aplicadas | Esquema limpio con nueva migración `AgregarSubindicesSeccion` |
+| PostgreSQL 17 (Testcontainers) | `FabricaAplicacionPostgres` con migraciones EF Core aplicadas | Esquema limpio con nueva migración `20261105155233_AgregarSubindicesSeccion` |
 | API .NET 10 + Cliente Angular | `openapi/v1.json` sincronizado con `src/Frontend/src/app/api-client` | Sin diferencias pendientes en Git |
 
 ## Matriz de cobertura
@@ -32,7 +32,7 @@ Todos los datos empleados son estrictamente ficticios: institución `Institució
 3. Desactivar un subíndice con `DELETE /api/configuracion/subindices/{id}` tras haber vinculado un registro.
 
 **Resultado esperado:** Respuestas `201 Created`, `409 Conflict` ante duplicado, `400 Bad Request` ante sección no soportada y `204 No Content` al desactivar manteniendo la referencia histórica.  
-**Resultado obtenido:** Aprobado en suite de integración (`SubindicesSeccionEndpointsTests`) y suite unitaria (`SubindicesSeccionConfigComponent`).  
+**Resultado obtenido:** Aprobado en suite de integración (`SubindicesSeccionTests` y `SubindicesSeccionIntegracionTests`) y suite unitaria (`SubindicesSeccionConfigComponent`).  
 **Evidencia:** `dotnet test src/Backend --filter "FullyQualifiedName~SubindicesSeccion"` y `pnpm --dir src/Frontend test:ci`.  
 **Fecha y ejecutor:** 2026-11-05; Agente coordinador  
 **Incidencia:** Ninguna
@@ -47,7 +47,7 @@ Todos los datos empleados son estrictamente ficticios: institución `Institució
 3. Registrar experiencia vinculada al subíndice con `archivoId` válido y volver a consultar faltantes; verificar además que cerrar la sección omite el bloqueo.
 
 **Resultado esperado:** El estado del subíndice cambia a `cargado` y desaparece el faltante de completitud.  
-**Resultado obtenido:** Aprobado en pruebas de integración (`SubindicesSeccionEndpointsTests`) y componentes de sección en Vitest.  
+**Resultado obtenido:** Aprobado en pruebas de integración (`SubindicesSeccionTests` y `SubindicesSeccionIntegracionTests`) y componentes de sección en Vitest.  
 **Evidencia:** `dotnet test src/Backend --filter "FullyQualifiedName~SubindicesSeccion"` y `pnpm --dir src/Frontend test:ci`.  
 **Fecha y ejecutor:** 2026-11-05; Agente coordinador  
 **Incidencia:** Ninguna
@@ -70,6 +70,6 @@ Todos los datos empleados son estrictamente ficticios: institución `Institució
 
 | Caso | Aprobado / Fallido / Bloqueado | Evidencia | Incidencia |
 |---|---|---|---|
-| E2E-01 | Aprobado | `SubindicesSeccionEndpointsTests` + `subindices-seccion-config.component.spec.ts` | Ninguna |
-| E2E-02 | Aprobado | `SubindicesSeccionEndpointsTests` + specs de secciones de hoja de vida | Ninguna |
-| E2E-03 | Aprobado | `SubindicesSeccionEndpointsTests` + `expediente-secciones.component.spec.ts` | Ninguna |
+| E2E-01 | Aprobado | `SubindicesSeccionTests` y `SubindicesSeccionIntegracionTests` + `subindices-seccion-config.component.spec.ts` | Ninguna |
+| E2E-02 | Aprobado | `SubindicesSeccionTests` y `SubindicesSeccionIntegracionTests` + specs de secciones de hoja de vida | Ninguna |
+| E2E-03 | Aprobado | `SubindicesSeccionTests` y `SubindicesSeccionIntegracionTests` + `expediente-secciones.component.spec.ts` | Ninguna |
