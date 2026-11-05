@@ -58,3 +58,24 @@ public abstract class RegistroHojaDeVida : EntidadInstitucional
         }
     }
 }
+
+// ADR-0043: Registros multi-ítem que admiten clasificación opcional mediante SubindiceSeccion.
+public abstract class RegistroClasificableHojaDeVida : RegistroHojaDeVida
+{
+    public Guid? SubindiceSeccionId { get; protected set; }
+
+    protected RegistroClasificableHojaDeVida()
+    {
+    }
+
+    protected RegistroClasificableHojaDeVida(Guid id, InstitucionId institucionId, Guid personaId, DateTime? fechaUtc)
+        : base(id, institucionId, personaId, fechaUtc)
+    {
+    }
+
+    public void AsociarSubindice(Guid? subindiceSeccionId, DateTime? fechaUtc = null)
+    {
+        SubindiceSeccionId = subindiceSeccionId;
+        MarcarActualizado(fechaUtc);
+    }
+}

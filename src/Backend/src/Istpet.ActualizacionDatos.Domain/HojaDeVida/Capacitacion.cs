@@ -21,7 +21,7 @@ public sealed record DatosCapacitacion(
 
 // Capacitación, curso, seminario o congreso. Equivale a `cursos_profesores` del
 // sistema de origen (no a `cursos`, que allí son los niveles de una carrera).
-public class Capacitacion : RegistroHojaDeVida
+public class Capacitacion : RegistroClasificableHojaDeVida
 {
     public string NombreEvento { get; private set; }
     public string InstitucionOrganizadora { get; private set; }

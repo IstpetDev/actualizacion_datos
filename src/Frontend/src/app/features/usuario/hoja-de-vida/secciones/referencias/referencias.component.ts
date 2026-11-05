@@ -6,14 +6,28 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { ModalCambiosSinGuardarComponent } from '../../componentes/modal-cambios-sin-guardar.component';
 import { FormsModule } from '@angular/forms';
-import { GuardarReferenciaRequest, ReferenciaDto } from '../../../../../api-client';
+import {
+  EstadoSubindiceSeccionPersonaDto,
+  GuardarReferenciaRequest,
+  ReferenciaDto,
+} from '../../../../../api-client';
+import {
+  BloqueSubindicesSeccionComponent,
+  nombreSubindicePorId,
+} from '../../componentes/bloque-subindices-seccion.component';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.service';
 
 @Component({
   selector: 'app-referencias',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarcaObservacionComponent, ModalCambiosSinGuardarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MarcaObservacionComponent,
+    ModalCambiosSinGuardarComponent,
+    BloqueSubindicesSeccionComponent,
+  ],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -33,6 +47,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           </p>
         </div>
       </header>
+
+      <app-bloque-subindices-seccion
+        seccion="referencias"
+        [subindices]="subindicesSeccion()"
+        [idsCumplidos]="idsSubindicesCumplidos()"
+        [puedeEditar]="puedeEditar()"
+        (cargarEnSubindice)="abrirParaSubindice($event)"
+      />
 
       <!-- Subtabs: Personales y Laborales -->
       <nav class="subtabs-nav" role="tablist">
@@ -86,6 +108,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   : 'Nueva Referencia ' + tipoActivo()
               }}
             </h3>
+
+            @if (subindicesActivos().length > 0) {
+              <div class="form-group" style="margin-bottom: 0.75rem">
+                <label for="subindiceReferencia">Apartado / Subíndice de la sección</label>
+                <select
+                  id="subindiceReferencia"
+                  class="form-control"
+                  [(ngModel)]="modelo.subindiceSeccionId"
+                  data-testid="select-subindice-referencia"
+                >
+                  <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                  @for (sub of subindicesActivos(); track sub.id) {
+                    <option [ngValue]="sub.id">
+                      {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                    </option>
+                  }
+                </select>
+              </div>
+            }
 
             <div class="grid-dos">
               <div class="form-group">
@@ -225,6 +266,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <tr>
                   <td>
                     <strong>{{ r.nombresApellidos }}</strong>
+                    @if (nombreSubindice(r.subindiceSeccionId); as nomSub) {
+                      <div>
+                        <span class="badge-sub" data-testid="badge-subindice-referencia">{{
+                          nomSub
+                        }}</span>
+                      </div>
+                    }
                     <app-marca-observacion
                       [marca]="obtenerMarca('referencia', r.id)"
                     ></app-marca-observacion>
@@ -466,6 +514,15 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         color: #94a3b8;
         padding: 1.5rem !important;
       }
+      .badge-sub {
+        display: inline-block;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: #e0f2fe;
+        color: #0369a1;
+      }
     `,
   ],
 })
@@ -554,6 +611,19 @@ export class ReferenciasComponent implements OnInit, OnDestroy, SeccionConCambio
   readonly puedeEditar = this.state.puedeEditar;
   readonly guardando = this.state.guardando;
   readonly referencias = this.state.referencias;
+  readonly subindicesSeccion =
+    this.state.subindicesSeccion ?? signal<EstadoSubindiceSeccionPersonaDto[]>([]);
+  readonly subindicesActivos = computed(() =>
+    this.subindicesSeccion().filter((s) => s.seccion === 'referencias' && s.activo),
+  );
+  readonly idsSubindicesCumplidos = computed(
+    () =>
+      new Set(
+        this.referencias()
+          .filter((r) => !!r.subindiceSeccionId)
+          .map((r) => r.subindiceSeccionId!),
+      ),
+  );
 
   readonly tipoActivo = signal<'Personal' | 'Laboral'>('Personal');
   readonly mostrarFormulario = signal(false);
@@ -619,8 +689,20 @@ export class ReferenciasComponent implements OnInit, OnDestroy, SeccionConCambio
       titulo: r.titulo,
       cargoActual: r.cargoActual,
       empresa: r.empresa,
+      subindiceSeccionId: r.subindiceSeccionId,
     };
     this.mostrarFormulario.set(true);
+  }
+
+  abrirParaSubindice(sub: EstadoSubindiceSeccionPersonaDto): void {
+    this.abrirFormulario();
+    if (this.mostrarFormulario()) {
+      this.modelo.subindiceSeccionId = sub.id;
+    }
+  }
+
+  nombreSubindice(id?: string): string | undefined {
+    return nombreSubindicePorId(this.subindicesSeccion(), id);
   }
 
   cancelarFormulario(): void {

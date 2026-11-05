@@ -32,6 +32,7 @@ import {
   TituloEnCursoDto,
   CapacitacionesObligatoriasClient,
   EstadoCapacitacionObligatoriaPersonaDto,
+  EstadoSubindiceSeccionPersonaDto,
   MensajeRespuesta,
 } from '../../../../api-client';
 
@@ -98,6 +99,9 @@ export class HojaDeVidaStateService {
     () => this.hojaDeVida()?.experiencias ?? [],
   );
   readonly referencias = computed<ReferenciaDto[]>(() => this.hojaDeVida()?.referencias ?? []);
+  readonly subindicesSeccion = computed<EstadoSubindiceSeccionPersonaDto[]>(
+    () => this.hojaDeVida()?.subindicesSeccion ?? [],
+  );
 
   readonly referenciasPersonales = computed<ReferenciaDto[]>(() =>
     this.referencias().filter((r) => r.tipo?.toLowerCase() === 'personal'),

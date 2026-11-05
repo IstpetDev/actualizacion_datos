@@ -59,6 +59,23 @@ internal static class ConfiguracionComunHojaDeVida
             .HasDatabaseName($"ix_{tabla}_archivo_id");
     }
 
+    public static void ConfigurarRegistroClasificable<T>(EntityTypeBuilder<T> builder, string tabla)
+        where T : RegistroClasificableHojaDeVida
+    {
+        ConfigurarRegistro(builder, tabla);
+
+        builder.Property(r => r.SubindiceSeccionId)
+            .HasColumnName("subindice_seccion_id");
+
+        builder.HasOne<SubindiceSeccion>()
+            .WithMany()
+            .HasForeignKey(r => r.SubindiceSeccionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(r => r.SubindiceSeccionId)
+            .HasDatabaseName($"ix_{tabla}_subindice_seccion_id");
+    }
+
     public static void RelacionCatalogo<T>(
         EntityTypeBuilder<T> builder,
         Expression<Func<T, int?>> propiedad,
