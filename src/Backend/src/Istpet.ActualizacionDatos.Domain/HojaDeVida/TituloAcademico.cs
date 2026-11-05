@@ -13,7 +13,7 @@ public sealed record DatosTituloAcademico(
 // Título obtenido. Equivale a `titulos_profesores` del sistema de origen.
 // Si la institución que lo otorgó no está en el catálogo de universidades
 // (p. ej. una del exterior), se escribe su nombre en NombreInstitucionOtra.
-public class TituloAcademico : RegistroHojaDeVida
+public class TituloAcademico : RegistroClasificableHojaDeVida
 {
     public string NombreTitulo { get; private set; }
     public int GradoAcademicoId { get; private set; }

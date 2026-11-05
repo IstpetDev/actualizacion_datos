@@ -85,7 +85,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             exps.Select(MapearExperiencia).ToList(),
             refs.Select(MapearReferencia).ToList(),
             abiertasCodigos,
-            await ListarCapacitacionesObligatoriasAsync(documento, ct));
+            await ListarCapacitacionesObligatoriasAsync(documento, ct),
+            await ListarSubindicesPersonaAsync(persona, titulos, enCurso, caps, exps, refs, ct));
     }
 
     public async Task<HojaDeVidaDto> ObtenerParaRevisionAsync(string documento, CancellationToken ct = default)
@@ -186,6 +187,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         await ValidarFormatoAsync(request, "titulo", persona.InstitucionId, ct);
         await ValidarCatalogosTituloAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.FormacionAcademica, null, ct);
 
         var titulo = new TituloAcademico(
             Guid.NewGuid(),
@@ -202,6 +204,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.FechaRegistroSenescyt));
 
         titulo.AsociarArchivo(request.ArchivoId);
+        titulo.AsociarSubindice(request.SubindiceSeccionId);
         _context.TitulosAcademicos.Add(titulo);
         await _context.SaveChangesAsync(ct);
 
@@ -219,6 +222,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         await ValidarCatalogosTituloAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.FormacionAcademica, titulo.SubindiceSeccionId, ct);
 
         titulo.Actualizar(new DatosTituloAcademico(
             request.NombreTitulo,
@@ -231,6 +235,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.FechaRegistroSenescyt));
 
         titulo.AsociarArchivo(request.ArchivoId);
+        titulo.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
 
         return MapearTitulo(titulo);
@@ -255,6 +260,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         await ValidarFormatoAsync(request, "tituloEnCurso", persona.InstitucionId, ct);
         await ValidarCatalogosTituloEnCursoAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.FormacionAcademica, null, ct);
 
         var enCurso = new TituloEnCurso(
             Guid.NewGuid(),
@@ -275,6 +281,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.MontoBeca));
 
         enCurso.AsociarArchivo(request.ArchivoId);
+        enCurso.AsociarSubindice(request.SubindiceSeccionId);
         _context.TitulosEnCurso.Add(enCurso);
         await _context.SaveChangesAsync(ct);
 
@@ -292,6 +299,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
 
         await ValidarCatalogosTituloEnCursoAsync(request, ct);
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.FormacionAcademica, enCurso.SubindiceSeccionId, ct);
 
         enCurso.Actualizar(new DatosTituloEnCurso(
             request.NombrePrograma,
@@ -308,6 +316,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.MontoBeca));
 
         enCurso.AsociarArchivo(request.ArchivoId);
+        enCurso.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
 
         return MapearTituloEnCurso(enCurso);
@@ -338,6 +347,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         }
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.Capacitaciones, null, ct);
 
         if (request.CapacitacionObligatoriaId.HasValue)
         {
@@ -362,6 +372,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
+        capacitacion.AsociarSubindice(request.SubindiceSeccionId);
         _context.Capacitaciones.Add(capacitacion);
         await _context.SaveChangesAsync(ct);
 
@@ -385,6 +396,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         }
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.Capacitaciones, capacitacion.SubindiceSeccionId, ct);
 
         if (request.CapacitacionObligatoriaId.HasValue)
         {
@@ -405,6 +417,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.CapacitacionObligatoriaId));
 
         capacitacion.AsociarArchivo(request.ArchivoId);
+        capacitacion.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
 
         return MapearCapacitacion(capacitacion);
@@ -434,6 +447,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         }
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.ExperienciaLaboral, null, ct);
 
         var experiencia = new ExperienciaLaboral(
             Guid.NewGuid(),
@@ -450,6 +464,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.Funciones));
 
         experiencia.AsociarArchivo(request.ArchivoId);
+        experiencia.AsociarSubindice(request.SubindiceSeccionId);
         _context.ExperienciasLaborales.Add(experiencia);
         await _context.SaveChangesAsync(ct);
 
@@ -471,6 +486,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         }
 
         await AsegurarArchivoPropioAsync(persona.Id, request.ArchivoId, esFoto: false, ct);
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.ExperienciaLaboral, experiencia.SubindiceSeccionId, ct);
 
         experiencia.Actualizar(new DatosExperienciaLaboral(
             request.Empleador,
@@ -483,6 +499,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.Funciones));
 
         experiencia.AsociarArchivo(request.ArchivoId);
+        experiencia.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
 
         return MapearExperiencia(experiencia);
@@ -515,6 +532,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             throw new ReglaNegocioException($"No se pueden registrar más de cinco referencias de tipo {request.Tipo.ToLowerInvariant()}.");
         }
 
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.Referencias, null, ct);
+
         var referencia = new ReferenciaPersonal(
             Guid.NewGuid(),
             persona.InstitucionId,
@@ -527,6 +546,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
                 request.CargoActual,
                 request.Empresa));
 
+        referencia.AsociarSubindice(request.SubindiceSeccionId);
         _context.ReferenciasPersonales.Add(referencia);
         await _context.SaveChangesAsync(ct);
 
@@ -555,6 +575,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             }
         }
 
+        await ValidarSubindiceAsync(request.SubindiceSeccionId, persona, SeccionHojaDeVida.Referencias, referencia.SubindiceSeccionId, ct);
+
         referencia.Actualizar(new DatosReferencia(
             nuevoTipo,
             request.NombresApellidos,
@@ -563,6 +585,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.CargoActual,
             request.Empresa));
 
+        referencia.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
 
         return MapearReferencia(referencia);
@@ -734,7 +757,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         t.FechaObtencion,
         t.FechaRegistroSenescyt,
         t.ArchivoId,
-        t.FechaActualizacionUtc);
+        t.FechaActualizacionUtc,
+        t.SubindiceSeccionId);
 
     private static TituloEnCursoDto MapearTituloEnCurso(TituloEnCurso t) => new(
         t.Id,
@@ -751,7 +775,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         t.PorcentajeBeca,
         t.MontoBeca,
         t.ArchivoId,
-        t.FechaActualizacionUtc);
+        t.FechaActualizacionUtc,
+        t.SubindiceSeccionId);
 
     private static CapacitacionDto MapearCapacitacion(Capacitacion c) => new(
         c.Id,
@@ -766,7 +791,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         c.FinanciadaPorInstitucion,
         c.ArchivoId,
         c.FechaActualizacionUtc,
-        c.CapacitacionObligatoriaId);
+        c.CapacitacionObligatoriaId,
+        c.SubindiceSeccionId);
 
     public async Task<List<EstadoCapacitacionObligatoriaPersonaDto>> ListarCapacitacionesObligatoriasAsync(string documento, CancellationToken ct = default)
     {
@@ -993,7 +1019,8 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         e.PaisId,
         e.Funciones,
         e.ArchivoId,
-        e.FechaActualizacionUtc);
+        e.FechaActualizacionUtc,
+        e.SubindiceSeccionId);
 
     private static ReferenciaDto MapearReferencia(ReferenciaPersonal r) => new(
         r.Id,
@@ -1003,5 +1030,108 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
         r.Titulo,
         r.CargoActual,
         r.Empresa,
-        r.FechaActualizacionUtc);
+        r.FechaActualizacionUtc,
+        r.SubindiceSeccionId);
+
+    private async Task ValidarSubindiceAsync(
+        Guid? subindiceSeccionId,
+        Persona persona,
+        SeccionHojaDeVida seccion,
+        Guid? subindiceActualId,
+        CancellationToken ct)
+    {
+        if (!subindiceSeccionId.HasValue)
+        {
+            return;
+        }
+
+        var subindice = await _context.SubindicesSeccion
+            .FirstOrDefaultAsync(s => s.Id == subindiceSeccionId.Value && s.InstitucionId == persona.InstitucionId, ct)
+            ?? throw new RecursoNoEncontradoException("El subíndice seleccionado no existe en la institución.");
+
+        if (subindice.Seccion != seccion)
+        {
+            throw new ReglaNegocioException("El subíndice seleccionado no pertenece a esta sección.");
+        }
+
+        if (subindiceActualId != subindiceSeccionId)
+        {
+            if (!subindice.Activo)
+            {
+                throw new ReglaNegocioException("El subíndice seleccionado está inactivo.");
+            }
+
+            if (!subindice.AplicaA(persona.TipoFuncionarioId))
+            {
+                throw new ReglaNegocioException("El subíndice seleccionado no aplica a su tipo de funcionario.");
+            }
+        }
+    }
+
+    private async Task<List<EstadoSubindiceSeccionPersonaDto>> ListarSubindicesPersonaAsync(
+        Persona persona,
+        IReadOnlyCollection<TituloAcademico> titulos,
+        IReadOnlyCollection<TituloEnCurso> enCurso,
+        IReadOnlyCollection<Capacitacion> caps,
+        IReadOnlyCollection<ExperienciaLaboral> exps,
+        IReadOnlyCollection<ReferenciaPersonal> refs,
+        CancellationToken ct)
+    {
+        var referenciados = new HashSet<Guid>();
+        foreach (var id in titulos.Select(t => t.SubindiceSeccionId)
+            .Concat(enCurso.Select(t => t.SubindiceSeccionId))
+            .Concat(caps.Select(c => c.SubindiceSeccionId))
+            .Concat(exps.Select(e => e.SubindiceSeccionId))
+            .Concat(refs.Select(r => r.SubindiceSeccionId)))
+        {
+            if (id.HasValue)
+            {
+                referenciados.Add(id.Value);
+            }
+        }
+
+        var todos = await _context.SubindicesSeccion
+            .AsNoTracking()
+            .Where(s => s.InstitucionId == persona.InstitucionId)
+            .OrderBy(s => s.Seccion)
+            .ThenBy(s => s.Orden)
+            .ThenBy(s => s.Nombre)
+            .ToListAsync(ct);
+
+        var resultado = new List<EstadoSubindiceSeccionPersonaDto>();
+        foreach (var s in todos)
+        {
+            if (!s.AplicaA(persona.TipoFuncionarioId) && !referenciados.Contains(s.Id))
+            {
+                continue;
+            }
+
+            var cumplido = s.Seccion switch
+            {
+                SeccionHojaDeVida.FormacionAcademica =>
+                    titulos.Any(t => t.SubindiceSeccionId == s.Id && t.ArchivoId != null) ||
+                    enCurso.Any(t => t.SubindiceSeccionId == s.Id && t.ArchivoId != null),
+                SeccionHojaDeVida.Capacitaciones =>
+                    caps.Any(c => c.SubindiceSeccionId == s.Id && c.ArchivoId != null),
+                SeccionHojaDeVida.ExperienciaLaboral =>
+                    exps.Any(e => e.SubindiceSeccionId == s.Id && e.ArchivoId != null),
+                SeccionHojaDeVida.Referencias =>
+                    refs.Any(r => r.SubindiceSeccionId == s.Id),
+                _ => false
+            };
+
+            resultado.Add(new EstadoSubindiceSeccionPersonaDto(
+                s.Id,
+                CodigosSeccion.ObtenerCodigo(s.Seccion),
+                s.Nombre,
+                s.Descripcion,
+                s.TipoFuncionarioId,
+                s.EsObligatorio,
+                s.Orden,
+                s.Activo,
+                cumplido ? "cargado" : "pendiente"));
+        }
+
+        return resultado;
+    }
 }

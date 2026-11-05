@@ -44,6 +44,7 @@ public class ModeloPersistenciaTests
     [InlineData(typeof(TipoDocumento))]
     [InlineData(typeof(TipoFuncionario))]
     [InlineData(typeof(RequisitoDocumento))]
+    [InlineData(typeof(SubindiceSeccion))]
     public void Entidades_de_hoja_de_vida_son_institucionales(Type tipo)
     {
         using var contexto = CrearContexto();

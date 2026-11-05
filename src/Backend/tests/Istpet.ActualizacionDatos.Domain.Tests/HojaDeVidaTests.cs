@@ -374,4 +374,57 @@ public class HojaDeVidaTests
         persona.AsignarFechaIngreso(fecha);
         Assert.Equal(fecha, persona.FechaIngresoInstitucion);
     }
+
+    [Fact]
+    public void SubindiceSeccion_valida_seccion_nombre_y_alcance_por_tipo_funcionario()
+    {
+        var tipoDocente = Guid.NewGuid();
+        var subindice = new SubindiceSeccion(
+            Guid.NewGuid(),
+            Institucion,
+            SeccionHojaDeVida.ExperienciaLaboral,
+            "  Títulos de 3er Nivel  ",
+            "  Cargar respaldo registrado  ",
+            tipoDocente,
+            esObligatorio: true,
+            orden: 1);
+
+        Assert.Equal("Títulos de 3er Nivel", subindice.Nombre);
+        Assert.Equal("Cargar respaldo registrado", subindice.Descripcion);
+        Assert.True(subindice.AplicaA(tipoDocente));
+        Assert.False(subindice.AplicaA(Guid.NewGuid()));
+        Assert.False(subindice.AplicaA(null));
+
+        subindice.Desactivar();
+        Assert.False(subindice.AplicaA(tipoDocente));
+    }
+
+    [Theory]
+    [InlineData(SeccionHojaDeVida.FichaPersonal)]
+    [InlineData(SeccionHojaDeVida.DocumentosPersonales)]
+    [InlineData(SeccionHojaDeVida.CuentaBancaria)]
+    public void SubindiceSeccion_rechaza_secciones_no_soportadas(SeccionHojaDeVida seccionInvalida)
+    {
+        Assert.Throws<ReglaNegocioException>(() =>
+            new SubindiceSeccion(Guid.NewGuid(), Institucion, seccionInvalida, "Subíndice Inválido"));
+    }
+
+    [Fact]
+    public void RegistroClasificable_asocia_y_desasocia_subindice_sin_afectar_datos()
+    {
+        var subindiceId = Guid.NewGuid();
+        var experiencia = new ExperienciaLaboral(
+            Guid.NewGuid(),
+            Institucion,
+            PersonaId,
+            new DatosExperienciaLaboral("Instituto Ficticio", "Docente", new DateOnly(2024, 1, 1), TrabajaActualmente: true));
+
+        Assert.Null(experiencia.SubindiceSeccionId);
+
+        experiencia.AsociarSubindice(subindiceId);
+        Assert.Equal(subindiceId, experiencia.SubindiceSeccionId);
+
+        experiencia.AsociarSubindice(null);
+        Assert.Null(experiencia.SubindiceSeccionId);
+    }
 }

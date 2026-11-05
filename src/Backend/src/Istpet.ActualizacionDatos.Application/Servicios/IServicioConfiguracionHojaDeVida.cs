@@ -39,4 +39,10 @@ public interface IServicioConfiguracionHojaDeVida
     /// <summary>Da de baja mediante Activo=false y conserva los vínculos existentes (RF-CAP-003).</summary>
     Task EliminarCapacitacionObligatoriaAsync(Guid id, CancellationToken ct = default);
     Task<List<CumplimientoCapacitacionObligatoriaDto>> ObtenerCumplimientoObligatoriasAsync(CancellationToken ct = default);
+
+    Task<List<SubindiceSeccionDto>> ListarSubindicesSeccionAsync(CancellationToken ct = default);
+    Task<SubindiceSeccionDto> CrearSubindiceSeccionAsync(GuardarSubindiceSeccionRequest request, CancellationToken ct = default);
+    Task<SubindiceSeccionDto> ActualizarSubindiceSeccionAsync(Guid id, GuardarSubindiceSeccionRequest request, CancellationToken ct = default);
+    /// <summary>Da de baja mediante Activo=false y conserva los vínculos existentes (ADR-0043).</summary>
+    Task EliminarSubindiceSeccionAsync(Guid id, CancellationToken ct = default);
 }

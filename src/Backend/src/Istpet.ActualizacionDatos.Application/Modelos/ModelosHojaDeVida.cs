@@ -82,7 +82,8 @@ public sealed record GuardarTituloAcademicoRequest(
     string? NumeroRegistroSenescyt = null,
     DateOnly? FechaObtencion = null,
     DateOnly? FechaRegistroSenescyt = null,
-    Guid? ArchivoId = null);
+    Guid? ArchivoId = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record TituloAcademicoDto(
     Guid Id,
@@ -95,7 +96,8 @@ public sealed record TituloAcademicoDto(
     DateOnly? FechaObtencion,
     DateOnly? FechaRegistroSenescyt,
     Guid? ArchivoId,
-    DateTime FechaActualizacionUtc);
+    DateTime FechaActualizacionUtc,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record GuardarTituloEnCursoRequest(
     string NombrePrograma,
@@ -110,7 +112,8 @@ public sealed record GuardarTituloEnCursoRequest(
     int? FinanciamientoBecaId = null,
     int? PorcentajeBeca = null,
     decimal? MontoBeca = null,
-    Guid? ArchivoId = null);
+    Guid? ArchivoId = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record TituloEnCursoDto(
     Guid Id,
@@ -127,7 +130,8 @@ public sealed record TituloEnCursoDto(
     int? PorcentajeBeca,
     decimal? MontoBeca,
     Guid? ArchivoId,
-    DateTime FechaActualizacionUtc);
+    DateTime FechaActualizacionUtc,
+    Guid? SubindiceSeccionId = null);
 
 /// <summary>TipoParticipacion: "asistente", "aprobado" o "facilitador" (PD-HDV-08).</summary>
 public sealed record GuardarCapacitacionRequest(
@@ -141,7 +145,8 @@ public sealed record GuardarCapacitacionRequest(
     string? Lugar = null,
     bool FinanciadaPorInstitucion = false,
     Guid? ArchivoId = null,
-    Guid? CapacitacionObligatoriaId = null);
+    Guid? CapacitacionObligatoriaId = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record CapacitacionDto(
     Guid Id,
@@ -156,7 +161,8 @@ public sealed record CapacitacionDto(
     bool FinanciadaPorInstitucion,
     Guid? ArchivoId,
     DateTime FechaActualizacionUtc,
-    Guid? CapacitacionObligatoriaId = null);
+    Guid? CapacitacionObligatoriaId = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record GuardarExperienciaLaboralRequest(
     string Empleador,
@@ -167,7 +173,8 @@ public sealed record GuardarExperienciaLaboralRequest(
     string? Ciudad = null,
     int? PaisId = null,
     string? Funciones = null,
-    Guid? ArchivoId = null);
+    Guid? ArchivoId = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record ExperienciaLaboralDto(
     Guid Id,
@@ -180,7 +187,8 @@ public sealed record ExperienciaLaboralDto(
     int? PaisId,
     string? Funciones,
     Guid? ArchivoId,
-    DateTime FechaActualizacionUtc);
+    DateTime FechaActualizacionUtc,
+    Guid? SubindiceSeccionId = null);
 
 /// <summary>Tipo: "personal" o "familiar" (RF-HDV-017).</summary>
 public sealed record GuardarReferenciaRequest(
@@ -189,7 +197,8 @@ public sealed record GuardarReferenciaRequest(
     string Telefono,
     string? Titulo = null,
     string? CargoActual = null,
-    string? Empresa = null);
+    string? Empresa = null,
+    Guid? SubindiceSeccionId = null);
 
 public sealed record ReferenciaDto(
     Guid Id,
@@ -199,7 +208,8 @@ public sealed record ReferenciaDto(
     string? Titulo,
     string? CargoActual,
     string? Empresa,
-    DateTime FechaActualizacionUtc);
+    DateTime FechaActualizacionUtc,
+    Guid? SubindiceSeccionId = null);
 
 /// <summary>Hoja de vida completa de una persona, para el usuario y para la revisión.</summary>
 public sealed record HojaDeVidaDto(
@@ -214,7 +224,8 @@ public sealed record HojaDeVidaDto(
     List<ExperienciaLaboralDto> Experiencias,
     List<ReferenciaDto> Referencias,
     List<string>? SeccionesAbiertas = null,
-    List<EstadoCapacitacionObligatoriaPersonaDto>? CapacitacionesObligatorias = null);
+    List<EstadoCapacitacionObligatoriaPersonaDto>? CapacitacionesObligatorias = null,
+    List<EstadoSubindiceSeccionPersonaDto>? SubindicesSeccion = null);
 
 // --- Documentos personales (RF-HDV-007, 008, T-03) ---
 
@@ -386,3 +397,35 @@ public sealed record CumplimientoCapacitacionObligatoriaDto(
     int TotalExentaOJustificada,
     int TotalPendiente,
     List<PersonaPendienteCapacitacionDto> PersonasPendientes);
+
+// --- Subíndices libres configurables por sección (spec-0021, ADR-0043) ---
+
+public sealed record GuardarSubindiceSeccionRequest(
+    string Seccion,
+    string Nombre,
+    string? Descripcion = null,
+    Guid? TipoFuncionarioId = null,
+    bool EsObligatorio = true,
+    int Orden = 0,
+    bool Activo = true);
+
+public sealed record SubindiceSeccionDto(
+    Guid Id,
+    string Seccion,
+    string Nombre,
+    string? Descripcion,
+    Guid? TipoFuncionarioId,
+    bool EsObligatorio,
+    int Orden,
+    bool Activo);
+
+public sealed record EstadoSubindiceSeccionPersonaDto(
+    Guid Id,
+    string Seccion,
+    string Nombre,
+    string? Descripcion,
+    Guid? TipoFuncionarioId,
+    bool EsObligatorio,
+    int Orden,
+    bool Activo,
+    string Estado);

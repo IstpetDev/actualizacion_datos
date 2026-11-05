@@ -77,6 +77,10 @@ internal static class AccesoEndpoints
         {
             return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_DISPONIBLE"), statusCode: StatusCodes.Status409Conflict);
         }
+        catch (ConflictoEstadoException ex)
+        {
+            return Results.Conflict(new MensajeRespuesta(ex.Message, "CONFLICTO_ESTADO"));
+        }
         catch (ReglaNegocioException ex) when (ex.Message.Contains("no puede cerrarse", StringComparison.OrdinalIgnoreCase))
         {
             return Results.Json(new MensajeRespuesta(ex.Message, "SECCION_NO_MODIFICABLE"), statusCode: StatusCodes.Status409Conflict);
