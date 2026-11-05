@@ -1608,6 +1608,12 @@ export class ConfiguracionClient {
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
             }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1687,6 +1693,12 @@ export class ConfiguracionClient {
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -1904,6 +1916,12 @@ export class ConfiguracionClient {
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
             }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1983,6 +2001,12 @@ export class ConfiguracionClient {
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -2200,6 +2224,12 @@ export class ConfiguracionClient {
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
             }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2279,6 +2309,12 @@ export class ConfiguracionClient {
             let result404: any = null;
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
             }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
@@ -2496,6 +2532,12 @@ export class ConfiguracionClient {
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
             }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2576,6 +2618,12 @@ export class ConfiguracionClient {
             result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
             return throwException("Not Found", status, _responseText, _headers, result404);
             }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
         } else if (status !== 200 && status !== 204) {
             return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2617,6 +2665,314 @@ export class ConfiguracionClient {
     }
 
     protected processEliminarCapacitacionObligatoria(response: HttpResponseBase): Observable<void> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return _observableOf(null as any);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    listarSubindicesSeccion(): Observable<SubindiceSeccionDto[]> {
+        let url_ = this.baseUrl + "/api/configuracion/subindices";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processListarSubindicesSeccion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processListarSubindicesSeccion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<SubindiceSeccionDto[]>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<SubindiceSeccionDto[]>;
+        }));
+    }
+
+    protected processListarSubindicesSeccion(response: HttpResponseBase): Observable<SubindiceSeccionDto[]> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SubindiceSeccionDto[];
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Created
+     */
+    crearSubindiceSeccion(body?: GuardarSubindiceSeccionRequest | undefined): Observable<SubindiceSeccionDto> {
+        let url_ = this.baseUrl + "/api/configuracion/subindices";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("post", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processCrearSubindiceSeccion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processCrearSubindiceSeccion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<SubindiceSeccionDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<SubindiceSeccionDto>;
+        }));
+    }
+
+    protected processCrearSubindiceSeccion(response: HttpResponseBase): Observable<SubindiceSeccionDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 201) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result201: any = null;
+            result201 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SubindiceSeccionDto;
+            return _observableOf(result201);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    actualizarSubindiceSeccion(id: string, body?: GuardarSubindiceSeccionRequest | undefined): Observable<SubindiceSeccionDto> {
+        let url_ = this.baseUrl + "/api/configuracion/subindices/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_ : any = {
+            body: content_,
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            })
+        };
+
+        return this.http.request("put", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processActualizarSubindiceSeccion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processActualizarSubindiceSeccion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<SubindiceSeccionDto>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<SubindiceSeccionDto>;
+        }));
+    }
+
+    protected processActualizarSubindiceSeccion(response: HttpResponseBase): Observable<SubindiceSeccionDto> {
+        const status = response.status;
+        const responseBlob =
+            response instanceof HttpResponse ? response.body :
+            (response as any).error instanceof Blob ? (response as any).error : undefined;
+
+        let _headers: any = {}; if (response.headers) { for (let key of response.headers.keys()) { _headers[key] = response.headers.get(key); }}
+        if (status === 200) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result200: any = null;
+            result200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as SubindiceSeccionDto;
+            return _observableOf(result200);
+            }));
+        } else if (status === 400) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result400: any = null;
+            result400 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+            }));
+        } else if (status === 401) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("Unauthorized", status, _responseText, _headers);
+            }));
+        } else if (status === 403) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result403: any = null;
+            result403 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+            }));
+        } else if (status === 404) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result404: any = null;
+            result404 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Not Found", status, _responseText, _headers, result404);
+            }));
+        } else if (status === 409) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            let result409: any = null;
+            result409 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver) as MensajeRespuesta;
+            return throwException("Conflict", status, _responseText, _headers, result409);
+            }));
+        } else if (status !== 200 && status !== 204) {
+            return blobToText(responseBlob).pipe(_observableMergeMap((_responseText: string) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            }));
+        }
+        return _observableOf(null as any);
+    }
+
+    /**
+     * Da de baja el registro (Activo=false) conservando sus referencias.
+     * @return No Content
+     */
+    eliminarSubindiceSeccion(id: string): Observable<void> {
+        let url_ = this.baseUrl + "/api/configuracion/subindices/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_ : any = {
+            observe: "response",
+            responseType: "blob",
+            headers: new HttpHeaders({
+            })
+        };
+
+        return this.http.request("delete", url_, options_).pipe(_observableMergeMap((response_ : any) => {
+            return this.processEliminarSubindiceSeccion(response_);
+        })).pipe(_observableCatch((response_: any) => {
+            if (response_ instanceof HttpResponseBase) {
+                try {
+                    return this.processEliminarSubindiceSeccion(response_ as any);
+                } catch (e) {
+                    return _observableThrow(e) as any as Observable<void>;
+                }
+            } else
+                return _observableThrow(response_) as any as Observable<void>;
+        }));
+    }
+
+    protected processEliminarSubindiceSeccion(response: HttpResponseBase): Observable<void> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -8673,6 +9029,7 @@ export interface CapacitacionDto {
     archivoId: string | undefined;
     fechaActualizacionUtc: Date;
     capacitacionObligatoriaId?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -8887,6 +9244,20 @@ export interface EstadoProteccionDatosDto {
     [key: string]: any;
 }
 
+export interface EstadoSubindiceSeccionPersonaDto {
+    id: string;
+    seccion: string;
+    nombre: string;
+    descripcion: string | undefined;
+    tipoFuncionarioId: string | undefined;
+    esObligatorio: boolean;
+    orden: number;
+    activo: boolean;
+    estado: string;
+
+    [key: string]: any;
+}
+
 export interface ExpedienteRevisionDto {
     id: string;
     institucionId: string;
@@ -8915,6 +9286,7 @@ export interface ExperienciaLaboralDto {
     funciones: string | undefined;
     archivoId: string | undefined;
     fechaActualizacionUtc: Date;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -8987,6 +9359,7 @@ export interface GuardarCapacitacionRequest {
     financiadaPorInstitucion?: boolean;
     archivoId?: string | undefined;
     capacitacionObligatoriaId?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9028,6 +9401,7 @@ export interface GuardarExperienciaLaboralRequest {
     paisId?: number | undefined;
     funciones?: string | undefined;
     archivoId?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9069,6 +9443,7 @@ export interface GuardarReferenciaRequest {
     titulo?: string | undefined;
     cargoActual?: string | undefined;
     empresa?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9077,6 +9452,18 @@ export interface GuardarRequisitoDocumentoRequest {
     tipoDocumentoId: string;
     tipoFuncionarioId?: string | undefined;
     esObligatorio?: boolean;
+    activo?: boolean;
+
+    [key: string]: any;
+}
+
+export interface GuardarSubindiceSeccionRequest {
+    seccion: string;
+    nombre: string;
+    descripcion?: string | undefined;
+    tipoFuncionarioId?: string | undefined;
+    esObligatorio?: boolean;
+    orden?: number;
     activo?: boolean;
 
     [key: string]: any;
@@ -9112,6 +9499,7 @@ export interface GuardarTituloAcademicoRequest {
     fechaObtencion?: Date | undefined;
     fechaRegistroSenescyt?: Date | undefined;
     archivoId?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9130,6 +9518,7 @@ export interface GuardarTituloEnCursoRequest {
     porcentajeBeca?: number | undefined;
     montoBeca?: number | undefined;
     archivoId?: string | undefined;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9155,6 +9544,7 @@ export interface HojaDeVidaDto {
     referencias: ReferenciaDto[];
     seccionesAbiertas?: string[] | undefined;
     capacitacionesObligatorias?: EstadoCapacitacionObligatoriaPersonaDto[] | undefined;
+    subindicesSeccion?: EstadoSubindiceSeccionPersonaDto[] | undefined;
 
     [key: string]: any;
 }
@@ -9369,6 +9759,7 @@ export interface ReferenciaDto {
     cargoActual: string | undefined;
     empresa: string | undefined;
     fechaActualizacionUtc: Date;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9518,6 +9909,19 @@ export interface SesionUsuarioDto {
     [key: string]: any;
 }
 
+export interface SubindiceSeccionDto {
+    id: string;
+    seccion: string;
+    nombre: string;
+    descripcion: string | undefined;
+    tipoFuncionarioId: string | undefined;
+    esObligatorio: boolean;
+    orden: number;
+    activo: boolean;
+
+    [key: string]: any;
+}
+
 export interface TipoDocumentoDto {
     id: string;
     codigo: string;
@@ -9552,6 +9956,7 @@ export interface TituloAcademicoDto {
     fechaRegistroSenescyt: Date | undefined;
     archivoId: string | undefined;
     fechaActualizacionUtc: Date;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }
@@ -9572,6 +9977,7 @@ export interface TituloEnCursoDto {
     montoBeca: number | undefined;
     archivoId: string | undefined;
     fechaActualizacionUtc: Date;
+    subindiceSeccionId?: string | undefined;
 
     [key: string]: any;
 }

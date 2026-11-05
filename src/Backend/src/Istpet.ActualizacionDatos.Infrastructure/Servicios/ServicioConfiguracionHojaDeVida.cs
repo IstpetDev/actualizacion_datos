@@ -453,4 +453,124 @@ public sealed class ServicioConfiguracionHojaDeVida(
             throw new ReglaNegocioException("Las horas esperadas deben ser mayores a 0.");
         }
     }
+
+    private static SubindiceSeccionDto Dto(SubindiceSeccion s) =>
+        new(s.Id, CodigosSeccion.ObtenerCodigo(s.Seccion), s.Nombre, s.Descripcion, s.TipoFuncionarioId, s.EsObligatorio, s.Orden, s.Activo);
+
+    public async Task<List<SubindiceSeccionDto>> ListarSubindicesSeccionAsync(CancellationToken ct = default)
+    {
+        var lista = await db.SubindicesSeccion
+            .AsNoTracking()
+            .Where(s => s.InstitucionId == InstitucionActual)
+            .OrderBy(s => s.Seccion)
+            .ThenBy(s => s.Orden)
+            .ThenBy(s => s.Nombre)
+            .ToListAsync(ct);
+
+        return lista.Select(Dto).ToList();
+    }
+
+    public async Task<SubindiceSeccionDto> CrearSubindiceSeccionAsync(GuardarSubindiceSeccionRequest request, CancellationToken ct = default)
+    {
+        var seccion = ParsearSeccionSubindice(request.Seccion);
+        await ValidarSubindiceRequestAsync(request, seccion, null, ct);
+
+        var subindice = new SubindiceSeccion(
+            Guid.NewGuid(),
+            InstitucionActual,
+            seccion,
+            request.Nombre,
+            request.Descripcion,
+            request.TipoFuncionarioId,
+            request.EsObligatorio,
+            request.Orden,
+            request.Activo);
+
+        db.SubindicesSeccion.Add(subindice);
+        await GuardarAsync(ct);
+        return Dto(subindice);
+    }
+
+    public async Task<SubindiceSeccionDto> ActualizarSubindiceSeccionAsync(Guid id, GuardarSubindiceSeccionRequest request, CancellationToken ct = default)
+    {
+        var subindice = await db.SubindicesSeccion
+            .SingleOrDefaultAsync(s => s.Id == id && s.InstitucionId == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("El subíndice no existe en la institución.");
+
+        var seccion = ParsearSeccionSubindice(request.Seccion);
+        await ValidarSubindiceRequestAsync(request, seccion, id, ct);
+
+        subindice.Actualizar(
+            seccion,
+            request.Nombre,
+            request.Descripcion,
+            request.TipoFuncionarioId,
+            request.EsObligatorio,
+            request.Orden,
+            request.Activo);
+
+        await GuardarAsync(ct);
+        return Dto(subindice);
+    }
+
+    public async Task EliminarSubindiceSeccionAsync(Guid id, CancellationToken ct = default)
+    {
+        var subindice = await db.SubindicesSeccion
+            .SingleOrDefaultAsync(s => s.Id == id && s.InstitucionId == InstitucionActual, ct)
+            ?? throw new RecursoNoEncontradoException("El subíndice no existe en la institución.");
+
+        subindice.Desactivar();
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static SeccionHojaDeVida ParsearSeccionSubindice(string? codigo)
+    {
+        if (!CodigosSeccion.IntentarParsear(codigo, out var seccion) || !SubindiceSeccion.EsSeccionSoportada(seccion))
+        {
+            throw new ReglaNegocioException("La sección debe ser formacion, experiencia, capacitaciones o referencias.");
+        }
+
+        return seccion;
+    }
+
+    private async Task ValidarSubindiceRequestAsync(GuardarSubindiceSeccionRequest request, SeccionHojaDeVida seccion, Guid? idExcluir, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Nombre) || request.Nombre.Trim().Length > 150)
+        {
+            throw new ReglaNegocioException("El nombre del subíndice es obligatorio y no puede superar 150 caracteres.");
+        }
+
+        if (request.Descripcion is not null && request.Descripcion.Trim().Length > 500)
+        {
+            throw new ReglaNegocioException("La descripción del subíndice no puede superar 500 caracteres.");
+        }
+
+        if (request.TipoFuncionarioId is Guid tipoId)
+        {
+            var funcionario = await ObtenerTipoFuncionarioAsync(tipoId, ct);
+            if (request.Activo && !funcionario.Activo)
+            {
+                throw new ReglaNegocioException("El tipo de funcionario está inactivo.");
+            }
+        }
+
+        if (request.Activo)
+        {
+            var nombreLimpio = request.Nombre.Trim();
+            var nombresActivos = await db.SubindicesSeccion
+                .Where(s =>
+                    s.InstitucionId == InstitucionActual &&
+                    s.Activo &&
+                    s.Seccion == seccion &&
+                    s.TipoFuncionarioId == request.TipoFuncionarioId &&
+                    (!idExcluir.HasValue || s.Id != idExcluir.Value))
+                .Select(s => s.Nombre)
+                .ToListAsync(ct);
+
+            if (nombresActivos.Any(n => string.Equals(n, nombreLimpio, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ConflictoEstadoException($"Ya existe un subíndice activo con el nombre '{nombreLimpio}' para esa sección y alcance.");
+            }
+        }
+    }
 }

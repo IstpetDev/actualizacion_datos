@@ -9,7 +9,7 @@ public class TituloAcademicoConfiguracion : IEntityTypeConfiguration<TituloAcade
 {
     public void Configure(EntityTypeBuilder<TituloAcademico> builder)
     {
-        ConfigurarRegistro(builder, "titulos_academicos");
+        ConfigurarRegistroClasificable(builder, "titulos_academicos");
 
         builder.Property(t => t.NombreTitulo).HasMaxLength(300).IsRequired().HasColumnName("nombre_titulo");
         builder.Property(t => t.NombreInstitucionOtra).HasMaxLength(300).HasColumnName("nombre_institucion_otra");
@@ -31,7 +31,7 @@ public class TituloEnCursoConfiguracion : IEntityTypeConfiguration<TituloEnCurso
 {
     public void Configure(EntityTypeBuilder<TituloEnCurso> builder)
     {
-        ConfigurarRegistro(builder, "titulos_en_curso");
+        ConfigurarRegistroClasificable(builder, "titulos_en_curso");
 
         builder.Property(t => t.NombrePrograma).HasMaxLength(300).IsRequired().HasColumnName("nombre_programa");
         builder.Property(t => t.NombreInstitucionOtra).HasMaxLength(300).HasColumnName("nombre_institucion_otra");
@@ -63,7 +63,7 @@ public class CapacitacionConfiguracion : IEntityTypeConfiguration<Capacitacion>
 {
     public void Configure(EntityTypeBuilder<Capacitacion> builder)
     {
-        ConfigurarRegistro(builder, "capacitaciones");
+        ConfigurarRegistroClasificable(builder, "capacitaciones");
 
         builder.Property(c => c.NombreEvento).HasMaxLength(300).IsRequired().HasColumnName("nombre_evento");
         builder.Property(c => c.InstitucionOrganizadora).HasMaxLength(300).IsRequired().HasColumnName("institucion_organizadora");
@@ -92,7 +92,7 @@ public class ReferenciaPersonalConfiguracion : IEntityTypeConfiguration<Referenc
 {
     public void Configure(EntityTypeBuilder<ReferenciaPersonal> builder)
     {
-        ConfigurarRegistro(builder, "referencias_personales");
+        ConfigurarRegistroClasificable(builder, "referencias_personales");
 
         builder.Property(r => r.Tipo)
             .HasConversion<string>()
@@ -111,7 +111,7 @@ public class ExperienciaLaboralConfiguracion : IEntityTypeConfiguration<Experien
 {
     public void Configure(EntityTypeBuilder<ExperienciaLaboral> builder)
     {
-        ConfigurarRegistro(builder, "experiencias_laborales");
+        ConfigurarRegistroClasificable(builder, "experiencias_laborales");
 
         builder.Property(e => e.Empleador).HasMaxLength(300).IsRequired().HasColumnName("empleador");
         builder.Property(e => e.Cargo).HasMaxLength(200).IsRequired().HasColumnName("cargo");

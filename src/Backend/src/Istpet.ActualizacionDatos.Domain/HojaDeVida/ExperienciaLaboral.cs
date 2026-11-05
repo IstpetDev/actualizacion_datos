@@ -12,7 +12,7 @@ public sealed record DatosExperienciaLaboral(
 
 // Experiencia laboral. Equivale a `certificados_experiencia_laboral` del sistema de
 // origen; el certificado que allí se guardaba como ruta es aquí el archivo de respaldo.
-public class ExperienciaLaboral : RegistroHojaDeVida
+public class ExperienciaLaboral : RegistroClasificableHojaDeVida
 {
     public string Empleador { get; private set; }
     public string Cargo { get; private set; }

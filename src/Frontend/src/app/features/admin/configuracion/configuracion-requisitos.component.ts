@@ -18,9 +18,16 @@ import {
 import { AuthService } from '../../../core/auth';
 import { ConfiguracionDocumentoComponent } from './configuracion-documento.component';
 import { CapacitacionesObligatoriasConfigComponent } from './capacitaciones-obligatorias-config.component';
+import { SubindicesSeccionConfigComponent } from './subindices-seccion-config.component';
 
 type TabConfiguracion =
-  'funcionarios' | 'documentos' | 'requisitos' | 'asignaciones' | 'documento' | 'capacitaciones';
+  | 'funcionarios'
+  | 'documentos'
+  | 'requisitos'
+  | 'asignaciones'
+  | 'documento'
+  | 'capacitaciones'
+  | 'subindices';
 
 @Component({
   selector: 'app-configuracion-requisitos',
@@ -32,6 +39,7 @@ type TabConfiguracion =
     SeccionesComponent,
     ConfiguracionDocumentoComponent,
     CapacitacionesObligatoriasConfigComponent,
+    SubindicesSeccionConfigComponent,
   ],
   template: `
     <section class="configuracion-container" data-testid="configuracion-requisitos-panel">
@@ -129,6 +137,15 @@ type TabConfiguracion =
             data-testid="tab-capacitaciones-obligatorias"
           >
             6. Capacitaciones Obligatorias
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'subindices'"
+            (click)="cambiarTab('subindices')"
+            data-testid="tab-subindices-seccion"
+          >
+            7. Subíndices por Sección
           </button>
         </nav>
 
@@ -872,6 +889,13 @@ type TabConfiguracion =
         @if (tabActiva() === 'capacitaciones') {
           <div class="subtab-panel" data-testid="panel-capacitaciones-obligatorias">
             <app-capacitaciones-obligatorias-config />
+          </div>
+        }
+
+        <!-- SUBTAB 7: SUBÍNDICES LIBRES POR SECCIÓN (spec-0021, ADR-0043) -->
+        @if (tabActiva() === 'subindices') {
+          <div class="subtab-panel" data-testid="panel-subindices-seccion">
+            <app-subindices-seccion-config />
           </div>
         }
       }

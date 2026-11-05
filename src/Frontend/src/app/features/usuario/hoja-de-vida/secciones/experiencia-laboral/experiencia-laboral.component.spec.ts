@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
   ArchivosClient,
   ElementoCatalogoDto,
+  EstadoSubindiceSeccionPersonaDto,
   ExperienciaLaboralDto,
 } from '../../../../../api-client';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -21,6 +22,7 @@ describe('ExperienciaLaboralComponent', () => {
     puedeEditar: WritableSignal<boolean>;
     guardando: WritableSignal<boolean>;
     experiencias: WritableSignal<ExperienciaLaboralDto[]>;
+    subindicesSeccion: WritableSignal<EstadoSubindiceSeccionPersonaDto[]>;
     guardarExperiencia: Mock;
     eliminarExperiencia: Mock;
     obtenerMarcaParaItem: Mock;
@@ -61,6 +63,7 @@ describe('ExperienciaLaboralComponent', () => {
       puedeEditar: signal(true),
       guardando: signal(false),
       experiencias: signal([mockExperiencia]),
+      subindicesSeccion: signal([]),
       guardarExperiencia: vi.fn().mockReturnValue(of({})),
       eliminarExperiencia: vi.fn().mockReturnValue(of({})),
       obtenerMarcaParaItem: vi.fn().mockReturnValue(undefined),
@@ -170,5 +173,35 @@ describe('ExperienciaLaboralComponent', () => {
     expect(compiled.querySelector('[data-testid="btn-nueva-experiencia"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-editar-experiencia"]')).toBeNull();
     expect(compiled.querySelector('[data-testid="btn-eliminar-experiencia"]')).toBeNull();
+  });
+
+  it('muestra_subindices_de_experiencia_y_preselecciona_al_cargar_aqui', () => {
+    stateMock.subindicesSeccion.set([
+      {
+        id: 'sub-exp-1',
+        seccion: 'experiencia',
+        nombre: 'Títulos de 3er Nivel',
+        descripcion: 'Respaldo requerido',
+        tipoFuncionarioId: undefined,
+        esObligatorio: true,
+        orden: 1,
+        activo: true,
+        estado: 'pendiente',
+      },
+    ]);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="bloque-subindices-experiencia"]')).toBeTruthy();
+    expect(compiled.textContent).toContain('Títulos de 3er Nivel');
+
+    const btnCargar = compiled.querySelector(
+      '[data-testid="btn-cargar-subindice-sub-exp-1"]',
+    ) as HTMLButtonElement;
+    btnCargar.click();
+    fixture.detectChanges();
+
+    expect(component.mostrarFormulario()).toBe(true);
+    expect(component.modelo.subindiceSeccionId).toBe('sub-exp-1');
   });
 });

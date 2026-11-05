@@ -17,7 +17,7 @@ public sealed record DatosReferencia(
 // Referencias de la hoja de vida (formato institucional de docentes). El formato pide dos
 // personales y dos familiares; que haya al menos dos personales se comprueba al enviar,
 // en la capa de aplicación (ADR-0009: validaciones en un solo lugar), no aquí.
-public class ReferenciaPersonal : RegistroHojaDeVida
+public class ReferenciaPersonal : RegistroClasificableHojaDeVida
 {
     public TipoReferencia Tipo { get; private set; }
     public string NombresApellidos { get; private set; }

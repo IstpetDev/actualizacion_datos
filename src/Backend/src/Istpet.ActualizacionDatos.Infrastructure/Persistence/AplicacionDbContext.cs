@@ -37,6 +37,7 @@ public class AplicacionDbContext : DbContext
     public DbSet<DocumentoPersonal> DocumentosPersonales => Set<DocumentoPersonal>();
     public DbSet<CuentaBancaria> CuentasBancarias => Set<CuentaBancaria>();
     public DbSet<SeccionInstitucion> SeccionesInstitucion => Set<SeccionInstitucion>();
+    public DbSet<SubindiceSeccion> SubindicesSeccion => Set<SubindiceSeccion>();
 
     // Plantillas globales y configuración de documentos (spec-0013, ADR-0032)
     public DbSet<PlantillaHojaDeVida> PlantillasHojaDeVida => Set<PlantillaHojaDeVida>();

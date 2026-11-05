@@ -34,6 +34,9 @@ internal static class ConfiguracionHojaDeVidaEndpoints
         MapRecurso<GuardarCapacitacionObligatoriaRequest, CapacitacionObligatoriaDto>(grupo, "capacitaciones-obligatorias", "CapacitacionesObligatorias", "CapacitacionObligatoria",
             (s, ct) => s.ListarCapacitacionesObligatoriasAsync(ct), (s, r, ct) => s.CrearCapacitacionObligatoriaAsync(r, ct),
             (s, id, r, ct) => s.ActualizarCapacitacionObligatoriaAsync(id, r, ct), (s, id, ct) => s.EliminarCapacitacionObligatoriaAsync(id, ct), c => c.Id);
+        MapRecurso<GuardarSubindiceSeccionRequest, SubindiceSeccionDto>(grupo, "subindices", "SubindicesSeccion", "SubindiceSeccion",
+            (s, ct) => s.ListarSubindicesSeccionAsync(ct), (s, r, ct) => s.CrearSubindiceSeccionAsync(r, ct),
+            (s, id, r, ct) => s.ActualizarSubindiceSeccionAsync(id, r, ct), (s, id, ct) => s.EliminarSubindiceSeccionAsync(id, ct), x => x.Id);
 
         grupo.MapGet("/capacitaciones-obligatorias/cumplimiento", (HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
             EnInstitucion(http, contexto, async () => Results.Ok(await servicio.ObtenerCumplimientoObligatoriasAsync(ct))))
@@ -100,7 +103,8 @@ internal static class ConfiguracionHojaDeVidaEndpoints
             .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
-            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound);
+            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+            .Produces<MensajeRespuesta>(StatusCodes.Status409Conflict);
 
         grupo.MapPut($"/{ruta}/{{id:guid}}", (Guid id, TRequest request, HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
                 EnInstitucion(http, contexto, async () => Results.Ok(await actualizar(servicio, id, request, ct))))
@@ -109,7 +113,8 @@ internal static class ConfiguracionHojaDeVidaEndpoints
             .Produces<MensajeRespuesta>(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces<MensajeRespuesta>(StatusCodes.Status403Forbidden)
-            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound);
+            .Produces<MensajeRespuesta>(StatusCodes.Status404NotFound)
+            .Produces<MensajeRespuesta>(StatusCodes.Status409Conflict);
 
         grupo.MapDelete($"/{ruta}/{{id:guid}}", (Guid id, HttpContext http, IContextoInstitucion contexto, IServicioConfiguracionHojaDeVida servicio, CancellationToken ct) =>
                 EnInstitucion(http, contexto, async () =>

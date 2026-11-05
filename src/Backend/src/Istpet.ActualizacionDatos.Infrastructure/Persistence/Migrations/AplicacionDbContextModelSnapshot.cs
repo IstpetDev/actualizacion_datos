@@ -487,6 +487,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("persona_id");
 
+                    b.Property<Guid?>("SubindiceSeccionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subindice_seccion_id");
+
                     b.Property<int?>("TipoCapacitacionId")
                         .HasColumnType("integer")
                         .HasColumnName("tipo_capacitacion_id");
@@ -511,6 +515,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_capacitaciones_persona_id");
+
+                    b.HasIndex("SubindiceSeccionId")
+                        .HasDatabaseName("ix_capacitaciones_subindice_seccion_id");
 
                     b.HasIndex("TipoCapacitacionId")
                         .HasDatabaseName("ix_capacitaciones_tipo_capacitacion_id");
@@ -1119,6 +1126,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("persona_id");
 
+                    b.Property<Guid?>("SubindiceSeccionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subindice_seccion_id");
+
                     b.Property<bool>("TrabajaActualmente")
                         .HasColumnType("boolean")
                         .HasColumnName("trabaja_actualmente");
@@ -1137,6 +1148,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_experiencias_laborales_persona_id");
+
+                    b.HasIndex("SubindiceSeccionId")
+                        .HasDatabaseName("ix_experiencias_laborales_subindice_seccion_id");
 
                     b.ToTable("experiencias_laborales", (string)null);
                 });
@@ -1366,6 +1380,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("persona_id");
 
+                    b.Property<Guid?>("SubindiceSeccionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subindice_seccion_id");
+
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1394,6 +1412,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_referencias_personales_persona_id");
+
+                    b.HasIndex("SubindiceSeccionId")
+                        .HasDatabaseName("ix_referencias_personales_subindice_seccion_id");
 
                     b.ToTable("referencias_personales", (string)null);
                 });
@@ -1482,6 +1503,69 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_secciones_institucion_institucion_seccion");
 
                     b.ToTable("secciones_institucion", (string)null);
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("activo");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("descripcion");
+
+                    b.Property<bool>("EsObligatorio")
+                        .HasColumnType("boolean")
+                        .HasColumnName("es_obligatorio");
+
+                    b.Property<Guid>("InstitucionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("institucion_id");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer")
+                        .HasColumnName("orden");
+
+                    b.Property<string>("Seccion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("seccion");
+
+                    b.Property<Guid?>("TipoFuncionarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tipo_funcionario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subindices_seccion");
+
+                    b.HasIndex("InstitucionId")
+                        .HasDatabaseName("ix_subindices_seccion_institucion_id");
+
+                    b.HasIndex("TipoFuncionarioId")
+                        .HasDatabaseName("ix_subindices_seccion_tipo_funcionario_id");
+
+                    b.HasIndex("InstitucionId", "Seccion", "TipoFuncionarioId", "Nombre")
+                        .IsUnique()
+                        .HasDatabaseName("ix_subindices_seccion_institucion_seccion_alcance_nombre_activo")
+                        .HasFilter("activo = true");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("InstitucionId", "Seccion", "TipoFuncionarioId", "Nombre"), false);
+
+                    b.ToTable("subindices_seccion", (string)null);
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>
@@ -1630,6 +1714,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("persona_id");
 
+                    b.Property<Guid?>("SubindiceSeccionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subindice_seccion_id");
+
                     b.Property<int?>("UniversidadId")
                         .HasColumnType("integer")
                         .HasColumnName("universidad_id");
@@ -1651,6 +1739,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_titulos_academicos_persona_id");
+
+                    b.HasIndex("SubindiceSeccionId")
+                        .HasDatabaseName("ix_titulos_academicos_subindice_seccion_id");
 
                     b.HasIndex("UniversidadId")
                         .HasDatabaseName("ix_titulos_academicos_universidad_id");
@@ -1724,6 +1815,10 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("porcentaje_beca");
 
+                    b.Property<Guid?>("SubindiceSeccionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subindice_seccion_id");
+
                     b.Property<bool>("TieneBeca")
                         .HasColumnType("boolean")
                         .HasColumnName("tiene_beca");
@@ -1756,6 +1851,9 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PersonaId")
                         .HasDatabaseName("ix_titulos_en_curso_persona_id");
+
+                    b.HasIndex("SubindiceSeccionId")
+                        .HasDatabaseName("ix_titulos_en_curso_subindice_seccion_id");
 
                     b.HasIndex("TipoBecaId")
                         .HasDatabaseName("ix_titulos_en_curso_tipo_beca_id");
@@ -2098,6 +2196,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_capacitaciones_personas_persona_id");
 
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", null)
+                        .WithMany()
+                        .HasForeignKey("SubindiceSeccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_capacitaciones_subindices_seccion_subindice_seccion_id");
+
                     b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
                         .WithMany()
                         .HasForeignKey("TipoCapacitacionId")
@@ -2217,6 +2321,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_experiencias_laborales_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", null)
+                        .WithMany()
+                        .HasForeignKey("SubindiceSeccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_experiencias_laborales_subindices_seccion_subindice_seccion");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.FichaPersonal", b =>
@@ -2323,6 +2433,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_referencias_personales_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", null)
+                        .WithMany()
+                        .HasForeignKey("SubindiceSeccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_referencias_personales_subindices_seccion_subindice_seccion");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.RequisitoDocumento", b =>
@@ -2356,6 +2472,22 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_secciones_institucion_instituciones_institucion_id");
+                });
+
+            modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", b =>
+                {
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.Institucion", null)
+                        .WithMany()
+                        .HasForeignKey("InstitucionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_subindices_seccion_instituciones_institucion_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoFuncionario", null)
+                        .WithMany()
+                        .HasForeignKey("TipoFuncionarioId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_subindices_seccion_tipos_funcionario_tipo_funcionario_id");
                 });
 
             modelBuilder.Entity("Istpet.ActualizacionDatos.Domain.HojaDeVida.TipoDocumento", b =>
@@ -2413,6 +2545,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_titulos_academicos_personas_persona_id");
 
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", null)
+                        .WithMany()
+                        .HasForeignKey("SubindiceSeccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_academicos_subindices_seccion_subindice_seccion_id");
+
                     b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
                         .WithMany()
                         .HasForeignKey("UniversidadId")
@@ -2460,6 +2598,12 @@ namespace Istpet.ActualizacionDatos.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_titulos_en_curso_personas_persona_id");
+
+                    b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.SubindiceSeccion", null)
+                        .WithMany()
+                        .HasForeignKey("SubindiceSeccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_titulos_en_curso_subindices_seccion_subindice_seccion_id");
 
                     b.HasOne("Istpet.ActualizacionDatos.Domain.HojaDeVida.ElementoCatalogo", null)
                         .WithMany()

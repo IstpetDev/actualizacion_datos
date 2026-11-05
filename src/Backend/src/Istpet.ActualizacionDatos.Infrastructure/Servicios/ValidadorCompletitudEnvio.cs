@@ -423,3 +423,112 @@ public class ReglaCapacitacionesObligatorias : IReglaCompletitudEnvio
         return [];
     }
 }
+
+/// <summary>
+/// RF-SUB-006 (spec-0021, ADR-0043): Subíndices libres marcados como obligatorios en secciones abiertas
+/// deben contar con al menos un registro válido asociado (y archivo de respaldo cuando la sección lo exige).
+/// </summary>
+public class ReglaSubindicesSeccionObligatorios : IReglaCompletitudEnvio
+{
+    private readonly AplicacionDbContext _context;
+    private readonly IServicioSecciones _servicioSecciones;
+
+    public ReglaSubindicesSeccionObligatorios(AplicacionDbContext context, IServicioSecciones servicioSecciones)
+    {
+        _context = context;
+        _servicioSecciones = servicioSecciones;
+    }
+
+    public async Task<IReadOnlyList<FaltanteEnvioDto>> EvaluarAsync(Guid personaId, CancellationToken ct = default)
+    {
+        var persona = await _context.Personas
+            .FirstOrDefaultAsync(p => p.Id == personaId, ct);
+
+        if (persona == null)
+        {
+            return [];
+        }
+
+        var abiertas = await _servicioSecciones.ObtenerSeccionesAbiertasAsync(persona.InstitucionId, ct);
+        var subindices = await _context.SubindicesSeccion
+            .Where(s => s.InstitucionId == persona.InstitucionId && s.Activo && s.EsObligatorio)
+            .OrderBy(s => s.Seccion)
+            .ThenBy(s => s.Orden)
+            .ThenBy(s => s.Nombre)
+            .ToListAsync(ct);
+
+        var aplicables = subindices
+            .Where(s => abiertas.Contains(s.Seccion) && s.AplicaA(persona.TipoFuncionarioId))
+            .ToList();
+
+        if (aplicables.Count == 0)
+        {
+            return [];
+        }
+
+        var cumplidos = new HashSet<Guid>();
+
+        if (aplicables.Any(s => s.Seccion == SeccionHojaDeVida.FormacionAcademica))
+        {
+            var idsTitulos = await _context.TitulosAcademicos
+                .Where(t => t.PersonaId == personaId && t.SubindiceSeccionId != null && t.ArchivoId != null)
+                .Select(t => t.SubindiceSeccionId!.Value)
+                .ToListAsync(ct);
+            var idsEnCurso = await _context.TitulosEnCurso
+                .Where(t => t.PersonaId == personaId && t.SubindiceSeccionId != null && t.ArchivoId != null)
+                .Select(t => t.SubindiceSeccionId!.Value)
+                .ToListAsync(ct);
+            cumplidos.UnionWith(idsTitulos);
+            cumplidos.UnionWith(idsEnCurso);
+        }
+
+        if (aplicables.Any(s => s.Seccion == SeccionHojaDeVida.Capacitaciones))
+        {
+            var idsCaps = await _context.Capacitaciones
+                .Where(c => c.PersonaId == personaId && c.SubindiceSeccionId != null && c.ArchivoId != null)
+                .Select(c => c.SubindiceSeccionId!.Value)
+                .ToListAsync(ct);
+            cumplidos.UnionWith(idsCaps);
+        }
+
+        if (aplicables.Any(s => s.Seccion == SeccionHojaDeVida.ExperienciaLaboral))
+        {
+            var idsExps = await _context.ExperienciasLaborales
+                .Where(e => e.PersonaId == personaId && e.SubindiceSeccionId != null && e.ArchivoId != null)
+                .Select(e => e.SubindiceSeccionId!.Value)
+                .ToListAsync(ct);
+            cumplidos.UnionWith(idsExps);
+        }
+
+        if (aplicables.Any(s => s.Seccion == SeccionHojaDeVida.Referencias))
+        {
+            var idsRefs = await _context.ReferenciasPersonales
+                .Where(r => r.PersonaId == personaId && r.SubindiceSeccionId != null)
+                .Select(r => r.SubindiceSeccionId!.Value)
+                .ToListAsync(ct);
+            cumplidos.UnionWith(idsRefs);
+        }
+
+        var faltantes = new List<FaltanteEnvioDto>();
+        foreach (var sub in aplicables)
+        {
+            if (cumplidos.Contains(sub.Id))
+            {
+                continue;
+            }
+
+            var codigoSeccion = CodigosSeccion.ObtenerCodigo(sub.Seccion);
+            var mensaje = sub.Seccion == SeccionHojaDeVida.Referencias
+                ? $"Debe registrar al menos un ítem en el subíndice obligatorio '{sub.Nombre}' ({CodigosSeccion.ObtenerNombre(sub.Seccion)})."
+                : $"Debe registrar al menos un respaldo en el subíndice obligatorio '{sub.Nombre}' ({CodigosSeccion.ObtenerNombre(sub.Seccion)}).";
+
+            faltantes.Add(new FaltanteEnvioDto(
+                codigoSeccion,
+                $"{codigoSeccion}.subindice.{sub.Id}",
+                mensaje,
+                sub.Id));
+        }
+
+        return faltantes;
+    }
+}

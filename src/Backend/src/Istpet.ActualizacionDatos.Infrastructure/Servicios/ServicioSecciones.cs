@@ -213,6 +213,90 @@ public class ServicioSecciones : IServicioSecciones
             }
         }
 
+        // 8. Subíndices libres obligatorios por sección (ADR-0043)
+        var subindicesObligatorios = await _context.SubindicesSeccion
+            .IgnoreQueryFilters()
+            .Where(s => s.InstitucionId == institucionId && s.Activo && s.EsObligatorio)
+            .ToListAsync(ct);
+
+        var personasIncompletasPorSubindice = new Dictionary<SeccionHojaDeVida, HashSet<Guid>>
+        {
+            [SeccionHojaDeVida.FormacionAcademica] = [],
+            [SeccionHojaDeVida.Capacitaciones] = [],
+            [SeccionHojaDeVida.ExperienciaLaboral] = [],
+            [SeccionHojaDeVida.Referencias] = [],
+        };
+
+        if (subindicesObligatorios.Count > 0 && personaIds.Count > 0)
+        {
+            var formacionSubPorPersona = (await _context.TitulosAcademicos
+                .IgnoreQueryFilters()
+                .Where(t => t.InstitucionId == institucionId && personaIds.Contains(t.PersonaId) && t.SubindiceSeccionId != null && t.ArchivoId != null)
+                .Select(t => new { t.PersonaId, SubId = t.SubindiceSeccionId!.Value })
+                .Union(_context.TitulosEnCurso
+                    .IgnoreQueryFilters()
+                    .Where(t => t.InstitucionId == institucionId && personaIds.Contains(t.PersonaId) && t.SubindiceSeccionId != null && t.ArchivoId != null)
+                    .Select(t => new { t.PersonaId, SubId = t.SubindiceSeccionId!.Value }))
+                .ToListAsync(ct))
+                .GroupBy(x => x.PersonaId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.SubId).ToHashSet());
+
+            var capSubPorPersona = (await _context.Capacitaciones
+                .IgnoreQueryFilters()
+                .Where(c => c.InstitucionId == institucionId && personaIds.Contains(c.PersonaId) && c.SubindiceSeccionId != null && c.ArchivoId != null)
+                .Select(c => new { c.PersonaId, SubId = c.SubindiceSeccionId!.Value })
+                .ToListAsync(ct))
+                .GroupBy(x => x.PersonaId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.SubId).ToHashSet());
+
+            var expSubPorPersona = (await _context.ExperienciasLaborales
+                .IgnoreQueryFilters()
+                .Where(e => e.InstitucionId == institucionId && personaIds.Contains(e.PersonaId) && e.SubindiceSeccionId != null && e.ArchivoId != null)
+                .Select(e => new { e.PersonaId, SubId = e.SubindiceSeccionId!.Value })
+                .ToListAsync(ct))
+                .GroupBy(x => x.PersonaId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.SubId).ToHashSet());
+
+            var refSubPorPersona = (await _context.ReferenciasPersonales
+                .IgnoreQueryFilters()
+                .Where(r => r.InstitucionId == institucionId && personaIds.Contains(r.PersonaId) && r.SubindiceSeccionId != null)
+                .Select(r => new { r.PersonaId, SubId = r.SubindiceSeccionId!.Value })
+                .ToListAsync(ct))
+                .GroupBy(x => x.PersonaId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.SubId).ToHashSet());
+
+            foreach (var p in personas)
+            {
+                foreach (var sec in personasIncompletasPorSubindice.Keys)
+                {
+                    var reqSubs = subindicesObligatorios
+                        .Where(s => s.Seccion == sec && s.AplicaA(p.TipoFuncionarioId))
+                        .Select(s => s.Id)
+                        .ToList();
+                    if (reqSubs.Count == 0) continue;
+
+                    var mapa = sec switch
+                    {
+                        SeccionHojaDeVida.FormacionAcademica => formacionSubPorPersona,
+                        SeccionHojaDeVida.Capacitaciones => capSubPorPersona,
+                        SeccionHojaDeVida.ExperienciaLaboral => expSubPorPersona,
+                        SeccionHojaDeVida.Referencias => refSubPorPersona,
+                        _ => null
+                    };
+
+                    if (mapa == null || !mapa.TryGetValue(p.Id, out var cumplidosPersona) || !reqSubs.All(cumplidosPersona.Contains))
+                    {
+                        personasIncompletasPorSubindice[sec].Add(p.Id);
+                    }
+                }
+            }
+        }
+
+        formacionCompleta.ExceptWith(personasIncompletasPorSubindice[SeccionHojaDeVida.FormacionAcademica]);
+        personasCapSinRespaldo.UnionWith(personasIncompletasPorSubindice[SeccionHojaDeVida.Capacitaciones]);
+        personasExpSinRespaldo.UnionWith(personasIncompletasPorSubindice[SeccionHojaDeVida.ExperienciaLaboral]);
+        referenciasCompletas.ExceptWith(personasIncompletasPorSubindice[SeccionHojaDeVida.Referencias]);
+
         var resultado = new List<SeccionConfiguracionDto>();
         foreach (var seccion in CodigosSeccion.Todas)
         {

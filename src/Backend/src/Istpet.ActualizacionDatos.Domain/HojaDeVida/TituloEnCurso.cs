@@ -16,7 +16,7 @@ public sealed record DatosTituloEnCurso(
 
 // Estudios en curso. Equivale a `titulos_en_curso` del sistema de origen.
 // El archivo de respaldo es, por ejemplo, el certificado de matrícula.
-public class TituloEnCurso : RegistroHojaDeVida
+public class TituloEnCurso : RegistroClasificableHojaDeVida
 {
     public string NombrePrograma { get; private set; }
     public int GradoAcademicoId { get; private set; }

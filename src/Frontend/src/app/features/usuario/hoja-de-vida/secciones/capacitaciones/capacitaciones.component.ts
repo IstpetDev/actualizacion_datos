@@ -10,8 +10,13 @@ import {
   CapacitacionDto,
   ElementoCatalogoDto,
   EstadoCapacitacionObligatoriaPersonaDto,
+  EstadoSubindiceSeccionPersonaDto,
   GuardarCapacitacionRequest,
 } from '../../../../../api-client';
+import {
+  BloqueSubindicesSeccionComponent,
+  nombreSubindicePorId,
+} from '../../componentes/bloque-subindices-seccion.component';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
@@ -20,7 +25,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
 @Component({
   selector: 'app-capacitaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    UploaderRespaldoComponent,
+    MarcaObservacionComponent,
+    BloqueSubindicesSeccionComponent,
+  ],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -52,6 +63,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           }
         </div>
       </header>
+
+      <app-bloque-subindices-seccion
+        seccion="capacitaciones"
+        [subindices]="subindicesSeccion()"
+        [idsCumplidos]="idsSubindicesCumplidos()"
+        [puedeEditar]="puedeEditar()"
+        (cargarEnSubindice)="abrirParaSubindice($event)"
+      />
 
       <!-- Bloque Obligatorias de la Institución (RF-CAP-004) -->
       @if (obligatorias().length > 0) {
@@ -261,6 +280,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <h3 class="form-titulo-item">
             {{ idEdicion() ? 'Editar Capacitación' : 'Nueva Capacitación' }}
           </h3>
+
+          @if (subindicesActivos().length > 0) {
+            <div class="form-group" style="margin-bottom: 0.75rem">
+              <label for="subindiceCapacitacion">Apartado / Subíndice de la sección</label>
+              <select
+                id="subindiceCapacitacion"
+                class="form-control"
+                [(ngModel)]="modelo.subindiceSeccionId"
+                data-testid="select-subindice-capacitacion"
+              >
+                <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                @for (sub of subindicesActivos(); track sub.id) {
+                  <option [ngValue]="sub.id">
+                    {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                  </option>
+                }
+              </select>
+            </div>
+          }
 
           <div class="grid-dos">
             <div class="form-group">
@@ -507,6 +545,13 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <tr>
                 <td>
                   <strong>{{ c.nombreEvento }}</strong>
+                  @if (nombreSubindice(c.subindiceSeccionId); as nomSub) {
+                    <div>
+                      <span class="badge badge-info" data-testid="badge-subindice-capacitacion">{{
+                        nomSub
+                      }}</span>
+                    </div>
+                  }
                   <app-marca-observacion
                     [marca]="obtenerMarca('capacitacion', c.id)"
                   ></app-marca-observacion>
@@ -872,6 +917,19 @@ export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCam
   readonly capacitaciones = this.state.capacitaciones;
   readonly obligatorias =
     this.state.capacitacionesObligatorias ?? signal<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
+  readonly subindicesSeccion =
+    this.state.subindicesSeccion ?? signal<EstadoSubindiceSeccionPersonaDto[]>([]);
+  readonly subindicesActivos = computed(() =>
+    this.subindicesSeccion().filter((s) => s.seccion === 'capacitaciones' && s.activo),
+  );
+  readonly idsSubindicesCumplidos = computed(
+    () =>
+      new Set(
+        this.capacitaciones()
+          .filter((c) => !!c.subindiceSeccionId && !!c.archivoId)
+          .map((c) => c.subindiceSeccionId!),
+      ),
+  );
 
   readonly capacitacionesSinVincular = computed(() =>
     this.capacitaciones().filter((c) => !c.capacitacionObligatoriaId),
@@ -1040,10 +1098,20 @@ export class CapacitacionesComponent implements OnInit, OnDestroy, SeccionConCam
       financiadaPorInstitucion: c.financiadaPorInstitucion,
       archivoId: c.archivoId,
       capacitacionObligatoriaId: c.capacitacionObligatoriaId,
+      subindiceSeccionId: c.subindiceSeccionId,
     };
     this.fechaInicioStr = c.fechaInicio ? new Date(c.fechaInicio).toISOString().split('T')[0] : '';
     this.fechaFinStr = c.fechaFin ? new Date(c.fechaFin).toISOString().split('T')[0] : '';
     this.mostrarFormulario.set(true);
+  }
+
+  abrirParaSubindice(sub: EstadoSubindiceSeccionPersonaDto): void {
+    this.abrirFormulario();
+    this.modelo.subindiceSeccionId = sub.id;
+  }
+
+  nombreSubindice(id?: string): string | undefined {
+    return nombreSubindicePorId(this.subindicesSeccion(), id);
   }
 
   cancelarFormulario(): void {
