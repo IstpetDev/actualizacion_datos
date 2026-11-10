@@ -33,3 +33,7 @@ Una solución versionada permite explicar cálculos y preservar documentos, con 
 - [ADR-0004 — Vigente, multitenencia](ADR-0004-multitenancia-esquema-unico.md).
 - [ADR-0045 — Propuesto, corte histórico](ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md).
 - [ADR-0046 — Propuesto, PDF y verificación física](ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md).
+
+## Revisión documental para #187
+
+Revisado el 2026-11-10 frente a las specs 0022–0025 v0.1 y su [aprobación comunicada](../evidencia/issue-182/aprobacion.md). Los planes identifican contratos/rutas propuestos y tareas dependientes; ninguna opción técnica se adopta mediante esta revisión. Entrega 1 se limita a Modo A, sin saldos/FIFO. El backlog E0 exige la decisión expresa de quien desarrolla y el registro de los datos institucionales faltantes antes de ejecutar las tareas dependientes. Este ADR conserva estado **Propuesto**; el cierre documental de #182 no lo convierte en Vigente.

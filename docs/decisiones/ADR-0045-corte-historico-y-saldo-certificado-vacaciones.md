@@ -5,7 +5,7 @@
 
 ## Contexto
 
-[#184](https://github.com/IstpetDev/actualizacion_datos/issues/184) y [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185) prohíben inferir saldos exactos desde fechas antiguas sin consumos acreditados. [spec-0023 v0.1](../specs/spec-0023/spec.md) y [spec-0024 v0.1](../specs/spec-0024/spec.md) proponen certificación independiente de fecha/corte, Modo A sin saldo numérico y Modo B con cobertura certificada. Son borradores pendientes de aprobación.
+[#184](https://github.com/IstpetDev/actualizacion_datos/issues/184) y [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185) prohíben inferir saldos exactos desde fechas antiguas sin consumos acreditados. [spec-0023 v0.1](../specs/spec-0023/spec.md) y [spec-0024 v0.1](../specs/spec-0024/spec.md) proponen certificación independiente de fecha/corte, Modo A sin saldo numérico y Modo B con cobertura certificada. Versiones 0.1 aprobadas para planificación de Modo A según comunicación del solicitante del 2026-11-10; Modo B permanece diferido.
 
 El ledger legado modifica y elimina asientos durante reconciliación; no demuestra contabilidad inmutable. Sus bolsas históricas no son saldos certificados. La identidad continúa siendo institucional conforme ADR-0038; no se fusionan cuentas ni se crea identidad global.
 
@@ -33,3 +33,7 @@ Preservar movimientos facilita explicar tramos y auditar ajustes, con costo de c
 - [ADR-0038 — Vigente, identidad/roles institucionales](ADR-0038-asignacion-roles-institucionales.md).
 - [ADR-0044 — Propuesto, reglas](ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md).
 - [ADR-0046 — Propuesto, PDF y firma](ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md).
+
+## Revisión documental para #187
+
+Revisado el 2026-11-10 frente a las specs 0022–0025 v0.1 y su [aprobación comunicada](../evidencia/issue-182/aprobacion.md). Los planes identifican contratos/rutas propuestos y tareas dependientes; ninguna opción técnica se adopta mediante esta revisión. Entrega 1 se limita a Modo A, sin saldos/FIFO. El backlog E0 exige la decisión expresa de quien desarrolla y el registro de los datos institucionales faltantes antes de ejecutar las tareas dependientes. Este ADR conserva estado **Propuesto**; el cierre documental de #182 no lo convierte en Vigente.

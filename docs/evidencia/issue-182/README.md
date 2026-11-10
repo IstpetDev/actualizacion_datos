@@ -2,24 +2,24 @@
 
 **Consulta de issues e ingeniería inversa:** 2026-11-09. **Preparación del expediente:** 2026-11-10.
 
-**Estado:** Fase 1 preparada para revisión; aprobaciones funcionales pendientes. No hay implementación de producción.
+**Estado:** Specs v0.1 aprobadas para planificación de Entrega 1 en Modo A, según comunicación del solicitante del 2026-11-10. Los doce documentos de #187 están preparados y trazados; backlog posterior publicado. Cierre pendiente de integración del PR. No hay implementación de producción.
 
 ## Alcance y criterio de cierre
 
 El [issue #182](https://github.com/IstpetDev/actualizacion_datos/issues/182) exige cuatro specs revisadas/aprobadas, planes/tareas/pruebas trazados y ADR necesarios registrados para decisión. Archivos redactados o CI verde no equivalen a aprobación funcional, certificación jurídica ni cierre. Los seis issues estaban abiertos y sin comentarios de aprobación en la consulta inicial.
 
-La petición permite preparar el PR a `develop` y, cuando se cumplan todos los criterios, aprobar/integrar, cerrar issue y eliminar rama. Mientras falte aprobación de versiones concretas, el PR permanece en borrador y #182/#187 abiertos. No se agrega `Closes` prematuro ni se inventa evidencia de aprobación. No se publican comentarios adicionales en GitHub.
+La petición permite preparar el PR a `develop` y, cuando se cumplan todos los criterios, aprobar/integrar, cerrar issue y eliminar rama. La aprobación fue comunicada después de abrir el borrador: véase [registro](aprobacion.md). Se completa #187 y se publica [backlog posterior](backlog.md), sin ejecutar producción ni cerrar ADR Propuestos. La integración requiere CI del HEAD final y ausencia de conflictos; los issues documentales se cierran después del merge. No se publican comentarios adicionales en GitHub.
 
 ## Entregables y dependencias
 
 | Issue | Documento / versión | Estado real | Condición siguiente |
 |---|---|---|---|
-| [#183](https://github.com/IstpetDev/actualizacion_datos/issues/183) | [spec-0022 v0.1](../../specs/spec-0022/spec.md) | Borrador | Revisión de régimen, alcance y facultades por TH/Jurídico/responsable funcional |
-| [#184](https://github.com/IstpetDev/actualizacion_datos/issues/184) | [spec-0023 v0.1](../../specs/spec-0023/spec.md) | Borrador | Revisión de vínculo, fecha, historia y corte |
-| [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185) | [spec-0024 v0.1](../../specs/spec-0024/spec.md) | Borrador | Aprobar alcance A/B y decisiones operativas o delimitar bloqueos explícitos |
-| [#186](https://github.com/IstpetDev/actualizacion_datos/issues/186) | [spec-0025 v0.1](../../specs/spec-0025/spec.md) | Borrador | Aprobar contenido, facultades, verificación/evidencia y ciclo del acta |
-| [#187](https://github.com/IstpetDev/actualizacion_datos/issues/187) | No se generan aún `plan.md`, `tasks.md`, `test-e2e.md` | Espera aprobación de specs concretas | Después, tres documentos por spec aprobada; trazabilidad requisito/escenario → solución → tarea → prueba; backlog desde tareas aprobadas |
-| #182 | Este expediente y tres ADR propuestos | En curso | No cerrar antes de revisión/aprobación y trazabilidad de #187 |
+| [#183](https://github.com/IstpetDev/actualizacion_datos/issues/183) | [spec-0022 v0.1](../../specs/spec-0022/spec.md) | Aprobada para planificación Modo A | Aprobación comunicada; datos concretos pendientes conservan bloqueo de activación institucional |
+| [#184](https://github.com/IstpetDev/actualizacion_datos/issues/184) | [spec-0023 v0.1](../../specs/spec-0023/spec.md) | Aprobada para planificación Modo A | Aprobación comunicada; certificar cada dato al activar la institución, sin saldo en A |
+| [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185) | [spec-0024 v0.1](../../specs/spec-0024/spec.md) | Aprobada para planificación Modo A | Alcance A resuelto; B diferido; emisión sujeta a datos respaldados |
+| [#186](https://github.com/IstpetDev/actualizacion_datos/issues/186) | [spec-0025 v0.1](../../specs/spec-0025/spec.md) | Aprobada para planificación Modo A | Flujo aprobado para planificación; política/certificaciones concretas exigidas antes de activar |
+| [#187](https://github.com/IstpetDev/actualizacion_datos/issues/187) | `plan.md`, `tasks.md`, `test-e2e.md` por cada una de las cuatro specs | Doce documentos v0.1 preparados tras aprobación | 34 RF y 23 escenarios trazados; casos B diferidos explícitamente y backlog publicado |
+| #182 | Este expediente y tres ADR propuestos | Preparado para integración | Verificación final, merge a develop, cierre #183–#187 y #182; eliminar rama |
 
 Los ADR usan números correlativos libres sin reutilizar ADR-0001/0002/0003: [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md), [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md), [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md). Siguen **Propuestos**, para decisión de quien desarrolla; no habilitan tareas dependientes. Su registro anticipado no sustituye aprobación funcional ni constituye plan técnico.
 
@@ -72,9 +72,9 @@ Al aprobar se debe registrar validación de artículos/reformas/ámbito por Jur�
 3. Solo con versiones aprobadas, desarrollar #187 con `plan.md`, `tasks.md`, `test-e2e.md` por spec: rutas exactas, trazabilidad de cada RF/ESC, contratos/migraciones, corte, aislamiento, recuperación, PDF/evidencia y regeneración OpenAPI/cliente si cambia API.
 4. Crear issues de implementación desde tareas aprobadas con dependencias/aceptación, sin programar ni cerrar #182 antes de cumplir su revisión y trazabilidad.
 
-No se generan planes encubiertos ni matriz E2E anticipada aquí. Los escenarios funcionales son parte de las specs como exige #182.
+Los doce documentos de planificación se crearon después del commit que registra la aprobación comunicada. Los escenarios del spec son funcionales; los casos E2E derivados siguen pendientes de ejecución del software futuro.
 
-## Validación local del expediente
+## Validación local inicial del expediente
 
 Ejecución 2026-11-10. Solo cambia documentación: no hay área de producción modificada que compilar, ni pruebas .NET/Angular ejecutadas. No se presenta esa ausencia como prueba del módulo futuro. Las siguientes comprobaciones verifican el expediente actual:
 
@@ -90,8 +90,38 @@ El comprobador temporal no se añade como infraestructura de pruebas del product
 
 ## PR y primera validación remota
 
-[PR #188](https://github.com/IstpetDev/actualizacion_datos/pull/188), en borrador hacia `develop`, rama `docs/182-planificacion-vacaciones`, milestone 3 «Módulo de vacaciones: planificación por specs». El conector permitió consultas, pero crear el PR devolvió `403 Resource not accessible by integration`; se creó con `gh` mediante la sesión disponible, sin modificar permisos ni configuración del repositorio.
+[PR #188](https://github.com/IstpetDev/actualizacion_datos/pull/188), abierto inicialmente en borrador hacia `develop`, rama `docs/182-planificacion-vacaciones`, milestone 3 «Módulo de vacaciones: planificación por specs». El conector permitió consultas, pero crear el PR devolvió `403 Resource not accessible by integration`; se creó con `gh` mediante la sesión disponible, sin modificar permisos ni configuración del repositorio.
 
 Primera comprobación remota mediante `gh pr checks 188 --watch --interval 10` y `gh run view 42819949262 --json status,conclusion,headSha,jobs`: ejecución [42819949262](https://github.com/IstpetDev/actualizacion_datos/actions/runs/42819949262), HEAD `e3b589df2ca06a19f6aae0ac310cd749050a5f01`, estado `completed`, conclusión `success`. Pasaron Detectar cambios, Política de ramas, Secretos/Gitleaks y `ci-ok`; se omitieron los seis trabajos ajenos a documentación mediante el filtro existente. `gh pr view 188` informó `MERGEABLE`, `CLEAN`, `isDraft=true`; #182 seguía `OPEN`.
 
 Este registro describe esa ejecución concreta, previa al commit que añade este párrafo. El HEAD posterior debe comprobarse de nuevo al actualizar el PR. No hay aprobación/revisión GitHub emitida como sustituto de la revisión funcional; no se fusiona, cierra issue ni elimina rama mientras falten criterios de #182/#187.
+
+## Cumplimiento documental tras aprobación
+
+- [x] Aprobación del informe por RR. HH./Jurídico comunicada por el solicitante, registrada con alcance Modo A y límites de evidencia; ningún informe o firma real en el repositorio.
+- [x] Cuatro specs v0.1 con fuentes, modelo, exclusiones, requisitos, escenarios y bloqueos de activación institucional expresos.
+- [x] Doce documentos de #187 creados tras aprobación: cuatro planes, cuatro listas de tareas y cuatro matrices E2E, con rutas/contratos propuestos, datos/migraciones, recuperación y regeneración OpenAPI/NSwag futura.
+- [x] ADR-0044/0045/0046 registrados y revisados documentalmente; permanecen Propuestos y las tareas dependientes están bloqueadas hasta decisión expresa. La conclusión de #182 no los decide.
+- [x] Cada uno de los 34 requisitos y 23 escenarios tiene trazabilidad en plan/tarea/prueba o diferimiento B justificado. Las matrices no afirman ejecución del módulo.
+- [x] Siete issues posteriores publicados fuera del milestone 3: decisiones de ejecución y seis entregas verificables de implementación/integración, con dependencias y aceptación. Véase [backlog](backlog.md).
+
+Las tareas de ejecución permanecen pendientes. La orden del solicitante de continuar hasta cerrar el issue autoriza completar/publicar esta descomposición del alcance aprobado, sin afirmar revisión individual por RR. HH./Jurídico de cada detalle técnico nuevo. La evidencia del informe no aporta datos normativos/operativos concretos no comunicados; su ausencia sigue siendo puerta de activación en E0.
+
+## Validación de #187 y revisión para integración
+
+Comando `python3 /tmp/validar-expediente-vacaciones.py`, ejecución 2026-11-10:
+
+```text
+spec-0022: 7 RF, 4 escenarios, 4 casos E2E, 3 tareas; cobertura comprobada
+spec-0023: 8 RF, 6 escenarios, 6 casos E2E, 4 tareas; cobertura comprobada
+spec-0024: 9 RF, 7 escenarios, 7 casos E2E, 4 tareas; cobertura comprobada
+spec-0025: 10 RF, 6 escenarios, 6 casos E2E, 4 tareas; cobertura comprobada
+24 documentos, 262 enlaces locales, 34 requisitos, 23 escenarios, 23 casos E2E, 15 identificadores de tarea
+Validación documental correcta
+```
+
+El comprobador temporal verifica los cuatro archivos por spec, aprobación registrada, identificadores únicos, enlaces/anclas, referencias RF/ESC en plan/tarea/prueba, definición de tareas referidas y estado futuro de las pruebas. Las 15 tareas identificadas incluyen 4 puertas de revisión agrupadas en E0, 9 tareas de ejecución futura agrupadas en E1–E6 y 2 referencias diferidas B sin issue de implementación A. No son 15 tareas implementadas ni 23 pruebas ejecutadas. Las 24 referencias a archivos existentes de los planes se contrastaron con el árbol actual; los archivos futuros se identifican como Crear y la marca temporal de migraciones queda a cargo de EF.
+
+Los siete issues posteriores #189–#195 se comprobaron abiertos y sin milestone asignado, con dependencias, requisitos, tareas, rutas y aceptación en sus cuerpos. No se reabren ni se cierran con el milestone documental. Revisión de alcance con ponytail: reutilizar servicios/almacén/motor PDF y herramientas de pruebas existentes, sin dependencias nuevas ni motor de saldos en A; interfaces de aplicación siguen la separación de capas ya usada en el repositorio.
+
+La comprobación de formato es `git diff --cached --check`, la política de rama/título usa `.github/scripts/validar-rama.sh` y el escaneo usa `gitleaks protect --staged --redact --no-banner`. El filtro de rutas existente debe informar únicamente `docs=true`; no se compila ni se ejecutan pruebas .NET/Angular de un módulo que no se implementa aquí. CI y ausencia de conflictos se comprueban de nuevo sobre el HEAD final del PR, sin omitir checks ni publicar comentarios adicionales.

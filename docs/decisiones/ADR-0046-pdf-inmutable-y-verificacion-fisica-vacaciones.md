@@ -5,7 +5,7 @@
 
 ## Contexto
 
-[#186](https://github.com/IstpetDev/actualizacion_datos/issues/186) exige PDF imprimible, versiones, corrección y rastro de verificación física. [spec-0025 v0.1](../specs/spec-0025/spec.md) propone estados BORRADOR, EMITIDA_PDF, FIRMA_FISICA_VERIFICADA, OBSERVADA, ANULADA y sucesora para sustituir contenido. No existe aprobación funcional ni elección técnica todavía.
+[#186](https://github.com/IstpetDev/actualizacion_datos/issues/186) exige PDF imprimible, versiones, corrección y rastro de verificación física. [spec-0025 v0.1](../specs/spec-0025/spec.md) propone estados BORRADOR, EMITIDA_PDF, FIRMA_FISICA_VERIFICADA, OBSERVADA, ANULADA y sucesora para sustituir contenido. La aprobación funcional de Modo A fue comunicada por el solicitante el 2026-11-10; la elección técnica sigue pendiente.
 
 ADR-0006 elimina archivos sustituidos de actualización de datos: aplicarlo al acta perdería la versión que alguien pudo firmar. ADR-0033 elige motor PDF de hoja de vida; no resuelve persistencia, firma física ni retención de actas. Un hash no es firma electrónica.
 
@@ -33,3 +33,7 @@ Preservar versiones permite identificar papel/verificación y sustituciones, con
 - [ADR-0006 — Vigente, archivos](ADR-0006-almacenamiento-de-archivos.md); contradicción de retención pendiente, sin modificación de este ADR.
 - [ADR-0033 — Vigente, motor PDF](ADR-0033-motor-generacion-pdf.md).
 - [ADR-0045 — Propuesto, separación del efecto contable](ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md).
+
+## Revisión documental para #187
+
+Revisado el 2026-11-10 frente a las specs 0022–0025 v0.1 y su [aprobación comunicada](../evidencia/issue-182/aprobacion.md). Los planes identifican contratos/rutas propuestos y tareas dependientes; ninguna opción técnica se adopta mediante esta revisión. Entrega 1 se limita a Modo A, sin saldos/FIFO. El backlog E0 exige la decisión expresa de quien desarrolla y el registro de los datos institucionales faltantes antes de ejecutar las tareas dependientes. Este ADR conserva estado **Propuesto**; el cierre documental de #182 no lo convierte en Vigente.
