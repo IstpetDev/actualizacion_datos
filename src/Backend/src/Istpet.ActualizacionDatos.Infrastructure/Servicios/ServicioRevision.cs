@@ -464,7 +464,19 @@ public class ServicioRevision : IServicioRevision
             ahoraUtc,
             detalle: $"Actualización del usuario {persona.Documento} devuelta con observaciones en ronda {ronda}."));
 
+        // ADR-0006 y ADR-0039: Limpiar archivos huérfanos/sustituidos para no acumular archivos obsoletos ni consumir espacio innecesario
+        var sustituidos = await ObtenerArchivosSustituidosAsync(persona.Id, ct);
+        if (sustituidos.Count > 0)
+        {
+            _context.ArchivosAdjuntos.RemoveRange(sustituidos);
+        }
+
         await _context.SaveChangesAsync(ct);
+
+        foreach (var archivo in sustituidos)
+        {
+            await _almacenArchivos.EliminarAsync(archivo.InstitucionId, archivo.PersonaId, archivo.Id, ct);
+        }
     }
 
     public async Task VincularCapacitacionObligatoriaPorAyudaAsync(
@@ -575,9 +587,10 @@ public class ServicioRevision : IServicioRevision
                 await _context.ExperienciasLaborales.AnyAsync(e => e.Id == itemId && e.PersonaId == personaId, ct),
             "referencia" or "referencias" or "referencia-personal" or "referencia_personal" =>
                 await _context.ReferenciasPersonales.AnyAsync(r => r.Id == itemId && r.PersonaId == personaId, ct),
-            "documento" or "documentos" or "documento-personal" or "documento_personal" =>
-                await _context.DocumentosPersonales.AnyAsync(d => d.Id == itemId && d.PersonaId == personaId, ct),
-            _ => throw new ReglaNegocioException($"Tipo de ítem '{tipo}' no reconocido en la clave de destino. Tipos válidos: titulo, titulo-en-curso, capacitacion, capacitacion-obligatoria, experiencia, referencia, documento.")
+            "documento" or "documentos" or "documento-personal" or "documento_personal" or "archivo" or "adjunto" =>
+                await _context.DocumentosPersonales.AnyAsync(d => d.Id == itemId && d.PersonaId == personaId, ct) ||
+                await _context.ArchivosAdjuntos.AnyAsync(a => a.Id == itemId && a.PersonaId == personaId, ct),
+            _ => throw new ReglaNegocioException($"Tipo de ítem '{tipo}' no reconocido en la clave de destino. Tipos válidos: titulo, titulo-en-curso, capacitacion, capacitacion-obligatoria, experiencia, referencia, documento, archivo.")
         };
 
         if (!existe)

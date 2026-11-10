@@ -609,9 +609,16 @@ export interface ArchivoPrevisualizacion {
             <!-- Documentos y Archivos Adjuntos con Previsualización (Issue #176 & #177) -->
             <section class="card glass-card">
               <div class="card-header-styled">
-                <span class="material-symbols-outlined icon-md text-primary">attach_file</span>
-                <h3 class="card-title">Documentos Adjuntos del Expediente</h3>
+                <div class="card-title-group">
+                  <span class="material-symbols-outlined icon-md text-primary">attach_file</span>
+                  <h3 class="card-title">Documentos Adjuntos del Expediente</h3>
+                </div>
+                <span class="badge badge-info">{{ archivosExpediente().length }} total</span>
               </div>
+              <p class="section-hint text-muted">
+                Respaldos subidos en el expediente. Se pueden revisar aquí o dentro de cada pestaña
+                inferior.
+              </p>
               <div class="archivos-lista" data-testid="lista-archivos-expediente">
                 @for (archivo of archivosExpediente(); track archivo.id) {
                   <div class="archivo-item" [attr.data-testid]="'archivo-' + archivo.id">
@@ -823,6 +830,16 @@ export interface ArchivoPrevisualizacion {
             </header>
 
             <div class="modal-body">
+              @if (itemParaMarcarLabel()) {
+                <div class="item-marcado-banner" data-testid="banner-item-marcado">
+                  <span class="material-symbols-outlined icon-md text-warning">edit_note</span>
+                  <div class="banner-content">
+                    <span class="banner-sub">Corrección solicitada para:</span>
+                    <strong class="banner-title">{{ itemParaMarcarLabel() }}</strong>
+                  </div>
+                </div>
+              }
+
               <div class="form-group">
                 <label for="obsGeneral">Observación General (Obligatoria):</label>
                 <textarea
@@ -922,7 +939,12 @@ export interface ArchivoPrevisualizacion {
                 type="button"
                 class="btn btn-danger"
                 (click)="confirmarDevolucion()"
-                [disabled]="procesando() || !observacionGeneral().trim()"
+                [disabled]="
+                  procesando() ||
+                  (!observacionGeneral().trim() &&
+                    !nuevaMarcaTexto().trim() &&
+                    marcas().length === 0)
+                "
                 data-testid="btn-confirmar-devolver"
               >
                 <span class="material-symbols-outlined icon-sm">send</span>
@@ -1433,10 +1455,55 @@ export interface ArchivoPrevisualizacion {
       font-weight: 600;
       color: #0f172a;
     }
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .section-hint {
+      font-size: 0.8125rem;
+      margin: 0.25rem 0 0.75rem 0;
+    }
     .archivos-lista {
       display: flex;
       flex-direction: column;
+      gap: 0.625rem;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 0.375rem;
+    }
+    .archivos-lista::-webkit-scrollbar {
+      width: 6px;
+    }
+    .archivos-lista::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .item-marcado-banner {
+      display: flex;
+      align-items: center;
       gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(254, 243, 199, 0.7);
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-sm);
+      margin-bottom: 1rem;
+    }
+    .banner-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+    .banner-sub {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #92400e;
+      letter-spacing: 0.03em;
+    }
+    .banner-title {
+      font-size: 0.9375rem;
+      color: #78350f;
     }
     .archivo-item {
       background: rgba(248, 250, 252, 0.85);
@@ -1714,6 +1781,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   nuevaMarcaClave = signal<string>('');
   nuevaMarcaTexto = signal<string>('');
   readonly marcas = signal<MarcaObservacionItem[]>([]);
+  readonly itemParaMarcarLabel = signal<string>('');
 
   private cargaExpediente?: Subscription;
 
@@ -1946,9 +2014,13 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
     if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    this.itemParaMarcarLabel.set(info.label || info.tipo);
     this.nuevaMarcaTipo.set(info.tipo || 'Item');
     this.nuevaMarcaClave.set(info.clave);
     this.nuevaMarcaTexto.set('');
+    if (!this.observacionGeneral().trim()) {
+      this.observacionGeneral.set(`Se solicita corrección en: ${info.label || info.tipo}`);
+    }
     this.mostrarModalDevolver.set(true);
   }
 
@@ -1975,6 +2047,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   abrirModalDevolver(): void {
     if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    this.itemParaMarcarLabel.set('');
     this.observacionGeneral.set('');
     this.marcas.set([]);
     this.nuevaMarcaClave.set('');
@@ -1984,6 +2057,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   cerrarModalDevolver(): void {
     this.mostrarModalDevolver.set(false);
+    this.itemParaMarcarLabel.set('');
   }
 
   agregarMarca(): void {
@@ -2008,8 +2082,38 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   confirmarDevolucion(): void {
     const exp = this.expedienteSeleccionado();
-    const general = this.observacionGeneral().trim();
-    if (!exp || exp.estadoActualizacion !== 'Enviado' || !general) return;
+    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
+
+    // Si el revisor redactó un motivo puntual y no pulsó '+ Agregar Marca', agregarla automáticamente
+    const clave = this.nuevaMarcaClave().trim();
+    const texto = this.nuevaMarcaTexto().trim();
+    if (
+      clave &&
+      texto &&
+      !this.marcas().some((m) => m.claveDestino === clave && m.texto === texto)
+    ) {
+      this.marcas.update((actuales) => [
+        ...actuales,
+        {
+          tipoDestino: this.nuevaMarcaTipo(),
+          claveDestino: clave,
+          texto,
+        },
+      ]);
+      this.nuevaMarcaTexto.set('');
+    }
+
+    let general = this.observacionGeneral().trim();
+    if (!general) {
+      if (this.itemParaMarcarLabel()) {
+        general = `Se solicita corrección en ${this.itemParaMarcarLabel()}`;
+      } else if (this.marcas().length > 0) {
+        general = 'Se devuelven observaciones puntuales en el expediente.';
+      }
+      this.observacionGeneral.set(general);
+    }
+
+    if (!general) return;
 
     this.procesando.set(true);
     this.error.set(null);
