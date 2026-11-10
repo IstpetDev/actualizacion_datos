@@ -75,3 +75,6 @@ No se borra ni se reescribe un ADR vigente. Se escribe un ADR nuevo que explique
 | [ADR-0041](ADR-0041-transferencia-imagenes-scp-docker-load.md) | Transferencia de imágenes por SCP y carga local con `docker load -i` | Vigente por pedido explícito #161 |
 | [ADR-0042](ADR-0042-busqueda-tolerante-inputs-y-correo-personal.md) | Búsqueda tolerante en selectores de catálogos y campo de correo personal en ficha | Vigente por pedido explícito #164 |
 | [ADR-0043](ADR-0043-subindices-configurables-por-seccion.md) | Subíndices libres configurables por sección de la hoja de vida | Vigente por pedido explícito #171 |
+| [ADR-0044](ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) | Reglas vacacionales por institución y régimen | Propuesto |
+| [ADR-0045](ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Corte histórico y saldo certificado de vacaciones | Propuesto |
+| [ADR-0046](ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) | PDF inmutable y verificación física de actas de vacaciones | Propuesto |
