@@ -25,6 +25,8 @@ type TabConfiguracion =
   | 'documentos'
   | 'requisitos'
   | 'asignaciones'
+  | 'dominios'
+  | 'secciones'
   | 'documento'
   | 'capacitaciones'
   | 'subindices';
@@ -80,8 +82,6 @@ type TabConfiguracion =
           </div>
         }
 
-        <app-dominios-correo />
-        <app-secciones-configuracion />
         <!-- Pestañas internas de configuración -->
         <nav class="config-subtabs" role="tablist">
           <button
@@ -123,11 +123,29 @@ type TabConfiguracion =
           <button
             type="button"
             class="subtab-btn"
+            [class.active]="tabActiva() === 'dominios'"
+            (click)="cambiarTab('dominios')"
+            data-testid="tab-dominios-correo"
+          >
+            5. Dominios de Correo
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
+            [class.active]="tabActiva() === 'secciones'"
+            (click)="cambiarTab('secciones')"
+            data-testid="tab-secciones-hdv"
+          >
+            6. Secciones Hoja de Vida
+          </button>
+          <button
+            type="button"
+            class="subtab-btn"
             [class.active]="tabActiva() === 'documento'"
             (click)="cambiarTab('documento')"
             data-testid="tab-formato-documento"
           >
-            5. Plantilla y Marca (PDF)
+            7. Plantilla y Marca (PDF)
           </button>
           <button
             type="button"
@@ -136,7 +154,7 @@ type TabConfiguracion =
             (click)="cambiarTab('capacitaciones')"
             data-testid="tab-capacitaciones-obligatorias"
           >
-            6. Capacitaciones Obligatorias
+            8. Capacitaciones Obligatorias
           </button>
           <button
             type="button"
@@ -145,7 +163,7 @@ type TabConfiguracion =
             (click)="cambiarTab('subindices')"
             data-testid="tab-subindices-seccion"
           >
-            7. Subíndices por Sección
+            9. Subíndices por Sección
           </button>
         </nav>
 
@@ -878,14 +896,28 @@ type TabConfiguracion =
           </div>
         }
 
-        <!-- SUBTAB 5: FORMATO Y MARCA DE HOJA DE VIDA (RF-PLA-003, RF-PLA-004) -->
+        <!-- SUBTAB 5: DOMINIOS DE CORREO PERMITIDOS (ADR-0010) -->
+        @if (tabActiva() === 'dominios') {
+          <div class="subtab-panel" data-testid="panel-dominios-correo">
+            <app-dominios-correo />
+          </div>
+        }
+
+        <!-- SUBTAB 6: SECCIONES DE HOJA DE VIDA (ADR-0014) -->
+        @if (tabActiva() === 'secciones') {
+          <div class="subtab-panel" data-testid="panel-secciones-configuracion">
+            <app-secciones-configuracion />
+          </div>
+        }
+
+        <!-- SUBTAB 7: FORMATO Y MARCA DE HOJA DE VIDA (RF-PLA-003, RF-PLA-004) -->
         @if (tabActiva() === 'documento') {
           <div class="subtab-panel" data-testid="panel-plantilla-documento">
             <app-configuracion-documento />
           </div>
         }
 
-        <!-- SUBTAB 6: CAPACITACIONES OBLIGATORIAS (RF-CAP-001, RF-CAP-002, RF-CAP-010) -->
+        <!-- SUBTAB 8: CAPACITACIONES OBLIGATORIAS (RF-CAP-001, RF-CAP-002, RF-CAP-010) -->
         @if (tabActiva() === 'capacitaciones') {
           <div class="subtab-panel" data-testid="panel-capacitaciones-obligatorias">
             <app-capacitaciones-obligatorias-config />
@@ -934,21 +966,25 @@ type TabConfiguracion =
     .subtab-btn {
       padding: 0.65rem 1.1rem;
       border: none;
-      background: none;
+      background: #f8fafc;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
       color: #64748b;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
+      border-radius: 10px 10px 0 0;
+      border-bottom: 3px solid transparent;
       margin-bottom: -2px;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .subtab-btn:hover {
-      color: #0f172a;
+      color: #222c57;
+      background: #f1f5f9;
     }
     .subtab-btn.active {
-      color: #1e3a8a;
-      border-bottom-color: #1e3a8a;
+      color: #222c57;
+      background: #ffffff;
+      border-bottom: 3px solid #c4a857;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.03);
     }
     .grid-form-lista {
       display: grid;

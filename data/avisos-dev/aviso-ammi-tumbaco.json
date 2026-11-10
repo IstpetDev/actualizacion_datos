@@ -1,0 +1,14 @@
+{
+  "institucionId": "a0000000-0000-0000-0000-000000000003",
+  "version": "1.0-dev",
+  "titulo": "Aviso de Protección de Datos Personales — AMMI Tumbaco",
+  "responsable": "Unidad Educativa Particular Bilingüe Academia Militar Miguel Iturralde Tumbaco",
+  "contenido": "De conformidad con la Ley Orgánica de Protección de Datos Personales del Ecuador, la Academia Militar Miguel Iturralde sede Tumbaco informa que los datos personales y documentos provistos se utilizarán para la actualización de expedientes y registros internos de la institución.",
+  "declaracionAceptacion": "He leído y acepto el tratamiento de mis datos personales conforme a las políticas institucionales de AMMI Tumbaco",
+  "fuenteOficial": "https://ammi.edu.ec/tumbaco/proteccion-datos",
+  "evidenciaAprobacion": "Resolución AMMI-TB-2026-001",
+  "rolesDestinatarios": ["Usuario", "Supervisor", "Admin"],
+  "vigenteDesdeUtc": "2026-01-01T00:00:00Z",
+  "vigenteHastaUtc": null,
+  "aprobacionInstitucionalConfirmada": true
+}

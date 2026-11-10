@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
   API_BASE_URL,
   CampanaDto,
@@ -38,11 +39,21 @@ type TabAdmin =
   template: `
     <section class="dashboard-section" data-testid="admin-panel">
       <header class="section-header">
-        <div class="header-titles">
-          <h1 class="section-title">Panel de Administración Institucional</h1>
-          <p class="section-subtitle">
-            Gestión de períodos de campaña, habilitación y carga de personas, y exportaciones.
-          </p>
+        <div class="header-main-group">
+          <div class="header-icon-box">
+            <span class="material-symbols-outlined">admin_panel_settings</span>
+          </div>
+          <div class="header-titles">
+            <div class="header-pill">
+              <span class="material-symbols-outlined icon-xs">shield</span>
+              <span>Administración</span>
+            </div>
+            <h1 class="section-title">Panel de Administración Institucional</h1>
+            <p class="section-subtitle">
+              Gestión de períodos de campaña, habilitación y carga de nómina de personas, y
+              exportaciones.
+            </p>
+          </div>
         </div>
       </header>
 
@@ -368,23 +379,67 @@ type TabAdmin =
           data-testid="contenido-personas"
         >
           <div class="grid-personas-layout">
-            <!-- Formulario Carga de Personas -->
-            <div class="card">
-              <h2 class="card-title">Cargar / Habilitar Personas</h2>
-              <p class="card-desc">
-                Ingrese las personas a habilitar. Puede ingresar una a una o pegar varias filas en
-                formato <code>documento,nombre,correo</code>.
-              </p>
-
-              <!-- Carga mediante archivo Excel / CSV -->
-              <div class="carga-archivo-box card-destacada">
-                <h3 class="card-title">Cargar Nómina desde Archivo (.xlsx o .csv)</h3>
+            <!-- Bento Grid Superior: Métricas e Importación -->
+            <div class="bento-personas-grid">
+              <!-- Bento Card 1: Métricas de Personal -->
+              <div class="card bento-card-stat">
+                <div class="card-header-flexible">
+                  <h3 class="card-title">Resumen de Personal</h3>
+                  <span class="metrica-total-personas" data-testid="total-personas-badge">
+                    Total: {{ personas().length }} personas
+                  </span>
+                </div>
                 <p class="card-desc">
-                  Suba la nómina en formato Excel o CSV. Los registros ya existentes se omitirán sin
-                  sobrescribir sus datos (si tenían el acceso pendiente, se habilita) y las personas
-                  nuevas se habilitarán con sus datos personales y cuentas bancarias propuestas.
+                  Monitoreo de estado de acceso y personal cargado en el sistema.
                 </p>
-                <div class="fila-archivo">
+                <div class="bento-stat-mini-grid">
+                  <div
+                    class="bento-mini-pill"
+                    [class.pill-active]="filtroAcceso() === 'todos'"
+                    (click)="cambiarFiltroAcceso('todos')"
+                    role="button"
+                    tabindex="0"
+                  >
+                    <span class="pill-label">Total Nómina</span>
+                    <span class="pill-val">{{ personas().length }}</span>
+                  </div>
+                  <div
+                    class="bento-mini-pill pill-success"
+                    [class.pill-active]="filtroAcceso() === 'habilitados'"
+                    (click)="cambiarFiltroAcceso('habilitados')"
+                    role="button"
+                    tabindex="0"
+                  >
+                    <span class="pill-label">Habilitados</span>
+                    <span class="pill-val">{{ totalHabilitadas() }}</span>
+                  </div>
+                  <div
+                    class="bento-mini-pill pill-warning"
+                    [class.pill-active]="filtroAcceso() === 'pendientes'"
+                    (click)="cambiarFiltroAcceso('pendientes')"
+                    role="button"
+                    tabindex="0"
+                  >
+                    <span class="pill-label">Pendientes</span>
+                    <span class="pill-val">{{ totalPendientes() }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bento Card 2: Importar Nómina desde Archivo (.xlsx o .csv) -->
+              <div class="card bento-card-import">
+                <div class="card-header-flexible">
+                  <h3 class="card-title">
+                    <span class="material-symbols-outlined icon-inline">upload_file</span>
+                    Cargar Nómina (.xlsx o .csv)
+                  </h3>
+                  <span class="badge badge-info">Excel / CSV</span>
+                </div>
+                <p class="texto-aclaratorio-guardado">
+                  La importación de nómina persiste automáticamente a las personas y sus datos en la
+                  base de datos al finalizar. No requiere pulsar ningún botón adicional de guardado.
+                </p>
+                <div class="fila-archivo mt-2">
                   <input
                     type="file"
                     #archivoInput
@@ -405,125 +460,140 @@ type TabAdmin =
                 </div>
               </div>
 
-              <div class="divisor-o">
-                <span>— o ingrese personas manualmente —</span>
-              </div>
-
-              <!-- Formulario simple para añadir fila -->
-              <div class="fila-builder">
-                <div class="form-row">
-                  <div class="form-group col">
-                    <label for="docPersona">Cédula / Documento:</label>
+              <!-- Bento Card 3: Ingreso Manual de Persona -->
+              <div class="card bento-card-manual">
+                <div class="card-header-flexible">
+                  <h3 class="card-title">
+                    <span class="material-symbols-outlined icon-inline">person_add</span>
+                    Ingreso Individual
+                  </h3>
+                </div>
+                <p class="card-desc">Añada personas puntuales a la lista de carga rápida.</p>
+                <div class="fila-builder">
+                  <div class="form-row">
+                    <div class="form-group col">
+                      <label for="docPersona">Cédula:</label>
+                      <input
+                        id="docPersona"
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="filaDoc"
+                        placeholder="1700000000"
+                        data-testid="input-persona-doc"
+                      />
+                    </div>
+                    <div class="form-group col">
+                      <label for="nomPersona">Nombre:</label>
+                      <input
+                        id="nomPersona"
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="filaNom"
+                        placeholder="Nombre Completo"
+                        data-testid="input-persona-nom"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="corPersona">Correo Institucional:</label>
                     <input
-                      id="docPersona"
-                      type="text"
+                      id="corPersona"
+                      type="email"
                       class="form-control"
-                      [(ngModel)]="filaDoc"
-                      placeholder="1700000000"
-                      data-testid="input-persona-doc"
+                      [(ngModel)]="filaCor"
+                      placeholder="usuario@ejemplo.test"
+                      data-testid="input-persona-cor"
                     />
                   </div>
-                  <div class="form-group col">
-                    <label for="nomPersona">Nombre:</label>
-                    <input
-                      id="nomPersona"
-                      type="text"
-                      class="form-control"
-                      [(ngModel)]="filaNom"
-                      placeholder="Nombre Completo"
-                      data-testid="input-persona-nom"
-                    />
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="corPersona">Correo Institucional:</label>
-                  <input
-                    id="corPersona"
-                    type="email"
-                    class="form-control"
-                    [(ngModel)]="filaCor"
-                    placeholder="usuario@ejemplo.test"
-                    data-testid="input-persona-cor"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  (click)="agregarFilaPersona()"
-                  data-testid="btn-agregar-persona-fila"
-                >
-                  + Añadir a la Lista de Carga
-                </button>
-              </div>
-
-              <!-- Lista pendiente de envío -->
-              @if (listaParaCargar().length > 0) {
-                <div class="personas-por-cargar" data-testid="lista-previa-carga">
-                  <h4>Personas listas para procesar ({{ listaParaCargar().length }}):</h4>
-                  <ul>
-                    @for (p of listaParaCargar(); track $index) {
-                      <li>
-                        <span
-                          ><strong>{{ p.documento }}</strong> — {{ p.nombre }} ({{
-                            p.correo
-                          }})</span
-                        >
-                        <button
-                          type="button"
-                          class="btn-link-danger"
-                          (click)="quitarFilaPersona($index)"
-                        >
-                          ✕
-                        </button>
-                      </li>
-                    }
-                  </ul>
                   <button
                     type="button"
-                    class="btn btn-primary mt-2"
-                    (click)="enviarCargaPersonas()"
-                    [disabled]="cargandoPersonas()"
-                    data-testid="btn-enviar-carga"
+                    class="btn btn-secondary btn-sm"
+                    (click)="agregarFilaPersona()"
+                    data-testid="btn-agregar-persona-fila"
                   >
-                    {{ cargandoPersonas() ? 'Cargando en sistema...' : 'Procesar Carga Masiva' }}
+                    + Añadir a la Lista
                   </button>
                 </div>
-              }
-
-              <!-- Resultado de la última carga (Informe ADR-0012) -->
-              @if (resultadoCarga()) {
-                <div class="resultado-carga-box" data-testid="resultado-carga">
-                  <app-informe-nomina [resultado]="resultadoCarga()"></app-informe-nomina>
-                </div>
-              }
+              </div>
             </div>
 
-            <!-- Listado de Personas Registradas -->
-            <div class="card">
+            <!-- Lista pendiente de envío (si hay personas añadidas manualmente) -->
+            @if (listaParaCargar().length > 0) {
+              <div class="card personas-por-cargar" data-testid="lista-previa-carga">
+                <h4>Personas listas para procesar ({{ listaParaCargar().length }}):</h4>
+                <ul>
+                  @for (p of listaParaCargar(); track $index) {
+                    <li>
+                      <span
+                        ><strong>{{ p.documento }}</strong> — {{ p.nombre }} ({{ p.correo }})</span
+                      >
+                      <button
+                        type="button"
+                        class="btn-link-danger"
+                        (click)="quitarFilaPersona($index)"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  }
+                </ul>
+                <button
+                  type="button"
+                  class="btn btn-primary mt-2"
+                  (click)="enviarCargaPersonas()"
+                  [disabled]="cargandoPersonas()"
+                  data-testid="btn-enviar-carga"
+                >
+                  {{ cargandoPersonas() ? 'Cargando en sistema...' : 'Procesar Carga Masiva' }}
+                </button>
+              </div>
+            }
+
+            <!-- Resultado de la última carga (Informe ADR-0012) -->
+            @if (resultadoCarga()) {
+              <div class="resultado-carga-box" data-testid="resultado-carga">
+                <app-informe-nomina [resultado]="resultadoCarga()"></app-informe-nomina>
+              </div>
+            }
+
+            <!-- Listado Completo de Personas Registradas (Ancho Completo y Paginado) -->
+            <div class="card card-personas-directorio">
               <div class="card-header-flexible">
-                <h2 class="card-title">Personas de la Institución</h2>
-                <span class="metrica-total-personas" data-testid="total-personas-badge">
-                  Total: {{ personas().length }} personas
+                <div>
+                  <h2 class="card-title">Personas de la Institución</h2>
+                  <p class="card-desc">
+                    Directorio institucional completo con estado de acceso y ficha.
+                  </p>
+                </div>
+                <span class="metrica-total-personas">
+                  {{ personasFiltradas().length }} de {{ personas().length }} personas
                 </span>
               </div>
-              <p class="texto-aclaratorio-guardado">
-                La importación de nómina persiste automáticamente a las personas y sus datos en la
-                base de datos al finalizar. No requiere pulsar ningún botón adicional de guardado.
-              </p>
 
-              <!-- Barra de Búsqueda y Filtros -->
+              <!-- Barra de Búsqueda y Filtros Bento -->
               <div class="filtros-tabla-personas">
                 <div class="filtro-busqueda-input">
                   <label for="buscarPersonaInput" class="visually-hidden">Buscar persona</label>
+                  <span class="material-symbols-outlined icono-input-busqueda">search</span>
                   <input
                     id="buscarPersonaInput"
                     type="search"
                     class="form-control"
-                    placeholder="Buscar por cédula o nombre…"
+                    placeholder="Buscar por cédula, nombre o correo institucional…"
                     [ngModel]="filtroBusqueda()"
                     (ngModelChange)="actualizarBusqueda($event)"
                     data-testid="input-buscar-persona"
                   />
+                  @if (filtroBusqueda()) {
+                    <button
+                      type="button"
+                      class="btn-limpiar-busqueda"
+                      (click)="actualizarBusqueda('')"
+                      title="Limpiar búsqueda"
+                    >
+                      ✕
+                    </button>
+                  }
                 </div>
                 <div class="filtro-select-grupo">
                   <label for="filtroAccesoSelect" class="filtro-label">Acceso:</label>
@@ -822,6 +892,53 @@ type TabAdmin =
           <app-estado-cuentas-bancarias #panelCuentas />
         </div>
       }
+
+      <!-- Modal de Previsualización In-App de Hoja de Vida en PDF para Admin -->
+      @if (archivoHdvPrevisualizacion(); as hdv) {
+        <div
+          class="modal-overlay preview-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-preview-admin-hdv"
+        >
+          <div class="modal-dialog preview-dialog">
+            <header class="modal-header">
+              <div class="preview-title-wrap">
+                <span class="material-symbols-outlined icon-md text-primary">picture_as_pdf</span>
+                <h3 id="titulo-preview-admin-hdv" class="modal-title">
+                  Hoja de Vida — CI: {{ hdv.documento }} ({{ hdv.nombreOriginal }})
+                </h3>
+              </div>
+              <div class="preview-header-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="descargarHdvCopia()"
+                  title="Descargar copia del PDF a tu equipo"
+                >
+                  <span class="material-symbols-outlined icon-sm">download</span>
+                  <span>Descargar Copia</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn-close"
+                  (click)="cerrarPrevisualizacionHdv()"
+                  aria-label="Cerrar visor"
+                >
+                  ✕
+                </button>
+              </div>
+            </header>
+            <div class="modal-body preview-body">
+              <iframe
+                [src]="hdv.safeUrl"
+                class="preview-iframe"
+                title="Visor de PDF Institucional"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      }
     </section>
   `,
   styles: `
@@ -840,15 +957,55 @@ type TabAdmin =
       overflow-x: hidden;
     }
     .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      padding-bottom: 1.25rem;
       margin-bottom: 1.5rem;
-      border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .header-main-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .header-icon-box {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: rgba(34, 44, 87, 0.08);
+      border: 1px solid rgba(34, 44, 87, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #222c57;
+      flex-shrink: 0;
+    }
+    .header-icon-box .material-symbols-outlined {
+      font-size: 28px;
+    }
+    .header-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #222c57;
+      background: rgba(34, 44, 87, 0.08);
+      border: 1px solid rgba(34, 44, 87, 0.18);
+      margin-bottom: 0.35rem;
     }
     .section-title {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-family: var(--font-display, 'Outfit', sans-serif);
+      font-size: 1.5rem;
+      font-weight: 800;
       color: #0f172a;
       margin: 0 0 0.25rem 0;
+      letter-spacing: -0.025em;
     }
     .section-subtitle {
       font-size: 0.875rem;
@@ -868,46 +1025,56 @@ type TabAdmin =
     }
     .admin-tabs-select {
       font-weight: 600;
-      color: #1e3a8a;
-      background-color: #f8fafc;
-      border: 1.5px solid #93c5fd;
+      color: #222c57;
+      background-color: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
       padding: 0.6rem 0.75rem;
       font-size: 0.9rem;
     }
     .admin-tabs {
       display: flex;
       gap: 0.5rem;
-      border-bottom: 2px solid #e2e8f0;
       margin-bottom: 1.5rem;
       overflow-x: auto;
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
+      padding-bottom: 0.25rem;
     }
     .tab-btn {
-      padding: 0.75rem 1.25rem;
-      border: none;
-      background: none;
+      padding: 0.65rem 1.15rem;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      background: #ffffff;
       font-size: 0.875rem;
       font-weight: 600;
-      color: #64748b;
+      color: #475569;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
       transition: all 0.2s;
       white-space: nowrap;
       flex-shrink: 0;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
     }
     .tab-btn:hover {
       color: #0f172a;
+      background: #f8fafc;
+      border-color: #94a3b8;
     }
     .tab-btn.active {
-      color: #2563eb;
-      border-bottom-color: #2563eb;
+      color: #ffffff;
+      background: #222c57;
+      border-color: #222c57;
+      border-bottom: 3px solid #c4a857;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(34, 44, 87, 0.25);
     }
     .alert {
       padding: 0.75rem 1rem;
-      border-radius: 0.375rem;
+      border-radius: 12px;
       margin-bottom: 1rem;
       font-size: 0.875rem;
     }
@@ -922,23 +1089,24 @@ type TabAdmin =
       color: #991b1b;
     }
     .card {
-      background: #f8fafc;
+      background: #ffffff;
       border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      padding: 1.25rem;
+      border-radius: 16px;
+      padding: 1.5rem;
       min-width: 0;
       max-width: 100%;
       box-sizing: border-box;
       overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
     .card-destacada {
       background: #eff6ff;
       border-color: #bfdbfe;
     }
     .card-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #1e293b;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
       margin: 0 0 1rem 0;
       border-bottom: 1px solid #e2e8f0;
       padding-bottom: 0.5rem;
@@ -979,11 +1147,113 @@ type TabAdmin =
       min-width: 0;
     }
     .grid-personas-layout {
-      display: grid;
-      grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 1.5rem;
-      align-items: start;
+      width: 100%;
       min-width: 0;
+    }
+    .bento-personas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+    }
+    .bento-card-stat,
+    .bento-card-import,
+    .bento-card-manual {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .bento-stat-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .bento-mini-pill {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.6rem 0.4rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .bento-mini-pill:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    .bento-mini-pill.pill-active {
+      border-color: #222c57;
+      background: rgba(34, 44, 87, 0.04);
+      box-shadow: 0 0 0 1.5px #222c57;
+    }
+    .pill-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .pill-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .pill-success .pill-val {
+      color: #16a34a;
+    }
+    .pill-warning .pill-val {
+      color: #d97706;
+    }
+    .card-personas-directorio {
+      width: 100%;
+      min-width: 0;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .icon-inline {
+      font-size: 1.15rem !important;
+      vertical-align: middle;
+      margin-right: 0.25rem;
+    }
+    .icono-input-busqueda {
+      position: absolute;
+      left: 0.75rem;
+      color: #94a3b8;
+      font-size: 1.25rem !important;
+      pointer-events: none;
+    }
+    .filtro-busqueda-input {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 260px;
+    }
+    .filtro-busqueda-input .form-control {
+      padding-left: 2.35rem !important;
+      padding-right: 2rem !important;
+    }
+    .btn-limpiar-busqueda {
+      position: absolute;
+      right: 0.65rem;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.875rem;
+      cursor: pointer;
+      padding: 0.25rem;
     }
     .mt-4 {
       margin-top: 1.5rem;
@@ -1205,29 +1475,43 @@ type TabAdmin =
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 1rem;
+      min-height: 42px;
+      padding: 0.55rem 1.15rem;
       font-size: 0.875rem;
-      font-weight: 500;
-      border-radius: 0.375rem;
-      border: 1px solid transparent;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1.5px solid transparent;
       cursor: pointer;
+      transition: all 0.18s ease;
     }
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
     .btn-sm {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.75rem;
+      min-height: 36px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8125rem;
+      border-radius: 8px;
     }
     .btn-primary {
-      background: #2563eb;
+      background: #222c57;
       color: #ffffff;
+      border-color: #222c57;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #1a2244;
+      border-color: #1a2244;
+      transform: translateY(-1px);
     }
     .btn-secondary {
-      background: #f1f5f9;
+      background: #f8fafc;
       color: #334155;
       border-color: #cbd5e1;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #94a3b8;
     }
     .btn-success {
       background: #16a34a;
@@ -1393,7 +1677,7 @@ type TabAdmin =
       color: #ffffff;
     }
     @media (max-width: 1024px) {
-      .grid-personas-layout {
+      .bento-personas-grid {
         grid-template-columns: minmax(0, 1fr);
       }
     }
@@ -1467,6 +1751,83 @@ type TabAdmin =
         flex-direction: column;
       }
     }
+
+    /* Modal de Previsualización In-App de PDF */
+    .modal-overlay.preview-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1050;
+      padding: 1rem;
+    }
+    .modal-dialog.preview-dialog {
+      background: #ffffff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 980px;
+      height: 90vh;
+      max-height: 920px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      border: 1.5px solid #cbd5e1;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: #ffffff;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    .preview-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+    }
+    .preview-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      line-height: 1;
+      transition: all 0.15s ease;
+    }
+    .btn-close:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .preview-body {
+      flex: 1;
+      padding: 0;
+      background: #1e293b;
+      overflow: hidden;
+    }
+    .preview-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
   `,
 })
 export class AdminDashboardComponent implements OnInit {
@@ -1475,6 +1836,15 @@ export class AdminDashboardComponent implements OnInit {
   private readonly personasClient = inject(PersonasClient);
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+  private readonly sanitizer = inject(DomSanitizer);
+
+  readonly archivoHdvPrevisualizacion = signal<{
+    documento: string;
+    nombreOriginal: string;
+    blobUrl: string;
+    safeUrl: SafeResourceUrl;
+  } | null>(null);
+  readonly cargandoHdvPdf = signal<boolean>(false);
 
   readonly tabActiva = signal<TabAdmin>('campanas');
   readonly error = signal<string | null>(null);
@@ -1995,6 +2365,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   descargarHdvPersona(id: string, documento: string): void {
+    this.cargandoHdvPdf.set(true);
     const url = `${this.baseUrl}/api/personas/${id}/documento-hoja-de-vida`;
     this.http
       .get(url, {
@@ -2003,16 +2374,54 @@ export class AdminDashboardComponent implements OnInit {
       })
       .subscribe({
         next: (res) => {
+          this.cargandoHdvPdf.set(false);
           const blob = res.body;
           if (!blob) return;
           const nombreArchivo =
             this.extraerNombreArchivo(res.headers.get('content-disposition')) ||
             `hoja-de-vida-${documento}.pdf`;
-          this.descargarBlob(blob, nombreArchivo);
+
+          const actual = this.archivoHdvPrevisualizacion();
+          if (actual?.blobUrl) {
+            window.URL.revokeObjectURL(actual.blobUrl);
+          }
+          const blobUrl = window.URL.createObjectURL(blob);
+          const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(blobUrl);
+          this.archivoHdvPrevisualizacion.set({
+            documento,
+            nombreOriginal: nombreArchivo,
+            blobUrl,
+            safeUrl,
+          });
         },
         error: (err) => {
+          this.cargandoHdvPdf.set(false);
           this.error.set(mensajeError(err, 'Error al descargar la hoja de vida de la persona.'));
         },
       });
+  }
+
+  cerrarPrevisualizacionHdv(): void {
+    const actual = this.archivoHdvPrevisualizacion();
+    if (actual?.blobUrl) {
+      window.URL.revokeObjectURL(actual.blobUrl);
+    }
+    this.archivoHdvPrevisualizacion.set(null);
+  }
+
+  descargarHdvCopia(): void {
+    const actual = this.archivoHdvPrevisualizacion();
+    if (actual?.blobUrl) {
+      this.descargarBlobFromUrl(actual.blobUrl, actual.nombreOriginal);
+    }
+  }
+
+  private descargarBlobFromUrl(url: string, nombreArchivo: string): void {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 }

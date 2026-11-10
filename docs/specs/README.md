@@ -66,3 +66,9 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0019](spec-0019/spec.md) | Retiro auditado de adjuntos por supervisor con eliminación física, issue #139 | Alcance autorizado por el solicitante (2026-10-28) |
 | [spec-0020](spec-0020/spec.md) | Visibilidad de borradores y avance institucional para supervisores, issue #143 | Alcance autorizado por el solicitante (2026-10-28) |
 | [spec-0021](spec-0021/spec.md) | Subíndices libres configurables por sección, issue #171 | Implementado (2026-11-05) |
+| [spec-0022](spec-0022/spec.md) | Vacaciones: marco y régimen aplicable, issue #183 | Aprobada v0.2 para Modo A (2026-11-10); puertas E0 resueltas en #189 y contratos congelados |
+| [spec-0023](spec-0023/spec.md) | Vacaciones: vínculos laborales e historia, issue #184 | Aprobada v0.2 para Modo A (2026-11-10); puertas E0 resueltas en #189, contratos congelados y acople progresivo con #196 |
+| [spec-0024](spec-0024/spec.md) | Vacaciones: períodos, calendario y saldos, issue #185 | Aprobada v0.2 para Modo A (2026-11-10); puertas E0 resueltas en #189 y contratos congelados |
+| [spec-0025](spec-0025/spec.md) | Vacaciones: acta imprimible y verificación de firma física, issue #186 | Aprobada v0.2 para Modo A (2026-11-10); puertas E0 resueltas en #189 y contratos congelados |
+
+Coordinación de #182 y #189: [evidencia de planificación #182](../evidencia/issue-182/README.md) y [evidencia de decisiones de activación E0 #189](../evidencia/issue-189/README.md). Los documentos de #187 (`plan.md`, `tasks.md`, `test-e2e.md`) cuentan con contratos v1.0 congelados tras #189.

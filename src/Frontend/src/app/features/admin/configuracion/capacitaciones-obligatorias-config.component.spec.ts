@@ -198,4 +198,44 @@ describe('CapacitacionesObligatoriasConfigComponent', () => {
     fixture.detectChanges();
     expect(compiled.querySelector('[data-testid="modal-detalle-pendientes"]')).toBeFalsy();
   });
+
+  it('serializa_fecha_con_formato_sin_hora_al_crear_capacitacion', () => {
+    component.abrirFormulario();
+    component.modelo.nombre = 'Capacitación con Fecha';
+    component.onFechaChange('2001-09-15');
+    component.modelo.horasEsperadas = 40;
+    component.guardar();
+
+    expect(configClientMock.crearCapacitacionObligatoria).toHaveBeenCalled();
+    const args = configClientMock.crearCapacitacionObligatoria.mock.calls[0][0];
+    expect(args.nombre).toBe('Capacitación con Fecha');
+    expect(args.horasEsperadas).toBe(40);
+    expect(args.fechaRealizacion).toBeDefined();
+    expect(args.fechaRealizacion.toJSON()).toBe('2001-09-15');
+  });
+
+  it('muestra_errores_especificos_por_campo_cuando_servidor_devuelve_validacion', () => {
+    configClientMock.crearCapacitacionObligatoria.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        mensaje: 'Revise los campos indicados.',
+        errores: {
+          fechaRealizacion: ['Revise el formato y el tipo de dato de este campo.'],
+        },
+      })),
+    );
+
+    component.abrirFormulario();
+    component.modelo.nombre = 'Prueba Error Fecha';
+    component.guardar();
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('Revise los campos indicados.');
+    expect(component.obtenerErrorCampo('fechaRealizacion')).toBe(
+      'Revise el formato y el tipo de dato de este campo.',
+    );
+    const campoError = (fixture.nativeElement as HTMLElement).querySelector('.campo-error-msg');
+    expect(campoError).toBeTruthy();
+    expect(campoError?.textContent).toContain('Revise el formato');
+  });
 });
