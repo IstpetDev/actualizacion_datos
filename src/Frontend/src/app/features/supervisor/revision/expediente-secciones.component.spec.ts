@@ -193,6 +193,28 @@ describe('ExpedienteSeccionesComponent', () => {
     expect(descargaEmitida?.archivoId).toBe('respaldo-tit-1');
   });
 
+  it('debe emitir el retiro de archivo al hacer clic en retirar documento en un título', () => {
+    component.cambiarTab('formacion');
+    fixture.detectChanges();
+
+    let retiroEmitido: { archivoId: string; nombreOriginal: string } | undefined;
+    component.retirarArchivo.subscribe((evt) => {
+      retiroEmitido = evt;
+    });
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const btnRetirar = compiled.querySelector(
+      '[data-testid="btn-retirar-titulo-tit-001"]',
+    ) as HTMLButtonElement;
+    expect(btnRetirar).toBeTruthy();
+    btnRetirar.click();
+
+    expect(retiroEmitido).toEqual({
+      archivoId: 'respaldo-tit-1',
+      nombreOriginal: 'titulo_Licenciada en Educación.pdf',
+    });
+  });
+
   it('debe permitir marcar capacitaciones, experiencias y referencias con clave estable', () => {
     let marcaEmitida: { tipo: string; clave: string; label: string } | undefined;
     component.marcarItem.subscribe((evt) => {

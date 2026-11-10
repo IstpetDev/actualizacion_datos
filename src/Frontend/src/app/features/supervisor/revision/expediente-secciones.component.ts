@@ -183,6 +183,17 @@ export type TabExpediente =
                       <span class="material-symbols-outlined icon-sm">download</span>
                       <span>Descargar Foto</span>
                     </button>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      (click)="onRetirarArchivo(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                      data-testid="btn-retirar-foto"
+                      title="Retirar fotografía de perfil del expediente"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                      <span>Retirar foto</span>
+                    </button>
                   </div>
                 </div>
               }
@@ -302,6 +313,19 @@ export type TabExpediente =
                     <span class="material-symbols-outlined icon-xs">edit_note</span>
                     <span>Solicitar corrección</span>
                   </button>
+                  @if (t.archivoId) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      (click)="onRetirarArchivo(t.archivoId, 'titulo_' + t.nombreTitulo + '.pdf')"
+                      [attr.data-testid]="'btn-retirar-titulo-' + t.id"
+                      title="Retirar respaldo adjunto de este título"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                      <span>Retirar documento</span>
+                    </button>
+                  }
                 </div>
               </div>
             } @empty {
@@ -386,6 +410,24 @@ export type TabExpediente =
                     <span class="material-symbols-outlined icon-xs">edit_note</span>
                     <span>Solicitar corrección</span>
                   </button>
+                  @if (tc.archivoId) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      (click)="
+                        onRetirarArchivo(
+                          tc.archivoId,
+                          'estudio_en_curso_' + tc.nombrePrograma + '.pdf'
+                        )
+                      "
+                      [attr.data-testid]="'btn-retirar-titulo-en-curso-' + tc.id"
+                      title="Retirar respaldo adjunto de este estudio en curso"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                      <span>Retirar documento</span>
+                    </button>
+                  }
                 </div>
               </div>
             } @empty {
@@ -592,6 +634,21 @@ export type TabExpediente =
                     <span class="material-symbols-outlined icon-xs">edit_note</span>
                     <span>Solicitar corrección</span>
                   </button>
+                  @if (c.archivoId) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      (click)="
+                        onRetirarArchivo(c.archivoId, 'capacitacion_' + c.nombreEvento + '.pdf')
+                      "
+                      [attr.data-testid]="'btn-retirar-capacitacion-' + c.id"
+                      title="Retirar respaldo adjunto de esta capacitación"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                      <span>Retirar documento</span>
+                    </button>
+                  }
                 </div>
               </div>
             } @empty {
@@ -715,6 +772,19 @@ export type TabExpediente =
                     <span class="material-symbols-outlined icon-xs">edit_note</span>
                     <span>Solicitar corrección</span>
                   </button>
+                  @if (e.archivoId) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      (click)="onRetirarArchivo(e.archivoId, 'experiencia_' + e.empleador + '.pdf')"
+                      [attr.data-testid]="'btn-retirar-experiencia-' + e.id"
+                      title="Retirar respaldo adjunto de esta experiencia laboral"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                      <span>Retirar documento</span>
+                    </button>
+                  }
                 </div>
               </div>
             } @empty {
@@ -829,7 +899,11 @@ export type TabExpediente =
           />
           <div class="items-lista">
             @for (arc of archivos(); track arc.id) {
-              <div class="item-card glass-card" [attr.data-testid]="'item-documento-' + arc.id">
+              <div
+                class="item-card glass-card archivo-item"
+                [attr.data-testid]="'item-documento-' + arc.id"
+              >
+                <div [attr.data-testid]="'archivo-' + arc.id" class="archivo-id-tracker"></div>
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -881,6 +955,17 @@ export type TabExpediente =
                   >
                     <span class="material-symbols-outlined icon-xs">edit_note</span>
                     <span>Solicitar corrección</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    (click)="onRetirarArchivo(arc.id, arc.nombreOriginal)"
+                    [attr.data-testid]="'btn-retirar-' + arc.id"
+                    title="Retirar archivo adjunto del expediente"
+                  >
+                    <span class="material-symbols-outlined icon-sm">delete_sweep</span>
+                    <span>Retirar documento</span>
                   </button>
                 </div>
               </div>
@@ -1138,6 +1223,7 @@ export class ExpedienteSeccionesComponent {
   readonly previsualizar = output<{ archivoId: string; nombreOriginal: string }>();
   readonly marcarItem = output<{ tipo: string; clave: string; label: string }>();
   readonly vincularPorAyuda = output<{ obligatoriaId: string; capacitacionId: string }>();
+  readonly retirarArchivo = output<{ archivoId: string; nombreOriginal: string }>();
 
   readonly tabActiva = signal<TabExpediente>('ficha');
   readonly modalAyudaObligatoria = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
@@ -1163,6 +1249,10 @@ export class ExpedienteSeccionesComponent {
 
   onDescargar(archivoId: string, nombreOriginal: string): void {
     this.descargar.emit({ archivoId, nombreOriginal });
+  }
+
+  onRetirarArchivo(archivoId: string, nombreOriginal: string): void {
+    this.retirarArchivo.emit({ archivoId, nombreOriginal });
   }
 
   onPrevisualizar(archivoId: string, nombreOriginal: string): void {
