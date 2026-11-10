@@ -13,15 +13,18 @@ public class ServicioDocumentosPersonales : IServicioDocumentosPersonales
     private readonly AplicacionDbContext _context;
     private readonly IServicioCampanas _servicioCampanas;
     private readonly IServicioSecciones _servicioSecciones;
+    private readonly IAlmacenArchivos? _almacenArchivos;
 
     public ServicioDocumentosPersonales(
         AplicacionDbContext context,
         IServicioCampanas servicioCampanas,
-        IServicioSecciones servicioSecciones)
+        IServicioSecciones servicioSecciones,
+        IAlmacenArchivos? almacenArchivos = null)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
         _servicioSecciones = servicioSecciones;
+        _almacenArchivos = almacenArchivos;
     }
 
     public async Task<List<DocumentoRequeridoDto>> ListarAsync(string documento, CancellationToken ct = default)
@@ -103,6 +106,19 @@ public class ServicioDocumentosPersonales : IServicioDocumentosPersonales
                 request.FechaVencimiento,
                 request.CategoriaLicencia,
                 request.PuntosLicencia));
+
+            if (existente.ArchivoId != null && existente.ArchivoId != request.ArchivoId)
+            {
+                var archViejo = await _context.ArchivosAdjuntos.FirstOrDefaultAsync(a => a.Id == existente.ArchivoId && a.PersonaId == persona.Id, ct);
+                if (archViejo != null)
+                {
+                    if (_almacenArchivos != null)
+                    {
+                        await _almacenArchivos.EliminarAsync(archViejo.InstitucionId, archViejo.PersonaId, archViejo.Id, ct);
+                    }
+                    _context.ArchivosAdjuntos.Remove(archViejo);
+                }
+            }
 
             existente.AsociarArchivo(request.ArchivoId);
             await _context.SaveChangesAsync(ct);

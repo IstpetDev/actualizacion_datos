@@ -14,17 +14,35 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
     private readonly IServicioCampanas _servicioCampanas;
     private readonly ValidadorCatalogos _validadorCatalogos;
     private readonly IServicioSecciones _servicioSecciones;
+    private readonly IAlmacenArchivos? _almacenArchivos;
 
     public ServicioHojaDeVida(
         AplicacionDbContext context,
         IServicioCampanas servicioCampanas,
         ValidadorCatalogos validadorCatalogos,
-        IServicioSecciones servicioSecciones)
+        IServicioSecciones servicioSecciones,
+        IAlmacenArchivos? almacenArchivos = null)
     {
         _context = context;
         _servicioCampanas = servicioCampanas;
         _validadorCatalogos = validadorCatalogos;
         _servicioSecciones = servicioSecciones;
+        _almacenArchivos = almacenArchivos;
+    }
+
+    private async Task LimpiarArchivoReemplazadoAsync(InstitucionId institucionId, Guid personaId, Guid? archivoViejoId, Guid? archivoNuevoId, CancellationToken ct)
+    {
+        if (archivoViejoId == null || archivoViejoId == Guid.Empty || archivoViejoId == archivoNuevoId) return;
+
+        var arch = await _context.ArchivosAdjuntos.FirstOrDefaultAsync(a => a.Id == archivoViejoId && a.PersonaId == personaId, ct);
+        if (arch != null)
+        {
+            if (_almacenArchivos != null)
+            {
+                await _almacenArchivos.EliminarAsync(arch.InstitucionId, arch.PersonaId, arch.Id, ct);
+            }
+            _context.ArchivosAdjuntos.Remove(arch);
+        }
     }
 
     public async Task<HojaDeVidaDto> ObtenerAsync(string documento, CancellationToken ct = default)
@@ -163,6 +181,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.NumeroCarnetDiscapacidad,
             ficha.Perfil));
 
+        if (ficha.FotoArchivoId != request.FotoArchivoId)
+        {
+            await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, ficha.FotoArchivoId, request.FotoArchivoId, ct);
+        }
+
         ficha.AsociarFoto(request.FotoArchivoId);
 
         // ADR-0037: el nombre confirmado reemplaza al original de la nómina.
@@ -234,6 +257,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.FechaObtencion,
             request.FechaRegistroSenescyt));
 
+        if (titulo.ArchivoId != request.ArchivoId)
+        {
+            await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, titulo.ArchivoId, request.ArchivoId, ct);
+        }
+
         titulo.AsociarArchivo(request.ArchivoId);
         titulo.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
@@ -249,6 +277,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("El título académico no existe.");
 
+        await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, titulo.ArchivoId, null, ct);
         _context.TitulosAcademicos.Remove(titulo);
         await _context.SaveChangesAsync(ct);
     }
@@ -315,6 +344,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.PorcentajeBeca,
             request.MontoBeca));
 
+        if (enCurso.ArchivoId != request.ArchivoId)
+        {
+            await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, enCurso.ArchivoId, request.ArchivoId, ct);
+        }
+
         enCurso.AsociarArchivo(request.ArchivoId);
         enCurso.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
@@ -330,6 +364,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             .FirstOrDefaultAsync(t => t.Id == id && t.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("El título en curso no existe.");
 
+        await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, enCurso.ArchivoId, null, ct);
         _context.TitulosEnCurso.Remove(enCurso);
         await _context.SaveChangesAsync(ct);
     }
@@ -416,6 +451,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.FinanciadaPorInstitucion,
             request.CapacitacionObligatoriaId));
 
+        if (capacitacion.ArchivoId != request.ArchivoId)
+        {
+            await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, capacitacion.ArchivoId, request.ArchivoId, ct);
+        }
+
         capacitacion.AsociarArchivo(request.ArchivoId);
         capacitacion.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
@@ -431,6 +471,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             .FirstOrDefaultAsync(c => c.Id == id && c.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("La capacitación no existe.");
 
+        await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, capacitacion.ArchivoId, null, ct);
         _context.Capacitaciones.Remove(capacitacion);
         await _context.SaveChangesAsync(ct);
     }
@@ -498,6 +539,11 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             request.PaisId,
             request.Funciones));
 
+        if (experiencia.ArchivoId != request.ArchivoId)
+        {
+            await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, experiencia.ArchivoId, request.ArchivoId, ct);
+        }
+
         experiencia.AsociarArchivo(request.ArchivoId);
         experiencia.AsociarSubindice(request.SubindiceSeccionId);
         await _context.SaveChangesAsync(ct);
@@ -513,6 +559,7 @@ public class ServicioHojaDeVida : IServicioHojaDeVida
             .FirstOrDefaultAsync(e => e.Id == id && e.PersonaId == persona.Id, ct)
             ?? throw new RecursoNoEncontradoException("La experiencia laboral no existe.");
 
+        await LimpiarArchivoReemplazadoAsync(persona.InstitucionId, persona.Id, experiencia.ArchivoId, null, ct);
         _context.ExperienciasLaborales.Remove(experiencia);
         await _context.SaveChangesAsync(ct);
     }

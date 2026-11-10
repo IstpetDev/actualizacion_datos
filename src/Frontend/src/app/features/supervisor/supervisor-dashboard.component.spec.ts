@@ -328,6 +328,37 @@ describe('SupervisorDashboardComponent', () => {
     });
   });
 
+  it('solicitar_correccion_agrega_marca_automaticamente_si_revisor_no_pulsa_boton_agregar', () => {
+    component.verExpediente('1700000001');
+    fixture.detectChanges();
+
+    component.iniciarMarcaItem({
+      tipo: 'Item',
+      clave: 'titulo:tit-100',
+      label: 'Ingeniero de Software',
+    });
+
+    expect(component.mostrarModalDevolver()).toBe(true);
+    expect(component.itemParaMarcarLabel()).toBe('Ingeniero de Software');
+    expect(component.observacionGeneral()).toContain('Ingeniero de Software');
+
+    // El supervisor escribe directamente el motivo puntual sin presionar '+ Agregar Marca'
+    component.nuevaMarcaTexto.set('Documento no legible');
+    component.confirmarDevolucion();
+    fixture.detectChanges();
+
+    expect(revisionClientMock.devolverActualizacion).toHaveBeenCalledWith('1700000001', {
+      observacionGeneral: expect.stringContaining('Ingeniero de Software'),
+      marcas: [
+        {
+          tipoDestino: 'Item',
+          claveDestino: 'titulo:tit-100',
+          texto: 'Documento no legible',
+        },
+      ],
+    });
+  });
+
   it('permite_descargar_el_documento_pdf_de_la_persona_en_revision', () => {
     component.verExpediente('1700000001');
     fixture.detectChanges();
