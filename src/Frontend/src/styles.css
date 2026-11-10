@@ -1,52 +1,78 @@
 /* ==========================================================================
-   Sistema de DiseÃ±o Institucional AMMI â€” Estilo Vercel (Geist Design System)
-   Arquitectura minimalista de bordes 1px, alto contraste y paleta AMMI.
+   Sistema de Diseño Institucional — ISTPET Talento Humano
+   Identidad Oficial: Azul Marino Institucional (#222c57), Dorado Heráldico (#c4a857), Negro Pizarra (#0f172a) y Blanco
+   Cumple WCAG 2.2 AA y leyes de ergonomía cognitiva (Miller, Hick, Fitts).
    ========================================================================== */
 
 :root {
-  /* Colores Oficiales del Escudo AMMI (Amarillo HerÃ¡ldico y Negro) */
-  --ammi-primary: #1d1e1c; /* Negro / CarbÃ³n institucional (Geist foreground) */
-  --ammi-primary-hover: #000000; /* Negro puro interactivo */
-  --ammi-primary-light: #333333;
+  /* Identidad Oficial ISTPET */
+  --brand-primary: #222c57; /* Azul marino institucional */
+  --brand-primary-hover: #1a2244;
+  --brand-primary-light: rgba(34, 44, 87, 0.08);
 
-  --ammi-gold: #fcea1e; /* Amarillo herÃ¡ldico oficial AMMI */
-  --ammi-gold-hover: #e5d415; /* Amarillo herÃ¡ldico atenuado */
-  --ammi-gold-text: #785c00; /* Oro oscuro de alto contraste sobre blanco */
-  --ammi-gold-soft: rgba(252, 234, 30, 0.14);
-  --ammi-gold-border: #e5d415;
+  --brand-accent: #c4a857; /* Dorado heráldico oficial */
+  --brand-accent-hover: #b09648;
+  --brand-accent-soft: rgba(196, 168, 87, 0.16);
+  --brand-accent-text: #8d7936;
 
-  /* Escala MonocromÃ¡tica Geist / Vercel */
-  --geist-bg: #fafafa;
-  --geist-surface: #ffffff;
-  --geist-surface-subtle: #f5f5f5;
-  --geist-header-bg: rgba(17, 17, 17, 0.88);
-  --geist-border: #eaeaea;
-  --geist-border-hover: #999999;
-  --geist-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --geist-shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --geist-shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
-  --geist-blur: saturate(180%) blur(12px);
+  /* Aliases para compatibilidad */
+  --ammi-primary: #222c57;
+  --ammi-primary-hover: #1a2244;
+  --ammi-primary-light: rgba(34, 44, 87, 0.08);
 
-  /* TipografÃ­a Geist */
-  --ammi-text-main: #171717;
-  --ammi-text-secondary: #444444;
-  --ammi-text-muted: #666666;
-  --ammi-text-subtle: #888888;
+  --ammi-gold: #c4a857;
+  --ammi-gold-hover: #b09648;
+  --ammi-gold-text: #8d7936;
+  --ammi-gold-soft: rgba(196, 168, 87, 0.16);
+  --ammi-gold-border: #c4a857;
+
+  /* Superficies Limpias (Alto Contraste) */
+  --surface-bg: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-border: #e2e8f0;
+  --surface-border-subtle: #cbd5e1;
+
+  /* Glassmorphism sobrio (Acrílico institucional) */
+  --glass-bg: #ffffff;
+  --glass-bg-subtle: #f8fafc;
+  --glass-bg-elevated: #ffffff;
+  --glass-border: #e2e8f0;
+  --glass-border-subtle: #cbd5e1;
+  --glass-blur: none;
+  --glass-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+  --glass-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --glass-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+
+  /* Tipografía */
+  --font-display: 'Outfit', 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', 'Roboto', -apple-system, sans-serif;
+
+  /* Tipografía de Alto Contraste */
+  --ammi-text-main: #0f172a;
+  --ammi-text-secondary: #334155;
+  --ammi-text-muted: #64748b;
+  --ammi-text-subtle: #94a3b8;
   --ammi-text-inverse: #ffffff;
 
-  /* Estados SemÃ¡nticos */
-  --ammi-success: #0f766e;
+  /* Estados Funcionales Semánticos Sobrios */
+  --ammi-success: #16a34a;
   --ammi-success-bg: #f0fdf4;
-  --ammi-warning: #854d0e;
+  --ammi-warning: #d97706;
   --ammi-warning-bg: #fefce8;
   --ammi-danger: #dc2626;
   --ammi-danger-bg: #fef2f2;
+  --ammi-info: #222c57;
+  --ammi-info-bg: #eff6ff;
 
-  /* GeometrÃ­a Vercel */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Geometría y Motion (Touch Targets Fitts >= 42px) */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 *,
@@ -58,23 +84,503 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  background-color: var(--geist-bg);
-  background-image:
-    radial-gradient(at 50% 0%, rgba(252, 234, 30, 0.12) 0px, transparent 55%),
-    radial-gradient(#e4e4e7 1px, transparent 1px);
-  background-size:
-    100% 100%,
-    24px 24px;
-  background-attachment: fixed;
+  font-family: var(--font-body);
+  background-color: var(--surface-bg);
   color: var(--ammi-text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+.section-title,
+.brand-title {
+  font-family: var(--font-display);
+}
+
+/* ==========================================================================
+   Material Symbols & Iconos
+   ========================================================================== */
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  vertical-align: middle;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.icon-xs {
+  font-size: 14px;
+}
+.icon-sm {
+  font-size: 16px;
+}
+.icon-md {
+  font-size: 20px;
+}
+.icon-lg {
+  font-size: 24px;
+}
+.icon-xl {
+  font-size: 32px;
+}
+
+/* ==========================================================================
+   Componentes Glassmorphism Base
+   ========================================================================== */
+
+.glass-panel,
+.dashboard-section {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow-md);
+  padding: 1.75rem;
+  transition: box-shadow var(--transition-smooth);
+}
+
+.glass-card,
+.card {
+  background: var(--glass-bg-elevated);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--glass-shadow-sm);
+  padding: 1.5rem;
+  transition: all var(--transition-fast);
+}
+
+.glass-card:hover,
+.card:hover {
+  box-shadow: var(--glass-shadow-md);
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+/* ==========================================================================
+   Botones con Estilo Institucional ISTPET
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: #ffffff;
+  border-color: var(--brand-primary);
+  box-shadow: 0 1px 3px rgba(34, 44, 87, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  border-color: var(--brand-primary-hover);
+  box-shadow: 0 4px 10px rgba(34, 44, 87, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-gold {
+  background: var(--brand-accent);
+  color: #0f172a;
+  font-weight: 800;
+  border-color: #b09648;
+  box-shadow: 0 1px 3px rgba(196, 168, 87, 0.2);
+}
+
+.btn-gold:hover:not(:disabled) {
+  background: var(--brand-accent-hover);
+  border-color: #8d7936;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: #15803d;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-warning {
+  background: #d97706;
+  color: #ffffff;
+  border-color: #b45309;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: #b45309;
+}
+
+.btn-sm {
+  min-height: 36px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.btn-link-danger {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Badges y Píldoras con Resplandor Luminoso
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.badge-gold {
+  background: var(--ammi-gold-soft);
+  color: var(--ammi-gold-text);
+  border: 1px solid var(--ammi-gold-border);
+  box-shadow: 0 0 10px rgba(252, 234, 30, 0.15);
+}
+
+.badge-blue,
+.badge-istpet {
+  background: var(--istpet-blue-soft);
+  color: var(--istpet-blue);
+  border: 1px solid var(--istpet-blue-border);
+  box-shadow: 0 0 10px rgba(30, 64, 175, 0.12);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.14);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.12);
+}
+
+.badge-success {
+  background: rgba(16, 185, 129, 0.14);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.12);
+}
+
+.badge-danger {
+  background: rgba(244, 63, 94, 0.14);
+  color: #991b1b;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.12);
+}
+
+.badge-info {
+  background: rgba(14, 165, 233, 0.14);
+  color: #0369a1;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+
+.badge-secondary {
+  background: rgba(148, 163, 184, 0.18);
+  color: #334155;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+/* ==========================================================================
+   Formularios e Inputs Refinados ISTPET (min-height 42px, radius 12px)
+   ========================================================================== */
+
+.form-control,
+.form-input-custom,
+input[type='text'],
+input[type='search'],
+input[type='password'],
+input[type='email'],
+input[type='date'],
+select,
+textarea {
+  min-height: 42px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #0f172a;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all var(--transition-fast);
+  outline: none;
+  font-family: inherit;
+  width: 100%;
+}
+
+.form-control:focus,
+.form-input-custom:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #222c57;
+  background-color: #ffffff;
+  box-shadow:
+    0 0 0 3.5px rgba(34, 44, 87, 0.12),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+select,
+.form-select-custom {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23222c57' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.25rem !important;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Tablas Estilizadas Institucionales ISTPET
+   ========================================================================== */
+
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+}
+
+.data-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-bottom: 1.5px solid #e2e8f0;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+  transition: background-color var(--transition-fast);
+}
+
+.data-table tbody tr:hover td {
+  background-color: #f8fafc;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   Modales Centrados y Accesibles con Backdrop Blur (Issue #175)
+   ========================================================================== */
+
+.modal-overlay,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: fadeIn 200ms ease-out;
+}
+
+.modal-dialog,
+.modal-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-top: 3px solid var(--ammi-gold);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ammi-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  background: rgba(248, 250, 252, 0.8);
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-close:hover {
+  background: rgba(226, 232, 240, 0.6);
+  color: #0f172a;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

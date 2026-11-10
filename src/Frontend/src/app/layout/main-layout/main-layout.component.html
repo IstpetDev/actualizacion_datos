@@ -1,6 +1,7 @@
 <div class="shell-layout">
   <header class="app-header" role="banner">
     <div class="header-brand">
+      <span class="material-symbols-outlined brand-icon">badge</span>
       <span class="brand-title">Actualización de Datos</span>
       <span
         class="brand-badge"
@@ -13,18 +14,28 @@
 
     <nav class="header-nav" role="navigation" aria-label="Navegación principal">
       @if (authService.tieneRol('usuario')) {
-        <a routerLink="/usuario" routerLinkActive="active-link" class="nav-link">Mis Datos</a>
+        <a routerLink="/usuario" routerLinkActive="active-link" class="nav-link">
+          <span class="material-symbols-outlined icon-sm">person</span>
+          <span>Mis Datos</span>
+        </a>
       }
       @if (authService.tieneRol(['supervisor', 'admin'])) {
-        <a routerLink="/supervisor" routerLinkActive="active-link" class="nav-link">Revisión</a>
+        <a routerLink="/supervisor" routerLinkActive="active-link" class="nav-link">
+          <span class="material-symbols-outlined icon-sm">fact_check</span>
+          <span>Revisión RRHH</span>
+        </a>
       }
       @if (authService.tieneRol('admin')) {
-        <a routerLink="/admin" routerLinkActive="active-link" class="nav-link">Administración</a>
+        <a routerLink="/admin" routerLinkActive="active-link" class="nav-link">
+          <span class="material-symbols-outlined icon-sm">admin_panel_settings</span>
+          <span>Administración</span>
+        </a>
       }
       @if (authService.tieneRol('superadmin')) {
-        <a routerLink="/superadmin" routerLinkActive="active-link" class="nav-link"
-          >Instituciones</a
-        >
+        <a routerLink="/superadmin" routerLinkActive="active-link" class="nav-link">
+          <span class="material-symbols-outlined icon-sm">corporate_fare</span>
+          <span>Instituciones</span>
+        </a>
       }
     </nav>
 
@@ -41,7 +52,8 @@
           (click)="cerrarSesion()"
           aria-label="Cerrar sesión"
         >
-          Salir
+          <span class="material-symbols-outlined icon-sm">logout</span>
+          <span>Salir</span>
         </button>
       }
     </div>

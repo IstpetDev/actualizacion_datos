@@ -11,6 +11,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD en .env}
     volumes:
       - postgres-datos:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -36,6 +38,7 @@ services:
     volumes:
       - ./data/catalogos:/catalogos:ro
       - backend-archivos:/app/almacen_archivos
+      - backend-dataprotection:/home/app/.aspnet/DataProtection-Keys
     ports:
       - "127.0.0.1:${BACKEND_PUERTO:-8080}:8080"
     healthcheck:
@@ -63,3 +66,4 @@ services:
 volumes:
   postgres-datos:
   backend-archivos:
+  backend-dataprotection:
