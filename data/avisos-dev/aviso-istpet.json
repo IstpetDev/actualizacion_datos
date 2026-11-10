@@ -1,0 +1,14 @@
+{
+  "institucionId": "a0000000-0000-0000-0000-000000000001",
+  "version": "1.0-dev",
+  "titulo": "Aviso de Protección de Datos Personales — ISTPET",
+  "responsable": "Instituto Superior Tecnológico Mayor Pedro Traversari",
+  "contenido": "De conformidad con la Ley Orgánica de Protección de Datos Personales del Ecuador, el Instituto Superior Tecnológico Mayor Pedro Traversari (ISTPET) informa a su personal docente, administrativo y de servicios que los datos recopilados en esta plataforma tienen fines exclusivos de actualización de expedientes laborales, gestión de talento humano y acreditación institucional. Sus datos serán tratados con debida confidencialidad y medidas de seguridad técnicas y organizativas.",
+  "declaracionAceptacion": "He leído y acepto el tratamiento de mis datos personales con fines de actualización institucional",
+  "fuenteOficial": "https://istpet.edu.ec/proteccion-datos",
+  "evidenciaAprobacion": "Resolución Institucional ISTPET-DEV-2026-001",
+  "rolesDestinatarios": ["Usuario", "Supervisor", "Admin"],
+  "vigenteDesdeUtc": "2026-01-01T00:00:00Z",
+  "vigenteHastaUtc": null,
+  "aprobacionInstitucionalConfirmada": true
+}

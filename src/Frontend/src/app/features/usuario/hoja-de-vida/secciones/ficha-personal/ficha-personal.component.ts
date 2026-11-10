@@ -15,20 +15,26 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { catchError, forkJoin, map, Observable, of, Subscription } from 'rxjs';
+import { catchError, finalize, forkJoin, map, Observable, of, Subscription } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
-import { ElementoCatalogoDto, GuardarFichaPersonalRequest } from '../../../../../api-client';
+import {
+  API_BASE_URL,
+  ArchivosClient,
+  ElementoCatalogoDto,
+  GuardarFichaPersonalRequest,
+} from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
-import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
+import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
 import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.service';
+import { mensajeError } from '../../../../../core/auth/mensaje-error';
 
 @Component({
   selector: 'app-ficha-personal',
   standalone: true,
-  imports: [CommonModule, FormsModule, UploaderRespaldoComponent, MarcaObservacionComponent],
+  imports: [CommonModule, FormsModule, MarcaObservacionComponent, UploaderRespaldoComponent],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -57,7 +63,122 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
       }
 
       <form (ngSubmit)="guardarFicha()" class="formulario-ficha" data-testid="form-ficha">
-        <!-- 1. IDENTIFICACIÓN Y NOMBRES -->
+        <!-- 1. FOTOGRAFÍA FORMAL INSTITUCIONAL-->
+        <fieldset
+          class="grupo-campos card-foto-carnet-container mb-4"
+          [disabled]="!puedeEditar()"
+          data-testid="cuadro-foto-perfil"
+        >
+          <legend class="grupo-titulo">
+            <span class="material-symbols-outlined icono-legend">photo_camera</span>
+            Fotografía Formal Institucional
+          </legend>
+
+          <div class="foto-carnet-grid">
+            <div class="foto-marco-carnet">
+              @if (fotoPreviewUrl(); as prev) {
+                <img [src]="prev" alt="Fotografía Formal" class="foto-img-carnet" />
+              } @else if (modelo.fotoArchivoId; as fotoId) {
+                <img
+                  [src]="obtenerUrlFoto(fotoId)"
+                  alt="Fotografía Formal"
+                  class="foto-img-carnet"
+                />
+              } @else {
+                <div class="sin-foto-carnet">
+                  <span class="material-symbols-outlined icono-placeholder-carnet"
+                    >account_circle</span
+                  >
+                  <span class="texto-sin-foto-carnet">Sin Fotografía</span>
+                </div>
+              }
+            </div>
+
+            <div class="foto-detalles-carnet">
+              <div class="foto-badge-row">
+                @if (fotoPreviewUrl() || modelo.fotoArchivoId) {
+                  <span class="badge-foto-estado badge-foto-registrada">
+                    <span class="material-symbols-outlined icon-xs">check_circle</span>
+                    Fotografía Cargada en Expediente
+                  </span>
+                } @else {
+                  <span class="badge-foto-estado badge-sin-foto">
+                    <span class="material-symbols-outlined icon-xs">info</span>
+                    Fotografía Pendiente
+                  </span>
+                }
+              </div>
+
+              <p class="foto-instruccion-texto">
+                Suba una fotografía formal para su carnet digital y ficha del expediente
+                institucional:
+              </p>
+              <ul class="foto-reglas-lista">
+                <li>
+                  <span class="material-symbols-outlined icon-xs text-success">check</span> Fondo
+                  claro/blanco y vestimenta formal.
+                </li>
+                <li>
+                  <span class="material-symbols-outlined icon-xs text-success">check</span> Rostro y
+                  hombros despejados (tipo carnet).
+                </li>
+                <li>
+                  <span class="material-symbols-outlined icon-xs text-success">check</span> Formatos
+                  admitidos: JPG, PNG o WEBP (máx. 10 MB).
+                </li>
+              </ul>
+
+              @if (puedeEditar()) {
+                <div class="foto-acciones-row">
+                  <label class="btn btn-subir-foto" [class.btn-disabled]="subiendoFoto()">
+                    <span class="material-symbols-outlined icon-sm">
+                      {{ subiendoFoto() ? 'sync' : 'upload' }}
+                    </span>
+                    <span>
+                      {{
+                        subiendoFoto()
+                          ? 'Subiendo fotografía...'
+                          : fotoPreviewUrl() || modelo.fotoArchivoId
+                            ? 'Cambiar Fotografía'
+                            : 'Subir Fotografía'
+                      }}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/jpg"
+                      (change)="onFotoSeleccionada($event)"
+                      [disabled]="subiendoFoto()"
+                      class="input-foto-file-hidden"
+                      data-testid="input-subir-foto-perfil"
+                    />
+                  </label>
+
+                  @if (fotoPreviewUrl() || modelo.fotoArchivoId) {
+                    <button
+                      type="button"
+                      class="btn btn-quitar-foto"
+                      (click)="eliminarFoto()"
+                      [disabled]="subiendoFoto()"
+                      data-testid="btn-eliminar-foto-perfil"
+                    >
+                      <span class="material-symbols-outlined icon-sm">delete</span>
+                      <span>Quitar</span>
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (errorFoto()) {
+                <div class="alerta-error-foto mt-2" role="alert">
+                  <span class="material-symbols-outlined icon-xs">error</span>
+                  <span>{{ errorFoto() }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 2. IDENTIFICACIÓN Y NOMBRES -->
         <fieldset class="grupo-campos" [disabled]="!puedeEditar()">
           <legend class="grupo-titulo">Identificación y Nombres</legend>
 
@@ -706,15 +827,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             </div>
           }
         </fieldset>
-        <!-- 5. FOTOGRAFÍA (spec-0007) -->
+        <!-- Perfil Profesional Institucional -->
         <fieldset class="grupo-campos mt-4" [disabled]="!puedeEditar()">
-          <legend class="grupo-titulo">Fotografía</legend>
-
-          <p>
-            El perfil profesional se genera automáticamente a partir de su formación y trayectoria
-            al revisar y exportar la hoja de vida.
+          <legend class="grupo-titulo">
+            <span class="material-symbols-outlined icono-legend">badge</span>
+            Perfil Profesional Institucional
+          </legend>
+          <p class="perfil-info-desc">
+            El perfil profesional institucional se sintetiza automáticamente a partir de su
+            formación académica, capacitaciones continuas y trayectoria laboral al revisar y
+            exportar el expediente digital.
           </p>
-
           <div class="mt-3">
             <app-uploader-respaldo
               etiqueta="Foto de Perfil Personal"
@@ -774,15 +897,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         margin: 0;
       }
       .grupo-campos {
-        border: 1px solid var(--geist-border, #eaeaea);
-        border-radius: var(--radius-md, 8px);
-        padding: 1.35rem;
-        background: var(--geist-surface, #ffffff);
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
       }
       .grupo-titulo {
-        font-size: 0.95rem;
+        font-family: var(--font-display, 'Outfit', sans-serif);
+        font-size: 1rem;
         font-weight: 700;
-        color: #334155;
+        color: #222c57;
         padding: 0 0.5rem;
       }
       .grid-cuatro {
@@ -808,20 +933,22 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
       .form-group label {
         font-size: 0.8125rem;
         font-weight: 600;
-        color: #475569;
+        color: #334155;
       }
       .form-control {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        min-height: 42px;
+        padding: 0.55rem 0.85rem;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 12px;
         font-size: 0.875rem;
-        color: #1e293b;
+        color: #0f172a;
         background-color: #ffffff;
+        transition: all 0.18s ease;
       }
       .form-control:focus {
         outline: none;
-        border-color: var(--ammi-primary, #1d1e1c);
-        box-shadow: 0 0 0 2px rgba(252, 234, 30, 0.45);
+        border-color: #222c57;
+        box-shadow: 0 0 0 3.5px rgba(34, 44, 87, 0.12);
       }
       .form-control:disabled {
         background-color: #f8fafc;
@@ -833,22 +960,24 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         justify-content: flex-end;
       }
       .btn {
+        min-height: 42px;
         padding: 0.625rem 1.25rem;
-        border-radius: 6px;
+        border-radius: 12px;
         font-size: 0.875rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
-        border: none;
+        border: 1.5px solid transparent;
+        transition: all 0.18s ease;
       }
       .btn-primary {
-        background: var(--ammi-primary, #1d1e1c);
-        border: 1px solid var(--ammi-primary, #1d1e1c);
+        background: #222c57;
+        border-color: #222c57;
         color: #ffffff;
       }
       .btn-primary:hover:not(:disabled) {
-        background: var(--ammi-primary-hover, #0f100e);
-        border-color: var(--ammi-gold, #fcea1e);
-        color: var(--ammi-gold, #fcea1e);
+        background: #1a2244;
+        border-color: #1a2244;
+        transform: translateY(-1px);
       }
       .btn-primary:disabled {
         opacity: 0.6;
@@ -874,6 +1003,183 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         gap: 0.375rem;
         cursor: pointer;
       }
+      .perfil-info-desc {
+        font-size: 0.8125rem;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      /* Fotografía Carnet Formal */
+      .card-foto-carnet-container {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      }
+      .icono-legend {
+        font-size: 18px;
+        vertical-align: middle;
+        margin-right: 0.35rem;
+        color: #222c57;
+      }
+      .foto-carnet-grid {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .foto-marco-carnet {
+        width: 120px;
+        height: 156px;
+        border-radius: 16px;
+        border: 2.5px solid #c4a857;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(13, 27, 76, 0.08);
+      }
+      .foto-img-carnet {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .sin-foto-carnet {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        color: #94a3b8;
+      }
+      .icono-placeholder-carnet {
+        font-size: 52px !important;
+        color: #cbd5e1;
+      }
+      .texto-sin-foto-carnet {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .foto-detalles-carnet {
+        flex: 1;
+        min-width: 240px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .foto-badge-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .badge-foto-estado {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.2rem 0.65rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .badge-foto-registrada {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .badge-sin-foto {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+      }
+      .foto-instruccion-texto {
+        font-size: 0.8125rem;
+        color: #334155;
+        font-weight: 600;
+        margin: 0;
+      }
+      .foto-reglas-lista {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+      .foto-reglas-lista li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .foto-acciones-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.25rem;
+      }
+      .btn-subir-foto {
+        background: #222c57;
+        color: #ffffff;
+        border: 1.5px solid #222c57;
+        border-radius: 12px;
+        padding: 0.55rem 1.15rem;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.18s ease;
+      }
+      .btn-subir-foto:hover {
+        background: #1a2244;
+        border-color: #1a2244;
+      }
+      .btn-quitar-foto {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1.5px solid #fecdd3;
+        border-radius: 12px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.18s ease;
+      }
+      .btn-quitar-foto:hover:not(:disabled) {
+        background: #ffe4e6;
+      }
+      .btn-disabled {
+        opacity: 0.6;
+        cursor: not-allowed !important;
+        pointer-events: none;
+      }
+      .input-foto-file-hidden {
+        display: none;
+      }
+      .alerta-error-foto {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #dc2626;
+        margin: 0;
+      }
+      .mb-4 {
+        margin-bottom: 1.25rem;
+      }
     `,
   ],
 })
@@ -887,6 +1193,12 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly fechaPolitica = fechaPolitica;
   private readonly state = inject(HojaDeVidaStateService);
   private readonly catalogos = inject(CatalogosCacheService);
+  private readonly archivosClient = inject(ArchivosClient);
+  private readonly baseUrl = inject(API_BASE_URL, { optional: true }) ?? '';
+
+  readonly subiendoFoto = signal<boolean>(false);
+  readonly fotoPreviewUrl = signal<string | null>(null);
+  readonly errorFoto = signal<string>('');
 
   readonly puedeEditar = this.state.puedeEditar;
   readonly guardando = this.state.guardando;
@@ -1329,6 +1641,83 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   onDiscapacidadChange(discapacidadId?: number): void {
     this.modelo.discapacidadId = discapacidadId;
     this.respuestaDiscapacidadModificada = true;
+  }
+
+  obtenerUrlFoto(id?: string): string | null {
+    if (!id) return null;
+    return `${this.baseUrl}/api/archivos/${encodeURIComponent(id)}/descargar`;
+  }
+
+  onFotoSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    if (!archivo) return;
+
+    this.errorFoto.set('');
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowed.includes(archivo.type)) {
+      this.errorFoto.set('Formato no permitido. Utilice únicamente imágenes JPG, PNG o WEBP.');
+      input.value = '';
+      return;
+    }
+
+    const maxBytes = 10 * 1024 * 1024;
+    if (archivo.size > maxBytes) {
+      this.errorFoto.set('La fotografía supera el límite máximo permitido de 10 MB.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.fotoPreviewUrl.set(reader.result as string);
+    };
+    reader.readAsDataURL(archivo);
+
+    this.subiendoFoto.set(true);
+    const parametroArchivo = {
+      data: archivo,
+      fileName: archivo.name,
+    };
+
+    this.archivosClient
+      .subirArchivo(undefined, undefined, parametroArchivo)
+      .pipe(
+        finalize(() => {
+          this.subiendoFoto.set(false);
+          input.value = '';
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.id) {
+            this.modelo.fotoArchivoId = res.id;
+            this.state.actualizarEstadoCambios?.();
+            if (!this.validacion.invalido(this.modelo, 'ficha')) {
+              this.state.guardarFichaPersonal(this.modelo).subscribe({
+                error: (err) => {
+                  this.errorFoto.set(
+                    mensajeError(err, 'Error al guardar la fotografía en la ficha.'),
+                  );
+                },
+              });
+            }
+          }
+        },
+        error: (err) => {
+          this.errorFoto.set(mensajeError(err, 'Error al subir la fotografía al servidor.'));
+        },
+      });
+  }
+
+  eliminarFoto(): void {
+    this.modelo.fotoArchivoId = undefined;
+    this.fotoPreviewUrl.set(null);
+    this.errorFoto.set('');
+    this.state.actualizarEstadoCambios?.();
+    if (this.puedeEditar() && !this.validacion.invalido(this.modelo, 'ficha')) {
+      this.state.guardarFichaPersonal(this.modelo).subscribe();
+    }
   }
 
   onFotoSubida(archivoId: string): void {

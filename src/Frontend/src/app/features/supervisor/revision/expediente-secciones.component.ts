@@ -20,7 +20,7 @@ export type TabExpediente =
   imports: [CommonModule, FormsModule, ObservacionesRevisionComponent],
   template: `
     <div class="expediente-secciones-container" data-testid="expediente-secciones">
-      <!-- Navegación de pestañas de secciones -->
+      <!-- Navegación de pestañas de secciones con Glassmorphism -->
       <nav class="secciones-tabs" role="tablist">
         <button
           type="button"
@@ -29,7 +29,8 @@ export type TabExpediente =
           (click)="cambiarTab('ficha')"
           data-testid="tab-exp-ficha"
         >
-          1. Ficha Personal
+          <span class="material-symbols-outlined icon-sm">person</span>
+          <span>1. Ficha Personal</span>
         </button>
         <button
           type="button"
@@ -38,9 +39,12 @@ export type TabExpediente =
           (click)="cambiarTab('formacion')"
           data-testid="tab-exp-formacion"
         >
-          2. Formación Académica ({{
-            (hojaDeVida().titulos?.length || 0) + (hojaDeVida().titulosEnCurso?.length || 0)
-          }})
+          <span class="material-symbols-outlined icon-sm">school</span>
+          <span>
+            2. Formación Académica ({{
+              (hojaDeVida().titulos?.length || 0) + (hojaDeVida().titulosEnCurso?.length || 0)
+            }})
+          </span>
         </button>
         <button
           type="button"
@@ -49,7 +53,8 @@ export type TabExpediente =
           (click)="cambiarTab('capacitaciones')"
           data-testid="tab-exp-capacitaciones"
         >
-          3. Capacitaciones ({{ hojaDeVida().capacitaciones?.length || 0 }})
+          <span class="material-symbols-outlined icon-sm">workspace_premium</span>
+          <span>3. Capacitaciones ({{ hojaDeVida().capacitaciones?.length || 0 }})</span>
         </button>
         <button
           type="button"
@@ -58,7 +63,8 @@ export type TabExpediente =
           (click)="cambiarTab('experiencia')"
           data-testid="tab-exp-experiencia"
         >
-          4. Experiencia Laboral ({{ hojaDeVida().experiencias?.length || 0 }})
+          <span class="material-symbols-outlined icon-sm">work</span>
+          <span>4. Experiencia Laboral ({{ hojaDeVida().experiencias?.length || 0 }})</span>
         </button>
         <button
           type="button"
@@ -67,7 +73,8 @@ export type TabExpediente =
           (click)="cambiarTab('referencias')"
           data-testid="tab-exp-referencias"
         >
-          5. Referencias ({{ hojaDeVida().referencias?.length || 0 }})
+          <span class="material-symbols-outlined icon-sm">groups</span>
+          <span>5. Referencias ({{ hojaDeVida().referencias?.length || 0 }})</span>
         </button>
         <button
           type="button"
@@ -76,7 +83,8 @@ export type TabExpediente =
           (click)="cambiarTab('documentos')"
           data-testid="tab-exp-documentos"
         >
-          6. Documentos y Respaldos ({{ archivos().length }})
+          <span class="material-symbols-outlined icon-sm">folder_open</span>
+          <span>6. Documentos y Respaldos ({{ archivos().length }})</span>
         </button>
       </nav>
 
@@ -157,14 +165,25 @@ export type TabExpediente =
               @if (ficha.fotoArchivoId) {
                 <div class="card-dato col-span-2">
                   <span class="label">Fotografía de Perfil:</span>
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    (click)="onDescargar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
-                    data-testid="btn-descargar-foto"
-                  >
-                    Ver Fotografía Adjunta
-                  </button>
+                  <div class="item-actions mt-2">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="onPrevisualizar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                    >
+                      <span class="material-symbols-outlined icon-sm">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="onDescargar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                      data-testid="btn-descargar-foto"
+                    >
+                      <span class="material-symbols-outlined icon-sm">download</span>
+                      <span>Descargar Foto</span>
+                    </button>
+                  </div>
                 </div>
               }
             </div>
@@ -215,7 +234,7 @@ export type TabExpediente =
           <h4 class="subtitulo-seccion">Títulos Académicos Obtenidos</h4>
           <div class="items-lista">
             @for (t of hojaDeVida().titulos; track t.id) {
-              <div class="item-card" [attr.data-testid]="'item-titulo-' + t.id">
+              <div class="item-card glass-card" [attr.data-testid]="'item-titulo-' + t.id">
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -226,7 +245,10 @@ export type TabExpediente =
                   [archivoId]="t.archivoId"
                 />
                 <div class="item-header">
-                  <strong>{{ t.nombreTitulo }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary">school</span>
+                    <strong>{{ t.nombreTitulo }}</strong>
+                  </div>
                   <div>
                     @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
                       <span class="badge badge-info">{{ nomSub }}</span>
@@ -253,10 +275,19 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-secondary btn-sm"
+                      (click)="onPrevisualizar(t.archivoId, 'titulo_' + t.nombreTitulo + '.pdf')"
+                    >
+                      <span class="material-symbols-outlined icon-sm">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
                       (click)="onDescargar(t.archivoId, 'titulo_' + t.nombreTitulo + '.pdf')"
                       [attr.data-testid]="'btn-descargar-titulo-' + t.id"
                     >
-                      Descargar Respaldo
+                      <span class="material-symbols-outlined icon-sm">download</span>
+                      <span>Descargar Respaldo</span>
                     </button>
                   } @else {
                     <span class="sin-respaldo">Sin respaldo adjunto</span>
@@ -268,7 +299,8 @@ export type TabExpediente =
                     (click)="onMarcarItem('titulo', t.id, t.nombreTitulo)"
                     [attr.data-testid]="'btn-marcar-titulo-' + t.id"
                   >
-                    ⚠️ Marcar Ítem
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
@@ -280,7 +312,10 @@ export type TabExpediente =
           <h4 class="subtitulo-seccion mt-4">Estudios en Curso</h4>
           <div class="items-lista">
             @for (tc of hojaDeVida().titulosEnCurso; track tc.id) {
-              <div class="item-card" [attr.data-testid]="'item-titulo-en-curso-' + tc.id">
+              <div
+                class="item-card glass-card"
+                [attr.data-testid]="'item-titulo-en-curso-' + tc.id"
+              >
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -291,7 +326,10 @@ export type TabExpediente =
                   [archivoId]="tc.archivoId"
                 />
                 <div class="item-header">
-                  <strong>{{ tc.nombrePrograma }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary">auto_stories</span>
+                    <strong>{{ tc.nombrePrograma }}</strong>
+                  </div>
                   <div>
                     @if (nombreSubindice(tc.subindiceSeccionId); as nomSub) {
                       <span class="badge badge-info">{{ nomSub }}</span>
@@ -315,11 +353,25 @@ export type TabExpediente =
                       type="button"
                       class="btn btn-secondary btn-sm"
                       (click)="
+                        onPrevisualizar(
+                          tc.archivoId,
+                          'estudio_en_curso_' + tc.nombrePrograma + '.pdf'
+                        )
+                      "
+                    >
+                      <span class="material-symbols-outlined icon-sm">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="
                         onDescargar(tc.archivoId, 'estudio_en_curso_' + tc.nombrePrograma + '.pdf')
                       "
                       [attr.data-testid]="'btn-descargar-titulo-en-curso-' + tc.id"
                     >
-                      Descargar Respaldo
+                      <span class="material-symbols-outlined icon-sm">download</span>
+                      <span>Descargar Respaldo</span>
                     </button>
                   } @else {
                     <span class="sin-respaldo">Sin respaldo adjunto</span>
@@ -331,7 +383,8 @@ export type TabExpediente =
                     (click)="onMarcarItem('titulo-en-curso', tc.id, tc.nombrePrograma)"
                     [attr.data-testid]="'btn-marcar-titulo-en-curso-' + tc.id"
                   >
-                    ⚠️ Marcar Ítem
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
@@ -382,7 +435,7 @@ export type TabExpediente =
             <h4 class="subtitulo-seccion">Obligatorias de la Institución</h4>
             <div class="items-lista mb-4" data-testid="lista-obligatorias-revision">
               @for (ob of obligatorias(); track ob.id) {
-                <div class="item-card" [attr.data-testid]="'item-obligatoria-' + ob.id">
+                <div class="item-card glass-card" [attr.data-testid]="'item-obligatoria-' + ob.id">
                   <app-observaciones-revision
                     [observaciones]="observaciones()"
                     [hojaDeVida]="hojaDeVida()"
@@ -392,7 +445,12 @@ export type TabExpediente =
                     [claveDestino]="ob.id"
                   />
                   <div class="item-header">
-                    <strong>{{ ob.nombre }}</strong>
+                    <div class="item-title-row">
+                      <span class="material-symbols-outlined icon-md text-amber"
+                        >verified_user</span
+                      >
+                      <strong>{{ ob.nombre }}</strong>
+                    </div>
                     <span
                       class="badge"
                       [ngClass]="{
@@ -432,7 +490,8 @@ export type TabExpediente =
                         (click)="onMarcarItem('capacitacion', ob.capacitacionId, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-' + ob.id"
                       >
-                        ⚠️ Marcar Ítem
+                        <span class="material-symbols-outlined icon-xs">edit_note</span>
+                        <span>Solicitar corrección</span>
                       </button>
                     } @else if (ob.estado === 'pendiente') {
                       <button
@@ -442,7 +501,8 @@ export type TabExpediente =
                         (click)="onMarcarObligatoriaPendiente(ob.id, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-pendiente-' + ob.id"
                       >
-                        ⚠️ Marcar Faltante
+                        <span class="material-symbols-outlined icon-xs">warning</span>
+                        <span>Marcar Faltante</span>
                       </button>
 
                       @if (puedeVincularPorAyuda() && capacitacionesDisponibles().length > 0) {
@@ -452,7 +512,8 @@ export type TabExpediente =
                           (click)="abrirModalAyuda(ob)"
                           [attr.data-testid]="'btn-vincular-ayuda-' + ob.id"
                         >
-                          Vincular por ayuda
+                          <span class="material-symbols-outlined icon-sm">link</span>
+                          <span>Vincular por ayuda</span>
                         </button>
                       }
                     }
@@ -465,7 +526,7 @@ export type TabExpediente =
           <h4 class="subtitulo-seccion mt-4">Capacitaciones Registradas</h4>
           <div class="items-lista">
             @for (c of hojaDeVida().capacitaciones; track c.id) {
-              <div class="item-card" [attr.data-testid]="'item-capacitacion-' + c.id">
+              <div class="item-card glass-card" [attr.data-testid]="'item-capacitacion-' + c.id">
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -476,7 +537,12 @@ export type TabExpediente =
                   [archivoId]="c.archivoId"
                 />
                 <div class="item-header">
-                  <strong>{{ c.nombreEvento }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary"
+                      >workspace_premium</span
+                    >
+                    <strong>{{ c.nombreEvento }}</strong>
+                  </div>
                   <div>
                     @if (nombreSubindice(c.subindiceSeccionId); as nomSub) {
                       <span class="badge badge-info">{{ nomSub }}</span>
@@ -497,10 +563,21 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-secondary btn-sm"
+                      (click)="
+                        onPrevisualizar(c.archivoId, 'capacitacion_' + c.nombreEvento + '.pdf')
+                      "
+                    >
+                      <span class="material-symbols-outlined icon-sm">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
                       (click)="onDescargar(c.archivoId, 'capacitacion_' + c.nombreEvento + '.pdf')"
                       [attr.data-testid]="'btn-descargar-capacitacion-' + c.id"
                     >
-                      Descargar Respaldo
+                      <span class="material-symbols-outlined icon-sm">download</span>
+                      <span>Descargar Respaldo</span>
                     </button>
                   } @else {
                     <span class="sin-respaldo">Sin respaldo adjunto</span>
@@ -512,7 +589,8 @@ export type TabExpediente =
                     (click)="onMarcarItem('capacitacion', c.id, c.nombreEvento)"
                     [attr.data-testid]="'btn-marcar-capacitacion-' + c.id"
                   >
-                    ⚠️ Marcar Ítem
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
@@ -561,7 +639,7 @@ export type TabExpediente =
           }
           <div class="items-lista">
             @for (e of hojaDeVida().experiencias; track e.id) {
-              <div class="item-card" [attr.data-testid]="'item-experiencia-' + e.id">
+              <div class="item-card glass-card" [attr.data-testid]="'item-experiencia-' + e.id">
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -572,7 +650,10 @@ export type TabExpediente =
                   [archivoId]="e.archivoId"
                 />
                 <div class="item-header">
-                  <strong>{{ e.cargo }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary">work</span>
+                    <strong>{{ e.cargo }}</strong>
+                  </div>
                   <div>
                     @if (nombreSubindice(e.subindiceSeccionId); as nomSub) {
                       <span
@@ -607,10 +688,19 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-secondary btn-sm"
+                      (click)="onPrevisualizar(e.archivoId, 'experiencia_' + e.empleador + '.pdf')"
+                    >
+                      <span class="material-symbols-outlined icon-sm">visibility</span>
+                      <span>Previsualizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
                       (click)="onDescargar(e.archivoId, 'experiencia_' + e.empleador + '.pdf')"
                       [attr.data-testid]="'btn-descargar-experiencia-' + e.id"
                     >
-                      Descargar Respaldo
+                      <span class="material-symbols-outlined icon-sm">download</span>
+                      <span>Descargar Respaldo</span>
                     </button>
                   } @else {
                     <span class="sin-respaldo">Sin respaldo adjunto</span>
@@ -622,7 +712,8 @@ export type TabExpediente =
                     (click)="onMarcarItem('experiencia', e.id, e.cargo + ' en ' + e.empleador)"
                     [attr.data-testid]="'btn-marcar-experiencia-' + e.id"
                   >
-                    ⚠️ Marcar Ítem
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
@@ -671,7 +762,7 @@ export type TabExpediente =
           }
           <div class="items-lista">
             @for (r of hojaDeVida().referencias; track r.id) {
-              <div class="item-card" [attr.data-testid]="'item-referencia-' + r.id">
+              <div class="item-card glass-card" [attr.data-testid]="'item-referencia-' + r.id">
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -681,7 +772,10 @@ export type TabExpediente =
                   [claveDestino]="r.id"
                 />
                 <div class="item-header">
-                  <strong>{{ r.nombresApellidos }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary">groups</span>
+                    <strong>{{ r.nombresApellidos }}</strong>
+                  </div>
                   <div>
                     @if (nombreSubindice(r.subindiceSeccionId); as nomSub) {
                       <span class="badge badge-info">{{ nomSub }}</span>
@@ -708,13 +802,14 @@ export type TabExpediente =
                     (click)="onMarcarItem('referencia', r.id, r.nombresApellidos)"
                     [attr.data-testid]="'btn-marcar-referencia-' + r.id"
                   >
-                    ⚠️ Marcar Ítem
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
             } @empty {
               <p class="text-muted empty-msg">
-                No se registran referencias personales o familiares.
+                No se registran referencias personales o profesionales.
               </p>
             }
           </div>
@@ -734,7 +829,7 @@ export type TabExpediente =
           />
           <div class="items-lista">
             @for (arc of archivos(); track arc.id) {
-              <div class="item-card" [attr.data-testid]="'item-documento-' + arc.id">
+              <div class="item-card glass-card" [attr.data-testid]="'item-documento-' + arc.id">
                 <app-observaciones-revision
                   [observaciones]="observaciones()"
                   [hojaDeVida]="hojaDeVida()"
@@ -744,7 +839,10 @@ export type TabExpediente =
                   [claveDestino]="arc.id"
                 />
                 <div class="item-header">
-                  <strong>{{ arc.nombreOriginal }}</strong>
+                  <div class="item-title-row">
+                    <span class="material-symbols-outlined icon-md text-primary">description</span>
+                    <strong>{{ arc.nombreOriginal }}</strong>
+                  </div>
                   <span class="badge badge-secondary"
                     >{{ (arc.tamanoBytes / 1024).toFixed(1) }} KB</span
                   >
@@ -760,10 +858,19 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-secondary btn-sm"
+                    (click)="onPrevisualizar(arc.id, arc.nombreOriginal)"
+                  >
+                    <span class="material-symbols-outlined icon-sm">visibility</span>
+                    <span>Previsualizar</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
                     (click)="onDescargar(arc.id, arc.nombreOriginal)"
                     [attr.data-testid]="'btn-descargar-archivo-' + arc.id"
                   >
-                    Descargar
+                    <span class="material-symbols-outlined icon-sm">download</span>
+                    <span>Descargar</span>
                   </button>
                   <button
                     type="button"
@@ -772,7 +879,8 @@ export type TabExpediente =
                     (click)="onMarcarItem('documento', arc.id, arc.nombreOriginal)"
                     [attr.data-testid]="'btn-marcar-documento-' + arc.id"
                   >
-                    ⚠️ Marcar Ítem / Archivo
+                    <span class="material-symbols-outlined icon-xs">edit_note</span>
+                    <span>Solicitar corrección</span>
                   </button>
                 </div>
               </div>
@@ -784,33 +892,49 @@ export type TabExpediente =
           </div>
         </div>
       }
-      <!-- Modal Vincular por Ayuda -->
+
+      <!-- Modal Centrado y Accesible de Vincular por Ayuda -->
       @if (modalAyudaObligatoria()) {
-        <div class="modal-backdrop" data-testid="modal-vincular-ayuda">
-          <div class="modal-card">
-            <h4>Vincular por ayuda del supervisor</h4>
-            <p>
-              Vincular una capacitación registrada de la persona a:
-              <strong>{{ modalAyudaObligatoria()!.nombre }}</strong>
-            </p>
-            <div class="form-group mb-3">
-              <label for="selectCapAyuda">Seleccionar Capacitación</label>
-              <select
-                id="selectCapAyuda"
-                class="form-control"
-                [ngModel]="capacitacionAyudaSeleccionada()"
-                (ngModelChange)="capacitacionAyudaSeleccionada.set($event)"
-                data-testid="select-ayuda-capacitacion"
+        <div class="modal-overlay" data-testid="modal-vincular-ayuda">
+          <div class="modal-dialog">
+            <header class="modal-header">
+              <h4 class="modal-title">
+                <span class="material-symbols-outlined icon-md text-primary">link</span>
+                <span>Vincular por ayuda del supervisor</span>
+              </h4>
+              <button
+                type="button"
+                class="btn-close"
+                (click)="cerrarModalAyuda()"
+                aria-label="Cerrar modal"
               >
-                <option value="">-- Seleccione una capacitación --</option>
-                @for (c of capacitacionesDisponibles(); track c.id) {
-                  <option [value]="c.id">
-                    {{ c.nombreEvento }} ({{ c.institucionOrganizadora }})
-                  </option>
-                }
-              </select>
+                ✕
+              </button>
+            </header>
+            <div class="modal-body">
+              <p>
+                Vincular una capacitación registrada del colaborador con el requisito obligatorio:
+                <strong>{{ modalAyudaObligatoria()!.nombre }}</strong>
+              </p>
+              <div class="form-group mb-3">
+                <label for="selectCapAyuda">Seleccionar Capacitación Registrada</label>
+                <select
+                  id="selectCapAyuda"
+                  class="form-control"
+                  [ngModel]="capacitacionAyudaSeleccionada()"
+                  (ngModelChange)="capacitacionAyudaSeleccionada.set($event)"
+                  data-testid="select-ayuda-capacitacion"
+                >
+                  <option value="">-- Seleccione una capacitación --</option>
+                  @for (c of capacitacionesDisponibles(); track c.id) {
+                    <option [value]="c.id">
+                      {{ c.nombreEvento }} ({{ c.institucionOrganizadora }})
+                    </option>
+                  }
+                </select>
+              </div>
             </div>
-            <div class="modal-botones">
+            <footer class="modal-footer">
               <button type="button" class="btn btn-secondary btn-sm" (click)="cerrarModalAyuda()">
                 Cancelar
               </button>
@@ -821,70 +945,16 @@ export type TabExpediente =
                 (click)="confirmarVincularAyuda()"
                 data-testid="btn-confirmar-ayuda"
               >
-                Confirmar Vínculo
+                <span class="material-symbols-outlined icon-sm">check</span>
+                <span>Confirmar Vínculo</span>
               </button>
-            </div>
+            </footer>
           </div>
         </div>
       }
     </div>
   `,
   styles: `
-    .btn-primary {
-      background: #2563eb;
-      color: #ffffff;
-      border-color: #1d4ed8;
-    }
-    .btn-primary:hover {
-      background: #1d4ed8;
-    }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-    .modal-card {
-      background: #ffffff;
-      border-radius: 8px;
-      padding: 1.5rem;
-      max-width: 500px;
-      width: 100%;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    .modal-card h4 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.125rem;
-      color: #0f172a;
-    }
-    .modal-card p {
-      font-size: 0.875rem;
-      color: #475569;
-      margin: 0 0 1rem 0;
-    }
-    .modal-botones {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.75rem;
-    }
-    .form-control {
-      width: 100%;
-      padding: 0.5rem 0.75rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      background-color: #ffffff;
-    }
-    .mb-3 {
-      margin-bottom: 0.75rem;
-    }
-    .mb-4 {
-      margin-bottom: 1rem;
-    }
     .expediente-secciones-container {
       margin-top: 1rem;
     }
@@ -892,36 +962,46 @@ export type TabExpediente =
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      border-bottom: 2px solid #e2e8f0;
-      margin-bottom: 1.25rem;
+      border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.25rem;
     }
     .tab-btn {
-      padding: 0.6rem 1rem;
+      padding: 0.65rem 1.15rem;
       border: none;
-      background: none;
-      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: var(--radius-sm, 8px) var(--radius-sm, 8px) 0 0;
+      font-size: 0.875rem;
       font-weight: 600;
       color: #64748b;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -0.25rem;
+      transition: all var(--transition-fast, 180ms ease);
     }
     .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.95);
       color: #0f172a;
     }
     .tab-btn.active {
-      color: #1e3a8a;
-      border-bottom-color: #1e3a8a;
+      color: #4338ca;
+      background: #ffffff;
+      border-bottom-color: #6366f1;
+      box-shadow: 0 -2px 10px rgba(99, 102, 241, 0.1);
     }
     .tab-panel {
       padding: 0.5rem 0;
     }
     .subtitulo-seccion {
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 700;
-      color: #334155;
-      margin-bottom: 0.75rem;
+      color: #1e293b;
+      margin-bottom: 0.85rem;
     }
     .ficha-grid {
       display: grid;
@@ -929,10 +1009,12 @@ export type TabExpediente =
       gap: 1rem;
     }
     .card-dato {
-      background: #f8fafc;
-      padding: 0.75rem 1rem;
-      border-radius: 0.375rem;
-      border: 1px solid #e2e8f0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius-sm, 8px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
@@ -943,11 +1025,12 @@ export type TabExpediente =
     .label {
       font-size: 0.75rem;
       color: #64748b;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
+      letter-spacing: 0.025em;
     }
     .valor {
-      font-size: 0.9rem;
+      font-size: 0.925rem;
       color: #0f172a;
     }
     .texto-perfil {
@@ -957,24 +1040,39 @@ export type TabExpediente =
     .items-lista {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.85rem;
     }
     .item-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 0.375rem;
-      padding: 0.875rem 1rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-md, 12px);
+      padding: 1.15rem 1.35rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.65rem;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+      transition: all var(--transition-fast, 180ms ease);
+    }
+    .item-card:hover {
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      border-color: rgba(99, 102, 241, 0.3);
     }
     .item-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .item-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .item-body {
-      font-size: 0.85rem;
+      font-size: 0.875rem;
       color: #475569;
     }
     .item-meta {
@@ -982,77 +1080,50 @@ export type TabExpediente =
     }
     .item-contacto {
       margin: 0.25rem 0 0 0;
-      font-size: 0.8rem;
+      font-size: 0.8125rem;
       color: #64748b;
     }
     .item-actions {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.25rem;
+      gap: 0.65rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
     }
     .sin-respaldo {
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: #94a3b8;
       font-style: italic;
     }
     .empty-msg {
-      padding: 1.5rem;
+      padding: 2rem;
       text-align: center;
+      color: #64748b;
     }
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
+    .text-primary {
+      color: #4338ca;
     }
-    .badge-info {
-      background: #e0f2fe;
-      color: #0369a1;
+    .text-amber {
+      color: #d97706;
     }
-    .badge-success {
-      background: #dcfce7;
-      color: #15803d;
-    }
-    .badge-warning {
-      background: #fef3c7;
-      color: #b45309;
-    }
-    .badge-secondary {
-      background: #f1f5f9;
-      color: #475569;
-    }
-    .btn {
-      padding: 0.35rem 0.75rem;
-      border-radius: 0.375rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.15s ease-in-out;
-    }
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #334155;
-      border-color: #cbd5e1;
-    }
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-    .btn-warning {
-      background: #fffbeb;
-      color: #b45309;
-      border-color: #fde68a;
-    }
-    .btn-warning:hover {
-      background: #fef3c7;
-    }
-    .ml-2 {
-      margin-left: 0.5rem;
-    }
-    .mt-4 {
-      margin-top: 1rem;
+    @media (max-width: 768px) {
+      .ficha-grid {
+        grid-template-columns: 1fr;
+      }
+      .col-span-2 {
+        grid-column: span 1;
+      }
+      .secciones-tabs {
+        flex-direction: column;
+      }
+      .tab-btn {
+        width: 100%;
+        border-radius: var(--radius-sm, 8px);
+        border-bottom: none;
+      }
+      .tab-btn.active {
+        border-left: 3px solid #6366f1;
+      }
     }
   `,
 })
@@ -1064,6 +1135,7 @@ export class ExpedienteSeccionesComponent {
   readonly puedeVincularPorAyuda = input<boolean>(true);
 
   readonly descargar = output<{ archivoId: string; nombreOriginal: string }>();
+  readonly previsualizar = output<{ archivoId: string; nombreOriginal: string }>();
   readonly marcarItem = output<{ tipo: string; clave: string; label: string }>();
   readonly vincularPorAyuda = output<{ obligatoriaId: string; capacitacionId: string }>();
 
@@ -1091,6 +1163,10 @@ export class ExpedienteSeccionesComponent {
 
   onDescargar(archivoId: string, nombreOriginal: string): void {
     this.descargar.emit({ archivoId, nombreOriginal });
+  }
+
+  onPrevisualizar(archivoId: string, nombreOriginal: string): void {
+    this.previsualizar.emit({ archivoId, nombreOriginal });
   }
 
   onMarcarItem(tipoItem: string, id: string, label: string): void {
