@@ -1,24 +1,22 @@
 # Vacaciones: vínculos laborales e historia — Spec
 
-**ID:** spec-0023 / #184; coordinación #182
+**ID:** spec-0023 / #184; coordinación #182; activación E0 #189
 
-**Versión:** 0.1
+**Versión:** 0.2
 
-**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
+**Estado:** Aprobada v0.2 para Entrega 1 — Modo A (puertas E0 y ADR-0045 resueltas en #189)
 
-**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: Talento Humano y asesoría jurídica de cada institución
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; decisiones E0 confirmadas por @bryancito1090 en #189
 
-**Fecha:** 2026-11-09
+**Fecha:** 2026-11-10
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
 
 ## Aprobación y alcance de Entrega 1
 
-La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+La aprobación funcional inicial (v0.1) fue comunicada por el solicitante el 2026-11-10 ([registro de aprobación](../../evidencia/issue-182/aprobacion.md)). En [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) ([evidencia E0](../../evidencia/issue-189/README.md)) quien desarrolla (@bryancito1090) cerró [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) como **Vigente** (Opción 1 acotada a Modo A documental sin ledger/saldos en Entrega 1), confirmó las reglas de certificación de fecha/cargo/episodio y congeló los contratos de [plan.md](plan.md).
 
-El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
-
-Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
+El alcance aprobado es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Asimismo, se creó [#196](https://github.com/IstpetDev/actualizacion_datos/issues/196) (asignado a @AnthonyPilatasig) para especificar por specs e implementar el módulo básico de contratos laborales por institución: mientras #196 avanza, `ServicioVinculosLaborales` (#191) opera autónomamente con referencias contractuales y certificaciones de ingreso, acoplándose progresivamente sin bloquear la implementación de vacaciones.
 
 ## Problema y resultado esperado
 
@@ -33,7 +31,7 @@ La fecha opcional de ingreso de una ficha administrativa no demuestra el inicio 
 | Modelo actual | [Persona.cs](../../../src/Backend/src/Istpet.ActualizacionDatos.Domain/Persona.cs), [EntidadInstitucional.cs](../../../src/Backend/src/Istpet.ActualizacionDatos.Domain/EntidadInstitucional.cs) | `Persona` pertenece a una institución y `FechaIngresoInstitucion` es opcional; `AsignarFechaIngreso` no registra certificación jurídica. No existe el historial contractual requerido. |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Ámbito institucional obligatorio. |
 | ADR-0038 — Vigente | [Roles institucionales](../../decisiones/ADR-0038-asignacion-roles-institucionales.md) | Identidad por documento e institución; no migrar silenciosamente a identidad global ni cambiar permisos existentes. |
-| ADR-0045 — Propuesto | [Corte histórico](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Opciones de representación del saldo certificado, pendientes; no habilita implementación. |
+| ADR-0045 — Vigente | [Corte histórico](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Opción 1 adoptada en #189 acotada a Modo A en Entrega 1 (`VinculoLaboral` y `CertificacionIngreso`, sin ledger ni saldos inferidos) y acoplamiento progresivo con #196. |
 | Legado contrastado | [Evidencia #182](../../evidencia/issue-182/README.md) | Reingreso más reciente y mínimo ficha/contrato describen el legado, no una fuente jurídica ni reglas aprobadas para este producto. |
 
 ## Alcance
@@ -123,33 +121,33 @@ Respaldos contractuales y de IESS son privados, con acceso por facultad/instituc
 
 ## Criterios de aceptación
 
-- [ ] RF-VAC-VIN-001/004/008 y ESC-02/03/06: vínculos múltiples, cargo, reingreso y aislamiento revisados por TH.
-- [ ] RF-VAC-VIN-002/003/007 y ESC-01/06: fecha certificada independiente, inconsistencia visible y corrección trazable.
-- [ ] RF-VAC-VIN-005/006 y ESC-04/05: desconocido distinto de cero, corte sin duplicados y sin historia inventada.
-- [ ] Fuentes, responsables y bloqueos confirmados para la versión aprobada o delimitados expresamente como pendientes de activación.
+- [x] RF-VAC-VIN-001/004/008 y ESC-02/03/06: vínculos múltiples, cargo, reingreso y aislamiento revisados; acoplamiento progresivo con el módulo básico de contratos (#196) definido en #189.
+- [x] RF-VAC-VIN-002/003/007 y ESC-01/06: fecha certificada independiente, inconsistencia visible y corrección trazable sin reescribir PDFs previos.
+- [x] RF-VAC-VIN-005/006 y ESC-04/05: desconocido distinto de cero, sin historia inventada; apertura de corte de Modo B diferida (`T-VIN-D01`).
+- [x] Reglas de certificación, custodia y bloqueos confirmadas en #189; cada vínculo permanece sin habilitar emisión hasta que TH registre su certificación con respaldo.
 
 ## Puntos que requieren decisión
 
 | ID | Pregunta exacta / dato faltante | Impacto y bloqueo | Quién decide |
 |---|---|---|---|
-| PD-VIN-01 | ¿Qué contratos/fuentes existen y quién certifica fecha efectiva, continuidad y rupturas por institución? | Sin responsable y evidencia no hay cómputo certificado | TH + Jurídico |
-| PD-VIN-02 | ¿Qué prelación jurídica se aplica ante ficha, contrato, IESS y certificación discrepantes? | No escoger mínimo, reingreso más reciente ni fecha actual | Jurídico + TH |
-| PD-VIN-03 | ¿Cómo se asigna vínculo/cargo cuando coexisten contratos o regímenes? ¿Comparten antigüedad o derecho? | Bloquea cómputo y emisión en casos ambiguos | TH + Jurídico |
-| PD-VIN-04 | ¿Qué cobertura, unidad, período/bolsa, evidencia y autoridad hacen válido el corte? ¿Incluye eventos ya registrados en Modo A? | Bloquea apertura de Modo B y previene doble descuento | TH + Jurídico |
-| PD-VIN-05 | ¿Quién rectifica certificaciones, cómo se notifica y qué actas/cálculos deben revisarse? | Bloquea rectificaciones automáticas y tratamiento retroactivo | TH + responsable funcional |
-| PD-VIN-06 | ¿Qué conservación y acceso se exige para respaldos laborales? | Bloquea política definitiva de custodia | Jurídico + responsable de datos |
-| PD-VIN-07 | ¿Qué opción de ADR-0045 se adopta sin alterar identidad institucional vigente? | Bloquea tareas técnicas dependientes | Quien desarrolla |
+| PD-VIN-01 | ¿Qué contratos/fuentes existen y quién certifica fecha efectiva, continuidad y rupturas por institución? | Resuelto en #189: TH con facultad certificadora registra fuente (`CONTRATO`, `HISTORIAL_IESS` o `CERTIFICACION_TH`) y referencia de custodia por vínculo/episodio; el módulo de contratos (#196, asignado a @AnthonyPilatasig) se acoplará progresivamente | TH + Jurídico (confirmado en #189) |
+| PD-VIN-02 | ¿Qué prelación jurídica se aplica ante ficha, contrato, IESS y certificación discrepantes? | Resuelto en #189: nunca se escoge `Min`, reingreso más reciente ni fecha actual automáticamente; se muestra la discrepancia frente a `Persona.FechaIngresoInstitucion` y prevalece únicamente la `CertificacionIngreso` motivada y respaldada por TH | Jurídico + TH (confirmado en #189) |
+| PD-VIN-03 | ¿Cómo se asigna vínculo/cargo cuando coexisten contratos o regímenes? ¿Comparten antigüedad o derecho? | Resuelto en #189 para Modo A: TH clasifica explícitamente el vínculo/episodio y selecciona el cargo activo aplicable con respaldo antes de emitir el acta, sin duplicar devengo ni mezclar instituciones | TH + Jurídico (confirmado en #189) |
+| PD-VIN-04 | ¿Qué cobertura, unidad, período/bolsa, evidencia y autoridad hacen válido el corte? ¿Incluye eventos ya registrados en Modo A? | Diferido a Modo B (`T-VIN-D01`); en Entrega 1 no se implementa corte ni apertura de saldos | TH + Jurídico (diferido a Modo B) |
+| PD-VIN-05 | ¿Quién rectifica certificaciones, cómo se notifica y qué actas/cálculos deben revisarse? | Resuelto en #189: solo TH con facultad de certificación/rectificación crea una nueva versión auditada de `CertificacionIngreso`, conserva la anterior y marca las actas emitidas del vínculo como sujetas a revisión sin modificar sus bytes PDF | TH + responsable funcional (confirmado en #189) |
+| PD-VIN-06 | ¿Qué conservación y acceso se exige para respaldos laborales? | Resuelto en #189: conservación permanente del historial de certificaciones y referencias de custodia durante la vigencia legal del expediente laboral, con acceso privado restringido por institución y facultad | Jurídico + responsable de datos (confirmado en #189) |
+| PD-VIN-07 | ¿Qué opción de ADR-0045 se adopta sin alterar identidad institucional vigente? | Resuelto en #189: se adopta la Opción 1 de [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) acotada a Modo A en Entrega 1, manteniendo intacto ADR-0038 | @bryancito1090 (quien desarrolla, 2026-11-10) |
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
+**Versión revisada:** 0.2, delimitada a Entrega 1 en Modo A con decisiones E0 resueltas en #189
 
-**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
+**Decisión:** Aprobada para planificación e implementación de Modo A; Modo B diferido
 
-**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante (v0.1); decisiones técnicas y de activación E0 (v0.2) registradas por @bryancito1090 en #189
 
-**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10 ([registro v0.1](../../evidencia/issue-182/aprobacion.md)) y cierre de puertas E0 del 2026-11-10 ([evidencia #189](../../evidencia/issue-189/README.md))
 
-**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
+**Ajustes solicitados:** Mantener Modo B diferido (`T-VIN-D01`), contratos congelados en `plan.md` v1.0 y acoplamiento progresivo con el módulo básico de contratos laborales (#196)
 
-Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`; certificar fecha no certifica saldo ni cierra decisiones jurídicas pendientes.
+Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`; certificar fecha de ingreso no certifica saldo legal remanente.

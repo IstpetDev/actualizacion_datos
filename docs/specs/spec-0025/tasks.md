@@ -1,31 +1,35 @@
 # Acta PDF y firma física — Tareas
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [puertas E0 resueltas en #189](../../evidencia/issue-189/README.md).
 
-**Plan:** [plan.md](plan.md) v0.1. **Estado:** backlog documental preparado y publicación autorizada; implementación no iniciada. No se afirma aprobación de una opción técnica pendiente ni ejecución de pruebas futuras.
+**Plan:** [plan.md](plan.md) v1.0. **Estado:** puertas E0 (`T-ACT-00` y ADR-0046) resueltas en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) y contratos congelados; tareas `T-ACT-01` (#193), `T-ACT-02` (#194) y `T-ACT-03` (#195) listas para implementación secuencial tras #190–#192.
 
 ## Matriz de dependencias
 
 | Tarea | Requisitos | Depende de | Paralelismo | Dueño funcional/técnico |
 |---|---|---|---|---|
-| T-ACT-00 | Todos los requisitos del área | E0: decisiones registradas y activación institucional | Ninguno sobre archivos compartidos | Responsable técnico; TH/Jurídico aporta datos |
-| T-ACT-01 | RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-007 RF-VAC-ACT-009 | T-ACT-00; T-SAL-01, contenido/numeración/custodia definidos y ADR-0046 decidido | Secuencial | Responsable técnico de E4, por asignar |
-| T-ACT-02 | RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010 | T-ACT-00; T-ACT-01, método/evidencia/autoridades aprobados | Secuencial | Responsable técnico de E5, por asignar |
-| T-ACT-03 | RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-003 RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-007 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010 | T-ACT-00; T-ACT-01/02 y todas las API/contratos generados | Secuencial | Responsable técnico de E6, por asignar |
+| T-ACT-00 | Todos los requisitos del área | Completada en #189 (E0: decisiones registradas y contratos congelados) | Ninguno sobre archivos compartidos | `@bryancito1090`; TH/Jurídico |
+| T-ACT-01 | RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-007 RF-VAC-ACT-009 | T-ACT-00 (completada en #189); T-SAL-01 (#192) y ADR-0046 vigente | Secuencial | Responsable técnico de E4 (#193) |
+| T-ACT-02 | RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010 | T-ACT-00 (completada en #189); T-ACT-01 (#193) | Secuencial | Responsable técnico de E5 (#194) |
+| T-ACT-03 | RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-003 RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-007 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010 | T-ACT-00 (completada en #189); T-ACT-01 (#193), T-ACT-02 (#194) y API/contratos generados | Secuencial | Responsable técnico de E6 (#195) |
 
 ## T-ACT-00 — Condiciones previas
 
-**Estado:** Bloqueada por ADR/datos de activación; referencia E0 en [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** quien desarrolla y autoridad/TH/Jurídico según pregunta.
+**Estado:** Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0); referencia en [backlog](../../evidencia/issue-182/backlog.md) y [evidencia #189](../../evidencia/issue-189/README.md). **Responsable:** `@bryancito1090` y autoridad/TH/Jurídico.
 
-Revisar PD-ACT-01/02/03/04/05/06/07/08, resolver ADR dependientes sin cierre autónomo del agente y registrar alcance/valores autorizados. Contratos del plan son propuestas hasta esa revisión. Validación documental: estado del ADR, referencia de decisión y política institucional, sin subir informe físico ni datos reales. El resultado es una puerta de ejecución explícita, no un módulo habilitado. No editar producción en esta tarea documental.
+Se resolvieron PD-ACT-01/02/03/04/05/06/07/08, se aprobó [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) (Opción 1, estado `Vigente` para Modo A) y se congelaron los contratos en [plan.md](plan.md#diseño-y-contratos). Se exige doble firma manuscrita, verificación por operador autorizado distinto de la persona trabajadora titular con método y respaldo trazable (archivo privado `PDF`/`JPG`/`PNG` <= 10 MB, referencia física verificable o excepción motivada autorizada), numeración correlativa anual por institución sin reutilizar anulados, retención histórica permanente y escritura consistente BD + `IAlmacenArchivos` con SHA-256.
+
+- [x] Registrar decisión expresa sobre ADR-0046 (Opción 1, `Vigente` para Modo A).
+- [x] Confirmar firmas requeridas, método de verificación, respaldo/referencia física/excepción autorizada, numeración, retención/acceso histórico y recuperación base/archivos en `spec.md` v0.2 y `docs/evidencia/issue-189/README.md`.
+- [x] Congelar contratos propuestos en `plan.md` v1.0 antes de implementar consumidores (#193, #194, #195).
 
 ## T-ACT-01 — Emitir PDF inmutable por versión
 
-**Backlog:** E4, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E4 ([#193](https://github.com/IstpetDev/actualizacion_datos/issues/193)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Lista para ejecución tras E3 (#192) — puertas E0 y ADR-0046 resueltas en #189. **Responsable:** desarrollador asignado a #193; integrador técnico valida entrega.
 
-**Área y rama:** Backend; rama futura `feature/<numero-issue>-vacaciones-act-01` desde develop actualizado.
+**Área y rama:** Backend; rama futura `feature/193-vacaciones-act-01` desde develop actualizado.
 
-**Entrada/contrato:** T-SAL-01, contenido/numeración/custodia definidos y ADR-0046 decidido. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-007 RF-VAC-ACT-009.
+**Entrada/contrato:** T-SAL-01 (#192), contenido/numeración/custodia definidos y ADR-0046 vigente (#189). DTO y errores congelados en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-007 RF-VAC-ACT-009.
 
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/ActaVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/VersionActaVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/VerificacionFirmaFisica.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Modelos/ModelosActaVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Servicios/IServicioActasVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Documentos/IServicioGeneracionPdfActaVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioActasVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Documentos/GeneradorPdfActaVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/ActaVacacionesConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/VerificacionFirmaFisicaConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.WebApi/Endpoints/ActasVacacionesEndpoints.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/ActaVacacionesTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/ActasVacacionesTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/GeneradorPdfActaVacacionesTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Integracion/ActasVacacionesIntegracionTests.cs`.
 
@@ -46,11 +50,11 @@ Los archivos compartidos enumerados en el plan solo se modifican en el turno sec
 
 ## T-ACT-02 — Verificar, observar y corregir con historia
 
-**Backlog:** E5, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E5 ([#194](https://github.com/IstpetDev/actualizacion_datos/issues/194)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Lista para ejecución tras `T-ACT-01` (#193) — puertas E0 y ADR-0046 resueltas en #189. **Responsable:** desarrollador asignado a #194; integrador técnico valida entrega.
 
-**Área y rama:** Backend; rama futura `feature/<numero-issue>-vacaciones-act-02` desde develop actualizado.
+**Área y rama:** Backend; rama futura `feature/194-vacaciones-act-02` desde develop actualizado.
 
-**Entrada/contrato:** T-ACT-01, método/evidencia/autoridades aprobados. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010.
+**Entrada/contrato:** T-ACT-01 (#193), método/evidencia/autoridades aprobados en #189. DTO y errores congelados en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010.
 
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/VerificacionFirmaFisica.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Servicios/IServicioActasVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioActasVacaciones.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/VerificacionFirmaFisicaConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.WebApi/Endpoints/ActasVacacionesEndpoints.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/ActasVacacionesTests.cs`.
 
@@ -71,11 +75,11 @@ Los archivos compartidos enumerados en el plan solo se modifican en el turno sec
 
 ## T-ACT-03 — Recorrido de trabajador y operador con evidencia E2E
 
-**Backlog:** E6, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E6 ([#195](https://github.com/IstpetDev/actualizacion_datos/issues/195)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Lista para ejecución tras `T-ACT-01` (#193) y `T-ACT-02` (#194) — puertas E0 y ADR-0046 resueltas en #189. **Responsable:** desarrollador asignado a #195; integrador técnico valida entrega.
 
-**Área y rama:** Frontend; rama futura `feature/<numero-issue>-vacaciones-act-03` desde develop actualizado.
+**Área y rama:** Frontend; rama futura `feature/195-vacaciones-act-03` desde develop actualizado.
 
-**Entrada/contrato:** T-ACT-01/02 y todas las API/contratos generados. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-003 RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-007 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010.
+**Entrada/contrato:** T-ACT-01 (#193), T-ACT-02 (#194) y todas las API/contratos generados. DTO y errores congelados en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-ACT-001 RF-VAC-ACT-002 RF-VAC-ACT-003 RF-VAC-ACT-004 RF-VAC-ACT-005 RF-VAC-ACT-006 RF-VAC-ACT-007 RF-VAC-ACT-008 RF-VAC-ACT-009 RF-VAC-ACT-010.
 
 **Archivos exclusivos:** `src/Frontend/src/app/features/vacaciones/actas-vacaciones.component.ts`; `src/Frontend/src/app/features/vacaciones/mis-actas-vacaciones.component.ts`; `src/Frontend/src/app/features/vacaciones/actas-vacaciones.component.spec.ts`; `src/Frontend/src/app/features/vacaciones/mis-actas-vacaciones.component.spec.ts`.
 

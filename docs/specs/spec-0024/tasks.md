@@ -1,31 +1,31 @@
 # Períodos, calendario y registro sin saldo — Tareas
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md).
 
-**Plan:** [plan.md](plan.md) v0.1. **Estado:** backlog documental preparado y publicación autorizada; implementación no iniciada. No se afirma aprobación de una opción técnica pendiente ni ejecución de pruebas futuras.
+**Plan:** [plan.md](plan.md) v1.0. **Estado:** puerta `T-SAL-00` resuelta en #189 y contratos congelados; tareas `T-SAL-01` y `T-SAL-02` desbloqueadas en cuanto a ADR/E0 y listas tras `T-VIN-01` (#191) para implementación en [#192](https://github.com/IstpetDev/actualizacion_datos/issues/192).
 
 ## Matriz de dependencias
 
 | Tarea | Requisitos | Depende de | Paralelismo | Dueño funcional/técnico |
 |---|---|---|---|---|
-| T-SAL-00 | Todos los requisitos del área | E0: decisiones registradas y activación institucional | Ninguno sobre archivos compartidos | Responsable técnico; TH/Jurídico aporta datos |
-| T-SAL-01 | RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-007 RF-VAC-SAL-008 RF-VAC-SAL-009 | T-SAL-00; T-VIN-01, política de solapes y ADR-0045 revisado/decidido para A | Secuencial | Responsable técnico de E3, por asignar |
-| T-SAL-02 | RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-008 RF-VAC-SAL-009 | T-SAL-00; T-SAL-01 y cliente regenerado | Secuencial | Responsable técnico de E3, por asignar |
+| T-SAL-00 | Todos los requisitos del área | Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) | Ninguno sobre archivos compartidos | @bryancito1090; política TH/Jurídico registrada |
+| T-SAL-01 | RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-007 RF-VAC-SAL-008 RF-VAC-SAL-009 | T-SAL-00 (resuelta en #189); T-VIN-01 (#191), política de solapes y ADR-0045 Vigente | Secuencial | @bryancito1090 (#192) |
+| T-SAL-02 | RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-008 RF-VAC-SAL-009 | T-SAL-00 (resuelta en #189); T-SAL-01 y cliente regenerado | Secuencial | @bryancito1090 (#192) |
 | T-SAL-D01 | RF-VAC-SAL-003, RF-VAC-SAL-006 | Futura aprobación de Modo B | No ejecutable en Entrega 1 | Fuera de backlog de implementación A |
 
 ## T-SAL-00 — Condiciones previas
 
-**Estado:** Bloqueada por ADR/datos de activación; referencia E0 en [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** quien desarrolla y autoridad/TH/Jurídico según pregunta.
+**Estado:** Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0); véase [evidencia de #189](../../evidencia/issue-189/README.md) y [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** @bryancito1090 y autoridad/TH/Jurídico según pregunta.
 
-Revisar PD-SAL-02/04/05/06/07/08, resolver ADR dependientes sin cierre autónomo del agente y registrar alcance/valores autorizados. Contratos del plan son propuestas hasta esa revisión. Validación documental: estado del ADR, referencia de decisión y política institucional, sin subir informe físico ni datos reales. El resultado es una puerta de ejecución explícita, no un módulo habilitado. No editar producción en esta tarea documental.
+Se revisaron PD-SAL-01 a PD-SAL-08, se cerró [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) como Vigente (Opción 1 acotada a Modo A en Entrega 1), se confirmó la política de solapes inclusivos y vínculos concurrentes y se congelaron los contratos de [plan.md](plan.md#diseño-y-contratos). No se editó código de producción en esta tarea documental.
 
 ## T-SAL-01 — Períodos certificados y eventos de Modo A
 
-**Backlog:** E3, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E3 ([#192](https://github.com/IstpetDev/actualizacion_datos/issues/192)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Puerta ADR/E0 resuelta en #189; espera secuencialmente a E2 (#191). **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Backend; rama futura `feature/<numero-issue>-vacaciones-sal-01` desde develop actualizado.
 
-**Entrada/contrato:** T-VIN-01, política de solapes y ADR-0045 revisado/decidido para A. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-007 RF-VAC-SAL-008 RF-VAC-SAL-009.
+**Entrada/contrato:** T-VIN-01 (#191) y contrato congelado en [plan.md](plan.md#diseño-y-contratos) tras E0 (#189). **Requisitos:** RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-007 RF-VAC-SAL-008 RF-VAC-SAL-009.
 
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/PeriodoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/EventoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Modelos/ModelosPeriodoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Servicios/IServicioPeriodosVacacionales.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioPeriodosVacacionales.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/PeriodoVacacionalConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.WebApi/Endpoints/PeriodosVacacionalesEndpoints.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/PeriodoVacacionalTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/PeriodosVacacionalesTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Integracion/PeriodosVacacionalesIntegracionTests.cs`.
 
@@ -46,11 +46,11 @@ Los archivos compartidos enumerados en el plan solo se modifican en el turno sec
 
 ## T-SAL-02 — Presentar fechas, procedencia y ausencia de saldo
 
-**Backlog:** E3, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E3 ([#192](https://github.com/IstpetDev/actualizacion_datos/issues/192)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Puerta ADR/E0 resuelta en #189; espera secuencialmente a T-SAL-01. **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Frontend; rama futura `feature/<numero-issue>-vacaciones-sal-02` desde develop actualizado.
 
-**Entrada/contrato:** T-SAL-01 y cliente regenerado. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-008 RF-VAC-SAL-009.
+**Entrada/contrato:** T-SAL-01 y cliente regenerado según contrato congelado en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-SAL-001 RF-VAC-SAL-002 RF-VAC-SAL-004 RF-VAC-SAL-005 RF-VAC-SAL-008 RF-VAC-SAL-009.
 
 **Archivos exclusivos:** `src/Frontend/src/app/features/vacaciones/periodos-vacacionales.component.ts`; `src/Frontend/src/app/features/vacaciones/periodos-vacacionales.component.spec.ts`.
 

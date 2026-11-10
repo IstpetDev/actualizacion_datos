@@ -1,30 +1,30 @@
 # Marco y régimen — Tareas
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md).
 
-**Plan:** [plan.md](plan.md) v0.1. **Estado:** backlog documental preparado y publicación autorizada; implementación no iniciada. No se afirma aprobación de una opción técnica pendiente ni ejecución de pruebas futuras.
+**Plan:** [plan.md](plan.md) v1.0. **Estado:** puerta `T-MAR-00` resuelta en #189 y contratos congelados; tareas `T-MAR-01` y `T-MAR-02` desbloqueadas para implementación en [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190).
 
 ## Matriz de dependencias
 
 | Tarea | Requisitos | Depende de | Paralelismo | Dueño funcional/técnico |
 |---|---|---|---|---|
-| T-MAR-00 | Todos los requisitos del área | E0: decisiones registradas y activación institucional | Ninguno sobre archivos compartidos | Responsable técnico; TH/Jurídico aporta datos |
-| T-MAR-01 | RF-VAC-MAR-001 RF-VAC-MAR-002 RF-VAC-MAR-003 RF-VAC-MAR-007 | T-MAR-00; Contrato propuesto anterior; G0 debe fijar representación y designaciones | Secuencial | Responsable técnico de E1, por asignar |
-| T-MAR-02 | RF-VAC-MAR-004 RF-VAC-MAR-005 RF-VAC-MAR-006 | T-MAR-00; Salida de T-MAR-01 y cliente NSwag regenerado | Secuencial | Responsable técnico de E1, por asignar |
+| T-MAR-00 | Todos los requisitos del área | Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) | Ninguno sobre archivos compartidos | @bryancito1090; política TH/Jurídico registrada |
+| T-MAR-01 | RF-VAC-MAR-001 RF-VAC-MAR-002 RF-VAC-MAR-003 RF-VAC-MAR-007 | T-MAR-00 (resuelta en #189); contrato congelado en plan v1.0 | Secuencial | @bryancito1090 (#190) |
+| T-MAR-02 | RF-VAC-MAR-004 RF-VAC-MAR-005 RF-VAC-MAR-006 | T-MAR-00 (resuelta en #189); salida de T-MAR-01 y cliente NSwag regenerado | Secuencial | @bryancito1090 (#190) |
 
 ## T-MAR-00 — Condiciones previas
 
-**Estado:** Bloqueada por ADR/datos de activación; referencia E0 en [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** quien desarrolla y autoridad/TH/Jurídico según pregunta.
+**Estado:** Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0); véase [evidencia de #189](../../evidencia/issue-189/README.md) y [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** @bryancito1090 y autoridad/TH/Jurídico según pregunta.
 
-Revisar PD-MAR-01/02/03/04/06, resolver ADR dependientes sin cierre autónomo del agente y registrar alcance/valores autorizados. Contratos del plan son propuestas hasta esa revisión. Validación documental: estado del ADR, referencia de decisión y política institucional, sin subir informe físico ni datos reales. El resultado es una puerta de ejecución explícita, no un módulo habilitado. No editar producción en esta tarea documental.
+Se revisaron PD-MAR-01 a PD-MAR-06, se cerró [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) como Vigente (Opción 1 acotada a Modo A) y se congelaron los contratos de [plan.md](plan.md#diseño-y-contratos). Las instituciones sin fuente/cláusula ni delegaciones registradas permanecen en estado `PENDIENTE_CONFIRMACION` sin habilitar emisión ni verificación. No se editó código de producción en esta tarea documental.
 
 ## T-MAR-01 — Marco, fuentes y facultades en servidor
 
-**Backlog:** E1, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E1 ([#190](https://github.com/IstpetDev/actualizacion_datos/issues/190)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Lista para implementación (E0 y ADR-0044 resueltos en #189). **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Backend; rama futura `feature/<numero-issue>-vacaciones-mar-01` desde develop actualizado.
 
-**Entrada/contrato:** Contrato propuesto anterior; G0 debe fijar representación y designaciones. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-MAR-001 RF-VAC-MAR-002 RF-VAC-MAR-003 RF-VAC-MAR-007.
+**Entrada/contrato:** Contrato congelado en [plan.md](plan.md#diseño-y-contratos) tras resolver E0 (#189). **Requisitos:** RF-VAC-MAR-001 RF-VAC-MAR-002 RF-VAC-MAR-003 RF-VAC-MAR-007.
 
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/MarcoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/FacultadVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Modelos/ModelosMarcoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Servicios/IServicioMarcoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioMarcoVacacional.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/MarcoVacacionalConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.WebApi/Endpoints/MarcoVacacionalEndpoints.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/MarcoVacacionalTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Integracion/MarcoVacacionalIntegracionTests.cs`.
 
@@ -45,11 +45,11 @@ Los archivos compartidos enumerados en el plan solo se modifican en el turno sec
 
 ## T-MAR-02 — Presentar bloqueos, modo y límites de Entrega 1
 
-**Backlog:** E1, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E1 ([#190](https://github.com/IstpetDev/actualizacion_datos/issues/190)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Lista para implementación tras T-MAR-01 (E0 resuelta en #189). **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Frontend; rama futura `feature/<numero-issue>-vacaciones-mar-02` desde develop actualizado.
 
-**Entrada/contrato:** Salida de T-MAR-01 y cliente NSwag regenerado. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-MAR-004 RF-VAC-MAR-005 RF-VAC-MAR-006.
+**Entrada/contrato:** Salida de T-MAR-01 y cliente NSwag regenerado según contrato congelado en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-MAR-004 RF-VAC-MAR-005 RF-VAC-MAR-006.
 
 **Archivos exclusivos:** `src/Frontend/src/app/features/vacaciones/marco-vacacional.component.ts`; `src/Frontend/src/app/features/vacaciones/marco-vacacional.component.spec.ts`.
 

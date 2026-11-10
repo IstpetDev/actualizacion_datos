@@ -1,8 +1,8 @@
 # Acta PDF y firma física — Pruebas de punta a punta
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md). **Plan:** [plan.md](plan.md) v0.1.
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [puertas E0 resueltas en #189](../../evidencia/issue-189/README.md). **Plan:** [plan.md](plan.md) v1.0.
 
-**Responsable de ejecución:** desarrollador/revisor asignado al issue futuro. **Ambiente:** prueba local o staging aislado con Angular, API real y PostgreSQL; almacén privado de prueba. **Estado:** diseñado, pendiente de ejecución; #182 no implementa ni prueba el módulo.
+**Responsable de ejecución:** desarrollador/revisor asignado a #193/#194/#195. **Ambiente:** prueba local o staging aislado con Angular, API real y PostgreSQL; almacén privado de prueba. **Estado:** diseñado con contratos congelados en #189, pendiente de ejecución; #182/#189 no implementan ni prueban código de producción.
 
 ## Preparación
 
