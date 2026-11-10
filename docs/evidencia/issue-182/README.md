@@ -87,3 +87,11 @@ Ejecución 2026-11-10. Solo cambia documentación: no hay área de producción m
 | `gitleaks protect --staged --redact --no-banner` | `1 commits scanned`, `no leaks found` |
 
 El comprobador temporal no se añade como infraestructura de pruebas del producto. Sus cantidades se desglosan en spec-0022: 7 RF/4 escenarios; spec-0023: 8/6; spec-0024: 9/7; spec-0025: 10/6. La cobertura solo comprueba referencias y estructura documental, no ejecución ni corrección legal. La revisión funcional y los checks remotos del HEAD del PR son verificaciones distintas; CI verde no reemplaza aprobaciones.
+
+## PR y primera validación remota
+
+[PR #188](https://github.com/IstpetDev/actualizacion_datos/pull/188), en borrador hacia `develop`, rama `docs/182-planificacion-vacaciones`, milestone 3 «Módulo de vacaciones: planificación por specs». El conector permitió consultas, pero crear el PR devolvió `403 Resource not accessible by integration`; se creó con `gh` mediante la sesión disponible, sin modificar permisos ni configuración del repositorio.
+
+Primera comprobación remota mediante `gh pr checks 188 --watch --interval 10` y `gh run view 42819949262 --json status,conclusion,headSha,jobs`: ejecución [42819949262](https://github.com/IstpetDev/actualizacion_datos/actions/runs/42819949262), HEAD `e3b589df2ca06a19f6aae0ac310cd749050a5f01`, estado `completed`, conclusión `success`. Pasaron Detectar cambios, Política de ramas, Secretos/Gitleaks y `ci-ok`; se omitieron los seis trabajos ajenos a documentación mediante el filtro existente. `gh pr view 188` informó `MERGEABLE`, `CLEAN`, `isDraft=true`; #182 seguía `OPEN`.
+
+Este registro describe esa ejecución concreta, previa al commit que añade este párrafo. El HEAD posterior debe comprobarse de nuevo al actualizar el PR. No hay aprobación/revisión GitHub emitida como sustituto de la revisión funcional; no se fusiona, cierra issue ni elimina rama mientras falten criterios de #182/#187.
