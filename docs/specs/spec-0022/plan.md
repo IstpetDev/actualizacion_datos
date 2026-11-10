@@ -1,8 +1,8 @@
 # Marco y régimen — Plan de implementación
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md).
 
-**Versión del plan:** 0.1 — 2026-11-10. **Estado:** diseño documental preparado; ejecución futura condicionada a los ADR y datos institucionales indicados.
+**Versión del plan:** 1.0 — 2026-11-10. **Estado:** contratos congelados y puertas E0/ADR-0044 resueltas; listo para implementar `T-MAR-01` y `T-MAR-02` en [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190).
 
 **Áreas y tecnologías:** .NET 10 / Clean Architecture, EF Core y PostgreSQL, xUnit, Angular 22/pnpm y cliente NSwag existentes. No se seleccionan dependencias nuevas.
 
@@ -22,11 +22,11 @@ Se traza cada requisito/escenario; parcial o diferido significa que su component
 
 ## Diseño y contratos
 
-Propuesta condicionada a T-MAR-00: `GET /api/vacaciones/marco` devuelve modo `ACTA_SIN_SALDO`, referencias de régimen/fuente/versión, facultades efectivas y bloqueos de la institución de sesión. `PUT /api/vacaciones/marco` registra una revisión confirmada únicamente con facultad explícita y respaldo; no recibe ni acepta valores por defecto de días. DTOs previstos: `MarcoVacacionalDto` y `GuardarMarcoVacacionalSolicitud`. El cuerpo no selecciona una institución ajena; una ruta global, si se aprueba, exige alcance y facultad adicional. No se crean roles técnicos TH nuevos por inferencia.
+Contrato congelado tras `T-MAR-00` (#189): `GET /api/vacaciones/marco` devuelve modo `ACTA_SIN_SALDO`, referencias de régimen/fuente/versión, facultades efectivas y bloqueos de la institución de sesión. `PUT /api/vacaciones/marco` registra una revisión confirmada únicamente con facultad explícita y referencia de custodia documental; no recibe ni acepta valores por defecto de días. DTOs congelados: `MarcoVacacionalDto` y `GuardarMarcoVacacionalSolicitud`. El cuerpo no selecciona una institución ajena. No se crean roles técnicos TH nuevos por inferencia: las operaciones privilegiadas se controlan mediante `FacultadVacacional` (`PREPARAR_EMITIR`, `ENTREGAR`, `VERIFICAR_FIRMA`, `ANULAR_RECTIFICAR`, `CONSULTAR_ARCHIVO`).
 
-La selección de régimen y las delegaciones concretas son datos que deben registrar sus responsables, no semillas. Una institución sin ellos conserva borradores y deniega emisión/verificación. El servidor valida facultad en cada petición, incluso para superadmin; la UI solo informa el resultado. Cambiar base legal/vigencia crea revisión y no modifica un documento emitido. Modo B no tiene ruta de habilitación en esta entrega.
+La selección de régimen y las delegaciones concretas son datos que deben registrar sus responsables por institución, nunca semillas. Una institución sin ellos permanece en `PENDIENTE_CONFIRMACION`, conserva borradores y deniega emisión/verificación. El servidor valida facultad en cada petición, incluso para superadmin; la UI solo informa el resultado. Cambiar base legal/vigencia crea revisión y no modifica un documento emitido. Modo B no tiene ruta de habilitación en esta entrega.
 
-Los contratos descritos son propuestas de diseño para el backlog, no endpoints implementados. Cualquier cambio al alcance funcional aprobado exige revisión; resolver un detalle técnico condicionado no convierte este plan en decisión de un ADR.
+Los contratos aquí definidos quedan congelados en E0 (#189) antes de implementar consumidores en [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190); cualquier cambio posterior al alcance funcional vuelve a revisión funcional.
 
 Entradas inválidas: 400; sin sesión: 401; sin facultad: 403; recurso ajeno/ausente: 404 sin filtración; conflicto de revisión/intervalo/transición: 409. Se mantiene el contrato uniforme de ADR-0026. Validar pertenencia de todas las referencias en servidor, además del filtro institucional; no confiar en guardias Angular.
 
@@ -38,9 +38,9 @@ Entradas inválidas: 400; sin sesión: 401; sin facultad: 403; recurso ajeno/aus
 | Reutilizar convenciones vigentes | [ADR-0003](../../decisiones/ADR-0003-cliente-openapi-generado.md) — Vigente | Todas las tareas de implementación |
 | Reutilizar convenciones vigentes | [ADR-0004](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) — Vigente | Todas las tareas de implementación |
 | Reutilizar convenciones vigentes | [ADR-0026](../../decisiones/ADR-0026-manejo-global-de-errores-y-contrato-uniforme.md) — Vigente | Todas las tareas de implementación |
-| Resolver opción antes de tareas dependientes | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-MAR-00; bloquear tareas que adopten esa opción |
-| Resolver opción antes de tareas dependientes | [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-MAR-00; bloquear tareas que adopten esa opción |
-| Resolver opción antes de tareas dependientes | [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-MAR-00; bloquear tareas que adopten esa opción |
+| Reglas por institución y régimen en Modo A | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-MAR-00 completada; T-MAR-01 y T-MAR-02 desbloqueadas |
+| Registro documental sin saldo en Modo A | [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-MAR-00 completada; T-MAR-01 y T-MAR-02 desbloqueadas |
+| PDF inmutable y verificación física | [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-MAR-00 completada; T-MAR-01 y T-MAR-02 desbloqueadas |
 
 ## Mapa de archivos
 
@@ -77,19 +77,19 @@ Cada comando autorizado guarda cambio de estado e historia de auditoría de form
 
 ## Orden de ejecución e integración
 
-1. T-MAR-00: registrar decisiones técnicas y datos operativos en E0; no elegir opciones pendientes desde estas tareas.
-2. Ejecutar las tareas de servidor del área cuando sus dependencias estén resueltas; regenerar contrato/cliente en ese mismo PR.
-3. Ejecutar UI consumiendo contrato fijado y luego integración de rutas/menú.
+1. T-MAR-00: completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) con decisiones de ADR-0044/0045/0046 y contratos congelados.
+2. Ejecutar las tareas de servidor del área (`T-MAR-01` en [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190)); regenerar contrato/cliente en ese mismo PR.
+3. Ejecutar UI (`T-MAR-02`) consumiendo el contrato congelado y luego integración de rutas/menú en E6.
 4. Validar [test-e2e.md](test-e2e.md), registrar resultados reales y abrir PR hacia develop para la implementación posterior.
 
-Secuencia global de backlog: E0 → E1 (marco) → E2 (vínculos) → E3 (períodos/eventos) → E4 (PDF) → E5 (firma/correcciones) → E6 (recorrido integrado). No se ejecuta trabajo en paralelo sobre DbContext, migraciones, Program, registro DI ni cliente generado. El integrador de E6 posee rutas/menú finales; las demás tareas entregan componentes sin editar esos archivos.
+Secuencia global de backlog: E0 (#189, resuelta) → E1 (marco, #190) → E2 (vínculos, #191) → E3 (períodos/eventos, #192) → E4 (PDF, #193) → E5 (firma/correcciones, #194) → E6 (recorrido integrado, #195). No se ejecuta trabajo en paralelo sobre DbContext, migraciones, Program, registro DI ni cliente generado. El integrador de E6 posee rutas/menú finales; las demás tareas entregan componentes sin editar esos archivos.
 
 ## Riesgos y decisiones pendientes
 
 | Riesgo / decisión | Efecto | Acción / responsable |
 |---|---|---|
-| PD-MAR-01/02/03/04/06 | Activación sin datos confirmados produciría una afirmación falsa o permiso indebido | TH/Jurídico/autoridad registra valores y responsables; bloquear operación hasta entonces |
-| ADR-0044 Propuesto | La representación técnica no está decidida | Quien desarrolla decide en E0 antes de las tareas dependientes; el cierre de #182 no lo hace Vigente |
+| PD-MAR-01/02/03/04/06 | Regla de activación resuelta en #189; cada institución sin fuente/cláusula o delegaciones registradas permanece en `PENDIENTE_CONFIRMACION` | TH/Jurídico/autoridad registra valores y referencias de custodia al activar la institución; el sistema bloquea emisión/verificación mientras falten |
+| ADR-0044 Vigente | Opción 1 adoptada para Modo A en #189 | Aplicar en `T-MAR-01` y `T-MAR-02` sin fórmulas de saldo |
 | Historia incompleta o mezcla de instituciones | Saldo/identidad incorrectos y fuga de datos | Mantener A sin saldo y probar todas las referencias ajenas; responsable técnico |
 | Pérdida de archivo, carrera o reintento | Versión/estado inconsistente | Fallos controlados y recuperación en PostgreSQL/almacén de pruebas; E4/E5/E6 |
 
@@ -97,6 +97,6 @@ Secuencia global de backlog: E0 → E1 (marco) → E2 (vínculos) → E3 (perío
 
 - [x] Rutas existentes contrastadas; archivos futuros identificados como Crear; migraciones futuras sin fecha inventada.
 - [x] Cada RF/ESC se traza a tarea y prueba o justificación de diferimiento B.
-- [x] ADR nuevos registrados y revisados como Propuestos, con ejecución dependiente bloqueada.
+- [x] ADR-0044/0045/0046 cerrados como Vigentes en #189 para Modo A y contratos congelados antes de implementar consumidores.
 - [x] Contratos OpenAPI/Angular y puntos de edición compartida previstos en la misma tarea/PR que modifique API.
-- [x] Solo planificación; ningún caso E2E de producción ejecutado en #182.
+- [x] Solo planificación y cierre de puertas E0; ningún caso E2E de producción ejecutado en #182/#189.

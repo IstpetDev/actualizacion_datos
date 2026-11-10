@@ -1,8 +1,8 @@
 # Períodos, calendario y registro sin saldo — Plan de implementación
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md).
 
-**Versión del plan:** 0.1 — 2026-11-10. **Estado:** diseño documental preparado; ejecución futura condicionada a los ADR y datos institucionales indicados.
+**Versión del plan:** 1.0 — 2026-11-10. **Estado:** contratos congelados y puertas E0/ADR-0045 resueltas; listo para implementar `T-SAL-01` y `T-SAL-02` en [#192](https://github.com/IstpetDev/actualizacion_datos/issues/192).
 
 **Áreas y tecnologías:** .NET 10 / Clean Architecture, EF Core y PostgreSQL, xUnit, Angular 22/pnpm y cliente NSwag existentes. No se seleccionan dependencias nuevas.
 
@@ -24,13 +24,13 @@ Se traza cada requisito/escenario; parcial o diferido significa que su component
 
 ## Diseño y contratos
 
-Propuesta condicionada a T-SAL-00: `GET /api/vacaciones/vinculos/{id}/periodos`, `POST /api/vacaciones/periodos`, `POST /api/vacaciones/eventos/validar`, `POST /api/vacaciones/eventos`, `POST /api/vacaciones/eventos/{id}/rectificaciones`. `RegistrarPeriodoSolicitud` exige límites y fuente certificada o ancla/regla confirmada; `GuardarEventoVacacionalSolicitud` incluye período/vínculo, fechas solicitadas/efectivas, días calendario, días efectivos declarados y respaldo, retorno certificado, revisión esperada y motivo. `EventoVacacionalDto` informa modo `ACTA_SIN_SALDO` y estado de certificación; no incluye cero como saldo desconocido.
+Contrato congelado tras `T-SAL-00` (#189): `GET /api/vacaciones/vinculos/{id}/periodos`, `POST /api/vacaciones/periodos`, `POST /api/vacaciones/eventos/validar`, `POST /api/vacaciones/eventos`, `POST /api/vacaciones/eventos/{id}/rectificaciones`. `RegistrarPeriodoSolicitud` exige límites explícitos y fuente certificada o ancla/regla confirmada; `GuardarEventoVacacionalSolicitud` incluye período/vínculo, fechas solicitadas/efectivas, días calendario, días efectivos declarados y respaldo, retorno certificado, revisión esperada y motivo. `EventoVacacionalDto` informa modo `ACTA_SIN_SALDO` y estado de certificación; no incluye cero como saldo desconocido.
 
-La identificación de períodos es manual/certificada en A; aniversario/ciclo automático solo se usará si su regla fue efectivamente confirmada, sin devengo. El conteo de longitud del rango calendario no es cálculo de derecho. Feriados/empalme/retorno no tienen política predeterminada: se respalda el resultado del evento y se bloquea emisión si falta. G0 debe fijar estados operativos que bloquean solapes y si afectan vínculos simultáneos; la emisión del acta no inventa una aprobación laboral.
+La identificación de períodos es manual/certificada en A; aniversario/ciclo automático solo se usará si su regla fue efectivamente confirmada, sin devengo. El conteo de longitud del rango calendario no es cálculo de derecho. Feriados/empalme/retorno no tienen política predeterminada: se respalda el resultado del evento y se bloquea emisión si falta. Conforme lo resuelto en E0 (#189), bloquean solapamiento inclusivo (`[FechaInicioEfectiva, FechaFinEfectiva]`) todos los eventos vacacionales en estado activo/confirmado (no cancelados/anulados) del mismo vínculo, y ante vínculos concurrentes activos de la misma persona dentro de la misma institución se exige clasificación expresa del vínculo y se bloquean/advierten solapes salvo autorización expresa de TH, sin cruzar instituciones distintas; la emisión del acta no inventa una aprobación laboral.
 
-La validación y confirmación del rango deben revalidar conflictos dentro de una escritura consistente; dos eventos concurrentes no pueden reservar el mismo rango activo según la política aprobada. Cancelar/corregir registra motivo y revisión; no crea ni revierte un débito. El PDF ya emitido se corrige por sucesión de versión.
+La validación y confirmación del rango deben revalidar conflictos dentro de una escritura consistente; dos eventos concurrentes no pueden reservar el mismo rango activo (`409`). Cancelar/corregir registra motivo y revisión; no crea ni revierte un débito. El PDF ya emitido se corrige por sucesión de versión.
 
-Los contratos descritos son propuestas de diseño para el backlog, no endpoints implementados. Cualquier cambio al alcance funcional aprobado exige revisión; resolver un detalle técnico condicionado no convierte este plan en decisión de un ADR.
+Los contratos aquí definidos quedan congelados en E0 (#189) antes de implementar consumidores en [#192](https://github.com/IstpetDev/actualizacion_datos/issues/192); cualquier cambio posterior al alcance funcional vuelve a revisión funcional.
 
 Entradas inválidas: 400; sin sesión: 401; sin facultad: 403; recurso ajeno/ausente: 404 sin filtración; conflicto de revisión/intervalo/transición: 409. Se mantiene el contrato uniforme de ADR-0026. Validar pertenencia de todas las referencias en servidor, además del filtro institucional; no confiar en guardias Angular.
 
@@ -42,9 +42,9 @@ Entradas inválidas: 400; sin sesión: 401; sin facultad: 403; recurso ajeno/aus
 | Reutilizar convenciones vigentes | [ADR-0003](../../decisiones/ADR-0003-cliente-openapi-generado.md) — Vigente | Todas las tareas de implementación |
 | Reutilizar convenciones vigentes | [ADR-0004](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) — Vigente | Todas las tareas de implementación |
 | Reutilizar convenciones vigentes | [ADR-0026](../../decisiones/ADR-0026-manejo-global-de-errores-y-contrato-uniforme.md) — Vigente | Todas las tareas de implementación |
-| Resolver opción antes de tareas dependientes | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-SAL-00; bloquear tareas que adopten esa opción |
-| Resolver opción antes de tareas dependientes | [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-SAL-00; bloquear tareas que adopten esa opción |
-| Resolver opción antes de tareas dependientes | [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) — Propuesto, revisado documentalmente, sin decisión autónoma | T-SAL-00; bloquear tareas que adopten esa opción |
+| Reglas por institución y régimen en Modo A | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-SAL-00 completada; T-SAL-01 y T-SAL-02 desbloqueadas |
+| Registro documental sin saldo en Modo A | [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-SAL-00 completada; T-SAL-01 y T-SAL-02 desbloqueadas |
+| PDF inmutable y verificación física | [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) — Vigente (cerrado en #189, Opción 1 para Modo A) | T-SAL-00 completada; T-SAL-01 y T-SAL-02 desbloqueadas |
 
 ## Mapa de archivos
 
@@ -82,19 +82,19 @@ Cada comando autorizado guarda cambio de estado e historia de auditoría de form
 
 ## Orden de ejecución e integración
 
-1. T-SAL-00: registrar decisiones técnicas y datos operativos en E0; no elegir opciones pendientes desde estas tareas.
-2. Ejecutar las tareas de servidor del área cuando sus dependencias estén resueltas; regenerar contrato/cliente en ese mismo PR.
-3. Ejecutar UI consumiendo contrato fijado y luego integración de rutas/menú.
+1. T-SAL-00: completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) con decisiones de ADR-0044/0045/0046, política de solapes y contratos congelados.
+2. Ejecutar las tareas de servidor del área (`T-SAL-01` en [#192](https://github.com/IstpetDev/actualizacion_datos/issues/192)) tras integrar E2 (#191); regenerar contrato/cliente en ese mismo PR.
+3. Ejecutar UI (`T-SAL-02`) consumiendo el contrato congelado y luego integración de rutas/menú en E6.
 4. Validar [test-e2e.md](test-e2e.md), registrar resultados reales y abrir PR hacia develop para la implementación posterior.
 
-Secuencia global de backlog: E0 → E1 (marco) → E2 (vínculos) → E3 (períodos/eventos) → E4 (PDF) → E5 (firma/correcciones) → E6 (recorrido integrado). No se ejecuta trabajo en paralelo sobre DbContext, migraciones, Program, registro DI ni cliente generado. El integrador de E6 posee rutas/menú finales; las demás tareas entregan componentes sin editar esos archivos.
+Secuencia global de backlog: E0 (#189, resuelta) → E1 (marco, #190) → E2 (vínculos, #191) → E3 (períodos/eventos, #192) → E4 (PDF, #193) → E5 (firma/correcciones, #194) → E6 (recorrido integrado, #195). No se ejecuta trabajo en paralelo sobre DbContext, migraciones, Program, registro DI ni cliente generado. El integrador de E6 posee rutas/menú finales; las demás tareas entregan componentes sin editar esos archivos.
 
 ## Riesgos y decisiones pendientes
 
 | Riesgo / decisión | Efecto | Acción / responsable |
 |---|---|---|
-| PD-SAL-02/04/05/06/07/08 | Activación sin datos confirmados produciría una afirmación falsa o permiso indebido | TH/Jurídico/autoridad registra valores y responsables; bloquear operación hasta entonces |
-| ADR-0045 Propuesto | La representación técnica no está decidida | Quien desarrolla decide en E0 antes de las tareas dependientes; el cierre de #182 no lo hace Vigente |
+| PD-SAL-01/02/04/05/06/07/08 | Reglas de Modo A y solapes resueltas en #189; emisión bloqueada si faltan período, días o retorno certificados | TH/Jurídico registra respaldo por período/evento; el servidor bloquea si faltan datos |
+| ADR-0045 Vigente | Opción 1 adoptada en #189 acotada a Modo A en Entrega 1 (`T-SAL-D01` diferida a Modo B) | Aplicar en `T-SAL-01` y `T-SAL-02` sin movimientos contables ni saldo numérico |
 | Historia incompleta o mezcla de instituciones | Saldo/identidad incorrectos y fuga de datos | Mantener A sin saldo y probar todas las referencias ajenas; responsable técnico |
 | Pérdida de archivo, carrera o reintento | Versión/estado inconsistente | Fallos controlados y recuperación en PostgreSQL/almacén de pruebas; E4/E5/E6 |
 
@@ -102,6 +102,6 @@ Secuencia global de backlog: E0 → E1 (marco) → E2 (vínculos) → E3 (perío
 
 - [x] Rutas existentes contrastadas; archivos futuros identificados como Crear; migraciones futuras sin fecha inventada.
 - [x] Cada RF/ESC se traza a tarea y prueba o justificación de diferimiento B.
-- [x] ADR nuevos registrados y revisados como Propuestos, con ejecución dependiente bloqueada.
+- [x] ADR-0044/0045/0046 cerrados como Vigentes en #189 para Modo A y contratos congelados antes de implementar consumidores.
 - [x] Contratos OpenAPI/Angular y puntos de edición compartida previstos en la misma tarea/PR que modifique API.
-- [x] Solo planificación; ningún caso E2E de producción ejecutado en #182.
+- [x] Solo planificación y cierre de puertas E0; ningún caso E2E de producción ejecutado en #182/#189.

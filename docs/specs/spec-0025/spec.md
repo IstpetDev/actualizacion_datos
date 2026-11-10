@@ -1,24 +1,24 @@
 # Vacaciones: acta imprimible y verificación de firma física — Spec
 
-**ID:** spec-0025 / #186; coordinación #182
+**ID:** spec-0025 / #186; coordinación #182; puertas E0 resueltas en #189
 
-**Versión:** 0.1
+**Versión:** 0.2
 
-**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
+**Estado:** Aprobada v0.2 para implementación de Entrega 1 — Modo A (puertas E0 resueltas en #189)
 
-**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: responsable funcional, Talento Humano, asesoría jurídica y responsable de datos
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; decisiones de activación E0 y ADR-0046 registradas por `@bryancito1090` en #189
 
-**Fecha:** 2026-11-09
+**Fecha:** 2026-11-10
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
 
 ## Aprobación y alcance de Entrega 1
 
-La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+La aprobación funcional inicial (v0.1) fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. En [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) se registraron las decisiones técnicas ([ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) en estado `Vigente`, Opción 1) y las reglas de firmas requeridas, método de verificación, respaldo/evidencia o referencia física/excepción autorizada, numeración anual correlativa por institución, retención histórica permanente y recuperación consistente entre PostgreSQL y `IAlmacenArchivos` para el alcance Modo A. Véanse [registro de aprobación](../../evidencia/issue-182/aprobacion.md) y [evidencia de decisiones #189](../../evidencia/issue-189/README.md).
 
-El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
+El alcance aprobado es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las instituciones con datos pendientes (`PENDIENTE_CONFIRMACION`) permanecen sin habilitar para emisión oficial; no se infieren textos normativos, delegaciones ni firmas.
 
-Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
+Esta versión 0.2 con puertas E0 resueltas en #189 congela los contratos propuestos en `plan.md` v1.0 y habilita la ejecución de las tareas de implementación (#193, #194 y #195).
 
 ## Problema y resultado esperado
 
@@ -29,12 +29,12 @@ TH prepara un acta, la persona trabajadora descarga un PDF imprimible y firma fu
 | Fuente | Ruta o enlace exacto | Regla o dato y estado |
 |---|---|---|
 | Solicitud | [#186](https://github.com/IstpetDev/actualizacion_datos/issues/186), [#182](https://github.com/IstpetDev/actualizacion_datos/issues/182) | PDF imprimible, firma física verificable, versiones y privacidad; contenido exacto pendiente de aprobación funcional/jurídica. |
-| Marco, vínculos y saldo | [spec-0022](../spec-0022/spec.md), [spec-0023](../spec-0023/spec.md), [spec-0024](../spec-0024/spec.md) | Versiones 0.1 aprobadas para planificación de Modo A: ámbito, certificaciones y modos A/B. Fuentes iniciales CT arts. 69–78 / LOSEP art. 29 (copias con última reforma declarada 2023-05-12 consultadas 2026-11-09), LOEI sin contenido comprobado por fallo de acceso. Vigencia/aplicabilidad y cláusulas contractuales pendientes de Jurídico. |
+| Marco, vínculos y saldo | [spec-0022](../spec-0022/spec.md), [spec-0023](../spec-0023/spec.md), [spec-0024](../spec-0024/spec.md) | Versiones 0.2 aprobadas para Modo A con puertas E0 resueltas en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189): ámbito, certificaciones y modos A/B. Vigencia/aplicabilidad y cláusulas se registran por institución antes de activar (`PENDIENTE_CONFIRMACION` por defecto). |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Documentos/evidencias aislados por institución. |
-| ADR-0006 — Vigente | [Almacenamiento](../../decisiones/ADR-0006-almacenamiento-de-archivos.md) | Archivos privados y acceso por backend. Su eliminación de versiones sustituidas de actualización de datos contradice la necesidad de conservar actas; no extenderla silenciosamente. |
-| ADR-0033 — Vigente | [Motor PDF](../../decisiones/ADR-0033-motor-generacion-pdf.md) | Existe elección de motor para hoja de vida; no acredita persistencia ni versionado de actas. Reutilización a evaluar después de aprobación. |
-| ADR-0046 — Propuesto | [PDF y verificación](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) | Conservación de versiones, auditoría y alcance de excepción a ADR-0006 pendientes de decisión antes de tareas dependientes. |
-| Estructura del legado | [Evidencia #182](../../evidencia/issue-182/README.md) | Acta DOCX y composición como referencia; no se copió fotografía, plantilla con datos ni firmas reales. |
+| ADR-0006 — Vigente | [Almacenamiento](../../decisiones/ADR-0006-almacenamiento-de-archivos.md) | Archivos privados y acceso por backend. ADR-0046 registra excepción explícita para no eliminar versiones históricas ni evidencias de actas de vacaciones. |
+| ADR-0033 — Vigente | [Motor PDF](../../decisiones/ADR-0033-motor-generacion-pdf.md) | Se reutiliza `QuestPDF` con diseño desacoplado detrás de `IServicioGeneracionPdfActaVacaciones` según ADR-0046. |
+| ADR-0046 — Vigente | [PDF y verificación](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) | Opción 1 aprobada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189): versión inmutable, hash SHA-256, `QuestPDF` + `IAlmacenArchivos` privado y excepción de retención a ADR-0006/ADR-0039. |
+| Estructura del legado | [Evidencia #182](../../evidencia/issue-182/README.md), [Evidencia #189](../../evidencia/issue-189/README.md) | Acta DOCX y composición como referencia; no se copió fotografía, plantilla con datos ni firmas reales. |
 
 ## Alcance
 
@@ -178,35 +178,35 @@ PDF y evidencias permanecen en custodia privada por institución, con autorizaci
 
 ## Criterios de aceptación
 
-- [ ] RF-VAC-ACT-001/002/007 y ESC-01: composición, campos y modo sin saldo aprobados, con PDF inmutable por versión.
-- [ ] RF-VAC-ACT-003/004/008 y ESC-02/03: recorridos de persona trabajadora, TH y administrador con facultades, evidencia y significado de firma revisados.
-- [ ] RF-VAC-ACT-005/006/010 y ESC-04/05: observación, pérdida, anulación y corrección sin sobrescritura.
-- [ ] RF-VAC-ACT-009 y ESC-06: política de concurrencia, errores e idempotencia verificable.
-- [ ] Fuentes, retención, numeración y decisiones de ADR-0046 revisadas; ningún dato/firma real se incorpora al repositorio.
+- [x] RF-VAC-ACT-001/002/007 y ESC-01: composición, campos y modo sin saldo aprobados, con PDF inmutable por versión.
+- [x] RF-VAC-ACT-003/004/008 y ESC-02/03: recorridos de persona trabajadora, TH y administrador con facultades, evidencia y significado de firma revisados.
+- [x] RF-VAC-ACT-005/006/010 y ESC-04/05: observación, pérdida, anulación y corrección sin sobrescritura.
+- [x] RF-VAC-ACT-009 y ESC-06: política de concurrencia, errores e idempotencia verificable.
+- [x] Fuentes, retención, numeración y decisiones de ADR-0046 revisadas; ningún dato/firma real se incorpora al repositorio.
 
 ## Puntos que requieren decisión
 
-| ID | Pregunta exacta / dato faltante | Impacto y bloqueo | Quién decide |
+| ID | Decisión registrada en #189 (E0) / estado por institución | Impacto y bloqueo | Quién decide |
 |---|---|---|---|
-| PD-ACT-01 | ¿Quién prepara, emite, imprime/entrega, observa, anula y verifica? ¿Qué delegación/suplencia y separación de funciones se exige? | Bloquea permisos de emisión/verificación; coordinar PD-MAR-04 | Autoridad institucional + TH |
-| PD-ACT-02 | ¿Qué firmas son exigidas y qué inspección/método acredita la verificación administrativa? ¿Se confirma el significado propuesto del indicador? | Bloquea verificación definitiva; no declarar firma electrónica válida | TH + Jurídico |
-| PD-ACT-03 | ¿Es obligatorio escaneo, basta referencia física o se admite excepción? ¿Quién autoriza la excepción y qué campos conserva? | Bloquea política de evidencia; nunca booleano sin trazabilidad | TH + Jurídico + responsable de datos |
-| PD-ACT-04 | ¿Qué texto, comparecientes, cargos, cláusulas, tabla A/B y nota de anticipo se aprueban por régimen/modo? | Bloquea PDF oficial sin contenido aprobado | TH + Jurídico |
-| PD-ACT-05 | ¿Qué numeración, ámbito de unicidad y tratamiento de números fallidos/anulados se usan? | Bloquea emisión y su recuperación | TH + responsable documental |
-| PD-ACT-06 | ¿Se aprueba esta máquina de estados, observación por pérdida, sucesión y acceso histórico? ¿Cómo se comunica sustitución a las partes? | Bloquea transiciones y comunicación definitiva | Responsable funcional + TH + Jurídico |
-| PD-ACT-07 | ¿Quién accede a evidencia, cuánto se conserva, cómo se respalda/restaura y cuándo procede eliminación legal documentada? | Bloquea custodia; resolver contradicción con eliminación de ADR-0006 | Jurídico + responsable de datos |
-| PD-ACT-08 | ¿Qué opción de ADR-0046 preserva versiones y auditoría y qué alcance tiene respecto de ADR-0006/0033? | Bloquea tareas técnicas dependientes; no modifica ADR vigentes aún | Quien desarrolla |
+| PD-ACT-01 | **Resuelto en #189:** Preparar, emitir, entregar, observar, anular, sustituir y verificar requieren delegación explícita vigente por institución (`FacultadVacacional`). Con separación estricta de funciones: nadie verifica su propia firma como persona trabajadora titular del acta, ni se otorgan permisos implícitos por rol global. | Permisos y separación de funciones congelados para #193/#194/#195 | Solicitante (`@bryancito1090`) + Autoridad institucional + TH |
+| PD-ACT-02 | **Resuelto en #189:** Se exigen dos firmas manuscritas en físico (representante autorizado de TH/Autoridad institucional y persona trabajadora). La verificación administrativa exige comprobar coincidencia de número/versión impresa con la versión emitida y presencia de ambas firmas; `firma_verificada = true` es un dato derivado exclusivamente de `FIRMA_FISICA_VERIFICADA` vigente y no declara firma electrónica. | Regla de firmas y significado de `firma_verificada` congelados | Solicitante (`@bryancito1090`) + TH + Jurídico |
+| PD-ACT-03 | **Resuelto en #189:** Toda verificación exige método registrado y al menos un respaldo trazable según política institucional: (a) escaneo/foto en custodia privada (`PDF`, `JPG`, `PNG` <= 10 MB con validación de firma mágica), (b) referencia física verificable (código de archivo/carpeta/tomo/folio y responsable de custodia), o (c) excepción motivada autorizada con acto/motivo/autorizador. Nunca un booleano sin respaldo. | Política de evidencia y referencia física congelada para #194 | Solicitante (`@bryancito1090`) + TH + Jurídico + responsable de datos |
+| PD-ACT-04 | **Resuelto en #189 para Modo A:** La estructura del acta en Modo A congela encabezado institucional, comparecencia, detalle del período/fechas/retorno certificados, Tabla A sin saldo numérico con leyenda obligatoria `«Saldo no certificado / pendiente de levantamiento histórico»`, omisión de Tabla B y nota de anticipo, cláusula configurada por institución/régimen y bloque de doble firma física en blanco. | Emisión bloqueada en instituciones sin plantilla/cláusula activa (`PENDIENTE_CONFIRMACION`) | Solicitante (`@bryancito1090`) + TH + Jurídico |
+| PD-ACT-05 | **Resuelto en #189:** Numeración correlativa anual por institución (`ACTA-VAC-{Anio}-{Secuencia:0000}`, con prefijo institucional configurable), asignada únicamente al emitir versión oficial (`v1`, `v2`, ...). Los borradores no consumen número y los números de actas anuladas nunca se reutilizan. | Regla de numeración e idempotencia congelada para #193 | Solicitante (`@bryancito1090`) + TH + responsable documental |
+| PD-ACT-06 | **Resuelto en #189:** Se aprueba la máquina de estados documental (`BORRADOR`, `EMITIDA_PDF`, `FIRMA_FISICA_VERIFICADA`, `OBSERVADA`, `ANULADA` con enlace a versión sucesora), la transición a `OBSERVADA` por pérdida/invalidez de respaldo conservando historia y la consulta de estado/motivo en la aplicación para las partes autorizadas. | Máquina de estados y sucesión congeladas para #193 y #194 | Solicitante (`@bryancito1090`) + responsable funcional + TH + Jurídico |
+| PD-ACT-07 | **Resuelto en #189:** Retención histórica permanente de todas las versiones emitidas/anuladas y sus evidencias en almacenamiento privado por institución (`vacaciones/{institucionId}/actas/...`), con excepción explícita a la eliminación de sustituidos de ADR-0006/ADR-0039. Acceso de descarga/evidencia restringido por institución y facultad, y recuperación coordinada entre PostgreSQL e `IAlmacenArchivos` verificando hash SHA-256. | Política de retención, custodia y recuperación congelada | Solicitante (`@bryancito1090`) + Jurídico + responsable de datos |
+| PD-ACT-08 | **Resuelto en #189:** Se adopta la **Opción 1** de [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) (`Vigente`): entidad `VersionActaVacaciones` inmutable con instantánea y hash SHA-256, motor `QuestPDF` (ADR-0033), custodia privada vía `IAlmacenArchivos` (ADR-0006) con excepción explícita de no borrado histórico y escritura en dos fases/compensada. | Desbloquea #193, #194 y #195 (`T-ACT-01`, `T-ACT-02`, `T-ACT-03`) | Quien desarrolla (`@bryancito1090`) |
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
+**Versión revisada:** 0.2, delimitada a Entrega 1 en Modo A con puertas E0 resueltas en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189)
 
-**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
+**Decisión:** Aprobada para planificación e implementación de Modo A; Modo B diferido
 
-**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; decisiones de activación E0 y ADR-0046 (Opción 1) registradas por `@bryancito1090` en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189)
 
-**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10 ([aprobacion.md](../../evidencia/issue-182/aprobacion.md)) y resolución de puertas E0 del 2026-11-10 ([evidencia #189](../../evidencia/issue-189/README.md)). Fecha de firma física no aportada
 
-**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
+**Ajustes solicitados:** Implementar Modo A con contratos congelados, versión PDF inmutable y verificación física trazable; mantener Modo B diferido y bloqueos institucionales sin valores ni firmas reales en el repositorio
 
-Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Las decisiones de evidencia/autoridad/contenido pendientes impiden activar el flujo correspondiente.
+Esta versión 0.2 deja congeladas las decisiones de E0 (#189) para `plan.md`, `tasks.md` y `test-e2e.md`. Las instituciones sin configuración/plantilla/delegación completa conservan su bloqueo operativo.

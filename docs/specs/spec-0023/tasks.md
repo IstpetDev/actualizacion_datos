@@ -1,31 +1,31 @@
 # Vínculos laborales e historia — Tareas
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md).
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md).
 
-**Plan:** [plan.md](plan.md) v0.1. **Estado:** backlog documental preparado y publicación autorizada; implementación no iniciada. No se afirma aprobación de una opción técnica pendiente ni ejecución de pruebas futuras.
+**Plan:** [plan.md](plan.md) v1.0. **Estado:** puerta `T-VIN-00` resuelta en #189 y contratos congelados; tareas `T-VIN-01` y `T-VIN-02` desbloqueadas en cuanto a ADR/E0 y listas tras `T-MAR-01` (#190) para implementación en [#191](https://github.com/IstpetDev/actualizacion_datos/issues/191).
 
 ## Matriz de dependencias
 
 | Tarea | Requisitos | Depende de | Paralelismo | Dueño funcional/técnico |
 |---|---|---|---|---|
-| T-VIN-00 | Todos los requisitos del área | E0: decisiones registradas y activación institucional | Ninguno sobre archivos compartidos | Responsable técnico; TH/Jurídico aporta datos |
-| T-VIN-01 | RF-VAC-VIN-001 RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008 | T-VIN-00; T-MAR-01 y resolución de G0 para historia/custodia | Secuencial | Responsable técnico de E2, por asignar |
-| T-VIN-02 | RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008 | T-VIN-00; DTO y cliente regenerado de T-VIN-01 | Secuencial | Responsable técnico de E2, por asignar |
+| T-VIN-00 | Todos los requisitos del área | Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0) | Ninguno sobre archivos compartidos | @bryancito1090; política TH/Jurídico registrada |
+| T-VIN-01 | RF-VAC-VIN-001 RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008 | T-VIN-00 (resuelta en #189); T-MAR-01 (#190) | Secuencial | @bryancito1090 (#191); acoplamiento progresivo con #196 (@AnthonyPilatasig) |
+| T-VIN-02 | RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008 | T-VIN-00 (resuelta en #189); DTO y cliente regenerado de T-VIN-01 | Secuencial | @bryancito1090 (#191) |
 | T-VIN-D01 | RF-VAC-VIN-006 | Futura aprobación de Modo B | No ejecutable en Entrega 1 | Fuera de backlog de implementación A |
 
 ## T-VIN-00 — Condiciones previas
 
-**Estado:** Bloqueada por ADR/datos de activación; referencia E0 en [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** quien desarrolla y autoridad/TH/Jurídico según pregunta.
+**Estado:** Completada en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) (E0); véase [evidencia de #189](../../evidencia/issue-189/README.md) y [backlog](../../evidencia/issue-182/backlog.md). **Responsable:** @bryancito1090 y autoridad/TH/Jurídico según pregunta.
 
-Revisar PD-VIN-01/02/03/05/06/07, resolver ADR dependientes sin cierre autónomo del agente y registrar alcance/valores autorizados. Contratos del plan son propuestas hasta esa revisión. Validación documental: estado del ADR, referencia de decisión y política institucional, sin subir informe físico ni datos reales. El resultado es una puerta de ejecución explícita, no un módulo habilitado. No editar producción en esta tarea documental.
+Se revisaron PD-VIN-01 a PD-VIN-07, se cerró [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) como Vigente (Opción 1 acotada a Modo A en Entrega 1), se congelaron los contratos de [plan.md](plan.md#diseño-y-contratos) y se creó [#196](https://github.com/IstpetDev/actualizacion_datos/issues/196) (asignado a @AnthonyPilatasig) para especificar e implementar el módulo básico de contratos laborales acoplable progresivamente. No se editó código de producción en esta tarea documental.
 
 ## T-VIN-01 — Vínculos, fuentes y certificación auditada
 
-**Backlog:** E2, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E2 ([#191](https://github.com/IstpetDev/actualizacion_datos/issues/191)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Puerta ADR/E0 resuelta en #189; espera secuencialmente a E1 (#190). **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Backend; rama futura `feature/<numero-issue>-vacaciones-vin-01` desde develop actualizado.
 
-**Entrada/contrato:** T-MAR-01 y resolución de G0 para historia/custodia. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-VIN-001 RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008.
+**Entrada/contrato:** T-MAR-01 (#190) y contrato congelado en [plan.md](plan.md#diseño-y-contratos) tras E0 (#189). **Requisitos:** RF-VAC-VIN-001 RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008.
 
 **Archivos exclusivos:** `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/VinculoLaboral.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Domain/Vacaciones/CertificacionIngreso.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Modelos/ModelosVinculoLaboral.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Application/Servicios/IServicioVinculosLaborales.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Servicios/ServicioVinculosLaborales.cs`; `src/Backend/src/Istpet.ActualizacionDatos.Infrastructure/Persistence/Configuraciones/Vacaciones/VinculoLaboralConfiguracion.cs`; `src/Backend/src/Istpet.ActualizacionDatos.WebApi/Endpoints/VinculosLaboralesEndpoints.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.Domain.Tests/VinculoLaboralTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/VinculosLaboralesTests.cs`; `src/Backend/tests/Istpet.ActualizacionDatos.WebApi.Tests/Integracion/VinculosLaboralesIntegracionTests.cs`.
 
@@ -46,11 +46,11 @@ Los archivos compartidos enumerados en el plan solo se modifican en el turno sec
 
 ## T-VIN-02 — Pantalla de contraste y certificación
 
-**Backlog:** E2, enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Bloqueada por ADR y dependencias. **Responsable:** desarrollador asignado al issue futuro; integrador técnico valida entrega.
+**Backlog:** E2 ([#191](https://github.com/IstpetDev/actualizacion_datos/issues/191)), enlace en [registro](../../evidencia/issue-182/backlog.md). **Estado:** Puerta ADR/E0 resuelta en #189; espera secuencialmente a T-VIN-01. **Responsable:** @bryancito1090; integrador técnico valida entrega.
 
 **Área y rama:** Frontend; rama futura `feature/<numero-issue>-vacaciones-vin-02` desde develop actualizado.
 
-**Entrada/contrato:** DTO y cliente regenerado de T-VIN-01. DTO y errores de [plan.md](plan.md#diseño-y-contratos), cerrados antes de consumo. **Requisitos:** RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008.
+**Entrada/contrato:** DTO y cliente regenerado de T-VIN-01 según contrato congelado en [plan.md](plan.md#diseño-y-contratos). **Requisitos:** RF-VAC-VIN-002 RF-VAC-VIN-003 RF-VAC-VIN-004 RF-VAC-VIN-005 RF-VAC-VIN-007 RF-VAC-VIN-008.
 
 **Archivos exclusivos:** `src/Frontend/src/app/features/vacaciones/vinculos-laborales.component.ts`; `src/Frontend/src/app/features/vacaciones/vinculos-laborales.component.spec.ts`.
 

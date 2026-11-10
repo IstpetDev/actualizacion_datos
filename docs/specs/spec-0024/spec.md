@@ -1,24 +1,22 @@
 # Vacaciones: períodos, calendario y saldos — Spec
 
-**ID:** spec-0024 / #185; coordinación #182
+**ID:** spec-0024 / #185; coordinación #182; activación E0 #189
 
-**Versión:** 0.1
+**Versión:** 0.2
 
-**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
+**Estado:** Aprobada v0.2 para Entrega 1 — Modo A (puertas E0 y ADR-0045 resueltas en #189)
 
-**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: Talento Humano y asesoría jurídica de cada institución
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; decisiones E0 confirmadas por @bryancito1090 en #189
 
-**Fecha:** 2026-11-09
+**Fecha:** 2026-11-10
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
 
 ## Aprobación y alcance de Entrega 1
 
-La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+La aprobación funcional inicial (v0.1) fue comunicada por el solicitante el 2026-11-10 ([registro de aprobación](../../evidencia/issue-182/aprobacion.md)). En [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) ([evidencia E0](../../evidencia/issue-189/README.md)) quien desarrolla (@bryancito1090) cerró [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) y [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) como **Vigentes** para Modo A, confirmó la certificación de períodos/días/retorno, los estados que bloquean solapes y el tratamiento de vínculos concurrentes, y congeló los contratos de [plan.md](plan.md).
 
-El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
-
-Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
+El alcance aprobado es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas (`T-SAL-D01`), sin tareas de implementación en Entrega 1. Esta versión 0.2 resuelve `T-SAL-00` y deja listas para ejecución secuencial las tareas `T-SAL-01` y `T-SAL-02` en [#192](https://github.com/IstpetDev/actualizacion_datos/issues/192).
 
 ## Problema y resultado esperado
 
@@ -30,9 +28,9 @@ Un acta necesita indicar qué vacaciones se otorgan, su período de imputación,
 |---|---|---|
 | Solicitud | [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185), [#182](https://github.com/IstpetDev/actualizacion_datos/issues/182) | Contemplar períodos, corte, solapes y acta sin afirmar derechos no verificables. |
 | Marco | [spec-0022](../spec-0022/spec.md) | Catálogo de parámetros por confirmar; CT arts. 69–78 y LOSEP art. 29 revisados el 2026-11-09 en copias con última reforma declarada 2023-05-12, sin vigencia actual acreditada. LOEI pendiente de consulta por fallo de acceso; no hay valores legales confirmados para vínculos del producto. |
-| Historia | [spec-0023](../spec-0023/spec.md) | Fecha y corte certificados independientemente; cobertura/desglose y prevención de doble conteo. Versión 0.1 aprobada para planificación de Modo A; activación institucional condicionada a datos respaldados. |
+| Historia | [spec-0023](../spec-0023/spec.md) | Fecha y corte certificados independientemente; cobertura/desglose y prevención de doble conteo. Versión 0.2 aprobada para Modo A con puertas E0 resueltas en #189. |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Ningún saldo, calendario o período atraviesa la institución del vínculo. |
-| ADR-0044 / ADR-0045 — Propuestos | [Reglas](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md), [corte](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Arquitectura de reglas y representación contable por decidir antes de tareas dependientes. |
+| ADR-0044 / ADR-0045 — Vigentes | [Reglas](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md), [corte](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Opción 1 adoptada en #189 para Modo A documental (`PeriodoVacacional` y `EventoVacacional` sin ledger ni saldos en Entrega 1). |
 | Legado | [Evidencia #182](../../evidencia/issue-182/README.md) | Bolsas base/incentivo, FIFO, tramos, anticipos y empalmes describen comportamiento técnico previo; no acreditan reglas válidas aquí. El ledger previo permite modificaciones/borrados: su inmutabilidad no está probada. |
 
 ## Alcance
@@ -144,34 +142,34 @@ Se muestran fecha de corte, cobertura y procedencia al lado del saldo; «descono
 
 ## Criterios de aceptación
 
-- [ ] RF-VAC-SAL-001/003 y ESC-01/03: períodos, ingreso reciente y reingreso sin acreditar historia inexistente.
-- [ ] RF-VAC-SAL-002/003 y ESC-02: Modo A sin saldo numérico y conversión con corte sin doble descuento.
-- [ ] RF-VAC-SAL-004/005/009 y ESC-04/06: calendario, retorno, permisos y solapes comprobables.
-- [ ] RF-VAC-SAL-006/007/008 y ESC-05/06/07: conservación de unidades, idempotencia y correcciones, según decisiones aprobadas.
+- [x] RF-VAC-SAL-001/003 y ESC-01/03: períodos, ingreso reciente y reingreso sin acreditar historia inexistente.
+- [x] RF-VAC-SAL-002/003 y ESC-02: Modo A sin saldo numérico y conversión con corte sin doble descuento.
+- [x] RF-VAC-SAL-004/005/009 y ESC-04/06: calendario, retorno, permisos y solapes comprobables.
+- [x] RF-VAC-SAL-006/007/008 y ESC-05/06/07: conservación de unidades, idempotencia y correcciones, según decisiones aprobadas.
 
 ## Puntos que requieren decisión
 
-| ID | Pregunta exacta / dato faltante | Impacto y bloqueo | Quién decide |
+| ID | Decisión registrada en #189 (E0) / estado por institución | Impacto y bloqueo | Quién decide |
 |---|---|---|---|
-| PD-SAL-01 | Resuelto el alcance: solo Modo A en Entrega 1. La designación concreta de quien certifica período, días y retorno requiere respaldo institucional. | #187 habilitado para A; emisión bloqueada si falta certificación/facultad | Aprobación de alcance comunicada por solicitante; designación por TH/autoridad |
-| PD-SAL-02 | ¿Qué períodos, conteo, devengo proporcional, fracciones/redondeo, aniversario bisiesto, feriados, empalmes y retorno corresponden a cada régimen? | Bloquea los cálculos sin regla/fuente | TH + Jurídico; matriz spec-0022 |
-| PD-SAL-03 | ¿Se aprueba FIFO entre períodos y base antes de incentivo? ¿Se permiten anticipos, incentivos o caducidad, con qué fuente, límites y autoridad? | Bloquea imputación automática correspondiente; sin anticipos implícitos | TH + Jurídico |
-| PD-SAL-04 | ¿Qué hito autoriza otorgamiento, reserva y consumo? ¿Qué estados y facultades aprueban, notifican, cancelan o postergan un evento? | Bloquea Modo B y máquina operativa; no reutilizar estados del PDF | TH + responsable funcional |
-| PD-SAL-05 | ¿Qué estados bloquean solapes y se controlan también entre vínculos simultáneos de una persona dentro de la institución? | Bloquea validación definitiva de concurrencia/solapes | TH + Jurídico |
-| PD-SAL-06 | ¿Cómo se aprueba el efecto de correcciones, goce ya ejecutado, cambio de calendario y corte que incluye eventos A? | Bloquea ajustes automáticos retroactivos | TH + Jurídico |
-| PD-SAL-07 | ¿Cómo se notifica programación/aprobación/cancelación y qué significa pendiente/postergado/acumulado en cada régimen? | Bloquea esos comportamientos; no añadir mensajería ni pagos por inferencia | TH + responsable funcional |
-| PD-SAL-08 | ¿Qué representación de movimientos y resumen se adopta en ADR-0045? | Bloquea tareas técnicas dependientes | Quien desarrolla |
+| PD-SAL-01 | **Resuelto en #189 para Modo A:** En Entrega 1 solo opera Modo A documental. El período de imputación (`YYYY-YYYY`), días calendario/efectivos y fecha de retorno deben ser certificados por un operador de TH con delegación explícita vigente en la institución antes de emitir acta. | Emisión bloqueada si falta certificación explícita o facultad vigente en la institución | Solicitante (`@bryancito1090`) + TH institucional |
+| PD-SAL-02 | **Resuelto en #189 para Modo A:** En Modo A los días efectivos, feriados excluidos, empalme de fin de semana y fecha de retorno se registran por certificación de TH vinculada al calendario/regla institucional vigente, sin devengo proporcional ni cálculo automático de saldos; los parámetros automáticos por régimen quedan diferidos a Modo B. | Instituciones sin regla/calendario o certificación no emiten actas; sin cálculo automático en Modo A | TH + Jurídico; matriz [spec-0022](../spec-0022/spec.md) |
+| PD-SAL-03 | **Resuelto en #189 para Modo A:** El motor FIFO de doble bolsa, anticipos, incentivos y caducidad quedan diferidos fuera de Entrega 1 (Modo B). En Modo A no se ejecutan imputaciones automáticas ni se crean anticipos implícitos. | Sin imputación contable ni saldos en Entrega 1 | Solicitante (`@bryancito1090`) + TH + Jurídico |
+| PD-SAL-04 | **Resuelto en #189 para Modo A:** La máquina operativa de eventos en Modo A (`BORRADOR`, `PENDIENTE`, `APROBADO_TH`, `APROBADO`, `RECHAZADO`, `CANCELADO`) está separada del estado documental del acta PDF ([spec-0025](../spec-0025/spec.md)); toda transición exige delegación explícita por institución (`FacultadVacacional`). | Separación estricta entre estado del evento y estado del PDF | Solicitante (`@bryancito1090`) + TH + responsable funcional |
+| PD-SAL-05 | **Resuelto en #189:** Los estados que bloquean solape de rango inclusivo `[FechaInicioEfectiva, FechaFinEfectiva]` en el mismo vínculo son `PENDIENTE`, `APROBADO_TH` y `APROBADO` (y eventos con acta vigente no anulada); `BORRADOR`, `RECHAZADO` y `CANCELADO` no bloquean. Entre vínculos simultáneos de la misma persona en la misma institución también se bloquea el solape salvo clasificación/autorización expresa de TH. | Regla de colisión congelada para implementación en #192 | Solicitante (`@bryancito1090`) + TH + Jurídico |
+| PD-SAL-06 | **Resuelto en #189 para Modo A:** Cualquier corrección posterior de fechas o días sobre un evento con acta emitida exige anular la versión anterior con motivo auditado y emitir nueva versión sucesora vinculada, repitiendo validación de solapes; anular el PDF no borra la trazabilidad del evento ni altera registros históricos en silencio. | Trazabilidad inmutable sin ajustes retroactivos silenciosos | Solicitante (`@bryancito1090`) + TH + Jurídico |
+| PD-SAL-07 | **Resuelto en #189 para Modo A:** En Entrega 1 la consulta y seguimiento ocurren en la aplicación (bandeja de TH y vista de mis actas de la persona trabajadora) más entrega asistida auditada; no se añaden colas de mensajería externa ni cálculos de nómina/liquidación. | Sin mensajería externa ni pagos en Modo A | Solicitante (`@bryancito1090`) + TH + responsable funcional |
+| PD-SAL-08 | **Resuelto en #189:** Se adopta la **Opción 1** de [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) (`Vigente` para Modo A): registro auditable de `PeriodoVacacional` y `EventoVacacional` sin tablas de `Ledger` ni `Saldos` materializados en Entrega 1. | Desbloquea #192 (`T-SAL-01` y `T-SAL-02`) con contratos congelados | Quien desarrolla (`@bryancito1090`) |
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
+**Versión revisada:** 0.2, delimitada a Entrega 1 en Modo A con puertas E0 resueltas en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189)
 
-**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
+**Decisión:** Aprobada para planificación e implementación de Modo A; Modo B diferido
 
-**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; decisiones de activación E0 y ADR-0045 (Opción 1 Modo A) registradas por `@bryancito1090` en [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189)
 
-**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10 ([aprobacion.md](../../evidencia/issue-182/aprobacion.md)) y resolución de puertas E0 del 2026-11-10 ([evidencia #189](../../evidencia/issue-189/README.md)). Fecha de firma física no aportada
 
-**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
+**Ajustes solicitados:** Implementar Modo A con contratos congelados y control de solapes; mantener Modo B diferido y bloqueos institucionales sin saldos ni valores inferidos
 
-Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Las reglas no confirmadas conservan su bloqueo por institución.
+Esta versión 0.2 deja congeladas las decisiones de E0 (#189) para `plan.md`, `tasks.md` y `test-e2e.md`. Las instituciones sin configuración/certificación completa conservan su bloqueo operativo.

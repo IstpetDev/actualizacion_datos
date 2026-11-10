@@ -1,8 +1,8 @@
 # Marco y régimen — Pruebas de punta a punta
 
-**Spec aprobado:** [spec.md](spec.md) v0.1, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md). **Plan:** [plan.md](plan.md) v0.1.
+**Spec aprobado:** [spec.md](spec.md) v0.2, Modo A; [aprobación comunicada el 2026-11-10](../../evidencia/issue-182/aprobacion.md) y [decisiones E0 de #189](../../evidencia/issue-189/README.md). **Plan:** [plan.md](plan.md) v1.0.
 
-**Responsable de ejecución:** desarrollador/revisor asignado al issue futuro. **Ambiente:** prueba local o staging aislado con Angular, API real y PostgreSQL; almacén privado de prueba. **Estado:** diseñado, pendiente de ejecución; #182 no implementa ni prueba el módulo.
+**Responsable de ejecución:** desarrollador/revisor asignado al issue [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190) / [#195](https://github.com/IstpetDev/actualizacion_datos/issues/195). **Ambiente:** prueba local o staging aislado con Angular, API real y PostgreSQL; almacén privado de prueba. **Estado:** diseñado, puerta ADR/E0 resuelta en #189, pendiente de ejecución cuando se implemente el módulo.
 
 ## Preparación
 

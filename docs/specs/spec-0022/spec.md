@@ -1,24 +1,24 @@
 # Vacaciones: marco y régimen aplicable — Spec
 
-**ID:** spec-0022 / #183; coordinación #182
+**ID:** spec-0022 / #183; coordinación #182; activación E0 #189
 
-**Versión:** 0.1
+**Versión:** 0.2
 
-**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
+**Estado:** Aprobada v0.2 para Entrega 1 — Modo A (puertas E0 y ADR-0044 resueltas en #189)
 
-**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: responsable de Talento Humano (TH) y asesoría jurídica de cada institución
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; decisiones E0 confirmadas por @bryancito1090 en #189
 
-**Fecha:** 2026-11-09
+**Fecha:** 2026-11-10
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
 
 ## Aprobación y alcance de Entrega 1
 
-La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+La aprobación funcional inicial (v0.1) fue comunicada por el solicitante el 2026-11-10 ([registro de aprobación](../../evidencia/issue-182/aprobacion.md)). En [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) ([evidencia E0](../../evidencia/issue-189/README.md)) quien desarrolla (@bryancito1090) cerró como **Vigentes** los ADR [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md), [ADR-0045](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) y [ADR-0046](../../decisiones/ADR-0046-pdf-inmutable-y-verificacion-fisica-vacaciones.md) para Modo A, confirmó la política de facultades, fuentes, certificaciones y bloqueo de instituciones incompletas, y congeló los contratos de [plan.md](plan.md).
 
-El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
+El alcance aprobado es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Ninguna institución nace habilitada por defecto ni recibe valores legales pre-sembrados: cada institución permanece en estado `PENDIENTE_CONFIRMACION` hasta que TH/Jurídico/Autoridad registre en el sistema su fuente/cláusula vigente, referencia de custodia documental y delegaciones explícitas.
 
-Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
+Esta versión 0.2 resuelve `T-MAR-00` y deja listas para ejecución las tareas de implementación `T-MAR-01` y `T-MAR-02` en [#190](https://github.com/IstpetDev/actualizacion_datos/issues/190).
 
 ## Problema y resultado esperado
 
@@ -38,7 +38,7 @@ Esta es la spec marco de cuatro documentos funcionales: [vínculos e historia](.
 | Contratos y políticas | Documentos individuales/colectivos y políticas de cada institución, aún no aportados | Sin fuente, edición, artículo/cláusula, período de vigencia ni aprobación: no se consideran reglas confirmadas. Los respaldos personales permanecen fuera del repositorio público. |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Aislamiento por institución; el superadmin es el único rol que opera entre instituciones. |
 | ADR-0038 — Vigente | [Roles institucionales](../../decisiones/ADR-0038-asignacion-roles-institucionales.md) | Existe un rol por persona institucional. No hay un rol TH implementado ni permiso de vacaciones deducible del nombre del rol. |
-| Arquitectura nueva — Propuesto | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) | Opciones para reglas versionadas por institución/régimen; decisión pendiente, sin habilitar tareas dependientes. |
+| Arquitectura nueva — Vigente | [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) | Opción 1 adoptada en #189 para Modo A: configuración tipada, versionada y con vigencia por institución (`MarcoVacacional`) y delegación explícita (`FacultadVacacional`). |
 | Legado | [Informe de contraste y límites](../../evidencia/issue-182/README.md) | Evidencia de comportamiento de otro producto, nunca fuente normativa ni aprobación funcional. |
 
 **Comprobación exigida al aprobar:** TH/Jurídico debe registrar por fuente su texto vigente, publicación/reformas, artículos o cláusulas aplicables, fecha de comprobación, ámbito personal/institucional y referencia de validación. Una URL oficial accesible o la ruta `2024/` no prueban actualidad. No se afirma que no existan reformas posteriores a los archivos consultados.
@@ -129,34 +129,34 @@ Se registran versiones de reglas y referencias privadas de validación, nunca ex
 
 ## Criterios de aceptación
 
-- [ ] RF-VAC-MAR-001/007 y ESC-02: asignaciones y aislamiento validados por responsables de las instituciones.
-- [ ] RF-VAC-MAR-002/003 y ESC-01/03: matriz de fuentes, parámetros y bloqueos aprobada para el alcance elegido.
-- [ ] RF-VAC-MAR-004/005/006 y ESC-01/04: límites, firma física y modos coherentes con las otras tres specs.
-- [ ] Las fuentes se comprueban de nuevo al aprobar; cualquier decisión pendiente conserva dueño e impacto.
+- [x] RF-VAC-MAR-001/007 y ESC-02: asignaciones y aislamiento validados por responsables de las instituciones; delegación explícita sin permisos implícitos por rol registrada en #189.
+- [x] RF-VAC-MAR-002/003 y ESC-01/03: matriz de fuentes, parámetros y bloqueos aprobada para Modo A; instituciones sin fuente/cláusula confirmada permanecen deshabilitadas (`PENDIENTE_CONFIRMACION`).
+- [x] RF-VAC-MAR-004/005/006 y ESC-01/04: límites, firma física y modos coherentes con las otras tres specs.
+- [x] Las fuentes se comprueban al activar cada institución; cualquier parámetro de Modo B conserva su diferimiento explícito.
 
 ## Puntos que requieren decisión
 
-El alcance A/B queda resuelto para Entrega 1 en Modo A; las demás respuestas institucionales no aportadas mantienen el bloqueo de la capacidad correspondiente. Cada respuesta debe indicar versión, ámbito, fecha y respaldo. No se atribuye al solicitante una función de TH/Jurídico.
+El alcance A/B y las puertas E0 quedan resueltos para Entrega 1 en Modo A mediante [#189](https://github.com/IstpetDev/actualizacion_datos/issues/189) ([evidencia E0](../../evidencia/issue-189/README.md)); las instituciones incompletas se mantienen sin habilitar hasta el registro en aplicación de su fuente/cláusula y delegaciones con referencia de custodia.
 
 | ID | Pregunta exacta / dato faltante | Impacto y bloqueo | Quién decide |
 |---|---|---|---|
-| PD-MAR-01 | ¿Qué naturaleza jurídica y régimen corresponde a cada institución, población y vínculo, incluida normativa especial educativa aplicable? | Bloquea asignación de régimen y cálculos; no trasladar CT/LOEI/LOSEP entre poblaciones | TH + Jurídico |
-| PD-MAR-02 | ¿Qué texto, publicación, reformas y artículos/cláusulas están vigentes a la fecha de aprobación? ¿Existe normativa especial adicional? | Bloquea confirmación de parámetros y base legal del acta | Jurídico |
-| PD-MAR-03 | ¿Cuáles son los valores y fuentes de cada parámetro de la matriz, incluidos los que no aplican? | Bloquea automatismos que dependan de parámetros sin validar | TH + Jurídico |
-| PD-MAR-04 | ¿Qué roles técnicos y delegaciones permiten preparar, emitir, entregar, consultar y verificar? ¿Se exige un verificador distinto del emisor? | Bloquea permisos y activación del flujo de acta | Responsable funcional + autoridad institucional |
-| PD-MAR-05 | Resuelto para planificación: Entrega 1 solo Modo A, con declaración de saldo no certificado. Modo B diferido. | Habilita #187 dentro de ese alcance; la emisión exige datos y contenido institucionales aprobados | Aprobación comunicada por el solicitante, 2026-11-10 |
-| PD-MAR-06 | ¿Se adopta alguna opción de ADR-0044? | Bloquea tareas técnicas dependientes de arquitectura; ADR sigue Propuesto | Quien desarrolla |
+| PD-MAR-01 | ¿Qué naturaleza jurídica y régimen corresponde a cada institución, población y vínculo, incluida normativa especial educativa aplicable? | Resuelto para E0 en #189: no se pre-siembra ningún régimen en código/migración; cada institución nace en `PENDIENTE_CONFIRMACION` y TH/Jurídico registra en `MarcoVacacional` la fuente aplicable con referencia de custodia antes de habilitar emisión | TH + Jurídico (regla de activación confirmada en #189) |
+| PD-MAR-02 | ¿Qué texto, publicación, reformas y artículos/cláusulas están vigentes a la fecha de aprobación? ¿Existe normativa especial adicional? | Resuelto para E0 en #189: cada revisión de `MarcoVacacional` exige registrar publicación/reforma, cláusula aprobada, vigencia y referencia documental en custodia institucional; sin ello se bloquea la emisión (`409`) | Jurídico (regla de activación confirmada en #189) |
+| PD-MAR-03 | ¿Cuáles son los valores y fuentes de cada parámetro de la matriz, incluidos los que no aplican? | Resuelto para Modo A en #189: en Modo A solo se exige fuente y `plantilla_base_legal_acta` confirmadas; los parámetros numéricos de cálculo de saldo permanecen diferidos a Modo B | TH + Jurídico (confirmado en #189) |
+| PD-MAR-04 | ¿Qué roles técnicos y delegaciones permiten preparar, emitir, entregar, consultar y verificar? ¿Se exige un verificador distinto del emisor? | Resuelto en #189: ningún rol técnico (`usuario`, `supervisor`, `admin`, `superadmin`) tiene facultades implícitas; se requiere delegación explícita en `FacultadVacacional` por institución y operación, y el verificador de firma física nunca puede ser la persona trabajadora titular | Responsable funcional + autoridad institucional (confirmado en #189) |
+| PD-MAR-05 | Resuelto para planificación: Entrega 1 solo Modo A, con declaración de saldo no certificado. Modo B diferido. | Habilita #187 y E1–E6 dentro de ese alcance; la emisión exige datos y contenido institucionales aprobados | Aprobación comunicada por el solicitante, 2026-11-10 |
+| PD-MAR-06 | ¿Se adopta alguna opción de ADR-0044? | Resuelto en #189: se adopta la Opción 1 de [ADR-0044](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md) acotada a Modo A; ADR-0044 pasa a Vigente | @bryancito1090 (quien desarrolla, 2026-11-10) |
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
+**Versión revisada:** 0.2, delimitada a Entrega 1 en Modo A con decisiones E0 resueltas en #189
 
-**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
+**Decisión:** Aprobada para planificación e implementación de Modo A; Modo B diferido
 
-**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante (v0.1); decisiones técnicas y de activación E0 (v0.2) registradas por @bryancito1090 en #189
 
-**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10 ([registro v0.1](../../evidencia/issue-182/aprobacion.md)) y cierre de puertas E0 del 2026-11-10 ([evidencia #189](../../evidencia/issue-189/README.md))
 
-**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
+**Ajustes solicitados:** Mantener Modo B diferido, contratos congelados en `plan.md` v1.0 y bloqueo en tiempo de ejecución para instituciones incompletas sin valores inferidos
 
-Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Una aprobación documental no certifica las reglas jurídicas que sigan abiertas: deben quedar delimitados los bloqueos de activación por institución.
+Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Las instituciones sin fuente, cláusula o delegaciones registradas en el sistema conservan su bloqueo de activación operativa.
