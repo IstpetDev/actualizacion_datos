@@ -378,8 +378,14 @@ describe('SupervisorDashboardComponent', () => {
     component.verExpediente('1700000001');
     fixture.detectChanges();
 
+    const tabDocs = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="tab-exp-documentos"]',
+    ) as HTMLButtonElement;
+    tabDocs?.click();
+    fixture.detectChanges();
+
     const archivoEl = (fixture.nativeElement as HTMLElement).querySelector(
-      '[data-testid="archivo-22222222-2222-2222-2222-222222222222"]',
+      '[data-testid="item-documento-22222222-2222-2222-2222-222222222222"]',
     );
     expect(archivoEl).not.toBeNull();
     const texto = archivoEl?.textContent || '';
@@ -522,10 +528,32 @@ describe('SupervisorDashboardComponent', () => {
       component.verExpediente('1700000001');
       fixture.detectChanges();
 
+      const tabDocs = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="tab-exp-documentos"]',
+      ) as HTMLButtonElement;
+      tabDocs?.click();
+      fixture.detectChanges();
+
       const btnRetirar = (fixture.nativeElement as HTMLElement).querySelector(
         '[data-testid="btn-retirar-22222222-2222-2222-2222-222222222222"]',
       );
       expect(btnRetirar).not.toBeNull();
+    });
+
+    it('muestra_boton_retirar_documento_junto_a_solicitar_correccion_en_formacion_academica', () => {
+      component.verExpediente('1700000001');
+      fixture.detectChanges();
+
+      const tabFormacion = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="tab-exp-formacion"]',
+      ) as HTMLButtonElement;
+      tabFormacion?.click();
+      fixture.detectChanges();
+
+      const btnRetirarTitulo = (fixture.nativeElement as HTMLElement).querySelector(
+        '[data-testid="btn-retirar-titulo-tit-100"]',
+      );
+      expect(btnRetirarTitulo).not.toBeNull();
     });
 
     it('iniciar_retiro_abre_modal_y_deshabilita_confirmar_sin_motivo', () => {
