@@ -604,84 +604,6 @@ export interface ArchivoPrevisualizacion {
                   <p class="text-muted">Sin datos adicionales registrados.</p>
                 }
               </div>
-            </section>
-
-            <!-- Documentos y Archivos Adjuntos con Previsualización (Issue #176 & #177) -->
-            <section class="card glass-card">
-              <div class="card-header-styled">
-                <div class="card-title-group">
-                  <span class="material-symbols-outlined icon-md text-primary">attach_file</span>
-                  <h3 class="card-title">Documentos Adjuntos del Expediente</h3>
-                </div>
-                <span class="badge badge-info">{{ archivosExpediente().length }} total</span>
-              </div>
-              <p class="section-hint text-muted">
-                Respaldos subidos en el expediente. Se pueden revisar aquí o dentro de cada pestaña
-                inferior.
-              </p>
-              <div class="archivos-lista" data-testid="lista-archivos-expediente">
-                @for (archivo of archivosExpediente(); track archivo.id) {
-                  <div class="archivo-item" [attr.data-testid]="'archivo-' + archivo.id">
-                    <div class="archivo-info">
-                      <div class="archivo-icon-row">
-                        <span class="material-symbols-outlined icon-sm text-muted">
-                          {{
-                            esTipoPdf(archivo.tipoContenido, archivo.nombreOriginal)
-                              ? 'picture_as_pdf'
-                              : 'description'
-                          }}
-                        </span>
-                        <strong>{{ archivo.nombreOriginal }}</strong>
-                      </div>
-                      <span class="archivo-meta">
-                        {{ archivo.claveDestino || 'Documento General' }} •
-                        {{ (archivo.tamanoBytes / 1024).toFixed(1) }} KB •
-                        {{ archivo.tipoContenido }} • Subido:
-                        {{ archivo.fechaSubidaUtc | date: 'dd/MM/yyyy HH:mm' }}
-                      </span>
-                    </div>
-                    <div class="archivo-buttons">
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm"
-                        (click)="
-                          previsualizarArchivo(
-                            archivo.id,
-                            archivo.nombreOriginal,
-                            archivo.tipoContenido
-                          )
-                        "
-                        title="Previsualizar archivo sin salir"
-                      >
-                        <span class="material-symbols-outlined icon-sm">visibility</span>
-                        <span>Previsualizar</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm"
-                        (click)="descargarArchivo(archivo.id, archivo.nombreOriginal)"
-                        [attr.data-testid]="'btn-descargar-' + archivo.id"
-                        title="Descargar archivo a tu equipo"
-                      >
-                        <span class="material-symbols-outlined icon-sm">download</span>
-                        <span>Descargar</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        (click)="iniciarRetiroArchivo(archivo)"
-                        [attr.data-testid]="'btn-retirar-' + archivo.id"
-                        title="Retirar archivo con motivo de rechazo"
-                      >
-                        <span class="material-symbols-outlined icon-sm">delete_sweep</span>
-                        <span>Retirar</span>
-                      </button>
-                    </div>
-                  </div>
-                } @empty {
-                  <p class="text-muted">No se registran documentos adjuntos en este expediente.</p>
-                }
-              </div>
 
               <app-observaciones-revision
                 [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
@@ -701,6 +623,7 @@ export interface ArchivoPrevisualizacion {
               (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
               (previsualizar)="previsualizarArchivo($event.archivoId, $event.nombreOriginal)"
               (marcarItem)="iniciarMarcaItem($event)"
+              (retirarArchivo)="iniciarRetiroArchivoPorId($event)"
             />
           }
         </article>
@@ -1732,7 +1655,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   });
 
   readonly esExpedienteEnviado = computed(() => {
-    return this.expedienteSeleccionado()?.estadoActualizacion === 'Enviado';
+    return (this.expedienteSeleccionado()?.estadoActualizacion || '').toLowerCase() === 'enviado';
   });
 
   obtenerClaseBadge(estado?: string): string {
@@ -2013,7 +1936,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
-    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set(info.label || info.tipo);
     this.nuevaMarcaTipo.set(info.tipo || 'Item');
     this.nuevaMarcaClave.set(info.clave);
@@ -2026,7 +1949,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   aprobar(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
+    if (!exp || !this.esExpedienteEnviado()) return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -2046,7 +1969,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   }
 
   abrirModalDevolver(): void {
-    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set('');
     this.observacionGeneral.set('');
     this.marcas.set([]);
@@ -2082,7 +2005,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   confirmarDevolucion(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
+    if (!exp || !this.esExpedienteEnviado()) return;
 
     // Si el revisor redactó un motivo puntual y no pulsó '+ Agregar Marca', agregarla automáticamente
     const clave = this.nuevaMarcaClave().trim();
@@ -2257,6 +2180,18 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
     this.errorRetiro.set('');
   }
 
+  iniciarRetiroArchivoPorId(info: { archivoId: string; nombreOriginal?: string }): void {
+    const arch =
+      this.archivosExpediente().find((a) => a.id === info.archivoId) ||
+      ({
+        id: info.archivoId,
+        nombreOriginal: info.nombreOriginal || 'Respaldo adjunto',
+        tipoContenido: 'application/pdf',
+        tamanoBytes: 0,
+      } as ArchivoDto);
+    this.iniciarRetiroArchivo(arch);
+  }
+
   cancelarRetiroArchivo(): void {
     this.archivoParaRetirar.set(null);
     this.motivoRetiro = '';
@@ -2284,6 +2219,9 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
         if (exp) {
           this.revisionClient.listarArchivosExpediente(exp.documento).subscribe({
             next: (archivos) => this.archivosExpediente.set(archivos),
+          });
+          this.revisionClient.obtenerHojaDeVidaParaRevision(exp.documento).subscribe({
+            next: (hdv) => this.hojaDeVida.set(hdv),
           });
         }
       },
