@@ -713,9 +713,10 @@ export class MiCuentaBancariaComponent implements OnInit {
     this.realizar(
       this.cliente.guardarMiCuentaBancaria({
         tipoCuentaId: this.tipoCuentaId,
-        numero: this.numero,
+        numero: this.numero.trim(),
         bancoId: this.bancoId ?? undefined,
-        nombreBancoOtro: this.bancoId === null ? this.nombreBancoOtro : undefined,
+        nombreBancoOtro:
+          this.bancoId === null ? this.nombreBancoOtro?.trim() || undefined : undefined,
       }),
       (resultado) => {
         this.mostrar(resultado as CuentaBancariaDto);

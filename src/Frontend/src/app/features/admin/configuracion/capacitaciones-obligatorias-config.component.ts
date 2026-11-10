@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   CapacitacionObligatoriaDto,
@@ -70,7 +70,16 @@ import { fechaSinHora } from '../../usuario/hoja-de-vida/servicios/fecha-sin-hor
       @if (error()) {
         <div class="bento-alert alert-danger" role="alert" data-testid="mensaje-error-obligatoria">
           <span class="alert-icon">⚠</span>
-          <span>{{ error() }}</span>
+          <div class="alerta-error-contenido">
+            <strong>{{ error() }}</strong>
+            @if (listaErroresCampos().length > 0) {
+              <ul class="alerta-lista-errores mt-1 mb-0 ps-3">
+                @for (err of listaErroresCampos(); track err) {
+                  <li>{{ err }}</li>
+                }
+              </ul>
+            }
+          </div>
         </div>
       }
 
@@ -1333,6 +1342,17 @@ export class CapacitacionesObligatoriasConfigComponent implements OnInit {
     return null;
   }
 
+  readonly listaErroresCampos = computed(() => {
+    const errs = this.erroresCampos();
+    const resultado: string[] = [];
+    for (const [campo, mensajes] of Object.entries(errs)) {
+      for (const m of mensajes) {
+        resultado.push(`${campo}: ${m}`);
+      }
+    }
+    return resultado;
+  });
+
   calcularPorcentaje(parcial: number, total: number): number {
     if (!total || total <= 0) return 0;
     return Math.min(100, Math.round((parcial / total) * 100));
@@ -1388,8 +1408,29 @@ export class CapacitacionesObligatoriasConfigComponent implements OnInit {
   }
 
   guardar(): void {
-    if (!this.modelo.nombre?.trim()) {
+    const nombreLimpio = this.modelo.nombre?.trim() ?? '';
+    if (!nombreLimpio) {
       this.error.set('El nombre de la capacitación obligatoria es obligatorio.');
+      this.erroresCampos.set({ nombre: ['El nombre es obligatorio.'] });
+      return;
+    }
+
+    if (nombreLimpio.length > 200) {
+      this.error.set('El nombre no puede superar 200 caracteres.');
+      this.erroresCampos.set({ nombre: ['El nombre no puede superar 200 caracteres.'] });
+      return;
+    }
+
+    const horas =
+      this.modelo.horasEsperadas !== undefined &&
+      this.modelo.horasEsperadas !== null &&
+      String(this.modelo.horasEsperadas).trim() !== ''
+        ? Number(this.modelo.horasEsperadas)
+        : undefined;
+
+    if (horas !== undefined && horas <= 0) {
+      this.error.set('Las horas esperadas deben ser mayores a 0.');
+      this.erroresCampos.set({ horasEsperadas: ['Las horas esperadas deben ser mayores a 0.'] });
       return;
     }
 
@@ -1408,13 +1449,6 @@ export class CapacitacionesObligatoriasConfigComponent implements OnInit {
         d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10),
       );
     }
-
-    const horas =
-      this.modelo.horasEsperadas !== undefined &&
-      this.modelo.horasEsperadas !== null &&
-      String(this.modelo.horasEsperadas).trim() !== ''
-        ? Number(this.modelo.horasEsperadas)
-        : undefined;
 
     const peticionRequest: GuardarCapacitacionObligatoriaRequest = {
       nombre: this.modelo.nombre.trim(),

@@ -10,6 +10,7 @@ using Istpet.ActualizacionDatos.Domain.HojaDeVida;
 using Istpet.ActualizacionDatos.Infrastructure;
 using Istpet.ActualizacionDatos.Infrastructure.Multitenancy;
 using Istpet.ActualizacionDatos.Infrastructure.Persistence;
+using Istpet.ActualizacionDatos.WebApi;
 using Istpet.ActualizacionDatos.WebApi.Endpoints;
 using Istpet.ActualizacionDatos.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication;
@@ -92,6 +93,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi(options =>
 {
+    options.AddSchemaTransformer((schema, context, cancellationToken) =>
+    {
+        if (context.JsonTypeInfo.Type == typeof(DateOnly))
+        {
+            schema.Type = JsonSchemaType.String;
+            schema.Format = "date";
+        }
+        else if (context.JsonTypeInfo.Type == typeof(DateOnly?))
+        {
+            schema.Type = JsonSchemaType.String | JsonSchemaType.Null;
+            schema.Format = "date";
+        }
+        return Task.CompletedTask;
+    });
     options.AddOperationTransformer((operation, context, cancellationToken) =>
     {
         if (operation.OperationId is "DescargarArchivo" or "DescargarDocumentoHojaDeVidaPersona" or "DescargarMiDocumentoHojaDeVida" or "ExportarZip" or "ExportarExcel")
@@ -135,6 +150,11 @@ builder.Services.AddOpenApi(options =>
     });
 });
 builder.Services.Configure<RouteHandlerOptions>(opciones => opciones.ThrowOnBadRequest = true);
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new DateOnlyFlexibleJsonConverter());
+    options.SerializerOptions.Converters.Add(new DateOnlyNullableFlexibleJsonConverter());
+});
 builder.Services.AddExceptionHandler<Istpet.ActualizacionDatos.WebApi.ValidacionJsonHandler>();
 builder.Services.AddExceptionHandler<ManejadorGlobalExcepciones>();
 builder.Services.AddProblemDetails();

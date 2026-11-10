@@ -292,7 +292,9 @@ export type TabSeccionHojaVida =
             @case ('ficha') {
               <app-ficha-personal></app-ficha-personal>
               @if (esCuentaBancariaAbierta()) {
-                <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
+                <div class="cuenta-bancaria-wrapper-separador">
+                  <app-mi-cuenta-bancaria [editable]="puedeEditar()"></app-mi-cuenta-bancaria>
+                </div>
               }
             }
             @case ('formacion') {
@@ -419,6 +421,12 @@ export type TabSeccionHojaVida =
         max-width: 1180px;
         margin: 0 auto;
         padding: 0.5rem 0.75rem;
+      }
+
+      .cuenta-bancaria-wrapper-separador {
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px dashed #cbd5e1;
       }
 
       /* Encabezado Institucional Luminoso (Estilo public-updater ISTPET) */

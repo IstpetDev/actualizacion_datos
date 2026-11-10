@@ -25,16 +25,15 @@ import {
   GuardarFichaPersonalRequest,
 } from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
-import { UploaderRespaldoComponent } from '../../componentes/uploader-respaldo.component';
 import { MarcaObservacionComponent } from '../../componentes/marca-observacion.component';
 import { CatalogosCacheService } from '../../servicios/catalogos-cache.service';
 import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.service';
-import { mensajeError } from '../../../../../core/auth/mensaje-error';
+import { extraerDetalleError, mensajeError } from '../../../../../core/auth/mensaje-error';
 
 @Component({
   selector: 'app-ficha-personal',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarcaObservacionComponent, UploaderRespaldoComponent],
+  imports: [CommonModule, FormsModule, MarcaObservacionComponent],
   template: `
     @if (validacion.errorCarga()) {
       <p role="alert">
@@ -77,12 +76,18 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
           <div class="foto-carnet-grid">
             <div class="foto-marco-carnet">
               @if (fotoPreviewUrl(); as prev) {
-                <img [src]="prev" alt="Fotografía Formal" class="foto-img-carnet" />
+                <img
+                  [src]="prev"
+                  alt="Fotografía Formal"
+                  class="foto-img-carnet"
+                  data-testid="foto-persistida"
+                />
               } @else if (modelo.fotoArchivoId; as fotoId) {
                 <img
                   [src]="obtenerUrlFoto(fotoId)"
                   alt="Fotografía Formal"
                   class="foto-img-carnet"
+                  data-testid="foto-persistida"
                 />
               } @else {
                 <div class="sin-foto-carnet">
@@ -128,8 +133,8 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
                 </li>
               </ul>
 
-              @if (puedeEditar()) {
-                <div class="foto-acciones-row">
+              <div class="foto-acciones-row">
+                @if (puedeEditar()) {
                   <label class="btn btn-subir-foto" [class.btn-disabled]="subiendoFoto()">
                     <span class="material-symbols-outlined icon-sm">
                       {{ subiendoFoto() ? 'sync' : 'upload' }}
@@ -165,8 +170,21 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
                       <span>Quitar</span>
                     </button>
                   }
-                </div>
-              }
+                }
+
+                @if (modelo.fotoArchivoId; as fotoId) {
+                  <a
+                    [href]="obtenerUrlFoto(fotoId)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-ver-foto"
+                    data-testid="btn-descargar-foto"
+                  >
+                    <span class="material-symbols-outlined icon-sm">visibility</span>
+                    <span>Ver / Descargar</span>
+                  </a>
+                }
+              </div>
 
               @if (errorFoto()) {
                 <div class="alerta-error-foto mt-2" role="alert">
@@ -838,29 +856,29 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
             formación académica, capacitaciones continuas y trayectoria laboral al revisar y
             exportar el expediente digital.
           </p>
-          <div class="mt-3">
-            <app-uploader-respaldo
-              etiqueta="Foto de Perfil Personal"
-              ayuda="Formatos permitidos: JPG, PNG (máx. 10 MB)"
-              [soloImagenes]="true"
-              [mostrarVistaPrevia]="true"
-              [requerido]="false"
-              [puedeEditar]="puedeEditar()"
-              [archivoId]="modelo.fotoArchivoId"
-              [claveDestino]="'foto:perfil'"
-              [archivoIdGuardado]="fotoGuardadaId()"
-              (archivoIdChange)="onFotoSubida($event)"
-              (archivoEliminado)="onFotoEliminada()"
-            ></app-uploader-respaldo>
-          </div>
         </fieldset>
 
-        <!-- Botón de Guardado -->
+        <!-- Botón de Guardado y Mensajes -->
         @if (mensajeExito()) {
-          <p role="status">{{ mensajeExito() }}</p>
+          <div class="alerta-exito-guardado mt-3" role="status">
+            <span class="material-symbols-outlined icon-sm">check_circle</span>
+            <span>{{ mensajeExito() }}</span>
+          </div>
         }
         @if (error()) {
-          <p class="text-danger" role="alert">{{ error() }}</p>
+          <div class="alerta-error-guardado mt-3" role="alert">
+            <div class="alerta-header">
+              <span class="material-symbols-outlined icon-sm">error</span>
+              <strong>{{ error() }}</strong>
+            </div>
+            @if (listaErroresServidor().length > 0) {
+              <ul class="lista-errores-servidor mt-2">
+                @for (e of listaErroresServidor(); track e) {
+                  <li>{{ e }}</li>
+                }
+              </ul>
+            }
+          </div>
         }
         @if (puedeEditar()) {
           <div class="acciones-form mt-4">
@@ -1177,6 +1195,57 @@ import { mensajeError } from '../../../../../core/auth/mensaje-error';
         color: #dc2626;
         margin: 0;
       }
+      .btn-ver-foto {
+        background: #f8fafc;
+        color: #222c57;
+        border: 1.5px solid #c4a857;
+        border-radius: 12px;
+        padding: 0.55rem 0.95rem;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-decoration: none;
+        transition: all 0.18s ease;
+      }
+      .btn-ver-foto:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+      }
+      .alerta-exito-guardado {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      .alerta-error-guardado {
+        padding: 0.75rem 1rem;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        border-radius: 12px;
+        font-size: 0.875rem;
+      }
+      .alerta-header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 700;
+      }
+      .lista-errores-servidor {
+        margin: 0.5rem 0 0 1.25rem;
+        padding: 0;
+        font-size: 0.8125rem;
+        color: #b91c1c;
+      }
       .mb-4 {
         margin-bottom: 1.25rem;
       }
@@ -1206,7 +1275,26 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   readonly error = this.state.error;
   readonly errorResidencia = signal('');
   readonly errorParroquia = signal('');
+  readonly erroresServidor = signal<Record<string, string[]>>({});
   private cargaResidencia?: Subscription;
+
+  readonly listaErroresServidor = computed(() => {
+    const errs = this.erroresServidor();
+    const resultado: string[] = [];
+    for (const [campo, mensajes] of Object.entries(errs)) {
+      for (const m of mensajes) {
+        resultado.push(`${campo}: ${m}`);
+      }
+    }
+    return resultado;
+  });
+
+  obtenerErrorCampo(campo: string): string {
+    const local = this.validacion.mensaje(this.modelo, 'ficha', campo);
+    if (local) return local;
+    const serv = this.erroresServidor()[campo];
+    return serv?.length ? serv.join(' ') : '';
+  }
 
   // Catálogos
   readonly paises = signal<ElementoCatalogoDto[]>([]);
@@ -1337,16 +1425,22 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
     }
     if (!this.puedeEditar()) return of(true);
     if (this.formularioInvalido()) return of(false);
+    this.erroresServidor.set({});
     const datos = this.datosParaGuardar();
     return this.state.guardarFichaPersonal(datos).pipe(
       map(() => {
-        this.modelo = datos;
+        this.modelo = { ...this.modelo, ...datos };
         this.guardarSnapshot();
+        this.erroresServidor.set({});
         this.state.actualizarEstadoCambios?.();
         return true;
       }),
       catchError((error: unknown) => {
+        const detalle = extraerDetalleError(error);
+        const errs = detalle.errores ?? {};
+        this.erroresServidor.set(errs);
         this.validacion.registrarError(error, datos);
+        this.validacion.registrarError(error, this.modelo);
         return of(false);
       }),
     );
@@ -1518,14 +1612,38 @@ export class FichaPersonalComponent implements OnInit, OnDestroy, SeccionConCamb
   }
 
   private datosParaGuardar(): GuardarFichaPersonalRequest {
-    return this.poseeDiscapacidad()
-      ? this.modelo
-      : {
-          ...this.modelo,
-          discapacidadId: undefined,
-          porcentajeDiscapacidad: undefined,
-          numeroCarnetDiscapacidad: undefined,
-        };
+    const res: Record<string, unknown> = { ...this.modelo };
+
+    // ADR-0024 / Disallow: el backend rechaza propiedades no mapeadas en GuardarFichaPersonalRequest
+    delete res['personaId'];
+    delete res['fechaActualizacionUtc'];
+    delete res['perfil'];
+
+    if (!this.poseeDiscapacidad()) {
+      if ('discapacidadId' in res) res['discapacidadId'] = undefined;
+      if ('porcentajeDiscapacidad' in res) res['porcentajeDiscapacidad'] = undefined;
+      if ('numeroCarnetDiscapacidad' in res) res['numeroCarnetDiscapacidad'] = undefined;
+    }
+
+    if (res['fechaNacimiento'] instanceof Date) {
+      const d = res['fechaNacimiento'];
+      const iso = d.toISOString().slice(0, 10);
+      if (new Date(iso).toISOString().slice(0, 10) === iso) {
+        res['fechaNacimiento'] = fechaSinHora(iso);
+      }
+    } else if (typeof res['fechaNacimiento'] === 'string') {
+      const str = res['fechaNacimiento'] as string;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str) && new Date(str).toISOString().slice(0, 10) === str) {
+        res['fechaNacimiento'] = fechaSinHora(str);
+      }
+    } else if (this.fechaNacimientoStr && !res['fechaNacimiento']) {
+      const str = this.fechaNacimientoStr;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str) && new Date(str).toISOString().slice(0, 10) === str) {
+        res['fechaNacimiento'] = fechaSinHora(str);
+      }
+    }
+
+    return res as GuardarFichaPersonalRequest;
   }
 
   onPoseeDiscapacidadChange(posee: boolean): void {
