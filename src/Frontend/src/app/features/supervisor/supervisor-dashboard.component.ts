@@ -1655,7 +1655,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   });
 
   readonly esExpedienteEnviado = computed(() => {
-    return this.expedienteSeleccionado()?.estadoActualizacion === 'Enviado';
+    return (this.expedienteSeleccionado()?.estadoActualizacion || '').toLowerCase() === 'enviado';
   });
 
   obtenerClaseBadge(estado?: string): string {
@@ -1936,7 +1936,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
-    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set(info.label || info.tipo);
     this.nuevaMarcaTipo.set(info.tipo || 'Item');
     this.nuevaMarcaClave.set(info.clave);
@@ -1949,7 +1949,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   aprobar(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
+    if (!exp || !this.esExpedienteEnviado()) return;
 
     this.procesando.set(true);
     this.error.set(null);
@@ -1969,7 +1969,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   }
 
   abrirModalDevolver(): void {
-    if (this.expedienteSeleccionado()?.estadoActualizacion !== 'Enviado') return;
+    if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set('');
     this.observacionGeneral.set('');
     this.marcas.set([]);
@@ -2005,7 +2005,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   confirmarDevolucion(): void {
     const exp = this.expedienteSeleccionado();
-    if (!exp || exp.estadoActualizacion !== 'Enviado') return;
+    if (!exp || !this.esExpedienteEnviado()) return;
 
     // Si el revisor redactó un motivo puntual y no pulsó '+ Agregar Marca', agregarla automáticamente
     const clave = this.nuevaMarcaClave().trim();

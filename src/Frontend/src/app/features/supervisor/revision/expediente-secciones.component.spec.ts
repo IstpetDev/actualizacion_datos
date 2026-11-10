@@ -174,6 +174,26 @@ describe('ExpedienteSeccionesComponent', () => {
     });
   });
 
+  it('habilita_los_botones_de_solicitar_correccion_y_retirar_incluso_con_estado_enviado_en_minusculas', () => {
+    fixture.componentRef.setInput('hojaDeVida', {
+      ...mockHdv,
+      estadoActualizacion: 'enviado',
+    });
+    component.cambiarTab('formacion');
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const btnMarcar = compiled.querySelector(
+      '[data-testid="btn-marcar-titulo-tit-001"]',
+    ) as HTMLButtonElement;
+    expect(btnMarcar.disabled).toBe(false);
+
+    const btnRetirar = compiled.querySelector(
+      '[data-testid="btn-retirar-titulo-tit-001"]',
+    ) as HTMLButtonElement;
+    expect(btnRetirar.disabled).toBe(false);
+  });
+
   it('debe emitir la descarga de respaldo al hacer clic en el botón correspondiente', () => {
     component.cambiarTab('formacion');
     fixture.detectChanges();

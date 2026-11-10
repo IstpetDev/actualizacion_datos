@@ -186,7 +186,7 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"
-                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      [disabled]="!esEnviado()"
                       (click)="onRetirarArchivo(ficha.fotoArchivoId, 'foto_perfil.jpg')"
                       data-testid="btn-retirar-foto"
                       title="Retirar fotografía de perfil del expediente"
@@ -306,7 +306,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('titulo', t.id, t.nombreTitulo)"
                     [attr.data-testid]="'btn-marcar-titulo-' + t.id"
                   >
@@ -317,7 +317,7 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"
-                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      [disabled]="!esEnviado()"
                       (click)="onRetirarArchivo(t.archivoId, 'titulo_' + t.nombreTitulo + '.pdf')"
                       [attr.data-testid]="'btn-retirar-titulo-' + t.id"
                       title="Retirar respaldo adjunto de este título"
@@ -403,7 +403,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('titulo-en-curso', tc.id, tc.nombrePrograma)"
                     [attr.data-testid]="'btn-marcar-titulo-en-curso-' + tc.id"
                   >
@@ -414,7 +414,7 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"
-                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      [disabled]="!esEnviado()"
                       (click)="
                         onRetirarArchivo(
                           tc.archivoId,
@@ -528,7 +528,7 @@ export type TabExpediente =
                       <button
                         type="button"
                         class="btn btn-warning btn-sm"
-                        [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                        [disabled]="!esEnviado()"
                         (click)="onMarcarItem('capacitacion', ob.capacitacionId, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-' + ob.id"
                       >
@@ -539,7 +539,7 @@ export type TabExpediente =
                       <button
                         type="button"
                         class="btn btn-warning btn-sm"
-                        [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                        [disabled]="!esEnviado()"
                         (click)="onMarcarObligatoriaPendiente(ob.id, ob.nombre)"
                         [attr.data-testid]="'btn-marcar-obligatoria-pendiente-' + ob.id"
                       >
@@ -627,7 +627,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('capacitacion', c.id, c.nombreEvento)"
                     [attr.data-testid]="'btn-marcar-capacitacion-' + c.id"
                   >
@@ -638,7 +638,7 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"
-                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      [disabled]="!esEnviado()"
                       (click)="
                         onRetirarArchivo(c.archivoId, 'capacitacion_' + c.nombreEvento + '.pdf')
                       "
@@ -765,7 +765,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('experiencia', e.id, e.cargo + ' en ' + e.empleador)"
                     [attr.data-testid]="'btn-marcar-experiencia-' + e.id"
                   >
@@ -776,7 +776,7 @@ export type TabExpediente =
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"
-                      [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                      [disabled]="!esEnviado()"
                       (click)="onRetirarArchivo(e.archivoId, 'experiencia_' + e.empleador + '.pdf')"
                       [attr.data-testid]="'btn-retirar-experiencia-' + e.id"
                       title="Retirar respaldo adjunto de esta experiencia laboral"
@@ -868,7 +868,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('referencia', r.id, r.nombresApellidos)"
                     [attr.data-testid]="'btn-marcar-referencia-' + r.id"
                   >
@@ -949,7 +949,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-warning btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onMarcarItem('documento', arc.id, arc.nombreOriginal)"
                     [attr.data-testid]="'btn-marcar-documento-' + arc.id"
                   >
@@ -959,7 +959,7 @@ export type TabExpediente =
                   <button
                     type="button"
                     class="btn btn-danger btn-sm"
-                    [disabled]="hojaDeVida().estadoActualizacion !== 'Enviado'"
+                    [disabled]="!esEnviado()"
                     (click)="onRetirarArchivo(arc.id, arc.nombreOriginal)"
                     [attr.data-testid]="'btn-retirar-' + arc.id"
                     title="Retirar archivo adjunto del expediente"
@@ -1228,6 +1228,10 @@ export class ExpedienteSeccionesComponent {
   readonly tabActiva = signal<TabExpediente>('ficha');
   readonly modalAyudaObligatoria = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
   readonly capacitacionAyudaSeleccionada = signal<string>('');
+
+  readonly esEnviado = computed(
+    () => (this.hojaDeVida()?.estadoActualizacion ?? '').toLowerCase() === 'enviado',
+  );
 
   readonly capacitacionesDisponibles = computed(() =>
     (this.hojaDeVida().capacitaciones || []).filter((c) => !c.capacitacionObligatoriaId),
