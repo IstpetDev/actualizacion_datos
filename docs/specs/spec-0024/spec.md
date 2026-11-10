@@ -4,13 +4,21 @@
 
 **Versión:** 0.1
 
-**Estado:** Borrador para revisión funcional
+**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
 
-**Revisor funcional:** Por designar: Talento Humano y asesoría jurídica de cada institución
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: Talento Humano y asesoría jurídica de cada institución
 
 **Fecha:** 2026-11-09
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
+
+## Aprobación y alcance de Entrega 1
+
+La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+
+El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
+
+Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
 
 ## Problema y resultado esperado
 
@@ -22,7 +30,7 @@ Un acta necesita indicar qué vacaciones se otorgan, su período de imputación,
 |---|---|---|
 | Solicitud | [#185](https://github.com/IstpetDev/actualizacion_datos/issues/185), [#182](https://github.com/IstpetDev/actualizacion_datos/issues/182) | Contemplar períodos, corte, solapes y acta sin afirmar derechos no verificables. |
 | Marco | [spec-0022](../spec-0022/spec.md) | Catálogo de parámetros por confirmar; CT arts. 69–78 y LOSEP art. 29 revisados el 2026-11-09 en copias con última reforma declarada 2023-05-12, sin vigencia actual acreditada. LOEI pendiente de consulta por fallo de acceso; no hay valores legales confirmados para vínculos del producto. |
-| Historia | [spec-0023](../spec-0023/spec.md) | Fecha y corte certificados independientemente; cobertura/desglose y prevención de doble conteo. Borrador, no decisión funcional vigente. |
+| Historia | [spec-0023](../spec-0023/spec.md) | Fecha y corte certificados independientemente; cobertura/desglose y prevención de doble conteo. Versión 0.1 aprobada para planificación de Modo A; activación institucional condicionada a datos respaldados. |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Ningún saldo, calendario o período atraviesa la institución del vínculo. |
 | ADR-0044 / ADR-0045 — Propuestos | [Reglas](../../decisiones/ADR-0044-reglas-vacacionales-por-institucion-y-regimen.md), [corte](../../decisiones/ADR-0045-corte-historico-y-saldo-certificado-vacaciones.md) | Arquitectura de reglas y representación contable por decidir antes de tareas dependientes. |
 | Legado | [Evidencia #182](../../evidencia/issue-182/README.md) | Bolsas base/incentivo, FIFO, tramos, anticipos y empalmes describen comportamiento técnico previo; no acreditan reglas válidas aquí. El ledger previo permite modificaciones/borrados: su inmutabilidad no está probada. |
@@ -145,7 +153,7 @@ Se muestran fecha de corte, cobertura y procedencia al lado del saldo; «descono
 
 | ID | Pregunta exacta / dato faltante | Impacto y bloqueo | Quién decide |
 |---|---|---|---|
-| PD-SAL-01 | ¿Entrega 1 incluye solo Modo A o también B? ¿Qué autoridad certifica período, días y retorno manuales en A? | Bloquea alcance y emisión sin datos respaldados | TH + Jurídico + solicitante |
+| PD-SAL-01 | Resuelto el alcance: solo Modo A en Entrega 1. La designación concreta de quien certifica período, días y retorno requiere respaldo institucional. | #187 habilitado para A; emisión bloqueada si falta certificación/facultad | Aprobación de alcance comunicada por solicitante; designación por TH/autoridad |
 | PD-SAL-02 | ¿Qué períodos, conteo, devengo proporcional, fracciones/redondeo, aniversario bisiesto, feriados, empalmes y retorno corresponden a cada régimen? | Bloquea los cálculos sin regla/fuente | TH + Jurídico; matriz spec-0022 |
 | PD-SAL-03 | ¿Se aprueba FIFO entre períodos y base antes de incentivo? ¿Se permiten anticipos, incentivos o caducidad, con qué fuente, límites y autoridad? | Bloquea imputación automática correspondiente; sin anticipos implícitos | TH + Jurídico |
 | PD-SAL-04 | ¿Qué hito autoriza otorgamiento, reserva y consumo? ¿Qué estados y facultades aprueban, notifican, cancelan o postergan un evento? | Bloquea Modo B y máquina operativa; no reutilizar estados del PDF | TH + responsable funcional |
@@ -156,14 +164,14 @@ Se muestran fecha de corte, cobertura y procedencia al lado del saldo; «descono
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1 (pendiente de revisión)
+**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
 
-**Decisión:** Pendiente
+**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
 
-**Aprobó:** Sin designar; ninguna aprobación registrada
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
 
-**Fecha y evidencia de aprobación:** No existen
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
 
-**Ajustes solicitados:** Pendientes de revisión
+**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
 
 Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Las reglas no confirmadas conservan su bloqueo por institución.

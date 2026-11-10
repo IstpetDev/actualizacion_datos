@@ -4,13 +4,21 @@
 
 **Versión:** 0.1
 
-**Estado:** Borrador para revisión funcional
+**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
 
-**Revisor funcional:** Por designar: responsable funcional, Talento Humano, asesoría jurídica y responsable de datos
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: responsable funcional, Talento Humano, asesoría jurídica y responsable de datos
 
 **Fecha:** 2026-11-09
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
+
+## Aprobación y alcance de Entrega 1
+
+La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+
+El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
+
+Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
 
 ## Problema y resultado esperado
 
@@ -21,7 +29,7 @@ TH prepara un acta, la persona trabajadora descarga un PDF imprimible y firma fu
 | Fuente | Ruta o enlace exacto | Regla o dato y estado |
 |---|---|---|
 | Solicitud | [#186](https://github.com/IstpetDev/actualizacion_datos/issues/186), [#182](https://github.com/IstpetDev/actualizacion_datos/issues/182) | PDF imprimible, firma física verificable, versiones y privacidad; contenido exacto pendiente de aprobación funcional/jurídica. |
-| Marco, vínculos y saldo | [spec-0022](../spec-0022/spec.md), [spec-0023](../spec-0023/spec.md), [spec-0024](../spec-0024/spec.md) | Borradores dependientes, sin aprobación: ámbito, certificaciones y modos A/B. Fuentes iniciales CT arts. 69–78 / LOSEP art. 29 (copias con última reforma declarada 2023-05-12 consultadas 2026-11-09), LOEI sin contenido comprobado por fallo de acceso. Vigencia/aplicabilidad y cláusulas contractuales pendientes de Jurídico. |
+| Marco, vínculos y saldo | [spec-0022](../spec-0022/spec.md), [spec-0023](../spec-0023/spec.md), [spec-0024](../spec-0024/spec.md) | Versiones 0.1 aprobadas para planificación de Modo A: ámbito, certificaciones y modos A/B. Fuentes iniciales CT arts. 69–78 / LOSEP art. 29 (copias con última reforma declarada 2023-05-12 consultadas 2026-11-09), LOEI sin contenido comprobado por fallo de acceso. Vigencia/aplicabilidad y cláusulas contractuales pendientes de Jurídico. |
 | ADR-0004 — Vigente | [Multitenencia](../../decisiones/ADR-0004-multitenancia-esquema-unico.md) | Documentos/evidencias aislados por institución. |
 | ADR-0006 — Vigente | [Almacenamiento](../../decisiones/ADR-0006-almacenamiento-de-archivos.md) | Archivos privados y acceso por backend. Su eliminación de versiones sustituidas de actualización de datos contradice la necesidad de conservar actas; no extenderla silenciosamente. |
 | ADR-0033 — Vigente | [Motor PDF](../../decisiones/ADR-0033-motor-generacion-pdf.md) | Existe elección de motor para hoja de vida; no acredita persistencia ni versionado de actas. Reutilización a evaluar después de aprobación. |
@@ -191,14 +199,14 @@ PDF y evidencias permanecen en custodia privada por institución, con autorizaci
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1 (pendiente de revisión)
+**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
 
-**Decisión:** Pendiente
+**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
 
-**Aprobó:** Sin designar; ninguna aprobación registrada
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
 
-**Fecha y evidencia de aprobación:** No existen
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
 
-**Ajustes solicitados:** Pendientes de revisión
+**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
 
 Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`. Las decisiones de evidencia/autoridad/contenido pendientes impiden activar el flujo correspondiente.

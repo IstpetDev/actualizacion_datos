@@ -66,9 +66,9 @@ Nunca se escriben datos personales reales. Usar solo ficticios, por ejemplo docu
 | [spec-0019](spec-0019/spec.md) | Retiro auditado de adjuntos por supervisor con eliminación física, issue #139 | Alcance autorizado por el solicitante (2026-10-28) |
 | [spec-0020](spec-0020/spec.md) | Visibilidad de borradores y avance institucional para supervisores, issue #143 | Alcance autorizado por el solicitante (2026-10-28) |
 | [spec-0021](spec-0021/spec.md) | Subíndices libres configurables por sección, issue #171 | Implementado (2026-11-05) |
-| [spec-0022](spec-0022/spec.md) | Vacaciones: marco y régimen aplicable, issue #183 | Borrador v0.1; revisión funcional y jurídica pendiente |
-| [spec-0023](spec-0023/spec.md) | Vacaciones: vínculos laborales e historia, issue #184 | Borrador v0.1; revisión funcional pendiente |
-| [spec-0024](spec-0024/spec.md) | Vacaciones: períodos, calendario y saldos, issue #185 | Borrador v0.1; revisión funcional pendiente |
-| [spec-0025](spec-0025/spec.md) | Vacaciones: acta imprimible y verificación de firma física, issue #186 | Borrador v0.1; revisión funcional pendiente |
+| [spec-0022](spec-0022/spec.md) | Vacaciones: marco y régimen aplicable, issue #183 | Aprobada v0.1 para planificación Modo A (2026-11-10); activación institucional condicionada |
+| [spec-0023](spec-0023/spec.md) | Vacaciones: vínculos laborales e historia, issue #184 | Aprobada v0.1 para planificación Modo A (2026-11-10); activación institucional condicionada |
+| [spec-0024](spec-0024/spec.md) | Vacaciones: períodos, calendario y saldos, issue #185 | Aprobada v0.1 para planificación Modo A (2026-11-10); activación institucional condicionada |
+| [spec-0025](spec-0025/spec.md) | Vacaciones: acta imprimible y verificación de firma física, issue #186 | Aprobada v0.1 para planificación Modo A (2026-11-10); activación institucional condicionada |
 
 Coordinación de #182: [evidencia, brechas y dependencias de aprobación](../evidencia/issue-182/README.md). Los documentos de #187 se generan por spec después de aprobar su versión concreta.

@@ -4,13 +4,21 @@
 
 **Versión:** 0.1
 
-**Estado:** Borrador para revisión funcional
+**Estado:** Aprobada v0.1 para planificación de Entrega 1 — Modo A
 
-**Revisor funcional:** Por designar: Talento Humano y asesoría jurídica de cada institución
+**Revisión funcional:** RR. HH. y Jurídico, según declaración del solicitante; funciones de revisión: Talento Humano y asesoría jurídica de cada institución
 
 **Fecha:** 2026-11-09
 
 **Áreas afectadas:** Documentación; futura aplicación en `src/Backend` y `src/Frontend`
+
+## Aprobación y alcance de Entrega 1
+
+La aprobación funcional de esta versión 0.1 fue comunicada por el solicitante el 2026-11-10: informó que RR. HH. firmó el informe y que Jurídico lo aprobó, y autorizó continuar hasta cerrar #182. Se registra su declaración como evidencia; el agente no inspeccionó el informe físico ni reproduce firmas, nombres, número documental o fecha de suscripción no aportados. Véase [registro de aprobación](../../evidencia/issue-182/aprobacion.md).
+
+El alcance aprobado en la conversación es **Modo A: acta imprimible y estado de verificación física, sin cálculo ni afirmación de saldo legal certificado**. El Modo B, FIFO, devengo, anticipos, incentivos y caducidad se conservan como referencias diferidas, sin tareas de implementación en Entrega 1. Las tablas de preguntas se leen con esta delimitación: la aprobación del informe no inventa valores normativos, delegaciones, fechas ni políticas institucionales concretas. Los datos pendientes necesarios para emitir/verificar se mantienen como bloqueos de activación por institución; no impiden diseñar el flujo que los exige.
+
+Esta aprobación habilita los tres documentos de #187 y su descomposición documental. No aprueba opciones técnicas de ADR Propuestos ni autoriza producción del módulo desde #182.
 
 ## Problema y resultado esperado
 
@@ -134,14 +142,14 @@ Respaldos contractuales y de IESS son privados, con acceso por facultad/instituc
 
 ## Revisión funcional
 
-**Versión revisada:** 0.1 (pendiente de revisión)
+**Versión revisada:** 0.1, delimitada a Entrega 1 en Modo A
 
-**Decisión:** Pendiente
+**Decisión:** Aprobada para planificación documental de Modo A; Modo B diferido
 
-**Aprobó:** Sin designar; ninguna aprobación registrada
+**Aprobó:** RR. HH. y Jurídico según confirmación del solicitante; continuidad y cierre documental autorizados por el solicitante
 
-**Fecha y evidencia de aprobación:** No existen
+**Fecha y evidencia de aprobación:** Comunicación del solicitante del 2026-11-10; [registro sin datos personales](../../evidencia/issue-182/aprobacion.md). Fecha de firma física no aportada
 
-**Ajustes solicitados:** Pendientes de revisión
+**Ajustes solicitados:** Planificar Modo A; mantener Modo B diferido y bloqueos institucionales sin valores inferidos
 
 Solo una aprobación explícita de esta versión habilita `plan.md`, `tasks.md` y `test-e2e.md`; certificar fecha no certifica saldo ni cierra decisiones jurídicas pendientes.
