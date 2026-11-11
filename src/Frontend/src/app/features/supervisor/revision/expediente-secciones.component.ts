@@ -9,6 +9,7 @@ import {
   EstadoSubindiceSeccionPersonaDto,
   ExpedienteRevisionDto,
   HojaDeVidaDto,
+  MarcaObservacionItem,
   ObservacionDto,
 } from '../../../api-client';
 import { nombreSubindicePorId } from '../../usuario/hoja-de-vida/componentes/bloque-subindices-seccion.component';
@@ -421,6 +422,7 @@ export type TabExpediente =
                 @for (t of hojaDeVida().titulos; track t.id; let idx = $index) {
                   <div
                     class="item-audit-card glass-card"
+                    [class.item-revisado-auditado]="estaRevisado('titulo:' + t.id)"
                     [attr.data-testid]="'item-titulo-' + t.id"
                   >
                     <app-observaciones-revision
@@ -432,6 +434,13 @@ export type TabExpediente =
                       [claveDestino]="t.id"
                       [archivoId]="t.archivoId"
                     />
+
+                    @if (marcaPendienteDe('titulo:' + t.id); as marca) {
+                      <div class="marca-pendiente-item-badge">
+                        <span class="material-symbols-outlined icon-xs text-warning">warning</span>
+                        <span>Corrección en cola: "{{ marca.texto }}"</span>
+                      </div>
+                    }
 
                     <div class="item-audit-top">
                       <div class="item-audit-left">
@@ -445,6 +454,9 @@ export type TabExpediente =
                               <span class="badge badge-info font-mono">
                                 Senescyt: {{ t.numeroRegistroSenescyt }}
                               </span>
+                            }
+                            @if (estaRevisado('titulo:' + t.id)) {
+                              <span class="badge badge-success">✓ Verificado</span>
                             }
                             @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
                               <span
@@ -526,17 +538,38 @@ export type TabExpediente =
                         }
                       </div>
 
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-sm"
-                        [disabled]="!esEnviado()"
-                        (click)="onMarcarItem('titulo', t.id, t.nombreTitulo)"
-                        [attr.data-testid]="'btn-marcar-titulo-' + t.id"
-                        title="Solicitar corrección puntual sobre este título"
-                      >
-                        <span class="material-symbols-outlined icon-xs">edit_note</span>
-                        <span>Solicitar corrección</span>
-                      </button>
+                      <div class="doc-actions-right flex items-center gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-revisado"
+                          [class.btn-revisado-ok]="estaRevisado('titulo:' + t.id)"
+                          (click)="toggleRevisado('titulo:' + t.id)"
+                          [attr.data-testid]="'btn-toggle-revisado-titulo-' + t.id"
+                          title="Marcar este título como verificado y conforme"
+                        >
+                          <span class="material-symbols-outlined icon-xs">
+                            {{
+                              estaRevisado('titulo:' + t.id)
+                                ? 'check_circle'
+                                : 'radio_button_unchecked'
+                            }}
+                          </span>
+                          <span>{{
+                            estaRevisado('titulo:' + t.id) ? 'Revisado' : 'Marcar Revisado'
+                          }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-warning btn-sm"
+                          [disabled]="!esEnviado()"
+                          (click)="onMarcarItem('titulo', t.id, t.nombreTitulo)"
+                          [attr.data-testid]="'btn-marcar-titulo-' + t.id"
+                          title="Solicitar corrección puntual sobre este título"
+                        >
+                          <span class="material-symbols-outlined icon-xs">edit_note</span>
+                          <span>Solicitar corrección</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 }
@@ -843,6 +876,7 @@ export type TabExpediente =
                 @for (c of hojaDeVida().capacitaciones; track c.id; let idx = $index) {
                   <div
                     class="item-audit-card glass-card"
+                    [class.item-revisado-auditado]="estaRevisado('capacitacion:' + c.id)"
                     [attr.data-testid]="'item-capacitacion-' + c.id"
                   >
                     <app-observaciones-revision
@@ -855,6 +889,13 @@ export type TabExpediente =
                       [archivoId]="c.archivoId"
                     />
 
+                    @if (marcaPendienteDe('capacitacion:' + c.id); as marca) {
+                      <div class="marca-pendiente-item-badge">
+                        <span class="material-symbols-outlined icon-xs text-warning">warning</span>
+                        <span>Corrección en cola: "{{ marca.texto }}"</span>
+                      </div>
+                    }
+
                     <div class="item-audit-top">
                       <div class="item-audit-left">
                         <span class="item-counter-badge" title="Capacitación #{{ idx + 1 }}">
@@ -864,6 +905,9 @@ export type TabExpediente =
                           <h5 class="item-main-title">{{ c.nombreEvento }}</h5>
                           <div class="item-badges-wrap">
                             <span class="badge badge-hours">{{ c.numeroHoras || 0 }} horas</span>
+                            @if (estaRevisado('capacitacion:' + c.id)) {
+                              <span class="badge badge-success">✓ Verificado</span>
+                            }
                             @if (nombreSubindice(c.subindiceSeccionId); as nomSub) {
                               <span class="badge badge-gold">Subíndice: {{ nomSub }}</span>
                             } @else {
@@ -943,17 +987,37 @@ export type TabExpediente =
                         }
                       </div>
 
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-sm"
-                        [disabled]="!esEnviado()"
-                        (click)="onMarcarItem('capacitacion', c.id, c.nombreEvento)"
-                        [attr.data-testid]="'btn-marcar-capacitacion-' + c.id"
-                        title="Solicitar corrección"
-                      >
-                        <span class="material-symbols-outlined icon-xs">edit_note</span>
-                        <span>Solicitar corrección</span>
-                      </button>
+                      <div class="doc-actions-right flex items-center gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-revisado"
+                          [class.btn-revisado-ok]="estaRevisado('capacitacion:' + c.id)"
+                          (click)="toggleRevisado('capacitacion:' + c.id)"
+                          title="Marcar capacitación como verificada"
+                        >
+                          <span class="material-symbols-outlined icon-xs">
+                            {{
+                              estaRevisado('capacitacion:' + c.id)
+                                ? 'check_circle'
+                                : 'radio_button_unchecked'
+                            }}
+                          </span>
+                          <span>{{
+                            estaRevisado('capacitacion:' + c.id) ? 'Revisado' : 'Marcar Revisado'
+                          }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-warning btn-sm"
+                          [disabled]="!esEnviado()"
+                          (click)="onMarcarItem('capacitacion', c.id, c.nombreEvento)"
+                          [attr.data-testid]="'btn-marcar-capacitacion-' + c.id"
+                          title="Solicitar corrección"
+                        >
+                          <span class="material-symbols-outlined icon-xs">edit_note</span>
+                          <span>Solicitar corrección</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 }
@@ -1314,27 +1378,63 @@ export type TabExpediente =
             claveDestino="documentos"
           />
 
-          <!-- Subíndice 6.1: Expediente Digital Consolidado -->
+          <!-- Subíndice 6.1: Expediente Digital Institucional -->
           <div class="subindice-bloque">
-            <div class="subindice-bloque-header">
+            <div class="subindice-bloque-header flex justify-between items-center flex-wrap gap-2">
               <div class="subindice-tag-group">
                 <span class="subindice-tag">Índice 6.1</span>
                 <h4 class="subindice-title">
-                  Archivos Digitales Adjuntos ({{ archivos().length }})
+                  {{
+                    filtroVistaDocumentos() === 'expediente'
+                      ? 'Documentos Personales e Institucionales (' +
+                        documentosExpediente().length +
+                        ')'
+                      : 'Todos los Respaldos Digitales (' + archivos().length + ')'
+                  }}
                 </h4>
               </div>
-              <span class="badge badge-info">Auditoría Documental</span>
+              <div class="documentos-view-switch">
+                <button
+                  type="button"
+                  class="btn-switch-doc"
+                  [class.active]="filtroVistaDocumentos() === 'expediente'"
+                  (click)="filtroVistaDocumentos.set('expediente')"
+                  title="Ver solo documentos personales e institucionales del expediente"
+                >
+                  Documentos del Expediente ({{ documentosExpediente().length }})
+                </button>
+                <button
+                  type="button"
+                  class="btn-switch-doc"
+                  [class.active]="filtroVistaDocumentos() === 'todos'"
+                  (click)="filtroVistaDocumentos.set('todos')"
+                  title="Ver todos los respaldos (incluyendo títulos, cursos y certificados)"
+                >
+                  Todos los Respaldos ({{ archivos().length }})
+                </button>
+              </div>
             </div>
 
-            @if (!archivos().length) {
-              <p class="empty-subindice-msg">
-                No se registran documentos adjuntos en este expediente.
-              </p>
+            @if (filtroVistaDocumentos() === 'expediente' && respaldosEspecificos().length > 0) {
+              <div class="aviso-respaldos-en-secciones">
+                <span class="material-symbols-outlined icon-xs text-primary">info</span>
+                <span>
+                  Los <strong>{{ respaldosEspecificos().length }} respaldos específicos</strong>
+                  (títulos, certificados de cursos y experiencia laboral) se gestionan y auditan
+                  directamente dentro de sus secciones superiores (Formación, Capacitaciones,
+                  Experiencia) para un flujo ordenado sin duplicidad.
+                </span>
+              </div>
+            }
+
+            @if (!archivosParaMostrar().length) {
+              <p class="empty-subindice-msg">No se registran documentos en esta vista.</p>
             } @else {
               <div class="items-cards-list">
-                @for (arc of archivos(); track arc.id; let idx = $index) {
+                @for (arc of archivosParaMostrar(); track arc.id; let idx = $index) {
                   <div
                     class="item-audit-card glass-card archivo-item"
+                    [class.item-revisado-auditado]="estaRevisado('documento:' + arc.id)"
                     [attr.data-testid]="'item-documento-' + arc.id"
                   >
                     <div [attr.data-testid]="'archivo-' + arc.id" class="archivo-id-tracker"></div>
@@ -1346,6 +1446,13 @@ export type TabExpediente =
                       tipoDestino="archivo"
                       [claveDestino]="arc.id"
                     />
+
+                    @if (marcaPendienteDe('documento:' + arc.id); as marca) {
+                      <div class="marca-pendiente-item-badge">
+                        <span class="material-symbols-outlined icon-xs text-warning">warning</span>
+                        <span>Corrección en cola: "{{ marca.texto }}"</span>
+                      </div>
+                    }
 
                     <div class="item-audit-top">
                       <div class="item-audit-left">
@@ -1366,6 +1473,9 @@ export type TabExpediente =
                             <span class="badge badge-info font-mono">
                               {{ arc.claveDestino || 'Documento general' }}
                             </span>
+                            @if (estaRevisado('documento:' + arc.id)) {
+                              <span class="badge badge-success">✓ Verificado</span>
+                            }
                           </div>
                         </div>
                       </div>
@@ -1420,17 +1530,37 @@ export type TabExpediente =
                         </button>
                       </div>
 
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-sm"
-                        [disabled]="!esEnviado()"
-                        (click)="onMarcarItem('documento', arc.id, arc.nombreOriginal)"
-                        [attr.data-testid]="'btn-marcar-documento-' + arc.id"
-                        title="Solicitar corrección sobre este documento"
-                      >
-                        <span class="material-symbols-outlined icon-xs">edit_note</span>
-                        <span>Solicitar corrección</span>
-                      </button>
+                      <div class="doc-actions-right flex items-center gap-2">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-revisado"
+                          [class.btn-revisado-ok]="estaRevisado('documento:' + arc.id)"
+                          (click)="toggleRevisado('documento:' + arc.id)"
+                          title="Marcar documento como verificado"
+                        >
+                          <span class="material-symbols-outlined icon-xs">
+                            {{
+                              estaRevisado('documento:' + arc.id)
+                                ? 'check_circle'
+                                : 'radio_button_unchecked'
+                            }}
+                          </span>
+                          <span>{{
+                            estaRevisado('documento:' + arc.id) ? 'Revisado' : 'Marcar Revisado'
+                          }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-warning btn-sm"
+                          [disabled]="!esEnviado()"
+                          (click)="onMarcarItem('documento', arc.id, arc.nombreOriginal)"
+                          [attr.data-testid]="'btn-marcar-documento-' + arc.id"
+                          title="Solicitar corrección sobre este documento"
+                        >
+                          <span class="material-symbols-outlined icon-xs">edit_note</span>
+                          <span>Solicitar corrección</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 }
@@ -1924,6 +2054,95 @@ export type TabExpediente =
       margin: 0;
       text-align: center;
     }
+    /* Estado de Ítem Revisado / Conforme */
+    .item-revisado-auditado {
+      border-left: 5px solid #10b981 !important;
+      background: rgba(240, 253, 244, 0.6) !important;
+    }
+    .btn-revisado {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.375rem 0.65rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+    }
+    .btn-revisado:hover {
+      border-color: #10b981;
+      color: #047857;
+      background: #f0fdf4;
+    }
+    .btn-revisado-ok {
+      background: #10b981 !important;
+      color: #ffffff !important;
+      border-color: #059669 !important;
+      font-weight: 700 !important;
+    }
+    .marca-pendiente-item-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.65rem;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #b45309;
+      width: 100%;
+    }
+    .documentos-view-switch {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 2px;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      gap: 2px;
+    }
+    .btn-switch-doc {
+      padding: 0.3rem 0.75rem;
+      border: none;
+      background: transparent;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-switch-doc:hover {
+      color: #0f172a;
+    }
+    .btn-switch-doc.active {
+      background: #ffffff;
+      color: #222c57;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    .aviso-respaldos-en-secciones {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.875rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 0.78125rem;
+      color: #475569;
+      margin-bottom: 0.75rem;
+    }
+    .doc-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
     .archivo-id-tracker {
       display: none;
     }
@@ -1935,6 +2154,7 @@ export class ExpedienteSeccionesComponent {
   readonly observaciones = input<ObservacionDto[]>([]);
   readonly archivos = input<ArchivoDto[]>([]);
   readonly obligatorias = input<EstadoCapacitacionObligatoriaPersonaDto[]>([]);
+  readonly marcasPendientes = input<MarcaObservacionItem[]>([]);
   readonly puedeVincularPorAyuda = input<boolean>(true);
 
   readonly descargar = output<{ archivoId: string; nombreOriginal: string }>();
@@ -1947,6 +2167,12 @@ export class ExpedienteSeccionesComponent {
   readonly modalAyudaObligatoria = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
   readonly capacitacionAyudaSeleccionada = signal<string>('');
 
+  // Ítems revisados localmente por el supervisor para seguimiento
+  readonly itemsRevisados = signal<Set<string>>(new Set<string>());
+
+  // Filtro de vista para la Sección 6 (Documentos del Expediente vs Todos los Respaldos)
+  readonly filtroVistaDocumentos = signal<'expediente' | 'todos'>('expediente');
+
   readonly esEnviado = computed(
     () => (this.hojaDeVida()?.estadoActualizacion ?? '').toLowerCase() === 'enviado',
   );
@@ -1954,6 +2180,93 @@ export class ExpedienteSeccionesComponent {
   readonly capacitacionesDisponibles = computed(() =>
     (this.hojaDeVida().capacitaciones || []).filter((c) => !c.capacitacionObligatoriaId),
   );
+
+  readonly idsArchivosTitulos = computed(() => {
+    const ids = new Set<string>();
+    for (const t of this.hojaDeVida()?.titulos || []) {
+      if (t.archivoId) ids.add(t.archivoId.toLowerCase());
+    }
+    for (const tc of this.hojaDeVida()?.titulosEnCurso || []) {
+      if (tc.archivoId) ids.add(tc.archivoId.toLowerCase());
+    }
+    return ids;
+  });
+
+  readonly idsArchivosCapacitaciones = computed(() => {
+    const ids = new Set<string>();
+    for (const c of this.hojaDeVida()?.capacitaciones || []) {
+      if (c.archivoId) ids.add(c.archivoId.toLowerCase());
+    }
+    return ids;
+  });
+
+  readonly idsArchivosExperiencias = computed(() => {
+    const ids = new Set<string>();
+    for (const e of this.hojaDeVida()?.experiencias || []) {
+      if (e.archivoId) ids.add(e.archivoId.toLowerCase());
+    }
+    return ids;
+  });
+
+  esArchivoDeItemEspecifico(arc: ArchivoDto): boolean {
+    const id = (arc.id || '').toLowerCase();
+    const clave = (arc.claveDestino || '').toLowerCase();
+    if (
+      clave.startsWith('titulo:') ||
+      clave.startsWith('capacitacion:') ||
+      clave.startsWith('experiencia:') ||
+      clave.startsWith('ficha') ||
+      clave.startsWith('foto')
+    ) {
+      return true;
+    }
+    return (
+      this.idsArchivosTitulos().has(id) ||
+      this.idsArchivosCapacitaciones().has(id) ||
+      this.idsArchivosExperiencias().has(id)
+    );
+  }
+
+  readonly documentosExpediente = computed(() => {
+    const docs = this.archivos().filter((a) => !this.esArchivoDeItemEspecifico(a));
+    return docs.length > 0 ? docs : this.archivos();
+  });
+
+  readonly respaldosEspecificos = computed(() => {
+    return this.archivos().filter((a) => this.esArchivoDeItemEspecifico(a));
+  });
+
+  readonly archivosParaMostrar = computed(() => {
+    if (this.filtroVistaDocumentos() === 'todos') {
+      return this.archivos();
+    }
+    return this.documentosExpediente();
+  });
+
+  estaRevisado(key: string): boolean {
+    return this.itemsRevisados().has(key);
+  }
+
+  toggleRevisado(key: string): void {
+    this.itemsRevisados.update((set) => {
+      const nuevo = new Set(set);
+      if (nuevo.has(key)) {
+        nuevo.delete(key);
+      } else {
+        nuevo.add(key);
+      }
+      return nuevo;
+    });
+  }
+
+  marcaPendienteDe(clave: string): MarcaObservacionItem | undefined {
+    const cNorm = clave.toLowerCase();
+    return this.marcasPendientes().find(
+      (m) =>
+        m.claveDestino.toLowerCase() === cNorm ||
+        m.claveDestino.toLowerCase().endsWith(':' + cNorm),
+    );
+  }
 
   cambiarTab(tab: TabExpediente): void {
     this.tabActiva.set(tab);

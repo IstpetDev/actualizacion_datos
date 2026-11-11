@@ -1,5 +1,6 @@
 import { catchError, forkJoin, of, Subscription } from 'rxjs';
 import { ObservacionesRevisionComponent } from '../revision-compartida/observaciones-revision.component';
+import { describirDestino } from '../revision-compartida/observaciones-revision';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -622,6 +623,44 @@ export interface ArchivoPrevisualizacion {
             </div>
           }
 
+          <!-- Banner de Correcciones Acumuladas Pendientes de Devolución -->
+          @if (marcas().length > 0) {
+            <div class="marcas-acumuladas-banner" data-testid="banner-marcas-acumuladas">
+              <div class="marcas-banner-left">
+                <span class="material-symbols-outlined icon-md text-warning"
+                  >playlist_add_check</span
+                >
+                <div>
+                  <strong>Correcciones preparadas para devolver ({{ marcas().length }}):</strong>
+                  <p class="marcas-banner-desc">
+                    Tienes {{ marcas().length }} observación(es) en cola. Puedes seguir marcando más
+                    registros por corregir o enviar todas juntas.
+                  </p>
+                </div>
+              </div>
+              <div class="marcas-banner-btns">
+                <button
+                  type="button"
+                  class="btn btn-warning btn-sm"
+                  (click)="abrirModalDevolver()"
+                  data-testid="btn-revisar-marcas"
+                >
+                  <span class="material-symbols-outlined icon-xs">rate_review</span>
+                  <span>Ver / Editar Marcas ({{ marcas().length }})</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="abrirModalDevolver()"
+                  data-testid="btn-enviar-marcas-acumuladas"
+                >
+                  <span class="material-symbols-outlined icon-xs">send</span>
+                  <span>Devolver con {{ marcas().length }} Observaciones</span>
+                </button>
+              </div>
+            </div>
+          }
+
           <!-- Observaciones Generales e Historial de Devoluciones del Expediente -->
           @if ((expedienteSeleccionado()?.observaciones?.length ?? 0) > 0) {
             <div
@@ -649,6 +688,7 @@ export interface ArchivoPrevisualizacion {
               [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
               [archivos]="archivosExpediente()"
               [obligatorias]="expedienteSeleccionado()?.capacitacionesObligatorias ?? []"
+              [marcasPendientes]="marcas()"
               (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
               (previsualizar)="previsualizarArchivo($event.archivoId, $event.nombreOriginal)"
               (marcarItem)="iniciarMarcaItem($event)"
@@ -833,82 +873,160 @@ export interface ArchivoPrevisualizacion {
                 <div class="item-marcado-banner" data-testid="banner-item-marcado">
                   <span class="material-symbols-outlined icon-md text-warning">edit_note</span>
                   <div class="banner-content">
-                    <span class="banner-sub">Corrección solicitada para:</span>
+                    <span class="banner-sub">Registro a corregir:</span>
                     <strong class="banner-title">{{ itemParaMarcarLabel() }}</strong>
                   </div>
                 </div>
+
+                <div class="marca-builder glass-card">
+                  <div class="form-group">
+                    <label for="textoMarca"
+                      ><strong
+                        >Instrucción o corrección requerida para este registro:</strong
+                      ></label
+                    >
+                    <input
+                      id="textoMarca"
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="nuevaMarcaTexto"
+                      placeholder="Ej: El archivo adjunto está borroso, volver a subir en PDF legible..."
+                      data-testid="input-texto-marca"
+                    />
+                  </div>
+
+                  <div class="marca-builder-actions mt-3 flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      class="btn btn-warning btn-sm"
+                      (click)="agregarMarcaYContinuar()"
+                      [disabled]="!nuevaMarcaTexto().trim()"
+                      data-testid="btn-agregar-y-continuar"
+                      title="Guarda esta corrección y te permite seguir auditando el resto del expediente"
+                    >
+                      <span class="material-symbols-outlined icon-sm">playlist_add</span>
+                      <span>+ Guardar y Seguir Revisando</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="agregarMarca()"
+                      [disabled]="!nuevaMarcaTexto().trim()"
+                      data-testid="btn-agregar-marca"
+                    >
+                      <span class="material-symbols-outlined icon-sm">add</span>
+                      <span>Agregar a la lista</span>
+                    </button>
+                  </div>
+
+                  <details class="advanced-details mt-3">
+                    <summary class="text-xs text-muted cursor-pointer">
+                      Identificador técnico del registro (opcional)
+                    </summary>
+                    <div class="form-row mt-2">
+                      <div class="form-group col">
+                        <label for="tipoDestino" class="text-xs">Tipo de registro:</label>
+                        <select
+                          id="tipoDestino"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaTipo"
+                          data-testid="select-tipo-marca"
+                        >
+                          <option value="Campo">Campo de Formulario</option>
+                          <option value="Archivo">Archivo / Documento</option>
+                          <option value="Item">Ítem de Hoja de Vida</option>
+                        </select>
+                      </div>
+                      <div class="form-group col">
+                        <label for="claveDestino" class="text-xs">Código interno:</label>
+                        <input
+                          id="claveDestino"
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaClave"
+                          placeholder="Clave interna"
+                          data-testid="input-clave-marca"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              } @else {
+                <details class="advanced-details mt-3">
+                  <summary class="text-sm font-medium text-secondary cursor-pointer">
+                    + Agregar observación específica por campo o documento (opcional)
+                  </summary>
+                  <div class="marca-builder glass-card mt-2">
+                    <div class="form-row">
+                      <div class="form-group col">
+                        <label for="tipoDestino" class="text-xs">Tipo:</label>
+                        <select
+                          id="tipoDestino"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaTipo"
+                          data-testid="select-tipo-marca"
+                        >
+                          <option value="Campo">Campo de Formulario</option>
+                          <option value="Archivo">Archivo / Documento</option>
+                          <option value="Item">Ítem de Hoja de Vida</option>
+                        </select>
+                      </div>
+                      <div class="form-group col">
+                        <label for="claveDestino" class="text-xs">Clave / Campo:</label>
+                        <input
+                          id="claveDestino"
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaClave"
+                          placeholder="Ej: telefono, titulo..."
+                          data-testid="input-clave-marca"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group mt-2">
+                      <label for="textoMarca" class="text-xs">Motivo puntual:</label>
+                      <input
+                        id="textoMarca"
+                        type="text"
+                        class="form-control form-control-sm"
+                        [(ngModel)]="nuevaMarcaTexto"
+                        placeholder="Motivo de la corrección..."
+                        data-testid="input-texto-marca"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm mt-2"
+                      (click)="agregarMarca()"
+                      data-testid="btn-agregar-marca"
+                    >
+                      <span class="material-symbols-outlined icon-sm">add</span>
+                      <span>+ Agregar a la lista</span>
+                    </button>
+                  </div>
+                </details>
               }
 
-              <div class="form-group">
-                <label for="obsGeneral">Observación General (Obligatoria):</label>
+              <div class="form-group mt-3">
+                <label for="obsGeneral">Observación o Mensaje General para el Colaborador:</label>
                 <textarea
                   id="obsGeneral"
                   class="form-control"
                   rows="3"
                   [(ngModel)]="observacionGeneral"
-                  placeholder="Explique detalladamente al colaborador las correcciones requeridas..."
+                  placeholder="Explique claramente al colaborador las correcciones requeridas antes de volver a enviar..."
                   data-testid="input-observacion-general"
                 ></textarea>
               </div>
 
-              <h4 class="modal-subtitle mt-4">Solicitud de Corrección Puntual (ADR-0008)</h4>
-              <div class="marca-builder glass-card">
-                <div class="form-row">
-                  <div class="form-group col">
-                    <label for="tipoDestino">Tipo:</label>
-                    <select
-                      id="tipoDestino"
-                      class="form-control"
-                      [(ngModel)]="nuevaMarcaTipo"
-                      data-testid="select-tipo-marca"
-                    >
-                      <option value="Campo">Campo de Formulario</option>
-                      <option value="Archivo">Archivo / Documento</option>
-                      <option value="Item">Ítem de Hoja de Vida</option>
-                    </select>
-                  </div>
-                  <div class="form-group col">
-                    <label for="claveDestino">Clave / Campo:</label>
-                    <input
-                      id="claveDestino"
-                      type="text"
-                      class="form-control"
-                      [(ngModel)]="nuevaMarcaClave"
-                      placeholder="Ej: telefono, cedula_frontal, titulo:tit-1..."
-                      data-testid="input-clave-marca"
-                    />
-                  </div>
-                </div>
-                <div class="form-group mt-2">
-                  <label for="textoMarca">Motivo o Corrección Puntual:</label>
-                  <input
-                    id="textoMarca"
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevaMarcaTexto"
-                    placeholder="Ej: Documento borroso o certificado desactualizado..."
-                    data-testid="input-texto-marca"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm mt-3"
-                  (click)="agregarMarca()"
-                  data-testid="btn-agregar-marca"
-                >
-                  <span class="material-symbols-outlined icon-sm">add</span>
-                  <span>+ Agregar Marca Específica</span>
-                </button>
-              </div>
-
               @if (marcas().length > 0) {
                 <div class="marcas-lista mt-3" data-testid="lista-marcas-creadas">
-                  <h5>Marcas a Enviar ({{ marcas().length }}):</h5>
+                  <h5>Correcciones registradas para esta devolución ({{ marcas().length }}):</h5>
                   <ul>
                     @for (m of marcas(); track $index) {
                       <li>
                         <span>
-                          <strong>[{{ m.tipoDestino }}] {{ m.claveDestino }}:</strong>
+                          <strong>{{ describirMarca(m) }}:</strong>
                           {{ m.texto }}
                         </span>
                         <button
@@ -932,7 +1050,7 @@ export interface ArchivoPrevisualizacion {
                 (click)="cerrarModalDevolver()"
                 [disabled]="procesando()"
               >
-                Cancelar
+                Cerrar
               </button>
               <button
                 type="button"
@@ -947,7 +1065,13 @@ export interface ArchivoPrevisualizacion {
                 data-testid="btn-confirmar-devolver"
               >
                 <span class="material-symbols-outlined icon-sm">send</span>
-                <span>{{ procesando() ? 'Devolviendo...' : 'Confirmar y Devolver' }}</span>
+                <span>{{
+                  procesando()
+                    ? 'Devolviendo...'
+                    : marcas().length > 1
+                      ? 'Confirmar y Devolver (' + marcas().length + ' Marcas)'
+                      : 'Confirmar y Devolver'
+                }}</span>
               </button>
             </footer>
           </div>
@@ -1343,6 +1467,38 @@ export interface ArchivoPrevisualizacion {
       color: #ffffff;
       border-bottom: 2px solid #c4a857;
       box-shadow: 0 2px 6px rgba(34, 44, 87, 0.3);
+    }
+
+    /* Banner de Marcas Acumuladas Pendientes */
+    .marcas-acumuladas-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.875rem 1.25rem;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 5px solid #d97706;
+      border-radius: var(--radius-md);
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.1);
+    }
+    .marcas-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+    .marcas-banner-desc {
+      font-size: 0.8125rem;
+      color: #78350f;
+      margin: 0.2rem 0 0 0;
+    }
+    .marcas-banner-btns {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
     /* Expediente Vista Detalle a Pantalla Completa */
@@ -1837,9 +1993,16 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   readonly pendientes = signal<ResumenRevisionPendienteDto[]>([]);
   readonly filtroTexto = signal<string>('');
+  readonly busquedaTexto = signal<string>('');
+  readonly filtroEstado = signal<string>('todos');
+  readonly ordenCriterio = signal<string>('nombre-asc');
+
+  readonly textoFiltroConsolidado = computed(() => {
+    return (this.busquedaTexto() || this.filtroTexto()).trim();
+  });
 
   readonly pendientesFiltrados = computed(() => {
-    const filtro = this.filtroTexto().trim();
+    const filtro = this.textoFiltroConsolidado();
     if (!filtro) return this.pendientes();
     return this.pendientes().filter(
       (p) =>
@@ -1877,11 +2040,6 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   readonly descargandoPdf = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
-
-  // Filtros y Búsqueda (Issue #180)
-  readonly busquedaTexto = signal<string>('');
-  readonly filtroEstado = signal<string>('todos');
-  readonly ordenCriterio = signal<string>('fecha-desc');
 
   // Paginación (Issue #180)
   readonly paginaActual = signal<number>(1);
@@ -1931,7 +2089,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   );
 
   readonly tieneFiltrosActivos = computed(() => {
-    return this.busquedaTexto().trim().length > 0 || this.filtroEstado() !== 'todos';
+    return this.textoFiltroConsolidado().length > 0 || this.filtroEstado() !== 'todos';
   });
 
   // Lista Filtrada y Ordenada
@@ -1945,29 +2103,29 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
       lista = lista.filter((item) => item.estadoActualizacion === estado);
     }
 
-    // Ordenamiento
+    // Ordenamiento alfabético y cronológico robusto
     lista.sort((a, b) => {
       switch (orden) {
-        case 'fecha-asc':
-          return (
-            new Date(a.fechaCreacionUtc || 0).getTime() -
-            new Date(b.fechaCreacionUtc || 0).getTime()
-          );
+        case 'nombre-asc':
+          return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+        case 'nombre-desc':
+          return (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' });
         case 'fecha-desc':
           return (
             new Date(b.fechaCreacionUtc || 0).getTime() -
             new Date(a.fechaCreacionUtc || 0).getTime()
           );
-        case 'nombre-asc':
-          return (a.nombre || '').localeCompare(b.nombre || '');
-        case 'nombre-desc':
-          return (b.nombre || '').localeCompare(a.nombre || '');
+        case 'fecha-asc':
+          return (
+            new Date(a.fechaCreacionUtc || 0).getTime() -
+            new Date(b.fechaCreacionUtc || 0).getTime()
+          );
         case 'documento-asc':
           return (a.documento || '').localeCompare(b.documento || '');
         case 'estado':
           return (a.estadoActualizacion || '').localeCompare(b.estadoActualizacion || '');
         default:
-          return 0;
+          return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
       }
     });
 
@@ -2129,6 +2287,8 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
     this.hojaDeVida.set(null);
     this.archivosExpediente.set([]);
     this.datosPersonalesParsed.set(null);
+    this.marcas.set([]);
+    this.observacionGeneral.set('');
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
@@ -2167,8 +2327,13 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   abrirModalDevolver(): void {
     if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set('');
-    this.observacionGeneral.set('');
-    this.marcas.set([]);
+    if (!this.observacionGeneral().trim()) {
+      if (this.marcas().length > 0) {
+        this.observacionGeneral.set('Se devuelven observaciones puntuales en el expediente.');
+      } else {
+        this.observacionGeneral.set('');
+      }
+    }
     this.nuevaMarcaClave.set('');
     this.nuevaMarcaTexto.set('');
     this.mostrarModalDevolver.set(true);
@@ -2193,6 +2358,38 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
     this.marcas.update((actuales) => [...actuales, item]);
     this.nuevaMarcaClave.set('');
     this.nuevaMarcaTexto.set('');
+  }
+
+  agregarMarcaYContinuar(): void {
+    const clave = this.nuevaMarcaClave().trim();
+    const texto = this.nuevaMarcaTexto().trim();
+    if (!clave || !texto) return;
+
+    const item: MarcaObservacionItem = {
+      tipoDestino: this.nuevaMarcaTipo(),
+      claveDestino: clave,
+      texto,
+    };
+
+    if (!this.marcas().some((m) => m.claveDestino === clave && m.texto === texto)) {
+      this.marcas.update((actuales) => [...actuales, item]);
+    }
+
+    if (!this.observacionGeneral().trim()) {
+      this.observacionGeneral.set('Se devuelven observaciones puntuales en el expediente.');
+    }
+
+    this.nuevaMarcaTexto.set('');
+    this.nuevaMarcaClave.set('');
+    this.itemParaMarcarLabel.set('');
+    this.mostrarModalDevolver.set(false);
+    this.mensajeExito.set(
+      'Corrección agregada a la lista de devolución. Puedes continuar revisando otros registros.',
+    );
+  }
+
+  describirMarca(m: MarcaObservacionItem): string {
+    return describirDestino(m, this.hojaDeVida(), this.archivosExpediente());
   }
 
   eliminarMarca(index: number): void {

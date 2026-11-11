@@ -108,43 +108,88 @@ export function coincideMarca(marca: MarcaObservacionDto, tipo: string, clave: s
 }
 
 export function describirDestino(
-  marca: MarcaObservacionDto,
+  marca: { tipoDestino?: string | null; claveDestino?: string | null },
   hoja?: HojaDeVidaDto | null,
   archivos: ArchivoDto[] = [],
 ): string {
-  const destino = marca.tipoDestino.toLowerCase();
-  if (destino === 'archivo') {
-    const archivo = archivos.find((a) => a.id.toLowerCase() === marca.claveDestino.toLowerCase());
-    return `Archivo: ${archivo?.nombreOriginal ?? marca.claveDestino}`;
+  const clave = marca.claveDestino || '';
+  const destino = (marca.tipoDestino || '').toLowerCase();
+
+  // Si la clave tiene formato "tipo:id" (ej: "titulo:3737b725-..."), resolverla como ítem directamente
+  // independientemente de si tipoDestino vino como 'Archivo' o 'Item'
+  if (clave.includes(':') || destino === 'item') {
+    const [tipo, id] = destinoItem(clave);
+    const buscar = <T extends { id: string }>(registros: T[] | undefined) =>
+      registros?.find((r) => r.id.toLowerCase() === id.toLowerCase());
+
+    switch (tipo) {
+      case 'titulo': {
+        const t = buscar(hoja?.titulos);
+        return `Título: ${t?.nombreTitulo ?? id}`;
+      }
+      case 'tituloencurso': {
+        const tc = buscar(hoja?.titulosEnCurso);
+        return `Estudio en curso: ${tc?.nombrePrograma ?? id}`;
+      }
+      case 'capacitacion': {
+        const c = buscar(hoja?.capacitaciones);
+        return `Capacitación: ${c?.nombreEvento ?? id}`;
+      }
+      case 'experiencia': {
+        const e = buscar(hoja?.experiencias);
+        const detalle = e?.empleador ? `${e.cargo} (${e.empleador})` : e?.cargo;
+        return `Experiencia laboral: ${detalle ?? id}`;
+      }
+      case 'referencia': {
+        const r = buscar(hoja?.referencias);
+        return `Referencia: ${r?.nombresApellidos ?? id}`;
+      }
+      case 'documento': {
+        const arch = archivos.find((a) => a.id.toLowerCase() === id.toLowerCase());
+        return `Documento personal: ${arch?.nombreOriginal ?? id}`;
+      }
+      case 'capacitacionobligatoria':
+        return `Capacitación obligatoria: ${id}`;
+      default:
+        break;
+    }
   }
+
+  if (destino === 'archivo') {
+    const archivo = archivos.find((a) => a.id.toLowerCase() === clave.toLowerCase());
+    if (archivo) {
+      return `Archivo: ${archivo.nombreOriginal}`;
+    }
+    const titConArchivo = hoja?.titulos?.find(
+      (t) => t.archivoId?.toLowerCase() === clave.toLowerCase(),
+    );
+    if (titConArchivo) {
+      return `Título: ${titConArchivo.nombreTitulo}`;
+    }
+    const capConArchivo = hoja?.capacitaciones?.find(
+      (c) => c.archivoId?.toLowerCase() === clave.toLowerCase(),
+    );
+    if (capConArchivo) {
+      return `Capacitación: ${capConArchivo.nombreEvento}`;
+    }
+    const expConArchivo = hoja?.experiencias?.find(
+      (e) => e.archivoId?.toLowerCase() === clave.toLowerCase(),
+    );
+    if (expConArchivo) {
+      return `Experiencia laboral: ${expConArchivo.cargo}`;
+    }
+    return `Archivo: ${clave}`;
+  }
+
   if (['campo', 'seccion', 'ficha'].includes(destino)) {
     const seccion = Object.entries(secciones).find(([, claves]) =>
-      claves.includes(normalizar(marca.claveDestino)),
+      claves.includes(normalizar(clave)),
     )?.[0];
-    if (seccion && normalizar(marca.claveDestino) === 'datospersonales') return 'Ficha personal';
+    if (seccion && normalizar(clave) === 'datospersonales') return 'Ficha personal';
     return seccion
-      ? `${nombresSeccion[seccion]} · ${marca.claveDestino.replace(/_/g, ' ')}`
-      : `Campo o sección: ${marca.claveDestino}`;
+      ? `${nombresSeccion[seccion]} · ${clave.replace(/_/g, ' ')}`
+      : `Campo o sección: ${clave}`;
   }
-  const [tipo, id] = destinoItem(marca.claveDestino);
-  const buscar = <T extends { id: string }>(registros: T[] | undefined) =>
-    registros?.find((r) => r.id.toLowerCase() === id);
-  switch (tipo) {
-    case 'titulo':
-      return `Título: ${buscar(hoja?.titulos)?.nombreTitulo ?? id}`;
-    case 'tituloencurso':
-      return `Estudio en curso: ${buscar(hoja?.titulosEnCurso)?.nombrePrograma ?? id}`;
-    case 'capacitacion':
-      return `Capacitación: ${buscar(hoja?.capacitaciones)?.nombreEvento ?? id}`;
-    case 'experiencia':
-      return `Experiencia laboral: ${buscar(hoja?.experiencias)?.cargo ?? id}`;
-    case 'referencia':
-      return `Referencia: ${buscar(hoja?.referencias)?.nombresApellidos ?? id}`;
-    case 'documento':
-      return `Documento personal: ${id}`;
-    case 'capacitacionobligatoria':
-      return `Capacitación obligatoria: ${id}`;
-    default:
-      return `Registro: ${marca.claveDestino}`;
-  }
+
+  return `Registro: ${clave}`;
 }
