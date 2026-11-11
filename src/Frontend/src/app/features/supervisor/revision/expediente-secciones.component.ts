@@ -36,18 +36,6 @@ export type TabExpediente =
       >
         <button
           type="button"
-          class="tab-btn tab-btn-todo"
-          [class.active]="tabActiva() === 'todos'"
-          (click)="cambiarTab('todos')"
-          data-testid="tab-exp-todos"
-          title="Ver todo el expediente de forma continua en pantalla completa"
-        >
-          <span class="material-symbols-outlined icon-sm">view_agenda</span>
-          <span>Ver Todo el Expediente</span>
-        </button>
-
-        <button
-          type="button"
           class="tab-btn"
           [class.active]="tabActiva() === 'ficha'"
           (click)="cambiarTab('ficha')"
@@ -65,10 +53,14 @@ export type TabExpediente =
           data-testid="tab-exp-formacion"
         >
           <span class="material-symbols-outlined icon-sm">school</span>
-          <span>
-            2. Formación Académica ({{
-              (hojaDeVida().titulos?.length || 0) + (hojaDeVida().titulosEnCurso?.length || 0)
-            }})
+          <span>2. Formación Académica</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="
+              (hojaDeVida().titulos?.length || 0) + (hojaDeVida().titulosEnCurso?.length || 0) > 0
+            "
+          >
+            {{ (hojaDeVida().titulos?.length || 0) + (hojaDeVida().titulosEnCurso?.length || 0) }}
           </span>
         </button>
 
@@ -80,7 +72,13 @@ export type TabExpediente =
           data-testid="tab-exp-capacitaciones"
         >
           <span class="material-symbols-outlined icon-sm">workspace_premium</span>
-          <span>3. Capacitaciones ({{ hojaDeVida().capacitaciones?.length || 0 }})</span>
+          <span>3. Capacitaciones</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="(hojaDeVida().capacitaciones?.length || 0) > 0"
+          >
+            {{ hojaDeVida().capacitaciones?.length || 0 }}
+          </span>
         </button>
 
         <button
@@ -91,7 +89,13 @@ export type TabExpediente =
           data-testid="tab-exp-experiencia"
         >
           <span class="material-symbols-outlined icon-sm">work</span>
-          <span>4. Experiencia Laboral ({{ hojaDeVida().experiencias?.length || 0 }})</span>
+          <span>4. Experiencia Laboral</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="(hojaDeVida().experiencias?.length || 0) > 0"
+          >
+            {{ hojaDeVida().experiencias?.length || 0 }}
+          </span>
         </button>
 
         <button
@@ -102,7 +106,13 @@ export type TabExpediente =
           data-testid="tab-exp-referencias"
         >
           <span class="material-symbols-outlined icon-sm">groups</span>
-          <span>5. Referencias ({{ hojaDeVida().referencias?.length || 0 }})</span>
+          <span>5. Referencias</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="(hojaDeVida().referencias?.length || 0) > 0"
+          >
+            {{ hojaDeVida().referencias?.length || 0 }}
+          </span>
         </button>
 
         <button
@@ -113,7 +123,25 @@ export type TabExpediente =
           data-testid="tab-exp-documentos"
         >
           <span class="material-symbols-outlined icon-sm">folder_open</span>
-          <span>6. Documentos y Respaldos ({{ archivos().length }})</span>
+          <span>6. Documentos del Expediente</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="documentosExpediente().length > 0"
+          >
+            {{ documentosExpediente().length }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="tab-btn tab-btn-todo"
+          [class.active]="tabActiva() === 'todos'"
+          (click)="cambiarTab('todos')"
+          data-testid="tab-exp-todos"
+          title="Ver todo el expediente de forma continua en pantalla completa"
+        >
+          <span class="material-symbols-outlined icon-sm">view_agenda</span>
+          <span>Vista Continua (Todo)</span>
         </button>
       </nav>
 
@@ -145,193 +173,206 @@ export type TabExpediente =
           />
 
           @if (hojaDeVida().ficha; as ficha) {
-            <!-- Subíndice 1.1: Identidad y Fotografía -->
-            <div class="subindice-card">
-              <div class="subindice-header">
-                <span class="subindice-tag">Índice 1.1</span>
-                <h4 class="subindice-title">Identidad y Fotografía Institucional</h4>
-              </div>
+            <div class="ficha-bento-grid">
+              <!-- Columna Izquierda: Identidad y Contacto -->
+              <div class="ficha-bento-col">
+                <!-- Subíndice 1.1: Identidad y Fotografía -->
+                <div class="subindice-card">
+                  <div class="subindice-header">
+                    <span class="subindice-tag">Índice 1.1</span>
+                    <h4 class="subindice-title">Identidad y Fotografía Institucional</h4>
+                  </div>
 
-              <div class="identidad-layout">
-                <!-- Tarjeta Fotografía -->
-                <div class="foto-perfil-box">
-                  <div class="foto-frame">
-                    @if (ficha.fotoArchivoId) {
-                      <div class="foto-badge-ok">
-                        <span class="material-symbols-outlined icon-xs">check_circle</span>
-                        <span>Foto Registrada</span>
+                  <div class="identidad-layout">
+                    <!-- Tarjeta Fotografía -->
+                    <div class="foto-perfil-box">
+                      <div class="foto-frame">
+                        @if (ficha.fotoArchivoId) {
+                          <div class="foto-badge-ok">
+                            <span class="material-symbols-outlined icon-xs">check_circle</span>
+                            <span>Foto Registrada</span>
+                          </div>
+                        } @else {
+                          <div class="foto-empty">
+                            <span class="material-symbols-outlined icon-xl text-muted"
+                              >no_photography</span
+                            >
+                            <span class="text-xs text-muted">Sin foto registrada</span>
+                          </div>
+                        }
                       </div>
-                    } @else {
-                      <div class="foto-empty">
-                        <span class="material-symbols-outlined icon-xl text-muted"
-                          >no_photography</span
-                        >
-                        <span class="text-xs text-muted">Sin foto registrada</span>
-                      </div>
-                    }
-                  </div>
-                  @if (ficha.fotoArchivoId) {
-                    <div class="foto-actions">
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm"
-                        (click)="onPrevisualizar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
-                        title="Previsualizar fotografía"
-                      >
-                        <span class="material-symbols-outlined icon-xs">visibility</span>
-                        <span>Previsualizar</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-secondary btn-sm"
-                        (click)="onDescargar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
-                        data-testid="btn-descargar-foto"
-                        title="Descargar archivo original de fotografía"
-                      >
-                        <span class="material-symbols-outlined icon-xs">download</span>
-                        <span>Descargar Foto</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        [disabled]="!esEnviado()"
-                        (click)="onRetirarArchivo(ficha.fotoArchivoId, 'foto_perfil.jpg')"
-                        data-testid="btn-retirar-foto"
-                        title="Retirar fotografía de perfil del expediente"
-                      >
-                        <span class="material-symbols-outlined icon-xs">delete_sweep</span>
-                        <span>Retirar foto</span>
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-warning btn-sm"
-                        [disabled]="!esEnviado()"
-                        (click)="onMarcarItem('ficha', 'foto', 'Fotografía de Perfil')"
-                        data-testid="btn-marcar-foto"
-                        title="Solicitar corrección sobre la fotografía"
-                      >
-                        <span class="material-symbols-outlined icon-xs">edit_note</span>
-                        <span>Solicitar corrección</span>
-                      </button>
-                    </div>
-                  }
-                </div>
-
-                <!-- Cuadrícula de Datos de Identidad -->
-                <div class="datos-grid-identidad">
-                  <div class="dato-field">
-                    <span class="dato-label">Nombres y Apellidos:</span>
-                    <strong class="dato-value-highlight">
-                      {{ ficha.primerNombre }} {{ ficha.segundoNombre || '' }}
-                      {{ ficha.primerApellido }} {{ ficha.segundoApellido || '' }}
-                    </strong>
-                  </div>
-                  <div class="dato-field">
-                    <span class="dato-label">Documento de Identidad:</span>
-                    <span class="dato-value font-mono" data-testid="expediente-doc">
-                      {{ hojaDeVida().documento }}
-                    </span>
-                  </div>
-                  <div class="dato-field">
-                    <span class="dato-label">Fecha de Nacimiento:</span>
-                    <span class="dato-value">
-                      {{
-                        ficha.fechaNacimiento ? (ficha.fechaNacimiento | date: 'dd/MM/yyyy') : '—'
-                      }}
-                    </span>
-                  </div>
-                  <div class="dato-field">
-                    <span class="dato-label">Discapacidad:</span>
-                    <span class="dato-value">
-                      @if (ficha.porcentajeDiscapacidad) {
-                        <span class="badge badge-warning">
-                          Sí ({{ ficha.porcentajeDiscapacidad }}% • Carnet:
-                          {{ ficha.numeroCarnetDiscapacidad || 'S/N' }})
-                        </span>
-                      } @else {
-                        <span class="badge badge-success">No registra discapacidad</span>
+                      @if (ficha.fotoArchivoId) {
+                        <div class="foto-actions">
+                          <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            (click)="onPrevisualizar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                            title="Previsualizar fotografía"
+                          >
+                            <span class="material-symbols-outlined icon-xs">visibility</span>
+                            <span>Previsualizar</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-secondary btn-sm"
+                            (click)="onDescargar(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                            data-testid="btn-descargar-foto"
+                            title="Descargar archivo original de fotografía"
+                          >
+                            <span class="material-symbols-outlined icon-xs">download</span>
+                            <span>Descargar Foto</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-danger btn-sm"
+                            [disabled]="!esEnviado()"
+                            (click)="onRetirarArchivo(ficha.fotoArchivoId, 'foto_perfil.jpg')"
+                            data-testid="btn-retirar-foto"
+                            title="Retirar fotografía de perfil del expediente"
+                          >
+                            <span class="material-symbols-outlined icon-xs">delete_sweep</span>
+                            <span>Retirar foto</span>
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-warning btn-sm"
+                            [disabled]="!esEnviado()"
+                            (click)="onMarcarItem('ficha', 'foto', 'Fotografía de Perfil')"
+                            data-testid="btn-marcar-foto"
+                            title="Solicitar corrección sobre la fotografía"
+                          >
+                            <span class="material-symbols-outlined icon-xs">edit_note</span>
+                            <span>Solicitar corrección</span>
+                          </button>
+                        </div>
                       }
-                    </span>
+                    </div>
+
+                    <!-- Cuadrícula de Datos de Identidad -->
+                    <div class="datos-grid-identidad">
+                      <div class="dato-field">
+                        <span class="dato-label">Nombres y Apellidos:</span>
+                        <strong class="dato-value-highlight">
+                          {{ ficha.primerNombre }} {{ ficha.segundoNombre || '' }}
+                          {{ ficha.primerApellido }} {{ ficha.segundoApellido || '' }}
+                        </strong>
+                      </div>
+                      <div class="dato-field">
+                        <span class="dato-label">Documento de Identidad:</span>
+                        <span class="dato-value font-mono" data-testid="expediente-doc">
+                          {{ hojaDeVida().documento }}
+                        </span>
+                      </div>
+                      <div class="dato-field">
+                        <span class="dato-label">Fecha de Nacimiento:</span>
+                        <span class="dato-value">
+                          {{
+                            ficha.fechaNacimiento
+                              ? (ficha.fechaNacimiento | date: 'dd/MM/yyyy')
+                              : '—'
+                          }}
+                        </span>
+                      </div>
+                      <div class="dato-field">
+                        <span class="dato-label">Discapacidad:</span>
+                        <span class="dato-value">
+                          @if (ficha.porcentajeDiscapacidad) {
+                            <span class="badge badge-warning">
+                              Sí ({{ ficha.porcentajeDiscapacidad }}% • Carnet:
+                              {{ ficha.numeroCarnetDiscapacidad || 'S/N' }})
+                            </span>
+                          } @else {
+                            <span class="badge badge-success">No registra discapacidad</span>
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Subíndice 1.2: Contacto y Residencia Domiciliaria -->
+                <div class="subindice-card">
+                  <div class="subindice-header">
+                    <span class="subindice-tag">Índice 1.2</span>
+                    <h4 class="subindice-title">Contacto y Residencia Domiciliaria</h4>
+                  </div>
+                  <div class="datos-grid-cards">
+                    <div class="dato-field">
+                      <span class="dato-label">Correo Institucional:</span>
+                      <span class="dato-value">{{ ficha.correoInstitucional || '—' }}</span>
+                    </div>
+                    <div class="dato-field">
+                      <span class="dato-label">Correo Personal:</span>
+                      <span
+                        class="dato-value font-semibold"
+                        data-testid="expediente-correo-personal"
+                      >
+                        {{ ficha.correoPersonal || '—' }}
+                      </span>
+                    </div>
+                    <div class="dato-field">
+                      <span class="dato-label">Teléfonos:</span>
+                      <span class="dato-value">
+                        Cel: <strong>{{ ficha.celular || '—' }}</strong> | Conv:
+                        {{ ficha.telefonoConvencional || '—' }}
+                      </span>
+                    </div>
+                    <div class="dato-field col-span-2">
+                      <span class="dato-label">Dirección Domiciliaria:</span>
+                      <span class="dato-value">
+                        {{ ficha.callePrincipal || '—' }} {{ ficha.numeroCasa || '' }}
+                        {{ ficha.calleSecundaria ? 'y ' + ficha.calleSecundaria : '' }}
+                        {{ ficha.referenciaDomicilio ? '(' + ficha.referenciaDomicilio + ')' : '' }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <!-- Subíndice 1.2: Contacto y Residencia Domiciliaria -->
-            <div class="subindice-card">
-              <div class="subindice-header">
-                <span class="subindice-tag">Índice 1.2</span>
-                <h4 class="subindice-title">Contacto y Residencia Domiciliaria</h4>
-              </div>
-              <div class="datos-grid-cards">
-                <div class="dato-field">
-                  <span class="dato-label">Correo Institucional:</span>
-                  <span class="dato-value">{{ ficha.correoInstitucional || '—' }}</span>
+              <!-- Columna Derecha: Consentimiento, Cuenta Bancaria y Perfil -->
+              <div class="ficha-bento-col">
+                <!-- Subíndice 1.3: Consentimiento y Cuenta Bancaria -->
+                <div class="subindice-card">
+                  <div class="subindice-header">
+                    <span class="subindice-tag">Índice 1.3</span>
+                    <h4 class="subindice-title">Consentimiento de Datos y Cuenta Bancaria</h4>
+                  </div>
+                  <div class="datos-grid-cards">
+                    <div class="dato-field col-span-2">
+                      <span class="dato-label">Tratamiento de Datos Personales (LOPDP):</span>
+                      <span class="dato-value">
+                        @if (expediente()?.tratamientoDatosAceptado) {
+                          <span class="badge badge-success">✓ Aceptado formalmente</span>
+                          <small class="text-muted ml-2">
+                            ({{
+                              expediente()?.fechaAceptacionTratamientoDatosUtc
+                                | date: 'dd/MM/yyyy HH:mm'
+                            }})
+                          </small>
+                        } @else {
+                          <span class="badge badge-secondary">Registrado formalmente</span>
+                        }
+                      </span>
+                    </div>
+                    <div class="dato-field col-span-2">
+                      <span class="dato-label">Cuenta Bancaria Vinculada:</span>
+                      <app-cuenta-bancaria-revision [documento]="hojaDeVida().documento" />
+                    </div>
+                  </div>
                 </div>
-                <div class="dato-field">
-                  <span class="dato-label">Correo Personal:</span>
-                  <span class="dato-value font-semibold" data-testid="expediente-correo-personal">
-                    {{ ficha.correoPersonal || '—' }}
-                  </span>
-                </div>
-                <div class="dato-field">
-                  <span class="dato-label">Teléfonos:</span>
-                  <span class="dato-value">
-                    Cel: <strong>{{ ficha.celular || '—' }}</strong> | Conv:
-                    {{ ficha.telefonoConvencional || '—' }}
-                  </span>
-                </div>
-                <div class="dato-field col-span-2">
-                  <span class="dato-label">Dirección Domiciliaria:</span>
-                  <span class="dato-value">
-                    {{ ficha.callePrincipal || '—' }} {{ ficha.numeroCasa || '' }}
-                    {{ ficha.calleSecundaria ? 'y ' + ficha.calleSecundaria : '' }}
-                    {{ ficha.referenciaDomicilio ? '(' + ficha.referenciaDomicilio + ')' : '' }}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            <!-- Subíndice 1.3: Consentimiento y Cuenta Bancaria -->
-            <div class="subindice-card">
-              <div class="subindice-header">
-                <span class="subindice-tag">Índice 1.3</span>
-                <h4 class="subindice-title">Consentimiento de Datos y Cuenta Bancaria</h4>
-              </div>
-              <div class="datos-grid-cards">
-                <div class="dato-field">
-                  <span class="dato-label">Tratamiento de Datos Personales:</span>
-                  <span class="dato-value">
-                    @if (expediente()?.tratamientoDatosAceptado) {
-                      <span class="badge badge-success">Aceptado</span>
-                      <small class="text-muted ml-2">
-                        ({{
-                          expediente()?.fechaAceptacionTratamientoDatosUtc
-                            | date: 'dd/MM/yyyy HH:mm'
-                        }})
-                      </small>
-                    } @else {
-                      <span class="badge badge-secondary">Registrado formalmente</span>
-                    }
-                  </span>
-                </div>
-                <div class="dato-field col-span-2">
-                  <span class="dato-label">Cuenta Bancaria Vinculada:</span>
-                  <app-cuenta-bancaria-revision [documento]="hojaDeVida().documento" />
-                </div>
+                <!-- Subíndice 1.4: Perfil Profesional Sintetizado -->
+                @if (ficha.perfil) {
+                  <div class="subindice-card">
+                    <div class="subindice-header">
+                      <span class="subindice-tag">Índice 1.4</span>
+                      <h4 class="subindice-title">Perfil Profesional Generado</h4>
+                    </div>
+                    <p class="texto-perfil">{{ ficha.perfil }}</p>
+                  </div>
+                }
               </div>
             </div>
-
-            <!-- Subíndice 1.4: Perfil Profesional Sintetizado -->
-            @if (ficha.perfil) {
-              <div class="subindice-card">
-                <div class="subindice-header">
-                  <span class="subindice-tag">Índice 1.4</span>
-                  <h4 class="subindice-title">Perfil Profesional Generado</h4>
-                </div>
-                <p class="texto-perfil">{{ ficha.perfil }}</p>
-              </div>
-            }
           } @else {
             <p class="text-muted empty-msg">
               No se registra ficha personal estructurada para este usuario.
@@ -1346,7 +1387,7 @@ export type TabExpediente =
       }
 
       <!-- =================================================================== -->
-      <!-- SECCIÓN 6: DOCUMENTOS Y RESPALDOS DEL EXPEDIENTE -->
+      <!-- SECCIÓN 6: DOCUMENTOS DEL EXPEDIENTE -->
       <!-- =================================================================== -->
       @if (tabActiva() === 'todos' || tabActiva() === 'documentos') {
         <section
@@ -1359,11 +1400,11 @@ export type TabExpediente =
               <span class="seccion-index-badge">6</span>
               <div>
                 <h3 class="seccion-auditoria-title">
-                  6. DOCUMENTOS Y RESPALDOS DEL EXPEDIENTE ({{ archivos().length }})
+                  6. DOCUMENTOS DEL EXPEDIENTE ({{ documentosExpediente().length }})
                 </h3>
                 <p class="seccion-auditoria-desc">
-                  Expediente digitalizado consolidado: cédula, certificados, títulos y respaldos
-                  probatorios.
+                  Expediente digitalizado oficial: cédula de identidad, certificados y documentos
+                  institucionales.
                 </p>
               </div>
             </div>
@@ -1384,54 +1425,20 @@ export type TabExpediente =
               <div class="subindice-tag-group">
                 <span class="subindice-tag">Índice 6.1</span>
                 <h4 class="subindice-title">
-                  {{
-                    filtroVistaDocumentos() === 'expediente'
-                      ? 'Documentos Personales e Institucionales (' +
-                        documentosExpediente().length +
-                        ')'
-                      : 'Todos los Respaldos Digitales (' + archivos().length + ')'
-                  }}
+                  Documentos Personales e Institucionales ({{ documentosExpediente().length }})
                 </h4>
               </div>
-              <div class="documentos-view-switch">
-                <button
-                  type="button"
-                  class="btn-switch-doc"
-                  [class.active]="filtroVistaDocumentos() === 'expediente'"
-                  (click)="filtroVistaDocumentos.set('expediente')"
-                  title="Ver solo documentos personales e institucionales del expediente"
-                >
-                  Documentos del Expediente ({{ documentosExpediente().length }})
-                </button>
-                <button
-                  type="button"
-                  class="btn-switch-doc"
-                  [class.active]="filtroVistaDocumentos() === 'todos'"
-                  (click)="filtroVistaDocumentos.set('todos')"
-                  title="Ver todos los respaldos (incluyendo títulos, cursos y certificados)"
-                >
-                  Todos los Respaldos ({{ archivos().length }})
-                </button>
-              </div>
+              <span class="badge badge-info">Expediente Oficial</span>
             </div>
 
-            @if (filtroVistaDocumentos() === 'expediente' && respaldosEspecificos().length > 0) {
-              <div class="aviso-respaldos-en-secciones">
-                <span class="material-symbols-outlined icon-xs text-primary">info</span>
-                <span>
-                  Los <strong>{{ respaldosEspecificos().length }} respaldos específicos</strong>
-                  (títulos, certificados de cursos y experiencia laboral) se gestionan y auditan
-                  directamente dentro de sus secciones superiores (Formación, Capacitaciones,
-                  Experiencia) para un flujo ordenado sin duplicidad.
-                </span>
-              </div>
-            }
-
-            @if (!archivosParaMostrar().length) {
-              <p class="empty-subindice-msg">No se registran documentos en esta vista.</p>
+            @if (!documentosExpediente().length) {
+              <p class="empty-subindice-msg">
+                No se registran documentos personales ni institucionales adjuntos en este
+                expediente.
+              </p>
             } @else {
               <div class="items-cards-list">
-                @for (arc of archivosParaMostrar(); track arc.id; let idx = $index) {
+                @for (arc of documentosExpediente(); track arc.id; let idx = $index) {
                   <div
                     class="item-audit-card glass-card archivo-item"
                     [class.item-revisado-auditado]="estaRevisado('documento:' + arc.id)"
@@ -1566,6 +1573,18 @@ export type TabExpediente =
                 }
               </div>
             }
+
+            @if (respaldosEspecificos().length > 0) {
+              <div class="aviso-respaldos-en-secciones mt-4">
+                <span class="material-symbols-outlined icon-xs text-primary">info</span>
+                <span>
+                  Los <strong>{{ respaldosEspecificos().length }} respaldos específicos</strong>
+                  (títulos, certificados de cursos y experiencia laboral) se revisan directamente
+                  dentro de cada sección (Formación, Capacitaciones, Experiencia) para mantener un
+                  expediente claro y sin duplicidad.
+                </span>
+              </div>
+            }
           </div>
         </section>
       }
@@ -1638,26 +1657,29 @@ export type TabExpediente =
       width: 100%;
     }
 
-    /* Pestañas de navegación sticky estilo Apple / Material 3 */
+    /* Pestañas de navegación sticky estilo Aurora UI & Glassmorphism */
     .secciones-tabs {
       display: flex;
       gap: 0.5rem;
       overflow-x: auto;
-      padding: 0.5rem;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       border-radius: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow:
+        0 4px 16px -2px rgba(15, 23, 42, 0.06),
+        0 1px 2px 0 rgba(0, 0, 0, 0.03);
       position: sticky;
       top: 0.75rem;
       z-index: 20;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .tab-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.625rem 1rem;
+      padding: 0.5rem 0.875rem;
       border: 1px solid transparent;
       border-radius: 0.625rem;
       background: #f8fafc;
@@ -1667,34 +1689,67 @@ export type TabExpediente =
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.2s ease;
-      min-height: 42px;
+      min-height: 40px;
+    }
+    .tab-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 0.375rem;
+      border-radius: 9999px;
+      background: #e2e8f0;
+      color: #64748b;
+      line-height: 1;
+      transition: all 0.2s ease;
+    }
+    .tab-count-badge.tab-count-has-items {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
+    }
+    .tab-btn.active .tab-count-badge {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+    .tab-btn.active .tab-count-badge.tab-count-has-items {
+      background: #38bdf8;
+      color: #082f49;
     }
     .tab-btn:hover {
       background: #f1f5f9;
       color: #0f172a;
     }
     .tab-btn.active {
-      background: #222c57;
+      background: linear-gradient(135deg, #1e293b 0%, #172554 50%, #222c57 100%);
       color: #ffffff;
-      box-shadow: 0 4px 6px -1px rgba(34, 44, 87, 0.25);
+      box-shadow: 0 4px 12px -2px rgba(34, 44, 87, 0.35);
+      border-color: rgba(255, 255, 255, 0.18);
     }
     .tab-btn-todo {
       background: rgba(34, 44, 87, 0.06);
       color: #222c57;
-      border-color: rgba(34, 44, 87, 0.2);
+      border-color: rgba(34, 44, 87, 0.18);
     }
     .tab-btn-todo.active {
-      background: #222c57;
+      background: linear-gradient(135deg, #1e293b 0%, #172554 50%, #222c57 100%);
       color: #ffffff;
     }
 
-    /* Secciones de auditoría completas */
+    /* Secciones de auditoría con Glassmorphism */
     .seccion-auditoria {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 1.125rem;
       padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow:
+        0 8px 24px -4px rgba(15, 23, 42, 0.05),
+        0 2px 6px -1px rgba(0, 0, 0, 0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
@@ -1712,14 +1767,14 @@ export type TabExpediente =
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: #222c57;
+      background: linear-gradient(135deg, #172554 0%, #222c57 100%);
       color: #ffffff;
       font-weight: 900;
       font-size: 1.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(34, 44, 87, 0.2);
+      box-shadow: 0 4px 10px -2px rgba(34, 44, 87, 0.35);
       flex-shrink: 0;
     }
     .seccion-auditoria-title {
@@ -1776,11 +1831,29 @@ export type TabExpediente =
       margin: 0;
     }
 
+    /* Bento Grid para Ficha Personal */
+    .ficha-bento-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+      align-items: start;
+    }
+    .ficha-bento-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    @media (max-width: 960px) {
+      .ficha-bento-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* Layout Ficha Identidad */
     .identidad-layout {
       display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 1.5rem;
+      grid-template-columns: 170px 1fr;
+      gap: 1.25rem;
       align-items: start;
     }
     @media (max-width: 768px) {
@@ -1795,7 +1868,7 @@ export type TabExpediente =
     }
     .foto-frame {
       width: 100%;
-      height: 180px;
+      height: 140px;
       border-radius: 0.75rem;
       background: #ffffff;
       border: 2px dashed #cbd5e1;
@@ -2097,33 +2170,6 @@ export type TabExpediente =
       color: #b45309;
       width: 100%;
     }
-    .documentos-view-switch {
-      display: inline-flex;
-      background: #f1f5f9;
-      padding: 2px;
-      border-radius: 0.5rem;
-      border: 1px solid #e2e8f0;
-      gap: 2px;
-    }
-    .btn-switch-doc {
-      padding: 0.3rem 0.75rem;
-      border: none;
-      background: transparent;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .btn-switch-doc:hover {
-      color: #0f172a;
-    }
-    .btn-switch-doc.active {
-      background: #ffffff;
-      color: #222c57;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
     .aviso-respaldos-en-secciones {
       display: flex;
       align-items: center;
@@ -2163,15 +2209,12 @@ export class ExpedienteSeccionesComponent {
   readonly vincularPorAyuda = output<{ obligatoriaId: string; capacitacionId: string }>();
   readonly retirarArchivo = output<{ archivoId: string; nombreOriginal: string }>();
 
-  readonly tabActiva = signal<TabExpediente>('todos');
+  readonly tabActiva = signal<TabExpediente>('ficha');
   readonly modalAyudaObligatoria = signal<EstadoCapacitacionObligatoriaPersonaDto | null>(null);
   readonly capacitacionAyudaSeleccionada = signal<string>('');
 
   // Ítems revisados localmente por el supervisor para seguimiento
   readonly itemsRevisados = signal<Set<string>>(new Set<string>());
-
-  // Filtro de vista para la Sección 6 (Documentos del Expediente vs Todos los Respaldos)
-  readonly filtroVistaDocumentos = signal<'expediente' | 'todos'>('expediente');
 
   readonly esEnviado = computed(
     () => (this.hojaDeVida()?.estadoActualizacion ?? '').toLowerCase() === 'enviado',
@@ -2228,19 +2271,11 @@ export class ExpedienteSeccionesComponent {
   }
 
   readonly documentosExpediente = computed(() => {
-    const docs = this.archivos().filter((a) => !this.esArchivoDeItemEspecifico(a));
-    return docs.length > 0 ? docs : this.archivos();
+    return this.archivos().filter((a) => !this.esArchivoDeItemEspecifico(a));
   });
 
   readonly respaldosEspecificos = computed(() => {
     return this.archivos().filter((a) => this.esArchivoDeItemEspecifico(a));
-  });
-
-  readonly archivosParaMostrar = computed(() => {
-    if (this.filtroVistaDocumentos() === 'todos') {
-      return this.archivos();
-    }
-    return this.documentosExpediente();
   });
 
   estaRevisado(key: string): boolean {
