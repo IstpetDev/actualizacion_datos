@@ -1,6 +1,12 @@
 import politicaPrueba from '../../servicios/politica-validacion.fixture.json';
-import { ConfiguracionClient } from '../../../../../api-client';
+import {
+  ConfiguracionClient,
+  EstadoSubindiceSeccionPersonaDto,
+  TituloAcademicoDto,
+  TituloEnCursoDto,
+} from '../../../../../api-client';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal, WritableSignal } from '@angular/core';
 import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { ArchivosClient, ElementoCatalogoDto } from '../../../../../api-client';
@@ -11,12 +17,16 @@ import { FormacionAcademicaComponent } from './formacion-academica.component';
 describe('FormacionAcademicaComponent', () => {
   let component: FormacionAcademicaComponent;
   let fixture: ComponentFixture<FormacionAcademicaComponent>;
+  let subindicesSignal: WritableSignal<EstadoSubindiceSeccionPersonaDto[]>;
+  let titulosSignal: WritableSignal<TituloAcademicoDto[]>;
+  let titulosEnCursoSignal: WritableSignal<TituloEnCursoDto[]>;
 
   let stateMock: {
     puedeEditar: ReturnType<typeof vi.fn>;
     guardando: ReturnType<typeof vi.fn>;
-    titulos: ReturnType<typeof vi.fn>;
-    titulosEnCurso: ReturnType<typeof vi.fn>;
+    titulos: WritableSignal<TituloAcademicoDto[]>;
+    titulosEnCurso: WritableSignal<TituloEnCursoDto[]>;
+    subindicesSeccion: WritableSignal<EstadoSubindiceSeccionPersonaDto[]>;
     guardarTitulo: Mock;
     eliminarTitulo: Mock;
     guardarTituloEnCurso: Mock;
@@ -68,11 +78,15 @@ describe('FormacionAcademicaComponent', () => {
   ];
 
   beforeEach(async () => {
+    subindicesSignal = signal<EstadoSubindiceSeccionPersonaDto[]>([]);
+    titulosSignal = signal<TituloAcademicoDto[]>([]);
+    titulosEnCursoSignal = signal<TituloEnCursoDto[]>([]);
     stateMock = {
       puedeEditar: vi.fn().mockReturnValue(true),
       guardando: vi.fn().mockReturnValue(false),
-      titulos: vi.fn().mockReturnValue([]),
-      titulosEnCurso: vi.fn().mockReturnValue([]),
+      titulos: titulosSignal,
+      titulosEnCurso: titulosEnCursoSignal,
+      subindicesSeccion: subindicesSignal,
       guardarTitulo: vi.fn().mockReturnValue(of({})),
       eliminarTitulo: vi.fn().mockReturnValue(of({})),
       guardarTituloEnCurso: vi.fn().mockReturnValue(of({})),
@@ -308,5 +322,152 @@ describe('FormacionAcademicaComponent', () => {
     expect(component.mostrarModalSubtab()).toBe(false);
     expect(component.mostrarFormTitulo()).toBe(false);
     expect(component.subtabActiva()).toBe('en-curso');
+  });
+
+  it('abre_formulario_modo_senescyt_y_permite_guardar_solo_con_documento', () => {
+    // Configurar subíndices de la institución con Registro SENESCYT
+    const subSenescyt: EstadoSubindiceSeccionPersonaDto = {
+      id: 'sub-senescyt-1',
+      seccion: 'formacion',
+      nombre: 'Registro SENESCYT',
+      descripcion: 'Subir certificado SENESCYT',
+      tipoFuncionarioId: undefined,
+      esObligatorio: true,
+      orden: 1,
+      activo: true,
+      estado: 'pendiente',
+    };
+    subindicesSignal.set([subSenescyt]);
+
+    // Abrir específicamente para SENESCYT
+    component.abrirParaSubindice(subSenescyt);
+    fixture.detectChanges();
+
+    expect(component.mostrarFormTitulo()).toBe(true);
+    expect(component.esSubindiceSenescyt()).toBe(true);
+    expect(component.modeloTitulo.nombreTitulo).toBe('Certificado de Registro SENESCYT');
+    expect(component.modeloTitulo.nombreInstitucionOtra).toBe('SENESCYT');
+    expect(component.modeloTitulo.gradoAcademicoId).toBeGreaterThan(0);
+
+    // Si no tiene archivoId, debe rechazar el guardado
+    component.guardarTitulo();
+    expect(component.errorFormulario()).toContain('Debe adjuntar el archivo PDF');
+
+    // Con archivoId cargado, se guarda exitosamente
+    component.modeloTitulo.archivoId = 'arch-senescyt-pdf-uuid';
+    component.guardarTitulo();
+
+    expect(stateMock.guardarTitulo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nombreTitulo: 'Certificado de Registro SENESCYT',
+        nombreInstitucionOtra: 'SENESCYT',
+        archivoId: 'arch-senescyt-pdf-uuid',
+        subindiceSeccionId: 'sub-senescyt-1',
+      }),
+      undefined,
+    );
+    expect(component.mostrarFormTitulo()).toBe(false);
+  });
+
+  it('abrirParaSubindice_autoselecciona_modo_segun_nombre_de_subindice', () => {
+    const sub3er: EstadoSubindiceSeccionPersonaDto = {
+      id: 'sub-3er-nivel',
+      seccion: 'formacion',
+      nombre: 'Título 3er nivel',
+      descripcion: undefined,
+      tipoFuncionarioId: undefined,
+      esObligatorio: false,
+      orden: 1,
+      activo: true,
+      estado: 'pendiente',
+    };
+    subindicesSignal.set([sub3er]);
+
+    component.abrirParaSubindice(sub3er);
+    fixture.detectChanges();
+
+    expect(component.mostrarFormTitulo()).toBe(true);
+    expect(component.esSubindiceSenescyt()).toBe(false);
+    expect(component.modeloTitulo.subindiceSeccionId).toBe('sub-3er-nivel');
+    // Verifica que intentó autoseleccionar Tercer Nivel (id 1)
+    expect(catalogosMock.gradosAcademicos).toHaveBeenCalledWith(1);
+  });
+
+  it('permite_registrar_y_contabilizar_multiples_titulos_de_tercer_nivel', () => {
+    const sub3erId = 'sub-3er-nivel-id';
+    titulosSignal.set([
+      {
+        id: 't-1',
+        nombreTitulo: 'Licenciado en Educación',
+        gradoAcademicoId: 10,
+        universidadId: 100,
+        nombreInstitucionOtra: undefined,
+        campoDetalladoUnescoId: undefined,
+        numeroRegistroSenescyt: undefined,
+        fechaObtencion: undefined,
+        fechaRegistroSenescyt: undefined,
+        archivoId: 'arch-1',
+        subindiceSeccionId: sub3erId,
+        fechaActualizacionUtc: new Date(),
+      },
+      {
+        id: 't-2',
+        nombreTitulo: 'Ingeniero en Computación',
+        gradoAcademicoId: 10,
+        universidadId: 100,
+        nombreInstitucionOtra: undefined,
+        campoDetalladoUnescoId: undefined,
+        numeroRegistroSenescyt: undefined,
+        fechaObtencion: undefined,
+        fechaRegistroSenescyt: undefined,
+        archivoId: 'arch-2',
+        subindiceSeccionId: sub3erId,
+        fechaActualizacionUtc: new Date(),
+      },
+    ]);
+    fixture.detectChanges();
+
+    const conteos = component.conteosPorSubindice();
+    expect(conteos[sub3erId]).toBe(2);
+    expect(component.idsSubindicesCumplidos().has(sub3erId)).toBe(true);
+  });
+
+  it('actualiza_y_restaura_fechaRegistroSenescyt', () => {
+    component.abrirFormTitulo();
+    component.onFechaRegistroSenescytChange('2022-08-15');
+    expect(component.fechaRegistroSenescytStr).toBe('2022-08-15');
+    expect(component.modeloTitulo.fechaRegistroSenescyt).toBeDefined();
+
+    // Al editar un título con fechaRegistroSenescyt
+    const tituloConFecha = {
+      id: 't-edit',
+      nombreTitulo: 'Abogado',
+      gradoAcademicoId: 10,
+      universidadId: 100,
+      nombreInstitucionOtra: undefined,
+      campoDetalladoUnescoId: undefined,
+      numeroRegistroSenescyt: '1005-2022-888888',
+      fechaObtencion: undefined,
+      fechaRegistroSenescyt: new Date('2022-08-15T00:00:00Z'),
+      archivoId: 'arch-edit',
+      fechaActualizacionUtc: new Date(),
+    };
+
+    component.editarTitulo(tituloConFecha);
+    expect(component.fechaRegistroSenescytStr).toBe('2022-08-15');
+    expect(component.modeloTitulo.numeroRegistroSenescyt).toBe('1005-2022-888888');
+  });
+
+  it('muestra_aviso_informativo_diferenciando_copia_de_titulo_de_certificado_senescyt', () => {
+    component.abrirFormTitulo();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const avisoTitulo = compiled.querySelector('[data-testid="aviso-respaldo-titulo"]');
+    expect(avisoTitulo).toBeTruthy();
+    expect(avisoTitulo?.textContent).toContain('Copia del Título Académico o Acta de Grado');
+    expect(avisoTitulo?.textContent).toContain(
+      'No adjunte aquí el Certificado de Registro de la SENESCYT',
+    );
   });
 });
