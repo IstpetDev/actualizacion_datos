@@ -469,5 +469,75 @@ describe('FormacionAcademicaComponent', () => {
     expect(avisoTitulo?.textContent).toContain(
       'No adjunte aquí el Certificado de Registro de la SENESCYT',
     );
+    // Verificar que no contenga emojis
+    expect(avisoTitulo?.textContent).not.toContain('⚠️');
+  });
+
+  it('no_renderiza_el_campo_fecha_de_obtencion_o_graduacion', () => {
+    component.abrirFormTitulo();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const inputFechaObtencion = compiled.querySelector('[data-testid="input-fecha-obtencion"]');
+    expect(inputFechaObtencion).toBeNull();
+  });
+
+  it('permite_alternar_entre_catalogo_universidades_y_otra_institucion', () => {
+    component.abrirFormTitulo();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    // Por defecto inicia en modo catálogo
+    expect(component.modoOtraInstitucion()).toBe(false);
+    expect(compiled.querySelector('[data-testid="select-universidad"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-testid="buscar-universidad"]')).toBeTruthy();
+
+    // Cambiar a modo otra institución
+    component.setModoOtraInstitucion(true);
+    fixture.detectChanges();
+
+    expect(component.modoOtraInstitucion()).toBe(true);
+    expect(compiled.querySelector('[data-testid="input-institucion-otra"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-testid="select-universidad"]')).toBeNull();
+  });
+
+  it('pestana_senescyt_permite_carga_directa_del_pdf_sin_otros_campos', () => {
+    const subSenescyt: EstadoSubindiceSeccionPersonaDto = {
+      id: 'sub-senescyt-directo',
+      seccion: 'formacion',
+      nombre: 'Registro SENESCYT',
+      descripcion: undefined,
+      tipoFuncionarioId: undefined,
+      esObligatorio: true,
+      orden: 2,
+      activo: true,
+      estado: 'pendiente',
+    };
+    subindicesSignal.set([subSenescyt]);
+    component.seleccionarTab('sub-senescyt-directo');
+    fixture.detectChanges();
+
+    expect(component.esTabSenescytActiva()).toBe(true);
+    const compiled = fixture.nativeElement as HTMLElement;
+    const panelSenescyt = compiled.querySelector('[data-testid="panel-carga-senescyt"]');
+    expect(panelSenescyt).toBeTruthy();
+    // No debe tener inputs de nombre de título, grado o universidad
+    expect(panelSenescyt?.querySelector('[data-testid="input-nombre-titulo"]')).toBeNull();
+    expect(panelSenescyt?.querySelector('[data-testid="select-grado-academico"]')).toBeNull();
+    expect(panelSenescyt?.querySelector('[data-testid="select-universidad"]')).toBeNull();
+
+    // Guardar directo con archivoId
+    component.modeloTitulo.archivoId = 'arch-directo-senescyt-id';
+    component.guardarSenescytDirecto();
+
+    expect(stateMock.guardarTitulo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nombreTitulo: 'Certificado de Registro SENESCYT',
+        nombreInstitucionOtra: 'SENESCYT',
+        archivoId: 'arch-directo-senescyt-id',
+        subindiceSeccionId: 'sub-senescyt-directo',
+      }),
+      undefined,
+    );
   });
 });
