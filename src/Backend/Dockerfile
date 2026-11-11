@@ -39,6 +39,7 @@ EXPOSE 8080
 # Un volumen nombrado nuevo hereda este dueño; sin ellas Docker las crea de root y la subida falla.
 RUN mkdir -p /app/almacen_archivos && chown -R $APP_UID:$APP_UID /app/almacen_archivos
 RUN mkdir -p /datos/archivos && chown -R $APP_UID:$APP_UID /datos/archivos
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys && chown -R $APP_UID:$APP_UID /home/app/.aspnet
 
 USER $APP_UID
 
