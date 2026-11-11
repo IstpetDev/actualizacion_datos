@@ -540,4 +540,97 @@ describe('FormacionAcademicaComponent', () => {
       undefined,
     );
   });
+
+  it('filtra_niveles_academicos_segun_apartado_activo_excluyendo_niveles_incoherentes', () => {
+    component.nivelesAcademicos.set([
+      {
+        id: 1,
+        tipo: 1,
+        codigo: 'PRI',
+        nombre: 'Primaria',
+        orden: 1,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 2,
+        tipo: 1,
+        codigo: 'SEC',
+        nombre: 'Secundaria',
+        orden: 2,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 3,
+        tipo: 1,
+        codigo: 'TEC',
+        nombre: 'Tercer Nivel Técnico',
+        orden: 3,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 4,
+        tipo: 1,
+        codigo: 'TNO',
+        nombre: 'Tercer Nivel Tecnológico',
+        orden: 4,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 5,
+        tipo: 1,
+        codigo: 'GRA',
+        nombre: 'Tercer Nivel de Grado',
+        orden: 5,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 6,
+        tipo: 1,
+        codigo: 'MAE',
+        nombre: 'Maestría',
+        orden: 6,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+      {
+        id: 7,
+        tipo: 1,
+        codigo: 'PHD',
+        nombre: 'PhD',
+        orden: 7,
+        padreId: undefined,
+        codigoExterno: undefined,
+      },
+    ]);
+
+    // En apartado de 3er nivel
+    component.seleccionarTab('tab-3er-nivel');
+    fixture.detectChanges();
+
+    const niveles3er = component.nivelesDisponibles();
+    const nombres3er = niveles3er.map((n) => n.nombre);
+    expect(nombres3er).toContain('Tercer Nivel Técnico');
+    expect(nombres3er).toContain('Tercer Nivel Tecnológico');
+    expect(nombres3er).toContain('Tercer Nivel de Grado');
+    expect(nombres3er).not.toContain('Primaria');
+    expect(nombres3er).not.toContain('Secundaria');
+    expect(nombres3er).not.toContain('Maestría');
+    expect(nombres3er).not.toContain('PhD');
+
+    // En apartado de 4to nivel
+    component.seleccionarTab('tab-4to-nivel');
+    fixture.detectChanges();
+
+    const niveles4to = component.nivelesDisponibles();
+    const nombres4to = niveles4to.map((n) => n.nombre);
+    expect(nombres4to).toContain('Maestría');
+    expect(nombres4to).toContain('PhD');
+    expect(nombres4to).not.toContain('Tercer Nivel Técnico');
+    expect(nombres4to).not.toContain('Primaria');
+  });
 });

@@ -356,10 +356,11 @@ export interface TabExcelItem {
                       class="form-control"
                       [ngModel]="nivelSeleccionadoId()"
                       (ngModelChange)="onNivelChange($event)"
+                      [disabled]="nivelesDisponibles().length <= 1"
                       data-testid="select-nivel-academico"
                     >
                       <option [ngValue]="undefined">Seleccione nivel...</option>
-                      @for (n of nivelesAcademicos(); track n.id) {
+                      @for (n of nivelesDisponibles(); track n.id) {
                         <option [ngValue]="n.id">{{ n.nombre }}</option>
                       }
                     </select>
@@ -2004,6 +2005,48 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
 
   // Catálogos
   readonly nivelesAcademicos = signal<ElementoCatalogoDto[]>([]);
+  readonly nivelesDisponibles = computed(() => {
+    const tab = this.tabActivaActual();
+    const todos = this.nivelesAcademicos();
+    if (!tab) return todos;
+
+    if (tab.tipo === '3er-nivel') {
+      const filtrados = todos.filter((n) => {
+        const nom = n.nombre.toLowerCase();
+        return (
+          (nom.includes('tercer') ||
+            nom.includes('grado') ||
+            nom.includes('técnico') ||
+            nom.includes('tecnológico') ||
+            n.codigo === '1' ||
+            n.codigo === 'TER') &&
+          !nom.includes('cuarto') &&
+          !nom.includes('posgrado') &&
+          !nom.includes('especialidad') &&
+          !nom.includes('maestría') &&
+          !nom.includes('phd')
+        );
+      });
+      return filtrados.length > 0 ? filtrados : todos;
+    }
+
+    if (tab.tipo === '4to-nivel') {
+      const filtrados = todos.filter((n) => {
+        const nom = n.nombre.toLowerCase();
+        return (
+          nom.includes('cuarto') ||
+          nom.includes('posgrado') ||
+          nom.includes('especialidad') ||
+          nom.includes('maestría') ||
+          nom.includes('phd') ||
+          nom.includes('doctorado')
+        );
+      });
+      return filtrados.length > 0 ? filtrados : todos;
+    }
+
+    return todos;
+  });
   readonly gradosAcademicos = signal<ElementoCatalogoDto[]>([]);
   readonly todosLosGrados = signal<ElementoCatalogoDto[]>([]);
   readonly universidades = signal<ElementoCatalogoDto[]>([]);
@@ -2280,20 +2323,25 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
 
     // Autoseleccionar nivel según el apartado activo
     if (tab.tipo === '3er-nivel') {
-      const nivel3 = this.nivelesAcademicos().find(
-        (n) => n.codigo === '1' || n.nombre.toLowerCase().includes('tercer'),
-      );
+      const nivel3 =
+        this.nivelesDisponibles().find((n) => n.nombre.toLowerCase().includes('grado')) ??
+        this.nivelesDisponibles().find(
+          (n) => n.codigo === '1' || n.nombre.toLowerCase().includes('tercer'),
+        ) ??
+        this.nivelesDisponibles()[0];
       if (nivel3) {
         this.onNivelChange(nivel3.id);
       }
     } else if (tab.tipo === '4to-nivel') {
-      const nivel4 = this.nivelesAcademicos().find(
-        (n) =>
-          ['4', '5', '6', '7'].includes(n.codigo ?? '') ||
-          n.nombre.toLowerCase().includes('posgrado') ||
-          n.nombre.toLowerCase().includes('cuarto') ||
-          n.nombre.toLowerCase().includes('maestría'),
-      );
+      const nivel4 =
+        this.nivelesDisponibles().find((n) => n.nombre.toLowerCase().includes('maestría')) ??
+        this.nivelesDisponibles().find(
+          (n) =>
+            ['4', '5', '6', '7'].includes(n.codigo ?? '') ||
+            n.nombre.toLowerCase().includes('posgrado') ||
+            n.nombre.toLowerCase().includes('cuarto'),
+        ) ??
+        this.nivelesDisponibles()[0];
       if (nivel4) {
         this.onNivelChange(nivel4.id);
       }
