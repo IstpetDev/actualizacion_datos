@@ -61,6 +61,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         seccion="formacion"
         [subindices]="subindicesSeccion()"
         [idsCumplidos]="idsSubindicesCumplidos()"
+        [conteos]="conteosPorSubindice()"
         [puedeEditar]="puedeEditar()"
         (cargarEnSubindice)="abrirParaSubindice($event)"
       />
@@ -103,20 +104,159 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             }
           </div>
 
-          <!-- Formulario / Modal Inline de Título -->
-          @if (mostrarFormTitulo()) {
-            <div class="card-formulario-item" data-testid="form-titulo">
-              <h3 class="form-titulo-item">
-                {{ idTituloEdicion() ? 'Editar Título Académico' : 'Nuevo Título Académico' }}
-              </h3>
+          <!-- Formulario / Modal Inline de Registro SENESCYT -->
+          @if (mostrarFormTitulo() && esSubindiceSenescyt()) {
+            <div class="card-formulario-item card-form-senescyt" data-testid="form-senescyt">
+              <div class="form-item-header">
+                <span class="badge badge-subindice-header">Apartado Institucional SENESCYT</span>
+                <h3 class="form-titulo-item">
+                  {{
+                    idTituloEdicion()
+                      ? 'Editar Certificado de Registro SENESCYT'
+                      : 'Cargar Certificado de Registro SENESCYT'
+                  }}
+                </h3>
+              </div>
 
               @if (subindicesActivos().length > 0) {
-                <div class="form-group" style="margin-bottom: 0.75rem">
+                <div class="form-group" style="margin-bottom: 0.85rem">
+                  <label for="subindiceSenescyt">Apartado / Subíndice de la sección</label>
+                  <select
+                    id="subindiceSenescyt"
+                    class="form-control"
+                    [ngModel]="modeloTitulo.subindiceSeccionId"
+                    (ngModelChange)="onSubindiceTituloChange($event)"
+                    data-testid="select-subindice-senescyt"
+                  >
+                    <option [ngValue]="undefined">General (sin subíndice específico)</option>
+                    @for (sub of subindicesActivos(); track sub.id) {
+                      <option [ngValue]="sub.id">
+                        {{ sub.nombre }}{{ sub.esObligatorio ? ' (Obligatorio)' : '' }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <!-- Callout informativo SENESCYT -->
+              <div class="callout-informativo callout-senescyt" data-testid="callout-senescyt">
+                <div class="callout-icono">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                </div>
+                <div class="callout-texto">
+                  <strong class="callout-titulo">Certificado Oficial de Registro SENESCYT</strong>
+                  <p class="callout-desc">
+                    Para este apartado únicamente debe cargar el
+                    <strong>documento oficial emitido por la SENESCYT en formato PDF</strong>. No es
+                    necesario seleccionar universidad ni datos de carrera adicionales.
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid-dos mt-3">
+                <div class="form-group">
+                  <label for="registroSenescytDoc"
+                    >N° de Registro SENESCYT
+                    <span class="text-muted text-xs">(Opcional)</span></label
+                  >
+                  <input
+                    id="registroSenescytDoc"
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="modeloTitulo.numeroRegistroSenescyt"
+                    placeholder="Ej. 1005-2020-123456"
+                    data-testid="input-registro-senescyt-doc"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="fechaRegistroSenescytDoc"
+                    >Fecha de Registro SENESCYT
+                    <span class="text-muted text-xs">(Opcional)</span></label
+                  >
+                  <input
+                    id="fechaRegistroSenescytDoc"
+                    type="date"
+                    class="form-control"
+                    [ngModel]="fechaRegistroSenescytStr"
+                    (ngModelChange)="onFechaRegistroSenescytChange($event)"
+                    data-testid="input-fecha-registro-senescyt-doc"
+                  />
+                </div>
+              </div>
+
+              <!-- Archivo de Respaldo SENESCYT -->
+              <div class="mt-3">
+                <app-uploader-respaldo
+                  etiqueta="Certificado de Registro SENESCYT"
+                  ayuda="Obligatorio. Archivo digital en formato PDF descargado del portal SENESCYT (máx. 10 MB)"
+                  [requerido]="true"
+                  [puedeEditar]="puedeEditar()"
+                  [archivoId]="modeloTitulo.archivoId"
+                  (archivoIdChange)="modeloTitulo.archivoId = $event"
+                  (archivoEliminado)="modeloTitulo.archivoId = undefined"
+                ></app-uploader-respaldo>
+              </div>
+
+              @if (errorFormulario()) {
+                <div class="alert alert-danger mt-2" data-testid="error-titulo">
+                  {{ errorFormulario() }}
+                </div>
+              }
+
+              <div class="form-botones-item mt-4">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="cancelarFormTitulo()"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  [disabled]="guardando() || !modeloTitulo.archivoId"
+                  (click)="guardarTitulo()"
+                  data-testid="btn-guardar-senescyt"
+                >
+                  {{ guardando() ? 'Guardando...' : 'Guardar Registro SENESCYT' }}
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Formulario / Modal Inline de Título Académico (3er nivel, 4to nivel o General) -->
+          @if (mostrarFormTitulo() && !esSubindiceSenescyt()) {
+            <div class="card-formulario-item" data-testid="form-titulo">
+              <div class="form-item-header">
+                <h3 class="form-titulo-item">
+                  {{ idTituloEdicion() ? 'Editar Título Académico' : 'Nuevo Título Académico' }}
+                </h3>
+              </div>
+
+              @if (subindicesActivos().length > 0) {
+                <div class="form-group" style="margin-bottom: 0.85rem">
                   <label for="subindiceTitulo">Apartado / Subíndice de la sección</label>
                   <select
                     id="subindiceTitulo"
                     class="form-control"
-                    [(ngModel)]="modeloTitulo.subindiceSeccionId"
+                    [ngModel]="modeloTitulo.subindiceSeccionId"
+                    (ngModelChange)="onSubindiceTituloChange($event)"
                     data-testid="select-subindice-titulo"
                   >
                     <option [ngValue]="undefined">General (sin subíndice específico)</option>
@@ -186,7 +326,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                   type="text"
                   class="form-control"
                   [(ngModel)]="modeloTitulo.nombreTitulo"
-                  placeholder="Ej. Licenciado en Ciencias de la Educación"
+                  placeholder="Ej. Licenciado en Ciencias de la Educación / Ingeniero en Software"
                   data-testid="input-nombre-titulo"
                 />
                 @if (validacion.mensaje(modeloTitulo, 'titulo', 'nombreTitulo'); as mensaje) {
@@ -253,7 +393,25 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 </div>
               </div>
 
-              <div class="grid-dos mt-3">
+              <div class="grid-tres mt-3">
+                <div class="form-group">
+                  <label for="fechaRegistroSenescyt">Fecha de Registro SENESCYT</label>
+                  <input
+                    id="fechaRegistroSenescyt"
+                    type="date"
+                    class="form-control"
+                    [ngModel]="fechaRegistroSenescytStr"
+                    (ngModelChange)="onFechaRegistroSenescytChange($event)"
+                    data-testid="input-fecha-registro-senescyt"
+                  />
+                  @if (
+                    validacion.mensaje(modeloTitulo, 'titulo', 'fechaRegistroSenescyt');
+                    as mensaje
+                  ) {
+                    <small class="text-danger" role="alert">{{ mensaje }}</small>
+                  }
+                </div>
+
                 <div class="form-group">
                   <label for="registroSenescyt">N° de Registro SENESCYT</label>
                   <input
@@ -262,7 +420,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                     type="text"
                     class="form-control"
                     [(ngModel)]="modeloTitulo.numeroRegistroSenescyt"
-                    placeholder="1005-2020-123456"
+                    placeholder="Ej. 1005-2020-123456"
                     data-testid="input-registro-senescyt"
                   />
                   @if (
@@ -300,72 +458,50 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 </div>
               </div>
 
-              <div class="grid-dos mt-3">
-                <div class="form-group">
-                  <label for="campoAmplio">Campo de conocimiento amplio</label>
-                  <select
-                    id="campoAmplio"
-                    class="form-control"
-                    [ngModel]="campoAmplioId"
-                    (ngModelChange)="cambiarCampoAmplio($event)"
-                    data-testid="select-campo-amplio"
+              <!-- Bloque Informativo Visible y Uploader de Copia de Título -->
+              <div
+                class="callout-informativo callout-titulo mt-3"
+                data-testid="aviso-respaldo-titulo"
+              >
+                <div class="callout-icono">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
                   >
-                    <option [ngValue]="undefined">Seleccione campo...</option>
-                    @for (campo of camposAmplios(); track campo.id) {
-                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
-                    }
-                  </select>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
                 </div>
-                <div class="form-group">
-                  <label for="campoEspecifico">Campo específico</label>
-                  <select
-                    id="campoEspecifico"
-                    class="form-control"
-                    [ngModel]="campoEspecificoId"
-                    (ngModelChange)="cambiarCampoEspecifico($event)"
-                    [disabled]="!campoAmplioId"
-                    data-testid="select-campo-especifico"
+                <div class="callout-texto">
+                  <strong class="callout-titulo"
+                    >Respaldo: Copia del Título Académico o Acta de Grado (PDF Obligatorio)</strong
                   >
-                    <option [ngValue]="undefined">Seleccione campo...</option>
-                    @for (campo of especificosDisponibles(); track campo.id) {
-                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
-                    }
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="campoDetallado">Campo detallado</label>
-                  <select
-                    [attr.aria-describedby]="'error-modeloTitulo-campoDetalladoUnescoId'"
-                    id="campoDetallado"
-                    class="form-control"
-                    [(ngModel)]="modeloTitulo.campoDetalladoUnescoId"
-                    [disabled]="!campoEspecificoId"
-                    data-testid="select-campo-detallado"
-                  >
-                    <option [ngValue]="undefined">Seleccione campo...</option>
-                    @for (campo of detalladosDisponibles(); track campo.id) {
-                      <option [ngValue]="campo.id">{{ campo.nombre }}</option>
-                    }
-                  </select>
-                  @if (
-                    validacion.mensaje(modeloTitulo, 'titulo', 'campoDetalladoUnescoId');
-                    as mensaje
-                  ) {
-                    <small
-                      id="error-modeloTitulo-campoDetalladoUnescoId"
-                      class="text-danger"
-                      role="alert"
-                      >{{ mensaje }}</small
-                    >
-                  }
+                  <p class="callout-desc">
+                    Adjunte la copia oficial del <strong>Título o Acta de Grado</strong> otorgada
+                    por la institución de educación superior en formato
+                    <strong>PDF legible</strong>.
+                  </p>
+                  <div class="callout-alerta">
+                    ⚠️ <strong>Aclaración importante:</strong> Este documento es la copia expedida
+                    por la universidad.
+                    <strong>No adjunte aquí el Certificado de Registro de la SENESCYT</strong> (ese
+                    es un documento independiente y se sube en el apartado «Registro SENESCYT»).
+                  </div>
                 </div>
               </div>
 
-              <!-- Archivo de Respaldo Obligatorio (RF-HDV-006, RF-HDV-024) -->
-              <div class="mt-3">
+              <div class="mt-2">
                 <app-uploader-respaldo
-                  etiqueta="Certificado o Copia de Título"
-                  ayuda="Obligatorio para validar el estudio. PDF o imagen (máx. 10 MB, aviso desde 5 MB)"
+                  etiqueta="Copia de Título Académico o Acta de Grado"
+                  ayuda="Obligatorio. Archivo digital en formato PDF del título universitario o acta de grado (máx. 10 MB)"
                   [requerido]="true"
                   [puedeEditar]="puedeEditar()"
                   [archivoId]="modeloTitulo.archivoId"
@@ -406,10 +542,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             <table class="data-table" data-testid="tabla-titulos">
               <thead>
                 <tr>
-                  <th>Título</th>
-                  <th>Institución</th>
+                  <th>Título Académico</th>
+                  <th>Institución Educativa</th>
                   <th>Registro SENESCYT</th>
-                  <th>Respaldo</th>
+                  <th>Respaldo PDF</th>
                   <th class="text-right">Acciones</th>
                 </tr>
               </thead>
@@ -417,21 +553,40 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 @for (t of titulos(); track t.id) {
                   <tr>
                     <td>
-                      <strong>{{ t.nombreTitulo }}</strong>
-                      @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
-                        <div>
-                          <span class="badge badge-info" data-testid="badge-subindice-titulo">{{
-                            nomSub
-                          }}</span>
-                        </div>
-                      }
+                      <div class="titulo-nombre-fila">
+                        <strong>{{ t.nombreTitulo }}</strong>
+                        @if (nombreSubindice(t.subindiceSeccionId); as nomSub) {
+                          <span
+                            class="badge badge-info badge-subindice"
+                            data-testid="badge-subindice-titulo"
+                            >{{ nomSub }}</span
+                          >
+                        }
+                      </div>
                       <!-- Marca de observación si existe -->
                       <app-marca-observacion
                         [marca]="obtenerMarca('titulo', t.id)"
                       ></app-marca-observacion>
                     </td>
                     <td>{{ t.nombreInstitucionOtra || 'Catálogo Oficial' }}</td>
-                    <td>{{ t.numeroRegistroSenescyt || '—' }}</td>
+                    <td>
+                      @if (t.numeroRegistroSenescyt || t.fechaRegistroSenescyt) {
+                        <div>
+                          @if (t.numeroRegistroSenescyt) {
+                            <div class="registro-codigo">
+                              <code>{{ t.numeroRegistroSenescyt }}</code>
+                            </div>
+                          }
+                          @if (t.fechaRegistroSenescyt) {
+                            <small class="text-muted text-xs"
+                              >Reg: {{ t.fechaRegistroSenescyt | date: 'dd/MM/yyyy' }}</small
+                            >
+                          }
+                        </div>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
                     <td>
                       @if (t.archivoId) {
                         <span class="badge badge-success">✓ Con Respaldo</span>
@@ -887,6 +1042,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         cursor: pointer;
         border-bottom: 2px solid transparent;
         margin-bottom: -2px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .subtab-btn:hover {
+        color: #0f172a;
       }
       .subtab-btn.active {
         color: var(--ammi-primary, #1d1e1c);
@@ -903,6 +1062,28 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         border-radius: var(--radius-md, 8px);
         padding: 1.25rem;
         margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .card-form-senescyt {
+        border-color: #bbf7d0;
+        background: #fbfdfc;
+      }
+      .form-item-header {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 0.85rem;
+      }
+      .form-item-header .form-titulo-item {
+        margin: 0;
+      }
+      .badge-subindice-header {
+        background: #0f172a;
+        color: #fff;
+        font-size: 0.72rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
       }
       .form-titulo-item {
         font-size: 1.05rem;
@@ -910,9 +1091,73 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         color: #1e293b;
         margin: 0 0 1rem 0;
       }
+      .callout-informativo {
+        display: flex;
+        gap: 0.85rem;
+        align-items: flex-start;
+        border-radius: var(--radius-md, 8px);
+        padding: 0.85rem 1rem;
+        font-size: 0.825rem;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .callout-titulo {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-left: 4px solid #2563eb;
+        color: #1e293b;
+      }
+      .callout-senescyt {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-left: 4px solid #059669;
+        color: #064e3b;
+      }
+      .callout-icono {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .callout-senescyt .callout-icono {
+        color: #059669;
+      }
+      .callout-titulo .callout-icono {
+        color: #2563eb;
+      }
+      .callout-texto {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .callout-texto strong.callout-titulo {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #0f172a;
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+      .callout-desc {
+        margin: 0;
+        line-height: 1.45;
+        color: #334155;
+      }
+      .callout-alerta {
+        margin-top: 0.4rem;
+        padding: 0.4rem 0.65rem;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 6px;
+        font-size: 0.785rem;
+        color: #92400e;
+        line-height: 1.4;
+      }
       .grid-dos {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+      }
+      .grid-tres {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
       }
       .form-group {
@@ -931,6 +1176,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         border-radius: 6px;
         font-size: 0.875rem;
         background-color: #ffffff;
+        transition:
+          border-color 0.15s ease,
+          box-shadow 0.15s ease;
+      }
+      .form-control:focus {
+        border-color: #0f172a;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
       }
       .form-check {
         display: flex;
@@ -962,17 +1215,48 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.875rem;
       }
       .data-table th {
-        background: #f1f5f9;
+        background: #f8fafc;
         padding: 0.625rem 0.875rem;
         text-align: left;
         font-weight: 600;
         color: #475569;
-        border-bottom: 1px solid #cbd5e1;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.8rem;
+        letter-spacing: 0.02em;
       }
       .data-table td {
         padding: 0.625rem 0.875rem;
         border-bottom: 1px solid #f1f5f9;
         color: #1e293b;
+      }
+      .data-table tbody tr {
+        transition: background 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .data-table tbody tr:hover {
+        background: #f8fafc;
+      }
+      .titulo-nombre-fila {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      .badge-subindice {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        font-size: 0.7rem;
+      }
+      .registro-codigo code {
+        font-family: monospace;
+        font-size: 0.8rem;
+        background: #f1f5f9;
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        color: #0f172a;
+      }
+      .text-xs {
+        font-size: 0.75rem;
       }
       .badge {
         display: inline-block;
@@ -984,14 +1268,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
       .badge-success {
         background: #dcfce7;
         color: #15803d;
+        border: 1px solid #bbf7d0;
       }
       .badge-danger {
         background: #fee2e2;
         color: #b91c1c;
+        border: 1px solid #fecaca;
       }
       .badge-info {
         background: #e0f2fe;
         color: #0369a1;
+        border: 1px solid #bae6fd;
       }
       .btn-accion {
         background: transparent;
@@ -1000,12 +1287,19 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.8125rem;
         font-weight: 600;
         margin-left: 0.5rem;
+        transition: color 0.15s ease;
       }
       .btn-editar {
         color: var(--ammi-primary, #1d1e1c);
       }
+      .btn-editar:hover {
+        text-decoration: underline;
+      }
       .btn-eliminar {
         color: #ef4444;
+      }
+      .btn-eliminar:hover {
+        text-decoration: underline;
       }
       .btn {
         padding: 0.5rem 1rem;
@@ -1014,6 +1308,14 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-weight: 600;
         cursor: pointer;
         border: none;
+        transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      }
+      .btn:active:not(:disabled) {
+        transform: scale(0.98);
       }
       .btn-sm {
         padding: 0.375rem 0.75rem;
@@ -1109,7 +1411,8 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
         m.universidadId ||
         m.nombreInstitucionOtra?.trim() ||
         m.archivoId ||
-        this.fechaObtencionStr
+        this.fechaObtencionStr ||
+        this.fechaRegistroSenescytStr
       ) {
         return true;
       }
@@ -1174,6 +1477,28 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
     return ids;
   });
 
+  readonly conteosPorSubindice = computed(() => {
+    const mapa: Record<string, number> = {};
+    for (const t of this.titulos()) {
+      if (t.subindiceSeccionId) {
+        mapa[t.subindiceSeccionId] = (mapa[t.subindiceSeccionId] ?? 0) + 1;
+      }
+    }
+    for (const tc of this.titulosEnCurso()) {
+      if (tc.subindiceSeccionId) {
+        mapa[tc.subindiceSeccionId] = (mapa[tc.subindiceSeccionId] ?? 0) + 1;
+      }
+    }
+    return mapa;
+  });
+
+  readonly esSubindiceSenescyt = computed(() => {
+    const subId = this.modeloTitulo.subindiceSeccionId;
+    if (!subId) return false;
+    const sub = this.subindicesSeccion().find((s) => s.id === subId);
+    return sub ? sub.nombre.toLowerCase().includes('senescyt') : false;
+  });
+
   readonly subtabActiva = signal<'obtenidos' | 'en-curso'>('obtenidos');
 
   // Catálogos
@@ -1204,6 +1529,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
   readonly idTituloEdicion = signal<string | undefined>(undefined);
   readonly errorFormulario = signal('');
   fechaObtencionStr = '';
+  fechaRegistroSenescytStr = '';
 
   modeloTitulo: GuardarTituloAcademicoRequest = {
     nombreTitulo: '',
@@ -1212,6 +1538,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
     nombreInstitucionOtra: undefined,
     numeroRegistroSenescyt: undefined,
     fechaObtencion: undefined,
+    fechaRegistroSenescyt: undefined,
     archivoId: undefined,
   };
 
@@ -1294,10 +1621,36 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
     this.modeloTitulo.fechaObtencion = fechaSinHora(valor);
   }
 
+  onFechaRegistroSenescytChange(valor: string): void {
+    this.fechaRegistroSenescytStr = valor;
+    this.modeloTitulo.fechaRegistroSenescyt = fechaSinHora(valor);
+  }
+
+  onSubindiceTituloChange(subId?: string): void {
+    this.modeloTitulo.subindiceSeccionId = subId;
+    if (!subId) return;
+    const sub = this.subindicesSeccion().find((s) => s.id === subId);
+    if (!sub) return;
+
+    if (sub.nombre.toLowerCase().includes('senescyt')) {
+      if (!this.modeloTitulo.nombreTitulo?.trim()) {
+        this.modeloTitulo.nombreTitulo = 'Certificado de Registro SENESCYT';
+      }
+      if (!this.modeloTitulo.nombreInstitucionOtra?.trim()) {
+        this.modeloTitulo.nombreInstitucionOtra = 'SENESCYT';
+      }
+      if (!this.modeloTitulo.gradoAcademicoId || this.modeloTitulo.gradoAcademicoId === 0) {
+        this.modeloTitulo.gradoAcademicoId =
+          this.gradosAcademicos()[0]?.id || this.todosLosGrados()[0]?.id || 1;
+      }
+    }
+  }
+
   abrirFormTitulo(): void {
     this.idTituloEdicion.set(undefined);
     this.errorFormulario.set('');
     this.fechaObtencionStr = '';
+    this.fechaRegistroSenescytStr = '';
     this.campoAmplioId = undefined;
     this.campoEspecificoId = undefined;
     this.nivelSeleccionadoId.set(undefined);
@@ -1308,6 +1661,7 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       nombreInstitucionOtra: undefined,
       numeroRegistroSenescyt: undefined,
       fechaObtencion: undefined,
+      fechaRegistroSenescyt: undefined,
       archivoId: undefined,
     };
     this.mostrarFormTitulo.set(true);
@@ -1324,12 +1678,27 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
       nombreInstitucionOtra: titulo.nombreInstitucionOtra,
       numeroRegistroSenescyt: titulo.numeroRegistroSenescyt,
       fechaObtencion: titulo.fechaObtencion,
+      fechaRegistroSenescyt: titulo.fechaRegistroSenescyt,
       archivoId: titulo.archivoId,
       subindiceSeccionId: titulo.subindiceSeccionId,
     };
     this.restaurarCamposTitulo();
     if (titulo.fechaObtencion) {
       this.fechaObtencionStr = new Date(titulo.fechaObtencion).toISOString().split('T')[0];
+    } else {
+      this.fechaObtencionStr = '';
+    }
+    if (titulo.fechaRegistroSenescyt) {
+      this.fechaRegistroSenescytStr = new Date(titulo.fechaRegistroSenescyt)
+        .toISOString()
+        .split('T')[0];
+    } else {
+      this.fechaRegistroSenescytStr = '';
+    }
+    const grado = this.todosLosGrados().find((g) => g.id === titulo.gradoAcademicoId);
+    if (grado?.padreId) {
+      this.nivelSeleccionadoId.set(grado.padreId);
+      this.catalogos.gradosAcademicos(grado.padreId).subscribe((g) => this.gradosAcademicos.set(g));
     }
     this.mostrarFormTitulo.set(true);
   }
@@ -1341,22 +1710,49 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
   cancelarFormTitulo(): void {
     this.mostrarFormTitulo.set(false);
     this.idTituloEdicion.set(undefined);
+    this.fechaRegistroSenescytStr = '';
+    this.fechaObtencionStr = '';
   }
 
   guardarTituloObservable(): Observable<boolean> {
-    if (!this.modeloTitulo.nombreTitulo?.trim()) {
-      this.errorFormulario.set('El nombre del título es obligatorio.');
-      return of(false);
-    }
-    if (!this.modeloTitulo.gradoAcademicoId) {
-      this.errorFormulario.set('Debe seleccionar el grado académico.');
-      return of(false);
-    }
-    if (!this.modeloTitulo.universidadId && !this.modeloTitulo.nombreInstitucionOtra?.trim()) {
-      this.errorFormulario.set(
-        'Debe indicar la universidad del catálogo o el nombre de otra institución (RF-HDV-003).',
-      );
-      return of(false);
+    if (this.esSubindiceSenescyt()) {
+      if (!this.modeloTitulo.archivoId) {
+        this.errorFormulario.set(
+          'Debe adjuntar el archivo PDF del Certificado de Registro SENESCYT.',
+        );
+        return of(false);
+      }
+      if (!this.modeloTitulo.nombreTitulo?.trim()) {
+        this.modeloTitulo.nombreTitulo = 'Certificado de Registro SENESCYT';
+      }
+      if (!this.modeloTitulo.gradoAcademicoId || this.modeloTitulo.gradoAcademicoId === 0) {
+        this.modeloTitulo.gradoAcademicoId =
+          this.gradosAcademicos()[0]?.id || this.todosLosGrados()[0]?.id || 1;
+      }
+      if (!this.modeloTitulo.universidadId && !this.modeloTitulo.nombreInstitucionOtra?.trim()) {
+        this.modeloTitulo.nombreInstitucionOtra = 'SENESCYT';
+      }
+    } else {
+      if (!this.modeloTitulo.nombreTitulo?.trim()) {
+        this.errorFormulario.set('El nombre del título es obligatorio.');
+        return of(false);
+      }
+      if (!this.modeloTitulo.gradoAcademicoId) {
+        this.errorFormulario.set('Debe seleccionar el grado académico.');
+        return of(false);
+      }
+      if (!this.modeloTitulo.universidadId && !this.modeloTitulo.nombreInstitucionOtra?.trim()) {
+        this.errorFormulario.set(
+          'Debe indicar la universidad del catálogo o el nombre de otra institución (RF-HDV-003).',
+        );
+        return of(false);
+      }
+      if (!this.modeloTitulo.archivoId) {
+        this.errorFormulario.set(
+          'Debe adjuntar la copia del título o acta de grado en formato PDF (RF-HDV-006, RF-HDV-024).',
+        );
+        return of(false);
+      }
     }
 
     if (this.validacion.invalido(this.modeloTitulo, 'titulo')) return of(false);
@@ -1425,6 +1821,36 @@ export class FormacionAcademicaComponent implements OnInit, OnDestroy, SeccionCo
     } else {
       this.abrirFormTitulo();
       this.modeloTitulo.subindiceSeccionId = sub.id;
+      if (sub.nombre.toLowerCase().includes('senescyt')) {
+        this.modeloTitulo.nombreTitulo = 'Certificado de Registro SENESCYT';
+        this.modeloTitulo.nombreInstitucionOtra = 'SENESCYT';
+        this.modeloTitulo.gradoAcademicoId =
+          this.gradosAcademicos()[0]?.id || this.todosLosGrados()[0]?.id || 1;
+      } else if (
+        sub.nombre.toLowerCase().includes('3er') ||
+        sub.nombre.toLowerCase().includes('tercer')
+      ) {
+        const nivel3 = this.nivelesAcademicos().find(
+          (n) => n.codigo === '1' || n.nombre.toLowerCase().includes('tercer'),
+        );
+        if (nivel3) {
+          this.onNivelChange(nivel3.id);
+        }
+      } else if (
+        sub.nombre.toLowerCase().includes('4to') ||
+        sub.nombre.toLowerCase().includes('cuarto')
+      ) {
+        const nivel4 = this.nivelesAcademicos().find(
+          (n) =>
+            ['4', '5', '6', '7'].includes(n.codigo ?? '') ||
+            n.nombre.toLowerCase().includes('posgrado') ||
+            n.nombre.toLowerCase().includes('cuarto') ||
+            n.nombre.toLowerCase().includes('maestría'),
+        );
+        if (nivel4) {
+          this.onNivelChange(nivel4.id);
+        }
+      }
     }
   }
 

@@ -38,7 +38,7 @@ export function nombreSubindicePorId(
                   </span>
                   @if (estaCumplido(sub.id)) {
                     <span class="badge badge-ok" [attr.data-testid]="'estado-subindice-' + sub.id">
-                      ✓ Cargado
+                      ✓ Cargado{{ conteo(sub.id) > 1 ? ' (' + conteo(sub.id) + ')' : '' }}
                     </span>
                   } @else if (sub.esObligatorio) {
                     <span
@@ -60,7 +60,7 @@ export function nombreSubindicePorId(
                   (click)="cargarEnSubindice.emit(sub)"
                   [attr.data-testid]="'btn-cargar-subindice-' + sub.id"
                 >
-                  + Cargar aquí
+                  {{ estaCumplido(sub.id) ? '+ Cargar otro' : '+ Cargar aquí' }}
                 </button>
               }
             </div>
@@ -102,6 +102,11 @@ export function nombreSubindicePorId(
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       padding: 0.65rem 0.85rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .subindice-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     }
     .subindice-fila {
       display: flex;
@@ -122,6 +127,7 @@ export function nombreSubindicePorId(
       border-radius: 999px;
       font-size: 0.7rem;
       font-weight: 600;
+      letter-spacing: 0.02em;
     }
     .badge-warn {
       background: #fef3c7;
@@ -134,13 +140,15 @@ export function nombreSubindicePorId(
     .badge-ok {
       background: #dcfce7;
       color: #15803d;
+      border: 1px solid #bbf7d0;
     }
     .badge-pend {
       background: #fee2e2;
       color: #b91c1c;
+      border: 1px solid #fecaca;
     }
     .btn-cargar {
-      padding: 0.35rem 0.7rem;
+      padding: 0.38rem 0.75rem;
       border-radius: 6px;
       border: 1px solid #0f172a;
       background: #0f172a;
@@ -149,6 +157,15 @@ export function nombreSubindicePorId(
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-cargar:hover {
+      background: #1e293b;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+    .btn-cargar:active {
+      transform: scale(0.97);
     }
   `,
 })
@@ -156,6 +173,7 @@ export class BloqueSubindicesSeccionComponent {
   readonly seccion = input.required<string>();
   readonly subindices = input<EstadoSubindiceSeccionPersonaDto[]>([]);
   readonly idsCumplidos = input<Set<string>>(new Set());
+  readonly conteos = input<Record<string, number>>({});
   readonly puedeEditar = input<boolean>(false);
 
   readonly cargarEnSubindice = output<EstadoSubindiceSeccionPersonaDto>();
@@ -166,5 +184,9 @@ export class BloqueSubindicesSeccionComponent {
 
   estaCumplido(id: string): boolean {
     return this.idsCumplidos().has(id);
+  }
+
+  conteo(id: string): number {
+    return this.conteos()[id] ?? (this.estaCumplido(id) ? 1 : 0);
   }
 }
