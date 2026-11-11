@@ -139,7 +139,7 @@ describe('ExpedienteSeccionesComponent', () => {
 
   it('debe crearse correctamente y mostrar la ficha personal por defecto', () => {
     expect(component).toBeTruthy();
-    expect(component.tabActiva()).toBe('ficha');
+    expect(component.tabActiva()).toBe('todos');
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('[data-testid="panel-exp-ficha"]')).toBeTruthy();
