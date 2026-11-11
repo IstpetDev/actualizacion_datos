@@ -46,8 +46,34 @@ public class ServicioAutenticacion : IServicioAutenticacion
             query = query.Where(p => p.InstitucionId == new InstitucionId(request.InstitucionId.Value));
         }
 
-        var candidatas = await query.Take(2).ToListAsync(ct);
-        var persona = candidatas.Count == 1 ? candidatas[0] : null;
+        var candidatas = await query.Take(5).ToListAsync(ct);
+        Persona? persona = null;
+        if (candidatas.Count == 1)
+        {
+            persona = candidatas[0];
+        }
+        else if (candidatas.Count > 1)
+        {
+            // Si el documento está registrado en más de una institución y no se envió InstitucionId:
+            // 1. Si solo una tiene acceso habilitado, seleccionar esa
+            var habilitadas = candidatas.Where(p => p.AccesoHabilitado).ToList();
+            if (habilitadas.Count == 1)
+            {
+                persona = habilitadas[0];
+            }
+            else
+            {
+                // 2. Si varias están habilitadas (o ninguna), buscar coincidencia de contraseña
+                var coincidente = (habilitadas.Count > 0 ? habilitadas : candidatas)
+                    .FirstOrDefault(p =>
+                        (string.IsNullOrEmpty(p.PasswordHash) && string.Equals(request.Contrasena, p.Documento, StringComparison.Ordinal)) ||
+                        (!string.IsNullOrEmpty(p.PasswordHash) && _passwordHasher.VerifyHashedPassword(p, p.PasswordHash, request.Contrasena) != PasswordVerificationResult.Failed));
+
+                persona = coincidente ?? (habilitadas.Count > 0 ? habilitadas : candidatas)
+                    .OrderByDescending(p => p.FechaCreacionUtc)
+                    .FirstOrDefault();
+            }
+        }
 
         // RF-ACC-004: Respuesta genérica sin revelar existencia
         if (persona == null)
