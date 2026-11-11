@@ -55,38 +55,6 @@ export interface ArchivoPrevisualizacion {
   ],
   template: `
     <section class="dashboard-section" data-testid="supervisor-panel">
-      <!-- Encabezado Principal de RRHH -->
-      <header class="section-header">
-        <div class="header-main-group">
-          <div class="header-icon-box">
-            <span class="material-symbols-outlined">inbox</span>
-          </div>
-          <div class="header-titles">
-            <div class="header-pill">
-              <span class="material-symbols-outlined icon-xs">verified_user</span>
-              <span>Talento Humano</span>
-            </div>
-            <h1 class="section-title">Bandeja de Actualizaciones y Control de Expedientes</h1>
-            <p class="section-subtitle">
-              Control de calidad documental, verificación de hojas de vida y aprobación
-              institucional.
-            </p>
-          </div>
-        </div>
-        <div class="header-actions">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            (click)="cargarPendientes()"
-            [disabled]="cargando()"
-            data-testid="btn-refrescar"
-          >
-            <span class="material-symbols-outlined icon-sm">refresh</span>
-            <span>{{ cargando() ? 'Actualizando...' : 'Refrescar Bandeja' }}</span>
-          </button>
-        </div>
-      </header>
-
       @if (mensajeExito()) {
         <div class="alert alert-success" role="alert" data-testid="mensaje-exito">
           <span class="material-symbols-outlined icon-md">check_circle</span>
@@ -119,6 +87,38 @@ export interface ArchivoPrevisualizacion {
 
       <!-- Vista principal: Lista y Filtros de Solicitudes -->
       @if (!expedienteSeleccionado()) {
+        <!-- Encabezado Principal de RRHH (Solo en vista de bandeja) -->
+        <header class="section-header">
+          <div class="header-main-group">
+            <div class="header-icon-box">
+              <span class="material-symbols-outlined">inbox</span>
+            </div>
+            <div class="header-titles">
+              <div class="header-pill">
+                <span class="material-symbols-outlined icon-xs">verified_user</span>
+                <span>Talento Humano</span>
+              </div>
+              <h1 class="section-title">Bandeja de Actualizaciones y Control de Expedientes</h1>
+              <p class="section-subtitle">
+                Control de calidad documental, verificación de hojas de vida y aprobación
+                institucional.
+              </p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="cargarPendientes()"
+              [disabled]="cargando()"
+              data-testid="btn-refrescar"
+            >
+              <span class="material-symbols-outlined icon-sm">refresh</span>
+              <span>{{ cargando() ? 'Actualizando...' : 'Refrescar Bandeja' }}</span>
+            </button>
+          </div>
+        </header>
+
         <!-- Barra de Control Unificada: Segmentación por Estado + Búsqueda (Baja Carga Cognitiva) -->
         <div class="control-panel">
           <!-- Segmented Control de Estados (Ley de Hick: una sola fila de opciones claras) -->
@@ -566,42 +566,6 @@ export interface ArchivoPrevisualizacion {
                 </div>
               </div>
             </div>
-
-            <!-- Resumen de Contenidos del Expediente (KPI Pills estilo admin-tray) -->
-            @if (hojaDeVida(); as hdv) {
-              <div class="hero-kpi-bar">
-                <span class="kpi-pill" [class.kpi-active]="hdv.ficha?.fotoArchivoId">
-                  <span class="material-symbols-outlined icon-xs">photo_camera</span>
-                  <span>{{ hdv.ficha?.fotoArchivoId ? 'Fotografía Registrada' : 'Sin Foto' }}</span>
-                </span>
-                <span class="kpi-pill">
-                  <span class="material-symbols-outlined icon-xs">school</span>
-                  <span>{{ hdv.titulos?.length || 0 }} Títulos Registrados</span>
-                </span>
-                @if ((hdv.titulosEnCurso?.length || 0) > 0) {
-                  <span class="kpi-pill">
-                    <span class="material-symbols-outlined icon-xs">menu_book</span>
-                    <span>{{ hdv.titulosEnCurso?.length }} En Curso</span>
-                  </span>
-                }
-                <span class="kpi-pill">
-                  <span class="material-symbols-outlined icon-xs">workspace_premium</span>
-                  <span>{{ hdv.capacitaciones?.length || 0 }} Capacitaciones</span>
-                </span>
-                <span class="kpi-pill">
-                  <span class="material-symbols-outlined icon-xs">work</span>
-                  <span>{{ hdv.experiencias?.length || 0 }} Experiencias</span>
-                </span>
-                <span class="kpi-pill">
-                  <span class="material-symbols-outlined icon-xs">groups</span>
-                  <span>{{ hdv.referencias?.length || 0 }} Referencias</span>
-                </span>
-                <span class="kpi-pill">
-                  <span class="material-symbols-outlined icon-xs">folder_open</span>
-                  <span>{{ archivosExpediente().length }} Respaldos Adjuntos</span>
-                </span>
-              </div>
-            }
           </div>
 
           @if (!esExpedienteEnviado()) {
@@ -1522,14 +1486,21 @@ export interface ArchivoPrevisualizacion {
       margin-bottom: 1rem;
     }
 
-    /* Auditoría Hero Banner (Estilo Admin Tray Institucional) */
+    /* Auditoría Hero Banner (Estilo Aurora UI & Glassmorphism Institucional) */
     .auditoria-hero-banner {
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #222c57 100%);
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -20%, rgba(14, 165, 233, 0.28), transparent 70%),
+        radial-gradient(ellipse 60% 50% at 85% 120%, rgba(196, 168, 87, 0.2), transparent 70%),
+        linear-gradient(135deg, #1e293b 0%, #172554 45%, #222c57 100%);
       color: #ffffff;
-      border-radius: 1rem;
-      padding: 1.25rem 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
+      border-radius: 1.25rem;
+      padding: 1.5rem 1.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow:
+        0 20px 35px -10px rgba(15, 23, 42, 0.35),
+        0 1px 2px 0 rgba(255, 255, 255, 0.25) inset;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
@@ -1540,51 +1511,58 @@ export interface ArchivoPrevisualizacion {
       align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
       padding-bottom: 1rem;
     }
     .btn-volver-bandeja {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.5rem 0.875rem;
+      padding: 0.55rem 1.1rem;
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 0.5rem;
-      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 0.625rem;
+      font-weight: 700;
       font-size: 0.8125rem;
       cursor: pointer;
+      backdrop-filter: blur(8px);
       transition: all 0.2s ease;
     }
     .btn-volver-bandeja:hover {
-      background: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.24);
+      border-color: rgba(255, 255, 255, 0.45);
       transform: translateX(-2px);
     }
     .btn-hero-action {
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      border-radius: 0.625rem;
+      font-weight: 700;
     }
 
     .hero-profile-row {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      gap: 1.35rem;
       flex-wrap: wrap;
     }
     .hero-avatar {
-      width: 58px;
-      height: 58px;
-      border-radius: 9999px;
-      background: rgba(99, 102, 241, 0.25);
-      border: 2px solid rgba(165, 180, 252, 0.5);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        0 1px 2px rgba(255, 255, 255, 0.4) inset;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #c7d2fe;
+      color: #ffffff;
       flex-shrink: 0;
     }
     .icon-hero-user {
-      font-size: 38px;
+      font-size: 40px;
     }
     .hero-info {
       display: flex;
@@ -1599,28 +1577,31 @@ export interface ArchivoPrevisualizacion {
       flex-wrap: wrap;
     }
     .hero-person-name {
-      font-size: 1.375rem;
+      font-size: 1.4rem;
       font-weight: 800;
       color: #ffffff;
       margin: 0;
       letter-spacing: -0.01em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     .hero-ci-badge {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.8125rem;
-      font-weight: 700;
-      padding: 0.2rem 0.625rem;
-      background: rgba(99, 102, 241, 0.25);
-      color: #c7d2fe;
-      border: 1px solid rgba(165, 180, 252, 0.4);
-      border-radius: 0.375rem;
+      font-weight: 800;
+      padding: 0.25rem 0.75rem;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
+      letter-spacing: 0.5px;
     }
     .hero-meta-row {
       display: flex;
       align-items: center;
       gap: 0.75rem;
       font-size: 0.8125rem;
-      color: #cbd5e1;
+      color: #e2e8f0;
       flex-wrap: wrap;
     }
     .meta-item {
@@ -1629,34 +1610,7 @@ export interface ArchivoPrevisualizacion {
       gap: 0.35rem;
     }
     .meta-divider {
-      color: rgba(255, 255, 255, 0.3);
-    }
-
-    /* KPI Summary Pills Bar */
-    .hero-kpi-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      padding-top: 0.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .kpi-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.375rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.35rem 0.65rem;
-      background: rgba(255, 255, 255, 0.08);
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 0.5rem;
-    }
-    .kpi-pill.kpi-active {
-      background: rgba(16, 185, 129, 0.2);
-      color: #a7f3d0;
-      border-color: rgba(16, 185, 129, 0.4);
+      color: rgba(255, 255, 255, 0.35);
     }
 
     .expediente-actions {

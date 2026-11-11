@@ -123,9 +123,12 @@ export type TabExpediente =
           data-testid="tab-exp-documentos"
         >
           <span class="material-symbols-outlined icon-sm">folder_open</span>
-          <span>6. Documentos y Respaldos</span>
-          <span class="tab-count-badge" [class.tab-count-has-items]="archivos().length > 0">
-            {{ archivos().length }}
+          <span>6. Documentos del Expediente</span>
+          <span
+            class="tab-count-badge"
+            [class.tab-count-has-items]="documentosExpediente().length > 0"
+          >
+            {{ documentosExpediente().length }}
           </span>
         </button>
 
@@ -1384,7 +1387,7 @@ export type TabExpediente =
       }
 
       <!-- =================================================================== -->
-      <!-- SECCIÓN 6: DOCUMENTOS Y RESPALDOS DEL EXPEDIENTE -->
+      <!-- SECCIÓN 6: DOCUMENTOS DEL EXPEDIENTE -->
       <!-- =================================================================== -->
       @if (tabActiva() === 'todos' || tabActiva() === 'documentos') {
         <section
@@ -1397,11 +1400,11 @@ export type TabExpediente =
               <span class="seccion-index-badge">6</span>
               <div>
                 <h3 class="seccion-auditoria-title">
-                  6. DOCUMENTOS Y RESPALDOS DEL EXPEDIENTE ({{ archivos().length }})
+                  6. DOCUMENTOS DEL EXPEDIENTE ({{ documentosExpediente().length }})
                 </h3>
                 <p class="seccion-auditoria-desc">
-                  Expediente digitalizado consolidado: cédula, certificados, títulos y respaldos
-                  probatorios.
+                  Expediente digitalizado oficial: cédula de identidad, certificados y documentos
+                  institucionales.
                 </p>
               </div>
             </div>
@@ -1422,54 +1425,20 @@ export type TabExpediente =
               <div class="subindice-tag-group">
                 <span class="subindice-tag">Índice 6.1</span>
                 <h4 class="subindice-title">
-                  {{
-                    filtroVistaDocumentos() === 'expediente'
-                      ? 'Documentos Personales e Institucionales (' +
-                        documentosExpediente().length +
-                        ')'
-                      : 'Todos los Respaldos Digitales (' + archivos().length + ')'
-                  }}
+                  Documentos Personales e Institucionales ({{ documentosExpediente().length }})
                 </h4>
               </div>
-              <div class="documentos-view-switch">
-                <button
-                  type="button"
-                  class="btn-switch-doc"
-                  [class.active]="filtroVistaDocumentos() === 'expediente'"
-                  (click)="filtroVistaDocumentos.set('expediente')"
-                  title="Ver solo documentos personales e institucionales del expediente"
-                >
-                  Documentos del Expediente ({{ documentosExpediente().length }})
-                </button>
-                <button
-                  type="button"
-                  class="btn-switch-doc"
-                  [class.active]="filtroVistaDocumentos() === 'todos'"
-                  (click)="filtroVistaDocumentos.set('todos')"
-                  title="Ver todos los respaldos (incluyendo títulos, cursos y certificados)"
-                >
-                  Todos los Respaldos ({{ archivos().length }})
-                </button>
-              </div>
+              <span class="badge badge-info">Expediente Oficial</span>
             </div>
 
-            @if (filtroVistaDocumentos() === 'expediente' && respaldosEspecificos().length > 0) {
-              <div class="aviso-respaldos-en-secciones">
-                <span class="material-symbols-outlined icon-xs text-primary">info</span>
-                <span>
-                  Los <strong>{{ respaldosEspecificos().length }} respaldos específicos</strong>
-                  (títulos, certificados de cursos y experiencia laboral) se gestionan y auditan
-                  directamente dentro de sus secciones superiores (Formación, Capacitaciones,
-                  Experiencia) para un flujo ordenado sin duplicidad.
-                </span>
-              </div>
-            }
-
-            @if (!archivosParaMostrar().length) {
-              <p class="empty-subindice-msg">No se registran documentos en esta vista.</p>
+            @if (!documentosExpediente().length) {
+              <p class="empty-subindice-msg">
+                No se registran documentos personales ni institucionales adjuntos en este
+                expediente.
+              </p>
             } @else {
               <div class="items-cards-list">
-                @for (arc of archivosParaMostrar(); track arc.id; let idx = $index) {
+                @for (arc of documentosExpediente(); track arc.id; let idx = $index) {
                   <div
                     class="item-audit-card glass-card archivo-item"
                     [class.item-revisado-auditado]="estaRevisado('documento:' + arc.id)"
@@ -1604,6 +1573,18 @@ export type TabExpediente =
                 }
               </div>
             }
+
+            @if (respaldosEspecificos().length > 0) {
+              <div class="aviso-respaldos-en-secciones mt-4">
+                <span class="material-symbols-outlined icon-xs text-primary">info</span>
+                <span>
+                  Los <strong>{{ respaldosEspecificos().length }} respaldos específicos</strong>
+                  (títulos, certificados de cursos y experiencia laboral) se revisan directamente
+                  dentro de cada sección (Formación, Capacitaciones, Experiencia) para mantener un
+                  expediente claro y sin duplicidad.
+                </span>
+              </div>
+            }
           </div>
         </section>
       }
@@ -1676,20 +1657,23 @@ export type TabExpediente =
       width: 100%;
     }
 
-    /* Pestañas de navegación sticky estilo Apple / Material 3 */
+    /* Pestañas de navegación sticky estilo Aurora UI & Glassmorphism */
     .secciones-tabs {
       display: flex;
       gap: 0.5rem;
       overflow-x: auto;
-      padding: 0.5rem;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       border-radius: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      box-shadow:
+        0 4px 16px -2px rgba(15, 23, 42, 0.06),
+        0 1px 2px 0 rgba(0, 0, 0, 0.03);
       position: sticky;
       top: 0.75rem;
       z-index: 20;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .tab-btn {
       display: inline-flex;
@@ -1740,27 +1724,32 @@ export type TabExpediente =
       color: #0f172a;
     }
     .tab-btn.active {
-      background: #222c57;
+      background: linear-gradient(135deg, #1e293b 0%, #172554 50%, #222c57 100%);
       color: #ffffff;
-      box-shadow: 0 4px 6px -1px rgba(34, 44, 87, 0.25);
+      box-shadow: 0 4px 12px -2px rgba(34, 44, 87, 0.35);
+      border-color: rgba(255, 255, 255, 0.18);
     }
     .tab-btn-todo {
       background: rgba(34, 44, 87, 0.06);
       color: #222c57;
-      border-color: rgba(34, 44, 87, 0.2);
+      border-color: rgba(34, 44, 87, 0.18);
     }
     .tab-btn-todo.active {
-      background: #222c57;
+      background: linear-gradient(135deg, #1e293b 0%, #172554 50%, #222c57 100%);
       color: #ffffff;
     }
 
-    /* Secciones de auditoría completas */
+    /* Secciones de auditoría con Glassmorphism */
     .seccion-auditoria {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: 1.125rem;
       padding: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      box-shadow:
+        0 8px 24px -4px rgba(15, 23, 42, 0.05),
+        0 2px 6px -1px rgba(0, 0, 0, 0.03);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
@@ -1778,14 +1767,14 @@ export type TabExpediente =
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: #222c57;
+      background: linear-gradient(135deg, #172554 0%, #222c57 100%);
       color: #ffffff;
       font-weight: 900;
       font-size: 1.25rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(34, 44, 87, 0.2);
+      box-shadow: 0 4px 10px -2px rgba(34, 44, 87, 0.35);
       flex-shrink: 0;
     }
     .seccion-auditoria-title {
@@ -2181,33 +2170,6 @@ export type TabExpediente =
       color: #b45309;
       width: 100%;
     }
-    .documentos-view-switch {
-      display: inline-flex;
-      background: #f1f5f9;
-      padding: 2px;
-      border-radius: 0.5rem;
-      border: 1px solid #e2e8f0;
-      gap: 2px;
-    }
-    .btn-switch-doc {
-      padding: 0.3rem 0.75rem;
-      border: none;
-      background: transparent;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .btn-switch-doc:hover {
-      color: #0f172a;
-    }
-    .btn-switch-doc.active {
-      background: #ffffff;
-      color: #222c57;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
     .aviso-respaldos-en-secciones {
       display: flex;
       align-items: center;
@@ -2253,9 +2215,6 @@ export class ExpedienteSeccionesComponent {
 
   // Ítems revisados localmente por el supervisor para seguimiento
   readonly itemsRevisados = signal<Set<string>>(new Set<string>());
-
-  // Filtro de vista para la Sección 6 (Documentos del Expediente vs Todos los Respaldos)
-  readonly filtroVistaDocumentos = signal<'expediente' | 'todos'>('expediente');
 
   readonly esEnviado = computed(
     () => (this.hojaDeVida()?.estadoActualizacion ?? '').toLowerCase() === 'enviado',
@@ -2312,19 +2271,11 @@ export class ExpedienteSeccionesComponent {
   }
 
   readonly documentosExpediente = computed(() => {
-    const docs = this.archivos().filter((a) => !this.esArchivoDeItemEspecifico(a));
-    return docs.length > 0 ? docs : this.archivos();
+    return this.archivos().filter((a) => !this.esArchivoDeItemEspecifico(a));
   });
 
   readonly respaldosEspecificos = computed(() => {
     return this.archivos().filter((a) => this.esArchivoDeItemEspecifico(a));
-  });
-
-  readonly archivosParaMostrar = computed(() => {
-    if (this.filtroVistaDocumentos() === 'todos') {
-      return this.archivos();
-    }
-    return this.documentosExpediente();
   });
 
   estaRevisado(key: string): boolean {
