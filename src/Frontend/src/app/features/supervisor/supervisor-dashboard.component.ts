@@ -1,5 +1,6 @@
 import { catchError, forkJoin, of, Subscription } from 'rxjs';
 import { ObservacionesRevisionComponent } from '../revision-compartida/observaciones-revision.component';
+import { describirDestino } from '../revision-compartida/observaciones-revision';
 import { mensajeError } from '../../core/auth/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -473,60 +474,134 @@ export interface ArchivoPrevisualizacion {
           </div>
         }
       } @else {
-        <!-- Vista detallada del Expediente seleccionado -->
+        <!-- Vista de Auditoría y Revisión a Pantalla Completa (Inspirada en Admin Tray) -->
         <article class="expediente-panel" data-testid="panel-expediente">
-          <div class="expediente-header glass-card">
-            <div class="expediente-header-info">
+          <!-- Banner Institucional Superior de Auditoría -->
+          <div class="auditoria-hero-banner" data-testid="auditoria-hero-banner">
+            <div class="hero-top-bar">
               <button
                 type="button"
-                class="btn btn-secondary btn-sm"
+                class="btn btn-secondary btn-sm btn-volver-bandeja"
                 (click)="cerrarExpediente()"
                 data-testid="btn-volver"
               >
                 <span class="material-symbols-outlined icon-sm">arrow_back</span>
                 <span>Volver a la bandeja</span>
               </button>
-              <h2 class="expediente-title">
-                Expediente: {{ expedienteSeleccionado()?.nombre || 'Usuario' }}
-                <span class="expediente-doc-badge">
-                  CI: {{ expedienteSeleccionado()?.documento }}
+
+              <div class="expediente-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-hero-action"
+                  (click)="descargarDocumentoPdf()"
+                  [disabled]="descargandoPdf() || procesando()"
+                  data-testid="btn-descargar-hdv-pdf"
+                >
+                  <span class="material-symbols-outlined icon-sm">picture_as_pdf</span>
+                  <span>{{
+                    descargandoPdf() ? 'Generando PDF...' : 'Descargar Hoja de Vida (PDF)'
+                  }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-hero-action"
+                  (click)="abrirModalDevolver()"
+                  [disabled]="procesando() || !esExpedienteEnviado()"
+                  data-testid="btn-abrir-devolver"
+                >
+                  <span class="material-symbols-outlined icon-sm">rate_review</span>
+                  <span>Devolver con Observaciones</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-success btn-hero-action"
+                  (click)="aprobar()"
+                  [disabled]="procesando() || !esExpedienteEnviado()"
+                  data-testid="btn-aprobar"
+                >
+                  <span class="material-symbols-outlined icon-sm">verified</span>
+                  <span>{{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="hero-profile-row">
+              <div class="hero-avatar">
+                <span class="material-symbols-outlined icon-hero-user">account_circle</span>
+              </div>
+              <div class="hero-info">
+                <div class="hero-name-row">
+                  <h2 class="hero-person-name">
+                    {{ expedienteSeleccionado()?.nombre || 'Usuario Registrado' }}
+                  </h2>
+                  <span class="hero-ci-badge" data-testid="expediente-doc">
+                    CI: {{ expedienteSeleccionado()?.documento }}
+                  </span>
+                  <span
+                    class="badge"
+                    [ngClass]="obtenerClaseBadge(expedienteSeleccionado()?.estadoActualizacion)"
+                  >
+                    Estado: {{ expedienteSeleccionado()?.estadoActualizacion }}
+                  </span>
+                </div>
+                <div class="hero-meta-row">
+                  <span class="meta-item">
+                    <span class="material-symbols-outlined icon-xs">mail</span>
+                    <span>{{
+                      expedienteSeleccionado()?.correo || 'Sin correo institucional'
+                    }}</span>
+                  </span>
+                  <span class="meta-divider">•</span>
+                  <span class="meta-item">
+                    <span class="material-symbols-outlined icon-xs">verified_user</span>
+                    <span>
+                      Tratamiento de datos personales:
+                      <strong>{{
+                        expedienteSeleccionado()?.tratamientoDatosAceptado
+                          ? 'Aceptado'
+                          : 'Pendiente'
+                      }}</strong>
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen de Contenidos del Expediente (KPI Pills estilo admin-tray) -->
+            @if (hojaDeVida(); as hdv) {
+              <div class="hero-kpi-bar">
+                <span class="kpi-pill" [class.kpi-active]="hdv.ficha?.fotoArchivoId">
+                  <span class="material-symbols-outlined icon-xs">photo_camera</span>
+                  <span>{{ hdv.ficha?.fotoArchivoId ? 'Fotografía Registrada' : 'Sin Foto' }}</span>
                 </span>
-              </h2>
-            </div>
-            <div class="expediente-actions">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                (click)="descargarDocumentoPdf()"
-                [disabled]="descargandoPdf() || procesando()"
-                data-testid="btn-descargar-hdv-pdf"
-              >
-                <span class="material-symbols-outlined icon-sm">picture_as_pdf</span>
-                <span>{{
-                  descargandoPdf() ? 'Generando PDF...' : 'Descargar Hoja de Vida (PDF)'
-                }}</span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-danger"
-                (click)="abrirModalDevolver()"
-                [disabled]="procesando() || !esExpedienteEnviado()"
-                data-testid="btn-abrir-devolver"
-              >
-                <span class="material-symbols-outlined icon-sm">rate_review</span>
-                <span>Devolver con Observaciones</span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-success"
-                (click)="aprobar()"
-                [disabled]="procesando() || !esExpedienteEnviado()"
-                data-testid="btn-aprobar"
-              >
-                <span class="material-symbols-outlined icon-sm">verified</span>
-                <span>{{ procesando() ? 'Aprobando...' : 'Aprobar Actualización' }}</span>
-              </button>
-            </div>
+                <span class="kpi-pill">
+                  <span class="material-symbols-outlined icon-xs">school</span>
+                  <span>{{ hdv.titulos?.length || 0 }} Títulos Registrados</span>
+                </span>
+                @if ((hdv.titulosEnCurso?.length || 0) > 0) {
+                  <span class="kpi-pill">
+                    <span class="material-symbols-outlined icon-xs">menu_book</span>
+                    <span>{{ hdv.titulosEnCurso?.length }} En Curso</span>
+                  </span>
+                }
+                <span class="kpi-pill">
+                  <span class="material-symbols-outlined icon-xs">workspace_premium</span>
+                  <span>{{ hdv.capacitaciones?.length || 0 }} Capacitaciones</span>
+                </span>
+                <span class="kpi-pill">
+                  <span class="material-symbols-outlined icon-xs">work</span>
+                  <span>{{ hdv.experiencias?.length || 0 }} Experiencias</span>
+                </span>
+                <span class="kpi-pill">
+                  <span class="material-symbols-outlined icon-xs">groups</span>
+                  <span>{{ hdv.referencias?.length || 0 }} Referencias</span>
+                </span>
+                <span class="kpi-pill">
+                  <span class="material-symbols-outlined icon-xs">folder_open</span>
+                  <span>{{ archivosExpediente().length }} Respaldos Adjuntos</span>
+                </span>
+              </div>
+            }
           </div>
 
           @if (!esExpedienteEnviado()) {
@@ -548,12 +623,83 @@ export interface ArchivoPrevisualizacion {
             </div>
           }
 
-          <div class="expediente-grid">
-            <!-- Datos Personales y Tratamiento -->
-            <section class="card glass-card">
+          <!-- Banner de Correcciones Acumuladas Pendientes de Devolución -->
+          @if (marcas().length > 0) {
+            <div class="marcas-acumuladas-banner" data-testid="banner-marcas-acumuladas">
+              <div class="marcas-banner-left">
+                <span class="material-symbols-outlined icon-md text-warning"
+                  >playlist_add_check</span
+                >
+                <div>
+                  <strong>Correcciones preparadas para devolver ({{ marcas().length }}):</strong>
+                  <p class="marcas-banner-desc">
+                    Tienes {{ marcas().length }} observación(es) en cola. Puedes seguir marcando más
+                    registros por corregir o enviar todas juntas.
+                  </p>
+                </div>
+              </div>
+              <div class="marcas-banner-btns">
+                <button
+                  type="button"
+                  class="btn btn-warning btn-sm"
+                  (click)="abrirModalDevolver()"
+                  data-testid="btn-revisar-marcas"
+                >
+                  <span class="material-symbols-outlined icon-xs">rate_review</span>
+                  <span>Ver / Editar Marcas ({{ marcas().length }})</span>
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  (click)="abrirModalDevolver()"
+                  data-testid="btn-enviar-marcas-acumuladas"
+                >
+                  <span class="material-symbols-outlined icon-xs">send</span>
+                  <span>Devolver con {{ marcas().length }} Observaciones</span>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Observaciones Generales e Historial de Devoluciones del Expediente -->
+          @if ((expedienteSeleccionado()?.observaciones?.length ?? 0) > 0) {
+            <div
+              class="observaciones-expediente-panel glass-card"
+              data-testid="panel-observaciones-expediente"
+            >
+              <div class="card-header-styled">
+                <span class="material-symbols-outlined icon-md text-warning">rate_review</span>
+                <h3 class="card-title">Historial de Observaciones del Expediente</h3>
+              </div>
+              <app-observaciones-revision
+                [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
+                [hojaDeVida]="hojaDeVida()"
+                [archivos]="archivosExpediente()"
+                [estado]="expedienteSeleccionado()?.estadoActualizacion || ''"
+              />
+            </div>
+          }
+
+          <!-- Secciones detalladas de Hoja de Vida a Pantalla Completa con Índices y Subíndices -->
+          @if (hojaDeVida(); as hdv) {
+            <app-expediente-secciones
+              [hojaDeVida]="hdv"
+              [expediente]="expedienteSeleccionado()"
+              [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
+              [archivos]="archivosExpediente()"
+              [obligatorias]="expedienteSeleccionado()?.capacitacionesObligatorias ?? []"
+              [marcasPendientes]="marcas()"
+              (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
+              (previsualizar)="previsualizarArchivo($event.archivoId, $event.nombreOriginal)"
+              (marcarItem)="iniciarMarcaItem($event)"
+              (retirarArchivo)="iniciarRetiroArchivoPorId($event)"
+            />
+          } @else {
+            <!-- Fallback para expedientes sin hoja de vida estructurada -->
+            <div class="expediente-fallback-card glass-card">
               <div class="card-header-styled">
                 <span class="material-symbols-outlined icon-md text-primary">person</span>
-                <h3 class="card-title">Datos Personales y Tratamiento</h3>
+                <h3 class="card-title">Datos del Expediente</h3>
               </div>
               <div class="info-group">
                 <span class="info-label">Documento:</span>
@@ -569,27 +715,10 @@ export interface ArchivoPrevisualizacion {
                 <span class="info-label">Correo:</span>
                 <span class="info-value">{{ expedienteSeleccionado()?.correo || '—' }}</span>
               </div>
-              <div class="info-group">
-                <span class="info-label">Tratamiento de Datos:</span>
-                <span class="info-value">
-                  @if (expedienteSeleccionado()?.tratamientoDatosAceptado) {
-                    <span class="badge badge-success">Aceptado</span>
-                    <small class="text-muted">
-                      ({{
-                        expedienteSeleccionado()?.fechaAceptacionTratamientoDatosUtc
-                          | date: 'dd/MM/yyyy HH:mm'
-                      }})</small
-                    >
-                  } @else {
-                    <span class="badge badge-danger">No Aceptado</span>
-                  }
-                </span>
-              </div>
               @if (expedienteSeleccionado(); as expediente) {
                 <app-cuenta-bancaria-revision [documento]="expediente.documento" />
               }
 
-              <h4 class="card-subtitle mt-4">Datos del Formulario</h4>
               <div class="json-datos" data-testid="datos-formulario">
                 @if (datosPersonalesParsed(); as datos) {
                   <div class="datos-grid">
@@ -611,20 +740,7 @@ export interface ArchivoPrevisualizacion {
                 [archivos]="archivosExpediente()"
                 [estado]="expedienteSeleccionado()?.estadoActualizacion || ''"
               />
-            </section>
-          </div>
-
-          <!-- Secciones detalladas de Hoja de Vida -->
-          @if (hojaDeVida(); as hdv) {
-            <app-expediente-secciones
-              [hojaDeVida]="hdv"
-              [observaciones]="expedienteSeleccionado()?.observaciones ?? []"
-              [archivos]="archivosExpediente()"
-              (descargar)="descargarArchivo($event.archivoId, $event.nombreOriginal)"
-              (previsualizar)="previsualizarArchivo($event.archivoId, $event.nombreOriginal)"
-              (marcarItem)="iniciarMarcaItem($event)"
-              (retirarArchivo)="iniciarRetiroArchivoPorId($event)"
-            />
+            </div>
           }
         </article>
       }
@@ -757,82 +873,160 @@ export interface ArchivoPrevisualizacion {
                 <div class="item-marcado-banner" data-testid="banner-item-marcado">
                   <span class="material-symbols-outlined icon-md text-warning">edit_note</span>
                   <div class="banner-content">
-                    <span class="banner-sub">Corrección solicitada para:</span>
+                    <span class="banner-sub">Registro a corregir:</span>
                     <strong class="banner-title">{{ itemParaMarcarLabel() }}</strong>
                   </div>
                 </div>
+
+                <div class="marca-builder glass-card">
+                  <div class="form-group">
+                    <label for="textoMarca"
+                      ><strong
+                        >Instrucción o corrección requerida para este registro:</strong
+                      ></label
+                    >
+                    <input
+                      id="textoMarca"
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="nuevaMarcaTexto"
+                      placeholder="Ej: El archivo adjunto está borroso, volver a subir en PDF legible..."
+                      data-testid="input-texto-marca"
+                    />
+                  </div>
+
+                  <div class="marca-builder-actions mt-3 flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      class="btn btn-warning btn-sm"
+                      (click)="agregarMarcaYContinuar()"
+                      [disabled]="!nuevaMarcaTexto().trim()"
+                      data-testid="btn-agregar-y-continuar"
+                      title="Guarda esta corrección y te permite seguir auditando el resto del expediente"
+                    >
+                      <span class="material-symbols-outlined icon-sm">playlist_add</span>
+                      <span>+ Guardar y Seguir Revisando</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="agregarMarca()"
+                      [disabled]="!nuevaMarcaTexto().trim()"
+                      data-testid="btn-agregar-marca"
+                    >
+                      <span class="material-symbols-outlined icon-sm">add</span>
+                      <span>Agregar a la lista</span>
+                    </button>
+                  </div>
+
+                  <details class="advanced-details mt-3">
+                    <summary class="text-xs text-muted cursor-pointer">
+                      Identificador técnico del registro (opcional)
+                    </summary>
+                    <div class="form-row mt-2">
+                      <div class="form-group col">
+                        <label for="tipoDestino" class="text-xs">Tipo de registro:</label>
+                        <select
+                          id="tipoDestino"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaTipo"
+                          data-testid="select-tipo-marca"
+                        >
+                          <option value="Campo">Campo de Formulario</option>
+                          <option value="Archivo">Archivo / Documento</option>
+                          <option value="Item">Ítem de Hoja de Vida</option>
+                        </select>
+                      </div>
+                      <div class="form-group col">
+                        <label for="claveDestino" class="text-xs">Código interno:</label>
+                        <input
+                          id="claveDestino"
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaClave"
+                          placeholder="Clave interna"
+                          data-testid="input-clave-marca"
+                        />
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              } @else {
+                <details class="advanced-details mt-3">
+                  <summary class="text-sm font-medium text-secondary cursor-pointer">
+                    + Agregar observación específica por campo o documento (opcional)
+                  </summary>
+                  <div class="marca-builder glass-card mt-2">
+                    <div class="form-row">
+                      <div class="form-group col">
+                        <label for="tipoDestino" class="text-xs">Tipo:</label>
+                        <select
+                          id="tipoDestino"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaTipo"
+                          data-testid="select-tipo-marca"
+                        >
+                          <option value="Campo">Campo de Formulario</option>
+                          <option value="Archivo">Archivo / Documento</option>
+                          <option value="Item">Ítem de Hoja de Vida</option>
+                        </select>
+                      </div>
+                      <div class="form-group col">
+                        <label for="claveDestino" class="text-xs">Clave / Campo:</label>
+                        <input
+                          id="claveDestino"
+                          type="text"
+                          class="form-control form-control-sm"
+                          [(ngModel)]="nuevaMarcaClave"
+                          placeholder="Ej: telefono, titulo..."
+                          data-testid="input-clave-marca"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group mt-2">
+                      <label for="textoMarca" class="text-xs">Motivo puntual:</label>
+                      <input
+                        id="textoMarca"
+                        type="text"
+                        class="form-control form-control-sm"
+                        [(ngModel)]="nuevaMarcaTexto"
+                        placeholder="Motivo de la corrección..."
+                        data-testid="input-texto-marca"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm mt-2"
+                      (click)="agregarMarca()"
+                      data-testid="btn-agregar-marca"
+                    >
+                      <span class="material-symbols-outlined icon-sm">add</span>
+                      <span>+ Agregar a la lista</span>
+                    </button>
+                  </div>
+                </details>
               }
 
-              <div class="form-group">
-                <label for="obsGeneral">Observación General (Obligatoria):</label>
+              <div class="form-group mt-3">
+                <label for="obsGeneral">Observación o Mensaje General para el Colaborador:</label>
                 <textarea
                   id="obsGeneral"
                   class="form-control"
                   rows="3"
                   [(ngModel)]="observacionGeneral"
-                  placeholder="Explique detalladamente al colaborador las correcciones requeridas..."
+                  placeholder="Explique claramente al colaborador las correcciones requeridas antes de volver a enviar..."
                   data-testid="input-observacion-general"
                 ></textarea>
               </div>
 
-              <h4 class="modal-subtitle mt-4">Solicitud de Corrección Puntual (ADR-0008)</h4>
-              <div class="marca-builder glass-card">
-                <div class="form-row">
-                  <div class="form-group col">
-                    <label for="tipoDestino">Tipo:</label>
-                    <select
-                      id="tipoDestino"
-                      class="form-control"
-                      [(ngModel)]="nuevaMarcaTipo"
-                      data-testid="select-tipo-marca"
-                    >
-                      <option value="Campo">Campo de Formulario</option>
-                      <option value="Archivo">Archivo / Documento</option>
-                      <option value="Item">Ítem de Hoja de Vida</option>
-                    </select>
-                  </div>
-                  <div class="form-group col">
-                    <label for="claveDestino">Clave / Campo:</label>
-                    <input
-                      id="claveDestino"
-                      type="text"
-                      class="form-control"
-                      [(ngModel)]="nuevaMarcaClave"
-                      placeholder="Ej: telefono, cedula_frontal, titulo:tit-1..."
-                      data-testid="input-clave-marca"
-                    />
-                  </div>
-                </div>
-                <div class="form-group mt-2">
-                  <label for="textoMarca">Motivo o Corrección Puntual:</label>
-                  <input
-                    id="textoMarca"
-                    type="text"
-                    class="form-control"
-                    [(ngModel)]="nuevaMarcaTexto"
-                    placeholder="Ej: Documento borroso o certificado desactualizado..."
-                    data-testid="input-texto-marca"
-                  />
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm mt-3"
-                  (click)="agregarMarca()"
-                  data-testid="btn-agregar-marca"
-                >
-                  <span class="material-symbols-outlined icon-sm">add</span>
-                  <span>+ Agregar Marca Específica</span>
-                </button>
-              </div>
-
               @if (marcas().length > 0) {
                 <div class="marcas-lista mt-3" data-testid="lista-marcas-creadas">
-                  <h5>Marcas a Enviar ({{ marcas().length }}):</h5>
+                  <h5>Correcciones registradas para esta devolución ({{ marcas().length }}):</h5>
                   <ul>
                     @for (m of marcas(); track $index) {
                       <li>
                         <span>
-                          <strong>[{{ m.tipoDestino }}] {{ m.claveDestino }}:</strong>
+                          <strong>{{ describirMarca(m) }}:</strong>
                           {{ m.texto }}
                         </span>
                         <button
@@ -856,7 +1050,7 @@ export interface ArchivoPrevisualizacion {
                 (click)="cerrarModalDevolver()"
                 [disabled]="procesando()"
               >
-                Cancelar
+                Cerrar
               </button>
               <button
                 type="button"
@@ -871,7 +1065,13 @@ export interface ArchivoPrevisualizacion {
                 data-testid="btn-confirmar-devolver"
               >
                 <span class="material-symbols-outlined icon-sm">send</span>
-                <span>{{ procesando() ? 'Devolviendo...' : 'Confirmar y Devolver' }}</span>
+                <span>{{
+                  procesando()
+                    ? 'Devolviendo...'
+                    : marcas().length > 1
+                      ? 'Confirmar y Devolver (' + marcas().length + ' Marcas)'
+                      : 'Confirmar y Devolver'
+                }}</span>
               </button>
             </footer>
           </div>
@@ -1269,44 +1469,196 @@ export interface ArchivoPrevisualizacion {
       box-shadow: 0 2px 6px rgba(34, 44, 87, 0.3);
     }
 
-    /* Expediente Vista Detalle */
+    /* Banner de Marcas Acumuladas Pendientes */
+    .marcas-acumuladas-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.875rem 1.25rem;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 5px solid #d97706;
+      border-radius: var(--radius-md);
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.1);
+    }
+    .marcas-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+    }
+    .marcas-banner-desc {
+      font-size: 0.8125rem;
+      color: #78350f;
+      margin: 0.2rem 0 0 0;
+    }
+    .marcas-banner-btns {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Expediente Vista Detalle a Pantalla Completa */
     .expediente-panel {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
+      width: 100%;
     }
-    .expediente-header {
+    .expediente-fallback-card {
+      padding: 1.5rem;
+      border-radius: var(--radius-md);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .fallback-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 1rem;
+    }
+
+    /* Auditoría Hero Banner (Estilo Admin Tray Institucional) */
+    .auditoria-hero-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #222c57 100%);
+      color: #ffffff;
+      border-radius: 1rem;
+      padding: 1.25rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .hero-top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 1.75rem;
-      gap: 1.5rem;
       flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 1rem;
     }
-    .expediente-header-info {
+    .btn-volver-bandeja {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-volver-bandeja:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateX(-2px);
+    }
+    .btn-hero-action {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero-profile-row {
       display: flex;
       align-items: center;
       gap: 1.25rem;
       flex-wrap: wrap;
     }
-    .expediente-title {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #0f172a;
-      margin: 0;
+    .hero-avatar {
+      width: 58px;
+      height: 58px;
+      border-radius: 9999px;
+      background: rgba(99, 102, 241, 0.25);
+      border: 2px solid rgba(165, 180, 252, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #c7d2fe;
+      flex-shrink: 0;
+    }
+    .icon-hero-user {
+      font-size: 38px;
+    }
+    .hero-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      flex: 1;
+    }
+    .hero-name-row {
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
-    .expediente-doc-badge {
+    .hero-person-name {
+      font-size: 1.375rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .hero-ci-badge {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 0.8125rem;
       font-weight: 700;
-      color: #222c57;
-      background: rgba(34, 44, 87, 0.1);
-      border: 1px solid rgba(34, 44, 87, 0.22);
-      padding: 0.2rem 0.55rem;
-      border-radius: 9999px;
+      padding: 0.2rem 0.625rem;
+      background: rgba(99, 102, 241, 0.25);
+      color: #c7d2fe;
+      border: 1px solid rgba(165, 180, 252, 0.4);
+      border-radius: 0.375rem;
     }
+    .hero-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8125rem;
+      color: #cbd5e1;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .meta-divider {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* KPI Summary Pills Bar */
+    .hero-kpi-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .kpi-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.35rem 0.65rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 0.5rem;
+    }
+    .kpi-pill.kpi-active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #a7f3d0;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
     .expediente-actions {
       display: flex;
       align-items: center;
@@ -1641,9 +1993,16 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
 
   readonly pendientes = signal<ResumenRevisionPendienteDto[]>([]);
   readonly filtroTexto = signal<string>('');
+  readonly busquedaTexto = signal<string>('');
+  readonly filtroEstado = signal<string>('todos');
+  readonly ordenCriterio = signal<string>('nombre-asc');
+
+  readonly textoFiltroConsolidado = computed(() => {
+    return (this.busquedaTexto() || this.filtroTexto()).trim();
+  });
 
   readonly pendientesFiltrados = computed(() => {
-    const filtro = this.filtroTexto().trim();
+    const filtro = this.textoFiltroConsolidado();
     if (!filtro) return this.pendientes();
     return this.pendientes().filter(
       (p) =>
@@ -1681,11 +2040,6 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   readonly descargandoPdf = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly mensajeExito = signal<string | null>(null);
-
-  // Filtros y Búsqueda (Issue #180)
-  readonly busquedaTexto = signal<string>('');
-  readonly filtroEstado = signal<string>('todos');
-  readonly ordenCriterio = signal<string>('fecha-desc');
 
   // Paginación (Issue #180)
   readonly paginaActual = signal<number>(1);
@@ -1735,7 +2089,7 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   );
 
   readonly tieneFiltrosActivos = computed(() => {
-    return this.busquedaTexto().trim().length > 0 || this.filtroEstado() !== 'todos';
+    return this.textoFiltroConsolidado().length > 0 || this.filtroEstado() !== 'todos';
   });
 
   // Lista Filtrada y Ordenada
@@ -1749,29 +2103,29 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
       lista = lista.filter((item) => item.estadoActualizacion === estado);
     }
 
-    // Ordenamiento
+    // Ordenamiento alfabético y cronológico robusto
     lista.sort((a, b) => {
       switch (orden) {
-        case 'fecha-asc':
-          return (
-            new Date(a.fechaCreacionUtc || 0).getTime() -
-            new Date(b.fechaCreacionUtc || 0).getTime()
-          );
+        case 'nombre-asc':
+          return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
+        case 'nombre-desc':
+          return (b.nombre || '').localeCompare(a.nombre || '', 'es', { sensitivity: 'base' });
         case 'fecha-desc':
           return (
             new Date(b.fechaCreacionUtc || 0).getTime() -
             new Date(a.fechaCreacionUtc || 0).getTime()
           );
-        case 'nombre-asc':
-          return (a.nombre || '').localeCompare(b.nombre || '');
-        case 'nombre-desc':
-          return (b.nombre || '').localeCompare(a.nombre || '');
+        case 'fecha-asc':
+          return (
+            new Date(a.fechaCreacionUtc || 0).getTime() -
+            new Date(b.fechaCreacionUtc || 0).getTime()
+          );
         case 'documento-asc':
           return (a.documento || '').localeCompare(b.documento || '');
         case 'estado':
           return (a.estadoActualizacion || '').localeCompare(b.estadoActualizacion || '');
         default:
-          return 0;
+          return (a.nombre || '').localeCompare(b.nombre || '', 'es', { sensitivity: 'base' });
       }
     });
 
@@ -1933,6 +2287,8 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
     this.hojaDeVida.set(null);
     this.archivosExpediente.set([]);
     this.datosPersonalesParsed.set(null);
+    this.marcas.set([]);
+    this.observacionGeneral.set('');
   }
 
   iniciarMarcaItem(info: { tipo: string; clave: string; label: string }): void {
@@ -1971,8 +2327,13 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
   abrirModalDevolver(): void {
     if (!this.esExpedienteEnviado()) return;
     this.itemParaMarcarLabel.set('');
-    this.observacionGeneral.set('');
-    this.marcas.set([]);
+    if (!this.observacionGeneral().trim()) {
+      if (this.marcas().length > 0) {
+        this.observacionGeneral.set('Se devuelven observaciones puntuales en el expediente.');
+      } else {
+        this.observacionGeneral.set('');
+      }
+    }
     this.nuevaMarcaClave.set('');
     this.nuevaMarcaTexto.set('');
     this.mostrarModalDevolver.set(true);
@@ -1997,6 +2358,38 @@ export class SupervisorDashboardComponent implements OnInit, OnDestroy {
     this.marcas.update((actuales) => [...actuales, item]);
     this.nuevaMarcaClave.set('');
     this.nuevaMarcaTexto.set('');
+  }
+
+  agregarMarcaYContinuar(): void {
+    const clave = this.nuevaMarcaClave().trim();
+    const texto = this.nuevaMarcaTexto().trim();
+    if (!clave || !texto) return;
+
+    const item: MarcaObservacionItem = {
+      tipoDestino: this.nuevaMarcaTipo(),
+      claveDestino: clave,
+      texto,
+    };
+
+    if (!this.marcas().some((m) => m.claveDestino === clave && m.texto === texto)) {
+      this.marcas.update((actuales) => [...actuales, item]);
+    }
+
+    if (!this.observacionGeneral().trim()) {
+      this.observacionGeneral.set('Se devuelven observaciones puntuales en el expediente.');
+    }
+
+    this.nuevaMarcaTexto.set('');
+    this.nuevaMarcaClave.set('');
+    this.itemParaMarcarLabel.set('');
+    this.mostrarModalDevolver.set(false);
+    this.mensajeExito.set(
+      'Corrección agregada a la lista de devolución. Puedes continuar revisando otros registros.',
+    );
+  }
+
+  describirMarca(m: MarcaObservacionItem): string {
+    return describirDestino(m, this.hojaDeVida(), this.archivosExpediente());
   }
 
   eliminarMarca(index: number): void {
