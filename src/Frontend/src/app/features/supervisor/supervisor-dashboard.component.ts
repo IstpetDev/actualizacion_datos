@@ -54,7 +54,11 @@ export interface ArchivoPrevisualizacion {
     ExpedienteSeccionesComponent,
   ],
   template: `
-    <section class="dashboard-section" data-testid="supervisor-panel">
+    <section
+      class="dashboard-section"
+      [class.dashboard-section-fullscreen]="expedienteSeleccionado() !== null"
+      data-testid="supervisor-panel"
+    >
       @if (mensajeExito()) {
         <div class="alert alert-success" role="alert" data-testid="mensaje-exito">
           <span class="material-symbols-outlined icon-md">check_circle</span>
@@ -1106,6 +1110,15 @@ export interface ArchivoPrevisualizacion {
       flex-direction: column;
       gap: 1.5rem;
     }
+    .dashboard-section.dashboard-section-fullscreen {
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+    }
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -1933,6 +1946,23 @@ export interface ArchivoPrevisualizacion {
       .select-filter {
         width: 100%;
         min-width: 0;
+      }
+      .hero-top-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .expediente-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      .btn-hero-action,
+      .btn-volver-bandeja {
+        width: 100%;
+        justify-content: center;
+      }
+      .hero-profile-row {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   `,

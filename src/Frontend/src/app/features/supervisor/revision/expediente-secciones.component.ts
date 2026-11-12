@@ -15,7 +15,7 @@ import {
 import { nombreSubindicePorId } from '../../usuario/hoja-de-vida/componentes/bloque-subindices-seccion.component';
 
 export type TabExpediente =
-  'todos' | 'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
+  'ficha' | 'formacion' | 'capacitaciones' | 'experiencia' | 'referencias' | 'documentos';
 
 @Component({
   selector: 'app-expediente-secciones',
@@ -131,24 +131,12 @@ export type TabExpediente =
             {{ documentosExpediente().length }}
           </span>
         </button>
-
-        <button
-          type="button"
-          class="tab-btn tab-btn-todo"
-          [class.active]="tabActiva() === 'todos'"
-          (click)="cambiarTab('todos')"
-          data-testid="tab-exp-todos"
-          title="Ver todo el expediente de forma continua en pantalla completa"
-        >
-          <span class="material-symbols-outlined icon-sm">view_agenda</span>
-          <span>Vista Continua (Todo)</span>
-        </button>
       </nav>
 
       <!-- =================================================================== -->
       <!-- SECCIÓN 1: FICHA PERSONAL E IDENTIDAD -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'ficha') {
+      @if (tabActiva() === 'ficha') {
         <section class="seccion-auditoria" data-testid="panel-exp-ficha" id="seccion-1-ficha">
           <header class="seccion-auditoria-header">
             <div class="seccion-header-main">
@@ -384,7 +372,7 @@ export type TabExpediente =
       <!-- =================================================================== -->
       <!-- SECCIÓN 2: FORMACIÓN ACADÉMICA -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'formacion') {
+      @if (tabActiva() === 'formacion') {
         <section
           class="seccion-auditoria"
           data-testid="panel-exp-formacion"
@@ -762,7 +750,7 @@ export type TabExpediente =
       <!-- =================================================================== -->
       <!-- SECCIÓN 3: CAPACITACIONES Y CURSOS -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'capacitaciones') {
+      @if (tabActiva() === 'capacitaciones') {
         <section
           class="seccion-auditoria"
           data-testid="panel-exp-capacitaciones"
@@ -1071,7 +1059,7 @@ export type TabExpediente =
       <!-- =================================================================== -->
       <!-- SECCIÓN 4: EXPERIENCIA LABORAL -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'experiencia') {
+      @if (tabActiva() === 'experiencia') {
         <section
           class="seccion-auditoria"
           data-testid="panel-exp-experiencia"
@@ -1275,7 +1263,7 @@ export type TabExpediente =
       <!-- =================================================================== -->
       <!-- SECCIÓN 5: REFERENCIAS -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'referencias') {
+      @if (tabActiva() === 'referencias') {
         <section
           class="seccion-auditoria"
           data-testid="panel-exp-referencias"
@@ -1389,7 +1377,7 @@ export type TabExpediente =
       <!-- =================================================================== -->
       <!-- SECCIÓN 6: DOCUMENTOS DEL EXPEDIENTE -->
       <!-- =================================================================== -->
-      @if (tabActiva() === 'todos' || tabActiva() === 'documentos') {
+      @if (tabActiva() === 'documentos') {
         <section
           class="seccion-auditoria"
           data-testid="panel-exp-documentos"
@@ -1678,8 +1666,11 @@ export type TabExpediente =
     .tab-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
+      flex: 1 1 0px;
+      min-width: 140px;
       gap: 0.5rem;
-      padding: 0.5rem 0.875rem;
+      padding: 0.55rem 0.875rem;
       border: 1px solid transparent;
       border-radius: 0.625rem;
       background: #f8fafc;
@@ -1689,7 +1680,7 @@ export type TabExpediente =
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.2s ease;
-      min-height: 40px;
+      min-height: 42px;
     }
     .tab-count-badge {
       display: inline-flex;
@@ -1728,15 +1719,6 @@ export type TabExpediente =
       color: #ffffff;
       box-shadow: 0 4px 12px -2px rgba(34, 44, 87, 0.35);
       border-color: rgba(255, 255, 255, 0.18);
-    }
-    .tab-btn-todo {
-      background: rgba(34, 44, 87, 0.06);
-      color: #222c57;
-      border-color: rgba(34, 44, 87, 0.18);
-    }
-    .tab-btn-todo.active {
-      background: linear-gradient(135deg, #1e293b 0%, #172554 50%, #222c57 100%);
-      color: #ffffff;
     }
 
     /* Secciones de auditoría con Glassmorphism */
