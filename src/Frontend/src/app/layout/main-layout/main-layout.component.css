@@ -153,11 +153,23 @@
 
 .content-container {
   flex: 1;
-  max-width: 1440px;
+  max-width: 100%;
   width: 100%;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1.25rem 2rem;
   box-sizing: border-box;
+}
+
+@media (min-width: 1920px) {
+  .content-container {
+    padding: 1.5rem 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 1rem 0.75rem;
+  }
 }
 
 @media (max-width: 840px) {
