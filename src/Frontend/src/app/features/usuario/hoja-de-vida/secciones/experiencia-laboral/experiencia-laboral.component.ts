@@ -7,9 +7,11 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
+  DocumentoRequeridoDto,
   ElementoCatalogoDto,
   EstadoSubindiceSeccionPersonaDto,
   ExperienciaLaboralDto,
+  GuardarDocumentoPersonalRequest,
   GuardarExperienciaLaboralRequest,
 } from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
@@ -45,9 +47,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         <div class="header-titulos">
           <h2 class="seccion-titulo">4. Trayectoria y Experiencia Laboral</h2>
           <p class="seccion-desc">
-            Detalle su historial de empleos previos y actuales. Para cada registro laboral debe
-            adjuntar el certificado de trabajo o mecanizado correspondiente (RF-HDV-006,
-            RF-HDV-024).
+            Detalle su historial de empleos previos y actuales. Por cada registro laboral debe
+            adjuntar el certificado laboral correspondiente (RF-HDV-006, RF-HDV-024).
+            Adicionalmente, adjunte su mecanizado del IESS como documento global de su historia
+            laboral.
           </p>
         </div>
         <div class="acciones-barra">
@@ -63,6 +66,70 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           }
         </div>
       </header>
+
+      <!-- Respaldo Global: Mecanizado del IESS -->
+      <div class="card-mecanizado-global" data-testid="card-mecanizado-global">
+        <div class="mecanizado-header">
+          <div class="mecanizado-titulos">
+            <h3 class="mecanizado-titulo">Mecanizado del IESS (Historia Laboral Global)</h3>
+            <p class="mecanizado-desc">
+              Documento único emitido por el IESS que consolida toda su trayectoria laboral y tiempo
+              de servicio acumulado.
+            </p>
+          </div>
+          <div class="mecanizado-estado">
+            @if (documentoMecanizado()?.registrado?.archivoId) {
+              <span class="badge badge-success" data-testid="badge-mecanizado-cargado"
+                >✓ Mecanizado Cargado</span
+              >
+            } @else if (documentoMecanizado()?.esObligatorio) {
+              <span class="badge badge-danger" data-testid="badge-mecanizado-obligatorio"
+                >✕ Obligatorio</span
+              >
+            } @else {
+              <span class="badge badge-info">Documento Institucional</span>
+            }
+          </div>
+        </div>
+
+        @if (documentoMecanizado(); as doc) {
+          <app-marca-observacion
+            [marca]="obtenerMarca('documento_personal', doc.tipoDocumentoId)"
+          ></app-marca-observacion>
+
+          <div class="mt-3">
+            <app-uploader-respaldo
+              etiqueta="Historial Laboral del IESS (Mecanizado)"
+              ayuda="Adjunte el mecanizado del IESS en PDF (máx. 10 MB)"
+              [requerido]="doc.esObligatorio"
+              [puedeEditar]="puedeEditar()"
+              [archivoId]="doc.registrado?.archivoId"
+              [claveDestino]="'documento:' + doc.tipoDocumentoId"
+              (archivoIdChange)="guardarMecanizado($event)"
+              data-testid="uploader-mecanizado-global"
+            ></app-uploader-respaldo>
+          </div>
+
+          @if (doc.registrado?.fechaActualizacionUtc) {
+            <div class="mecanizado-footer mt-2">
+              <span class="text-muted text-xs">
+                Actualizado: {{ formatearFechaCompleta(doc.registrado?.fechaActualizacionUtc) }}
+              </span>
+            </div>
+          }
+        } @else {
+          <p class="text-muted text-sm mt-2">
+            No se encontró un requisito de Mecanizado del IESS registrado en el catálogo
+            institucional.
+          </p>
+        }
+
+        @if (errorMecanizado()) {
+          <div class="alert alert-danger mt-2" data-testid="error-mecanizado">
+            {{ errorMecanizado() }}
+          </div>
+        }
+      </div>
 
       <app-bloque-subindices-seccion
         seccion="experiencia"
@@ -143,27 +210,53 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <div class="grid-dos mt-3">
             <div class="form-group">
               <label for="paisExperiencia">País</label>
-              <input
-                type="search"
-                class="form-control mb-1"
-                [ngModel]="filtroPais()"
-                (ngModelChange)="filtroPais.set($event)"
-                placeholder="Buscar país..."
-                data-testid="input-buscar-pais-experiencia"
-                aria-label="Filtrar catálogo de países para experiencia laboral"
-              />
-              <select
-                [attr.aria-describedby]="'error-modelo-paisId'"
-                id="paisExperiencia"
-                class="form-control"
-                [(ngModel)]="modelo.paisId"
-                data-testid="select-pais-experiencia"
-              >
-                <option [ngValue]="undefined">Seleccione país...</option>
-                @for (p of paisesFiltrados(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.nombre }}</option>
+              <div class="combobox-pais-contenedor">
+                <div class="combobox-pais-input-wrapper">
+                  <input
+                    type="text"
+                    id="paisExperiencia"
+                    class="form-control combobox-pais-input"
+                    [attr.aria-describedby]="'error-modelo-paisId'"
+                    [ngModel]="textoPais()"
+                    (ngModelChange)="onTextoPaisChange($event)"
+                    (focus)="abrirDropdownPais()"
+                    (blur)="cerrarDropdownPais()"
+                    placeholder="Buscar o seleccionar país..."
+                    autocomplete="off"
+                    data-testid="input-buscar-pais-experiencia"
+                    aria-label="Buscar o seleccionar país para experiencia laboral"
+                  />
+                  <span class="combobox-pais-flecha" aria-hidden="true">▼</span>
+                </div>
+
+                @if (mostrarDropdownPais()) {
+                  <ul class="combobox-pais-lista" role="listbox">
+                    @for (p of paisesFiltrados(); track p.id) {
+                      <li
+                        class="combobox-pais-item"
+                        [class.seleccionado]="modelo.paisId === p.id"
+                        (mousedown)="seleccionarPais(p)"
+                        data-testid="opcion-pais"
+                      >
+                        <span>{{ p.nombre }}</span>
+                        @if (modelo.paisId === p.id) {
+                          <span class="text-sm">✓</span>
+                        }
+                      </li>
+                    }
+                    @if (paisesFiltrados().length === 0) {
+                      <li class="combobox-pais-vacio">
+                        No se encontraron países con "{{ filtroPais() }}"
+                      </li>
+                    }
+                  </ul>
                 }
-              </select>
+              </div>
+              <input
+                type="hidden"
+                [ngModel]="modelo.paisId"
+                data-testid="select-pais-experiencia"
+              />
               @if (validacion.mensaje(modelo, 'experiencia', 'paisId'); as mensaje) {
                 <small id="error-modelo-paisId" class="text-danger" role="alert">{{
                   mensaje
@@ -266,16 +359,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             }
           </div>
 
-          <!-- Respaldo Digital de Experiencia -->
+          <!-- Respaldo Digital de Experiencia: Certificado Laboral -->
           <div class="mt-3">
             <app-uploader-respaldo
-              etiqueta="Certificado de Trabajo o Mecanizado IESS"
-              ayuda="Obligatorio para validar la experiencia laboral (máx. 10 MB)"
+              etiqueta="Certificado Laboral"
+              ayuda="Obligatorio para validar esta experiencia laboral individual (máx. 10 MB)"
               [requerido]="true"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.archivoId"
               (archivoIdChange)="modelo.archivoId = $event"
               (archivoEliminado)="modelo.archivoId = undefined"
+              data-testid="uploader-certificado-laboral"
             ></app-uploader-respaldo>
           </div>
 
@@ -311,7 +405,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <th>Cargo</th>
               <th>Periodo</th>
               <th>Lugar</th>
-              <th>Respaldo</th>
+              <th>Certificado Laboral</th>
               <th class="text-right">Acciones</th>
             </tr>
           </thead>
@@ -343,9 +437,9 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <td>{{ e.ciudad || '—' }}</td>
                 <td>
                   @if (e.archivoId) {
-                    <span class="badge badge-success">✓ Con Respaldo</span>
+                    <span class="badge badge-success">✓ Certificado Adjunto</span>
                   } @else {
-                    <span class="badge badge-danger">✕ Sin Respaldo</span>
+                    <span class="badge badge-danger">✕ Sin Certificado</span>
                   }
                 </td>
                 <td class="text-right">
@@ -405,6 +499,39 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.875rem;
         color: #64748b;
         margin: 0;
+      }
+      .card-mecanizado-global {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid var(--ammi-primary, #1d1e1c);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .mecanizado-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .mecanizado-titulo {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.25rem 0;
+      }
+      .mecanizado-desc {
+        font-size: 0.8125rem;
+        color: #64748b;
+        margin: 0;
+      }
+      .mecanizado-estado {
+        flex-shrink: 0;
+      }
+      .mecanizado-footer {
+        font-size: 0.75rem;
+        color: #94a3b8;
       }
       .card-formulario-item {
         background: var(--geist-surface-subtle, #fafafa);
@@ -569,6 +696,68 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         color: #94a3b8;
         padding: 1.5rem !important;
       }
+      .combobox-pais-contenedor {
+        position: relative;
+        width: 100%;
+      }
+      .combobox-pais-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .combobox-pais-input {
+        padding-right: 2rem;
+      }
+      .combobox-pais-flecha {
+        position: absolute;
+        right: 0.75rem;
+        pointer-events: none;
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+      .combobox-pais-lista {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 100;
+        margin: 0;
+        padding: 0.25rem 0;
+        list-style: none;
+      }
+      .combobox-pais-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: #1e293b;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.15s ease;
+      }
+      .combobox-pais-item:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+      }
+      .combobox-pais-item.seleccionado {
+        font-weight: 600;
+        color: var(--ammi-primary, #1d1e1c);
+        background-color: #f8fafc;
+      }
+      .combobox-pais-vacio {
+        padding: 0.75rem;
+        font-size: 0.8125rem;
+        color: #64748b;
+        text-align: center;
+      }
     `,
   ],
 })
@@ -599,8 +788,20 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
       ),
   );
 
+  readonly documentoMecanizado = computed<DocumentoRequeridoDto | undefined>(() => {
+    const docs = this.state.documentos?.() ?? [];
+    return (
+      docs.find((d) => d.codigo?.toUpperCase() === 'MECANIZADO_IESS') ??
+      docs.find((d) => d.codigo?.toUpperCase() === 'MECANIZADO') ??
+      docs.find((d) => d.nombre?.toLowerCase().includes('mecanizado'))
+    );
+  });
+  readonly errorMecanizado = signal('');
+
   readonly paises = signal<ElementoCatalogoDto[]>([]);
   readonly filtroPais = signal('');
+  readonly textoPais = signal('');
+  readonly mostrarDropdownPais = signal(false);
   readonly paisesFiltrados = computed(() =>
     filtrarCatalogo(this.paises(), this.filtroPais(), this.modelo.paisId),
   );
@@ -634,7 +835,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
         this.fechaFinStr ||
         this.modelo.archivoId ||
         this.modelo.ciudad?.trim() ||
-        this.modelo.funciones?.trim()
+        this.modelo.funciones?.trim() ||
+        this.modelo.paisId
       );
     }
     return false;
@@ -652,12 +854,70 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   }
 
   ngOnInit(): void {
-    this.catalogos.paises().subscribe((p) => this.paises.set(p));
+    this.catalogos.paises().subscribe((p) => {
+      this.paises.set(p);
+      this.sincronizarTextoPais();
+    });
     this.state.registrarSeccion?.(this);
   }
 
   ngOnDestroy(): void {
     this.state.desregistrarSeccion?.(this);
+  }
+
+  private sincronizarTextoPais(): void {
+    if (this.modelo.paisId) {
+      const p = this.paises().find((x) => x.id === this.modelo.paisId);
+      if (p) {
+        this.textoPais.set(p.nombre ?? '');
+        return;
+      }
+    }
+    if (!this.modelo.paisId && !this.mostrarDropdownPais()) {
+      this.textoPais.set('');
+    }
+  }
+
+  abrirDropdownPais(): void {
+    this.filtroPais.set(this.textoPais());
+    this.mostrarDropdownPais.set(true);
+  }
+
+  cerrarDropdownPais(): void {
+    setTimeout(() => {
+      if (!this.textoPais().trim()) {
+        this.modelo.paisId = undefined;
+      } else {
+        const match = this.paises().find((p) => p.id === this.modelo.paisId);
+        if (match && this.textoPais() !== match.nombre) {
+          this.textoPais.set(match.nombre ?? '');
+        }
+      }
+      this.mostrarDropdownPais.set(false);
+    }, 200);
+  }
+
+  onTextoPaisChange(valor: string): void {
+    this.textoPais.set(valor);
+    this.filtroPais.set(valor);
+    this.mostrarDropdownPais.set(true);
+    if (!valor.trim()) {
+      this.modelo.paisId = undefined;
+      return;
+    }
+    const match = this.paises().find(
+      (p) => p.nombre?.toLowerCase().trim() === valor.toLowerCase().trim(),
+    );
+    if (match) {
+      this.modelo.paisId = match.id;
+    }
+  }
+
+  seleccionarPais(p: ElementoCatalogoDto): void {
+    this.modelo.paisId = p.id;
+    this.textoPais.set(p.nombre ?? '');
+    this.filtroPais.set('');
+    this.mostrarDropdownPais.set(false);
   }
 
   onFechaInicioChange(valor: string): void {
@@ -681,6 +941,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.idEdicion.set(undefined);
     this.errorFormulario.set('');
     this.filtroPais.set('');
+    this.textoPais.set('');
+    this.mostrarDropdownPais.set(false);
     this.fechaInicioStr = '';
     this.fechaFinStr = '';
     this.modelo = {
@@ -701,6 +963,9 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.idEdicion.set(e.id);
     this.errorFormulario.set('');
     this.filtroPais.set('');
+    this.mostrarDropdownPais.set(false);
+    const paisEncontrado = this.paises().find((x) => x.id === e.paisId);
+    this.textoPais.set(paisEncontrado?.nombre ?? '');
     this.modelo = {
       empleador: e.empleador,
       cargo: e.cargo,
@@ -731,6 +996,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.mostrarFormulario.set(false);
     this.idEdicion.set(undefined);
     this.filtroPais.set('');
+    this.textoPais.set('');
+    this.mostrarDropdownPais.set(false);
   }
 
   guardarObservable(): Observable<boolean> {
@@ -771,9 +1038,39 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.state.eliminarExperiencia(id).subscribe();
   }
 
+  guardarMecanizado(archivoId?: string): void {
+    const doc = this.documentoMecanizado();
+    if (!doc || !archivoId) return;
+
+    this.errorMecanizado.set('');
+    const request: GuardarDocumentoPersonalRequest = {
+      archivoId,
+      numeroDocumento: doc.registrado?.numeroDocumento,
+      entidadEmisora: doc.registrado?.entidadEmisora,
+      fechaEmision: doc.registrado?.fechaEmision,
+      fechaVencimiento: doc.registrado?.fechaVencimiento,
+      categoriaLicencia: doc.registrado?.categoriaLicencia,
+      puntosLicencia: doc.registrado?.puntosLicencia,
+    };
+
+    this.state.guardarDocumentoPersonal?.(doc.tipoDocumentoId, request)?.subscribe({
+      error: (err: unknown) =>
+        this.errorMecanizado.set(mensajeError(err, 'Error al registrar el mecanizado del IESS.')),
+    });
+  }
+
   formatearFecha(fecha?: Date): string {
     if (!fecha) return '—';
     return new Date(fecha).toLocaleDateString('es-EC', { year: 'numeric', month: 'short' });
+  }
+
+  formatearFechaCompleta(fecha?: Date): string {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleDateString('es-EC', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   }
 
   obtenerMarca(tipoDestino: string, claveDestino: string) {

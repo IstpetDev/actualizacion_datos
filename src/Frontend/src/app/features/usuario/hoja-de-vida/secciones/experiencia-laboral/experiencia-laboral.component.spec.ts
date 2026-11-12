@@ -6,6 +6,8 @@ import { of } from 'rxjs';
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import {
   ArchivosClient,
+  DocumentoPersonalDto,
+  DocumentoRequeridoDto,
   ElementoCatalogoDto,
   EstadoSubindiceSeccionPersonaDto,
   ExperienciaLaboralDto,
@@ -23,13 +25,30 @@ describe('ExperienciaLaboralComponent', () => {
     guardando: WritableSignal<boolean>;
     experiencias: WritableSignal<ExperienciaLaboralDto[]>;
     subindicesSeccion: WritableSignal<EstadoSubindiceSeccionPersonaDto[]>;
+    documentos: WritableSignal<DocumentoRequeridoDto[]>;
     guardarExperiencia: Mock;
     eliminarExperiencia: Mock;
+    guardarDocumentoPersonal: Mock;
     obtenerMarcaParaItem: Mock;
   };
 
   let catalogosMock: {
     paises: Mock;
+  };
+
+  const mockDocumentoMecanizado: DocumentoRequeridoDto = {
+    tipoDocumentoId: 'doc-mecanizado-1',
+    codigo: 'MECANIZADO_IESS',
+    nombre: 'Mecanizado del IESS',
+    descripcion: 'Adjunte el mecanizado del IESS correspondiente a su historia laboral.',
+    tieneVencimiento: false,
+    esObligatorio: true,
+    registrado: {
+      id: 'reg-mecanizado-1',
+      tipoDocumentoId: 'doc-mecanizado-1',
+      archivoId: 'arch-mecanizado-global',
+      fechaActualizacionUtc: new Date(),
+    } as unknown as DocumentoPersonalDto,
   };
 
   const mockPaises: ElementoCatalogoDto[] = [
@@ -64,8 +83,10 @@ describe('ExperienciaLaboralComponent', () => {
       guardando: signal(false),
       experiencias: signal([mockExperiencia]),
       subindicesSeccion: signal([]),
+      documentos: signal([mockDocumentoMecanizado]),
       guardarExperiencia: vi.fn().mockReturnValue(of({})),
       eliminarExperiencia: vi.fn().mockReturnValue(of({})),
+      guardarDocumentoPersonal: vi.fn().mockReturnValue(of({})),
       obtenerMarcaParaItem: vi.fn().mockReturnValue(undefined),
     };
 
@@ -203,5 +224,57 @@ describe('ExperienciaLaboralComponent', () => {
 
     expect(component.mostrarFormulario()).toBe(true);
     expect(component.modelo.subindiceSeccionId).toBe('sub-exp-1');
+  });
+
+  it('combobox_pais_permite_filtrar_seleccionar_y_sincronizar_al_editar', () => {
+    component.abrirFormulario();
+    expect(component.textoPais()).toBe('');
+    expect(component.mostrarDropdownPais()).toBe(false);
+
+    component.abrirDropdownPais();
+    expect(component.mostrarDropdownPais()).toBe(true);
+
+    component.onTextoPaisChange('Ecu');
+    expect(component.filtroPais()).toBe('Ecu');
+    expect(component.paisesFiltrados().length).toBe(1);
+
+    component.seleccionarPais(mockPaises[0]);
+    expect(component.modelo.paisId).toBe(601);
+    expect(component.textoPais()).toBe('Ecuador');
+    expect(component.mostrarDropdownPais()).toBe(false);
+
+    // Al editar experiencia existente con paisId, sincroniza textoPais
+    component.editar(mockExperiencia);
+    expect(component.textoPais()).toBe('Ecuador');
+    expect(component.modelo.paisId).toBe(601);
+  });
+
+  it('renderiza_bloque_global_de_mecanizado_del_iess_y_guarda_archivo_global', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('[data-testid="card-mecanizado-global"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-testid="badge-mecanizado-cargado"]')).toBeTruthy();
+    expect(compiled.textContent).toContain('Mecanizado del IESS (Historia Laboral Global)');
+
+    component.guardarMecanizado('nuevo-arch-mecanizado');
+    expect(stateMock.guardarDocumentoPersonal).toHaveBeenCalledWith(
+      'doc-mecanizado-1',
+      expect.objectContaining({ archivoId: 'nuevo-arch-mecanizado' }),
+    );
+  });
+
+  it('formulario_experiencia_y_tabla_exigen_certificado_laboral_individual', () => {
+    component.abrirFormulario();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-testid="uploader-certificado-laboral"]')).toBeTruthy();
+    expect(compiled.textContent).toContain('Certificado Laboral');
+
+    // Tabla muestra encabezado de Certificado Laboral y estado adjunto
+    const tabla = compiled.querySelector('[data-testid="tabla-experiencias"]') as HTMLElement;
+    expect(tabla.textContent).toContain('Certificado Laboral');
+    expect(tabla.textContent).toContain('Certificado Adjunto');
   });
 });
