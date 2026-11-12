@@ -7,9 +7,11 @@ import { catchError, map, Observable, of } from 'rxjs';
 import { SeccionConCambios } from '../../servicios/seccion-con-cambios';
 import { FormsModule } from '@angular/forms';
 import {
+  DocumentoRequeridoDto,
   ElementoCatalogoDto,
   EstadoSubindiceSeccionPersonaDto,
   ExperienciaLaboralDto,
+  GuardarDocumentoPersonalRequest,
   GuardarExperienciaLaboralRequest,
 } from '../../../../../api-client';
 import { filtrarCatalogo } from '../../../../../core/util/filtro-busqueda.util';
@@ -45,9 +47,10 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         <div class="header-titulos">
           <h2 class="seccion-titulo">4. Trayectoria y Experiencia Laboral</h2>
           <p class="seccion-desc">
-            Detalle su historial de empleos previos y actuales. Para cada registro laboral debe
-            adjuntar el certificado de trabajo o mecanizado correspondiente (RF-HDV-006,
-            RF-HDV-024).
+            Detalle su historial de empleos previos y actuales. Por cada registro laboral debe
+            adjuntar el certificado laboral correspondiente (RF-HDV-006, RF-HDV-024).
+            Adicionalmente, adjunte su mecanizado del IESS como documento global de su historia
+            laboral.
           </p>
         </div>
         <div class="acciones-barra">
@@ -63,6 +66,70 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           }
         </div>
       </header>
+
+      <!-- Respaldo Global: Mecanizado del IESS -->
+      <div class="card-mecanizado-global" data-testid="card-mecanizado-global">
+        <div class="mecanizado-header">
+          <div class="mecanizado-titulos">
+            <h3 class="mecanizado-titulo">Mecanizado del IESS (Historia Laboral Global)</h3>
+            <p class="mecanizado-desc">
+              Documento único emitido por el IESS que consolida toda su trayectoria laboral y tiempo
+              de servicio acumulado.
+            </p>
+          </div>
+          <div class="mecanizado-estado">
+            @if (documentoMecanizado()?.registrado?.archivoId) {
+              <span class="badge badge-success" data-testid="badge-mecanizado-cargado"
+                >✓ Mecanizado Cargado</span
+              >
+            } @else if (documentoMecanizado()?.esObligatorio) {
+              <span class="badge badge-danger" data-testid="badge-mecanizado-obligatorio"
+                >✕ Obligatorio</span
+              >
+            } @else {
+              <span class="badge badge-info">Documento Institucional</span>
+            }
+          </div>
+        </div>
+
+        @if (documentoMecanizado(); as doc) {
+          <app-marca-observacion
+            [marca]="obtenerMarca('documento_personal', doc.tipoDocumentoId)"
+          ></app-marca-observacion>
+
+          <div class="mt-3">
+            <app-uploader-respaldo
+              etiqueta="Historial Laboral del IESS (Mecanizado)"
+              ayuda="Adjunte el mecanizado del IESS en PDF (máx. 10 MB)"
+              [requerido]="doc.esObligatorio"
+              [puedeEditar]="puedeEditar()"
+              [archivoId]="doc.registrado?.archivoId"
+              [claveDestino]="'documento:' + doc.tipoDocumentoId"
+              (archivoIdChange)="guardarMecanizado($event)"
+              data-testid="uploader-mecanizado-global"
+            ></app-uploader-respaldo>
+          </div>
+
+          @if (doc.registrado?.fechaActualizacionUtc) {
+            <div class="mecanizado-footer mt-2">
+              <span class="text-muted text-xs">
+                Actualizado: {{ formatearFechaCompleta(doc.registrado?.fechaActualizacionUtc) }}
+              </span>
+            </div>
+          }
+        } @else {
+          <p class="text-muted text-sm mt-2">
+            No se encontró un requisito de Mecanizado del IESS registrado en el catálogo
+            institucional.
+          </p>
+        }
+
+        @if (errorMecanizado()) {
+          <div class="alert alert-danger mt-2" data-testid="error-mecanizado">
+            {{ errorMecanizado() }}
+          </div>
+        }
+      </div>
 
       <app-bloque-subindices-seccion
         seccion="experiencia"
@@ -292,16 +359,17 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
             }
           </div>
 
-          <!-- Respaldo Digital de Experiencia -->
+          <!-- Respaldo Digital de Experiencia: Certificado Laboral -->
           <div class="mt-3">
             <app-uploader-respaldo
-              etiqueta="Certificado de Trabajo o Mecanizado IESS"
-              ayuda="Obligatorio para validar la experiencia laboral (máx. 10 MB)"
+              etiqueta="Certificado Laboral"
+              ayuda="Obligatorio para validar esta experiencia laboral individual (máx. 10 MB)"
               [requerido]="true"
               [puedeEditar]="puedeEditar()"
               [archivoId]="modelo.archivoId"
               (archivoIdChange)="modelo.archivoId = $event"
               (archivoEliminado)="modelo.archivoId = undefined"
+              data-testid="uploader-certificado-laboral"
             ></app-uploader-respaldo>
           </div>
 
@@ -337,7 +405,7 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
               <th>Cargo</th>
               <th>Periodo</th>
               <th>Lugar</th>
-              <th>Respaldo</th>
+              <th>Certificado Laboral</th>
               <th class="text-right">Acciones</th>
             </tr>
           </thead>
@@ -369,9 +437,9 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
                 <td>{{ e.ciudad || '—' }}</td>
                 <td>
                   @if (e.archivoId) {
-                    <span class="badge badge-success">✓ Con Respaldo</span>
+                    <span class="badge badge-success">✓ Certificado Adjunto</span>
                   } @else {
-                    <span class="badge badge-danger">✕ Sin Respaldo</span>
+                    <span class="badge badge-danger">✕ Sin Certificado</span>
                   }
                 </td>
                 <td class="text-right">
@@ -431,6 +499,39 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         font-size: 0.875rem;
         color: #64748b;
         margin: 0;
+      }
+      .card-mecanizado-global {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid var(--ammi-primary, #1d1e1c);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .mecanizado-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .mecanizado-titulo {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.25rem 0;
+      }
+      .mecanizado-desc {
+        font-size: 0.8125rem;
+        color: #64748b;
+        margin: 0;
+      }
+      .mecanizado-estado {
+        flex-shrink: 0;
+      }
+      .mecanizado-footer {
+        font-size: 0.75rem;
+        color: #94a3b8;
       }
       .card-formulario-item {
         background: var(--geist-surface-subtle, #fafafa);
@@ -687,6 +788,16 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
       ),
   );
 
+  readonly documentoMecanizado = computed<DocumentoRequeridoDto | undefined>(() => {
+    const docs = this.state.documentos?.() ?? [];
+    return (
+      docs.find((d) => d.codigo?.toUpperCase() === 'MECANIZADO_IESS') ??
+      docs.find((d) => d.codigo?.toUpperCase() === 'MECANIZADO') ??
+      docs.find((d) => d.nombre?.toLowerCase().includes('mecanizado'))
+    );
+  });
+  readonly errorMecanizado = signal('');
+
   readonly paises = signal<ElementoCatalogoDto[]>([]);
   readonly filtroPais = signal('');
   readonly textoPais = signal('');
@@ -927,9 +1038,39 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.state.eliminarExperiencia(id).subscribe();
   }
 
+  guardarMecanizado(archivoId?: string): void {
+    const doc = this.documentoMecanizado();
+    if (!doc || !archivoId) return;
+
+    this.errorMecanizado.set('');
+    const request: GuardarDocumentoPersonalRequest = {
+      archivoId,
+      numeroDocumento: doc.registrado?.numeroDocumento,
+      entidadEmisora: doc.registrado?.entidadEmisora,
+      fechaEmision: doc.registrado?.fechaEmision,
+      fechaVencimiento: doc.registrado?.fechaVencimiento,
+      categoriaLicencia: doc.registrado?.categoriaLicencia,
+      puntosLicencia: doc.registrado?.puntosLicencia,
+    };
+
+    this.state.guardarDocumentoPersonal?.(doc.tipoDocumentoId, request)?.subscribe({
+      error: (err: unknown) =>
+        this.errorMecanizado.set(mensajeError(err, 'Error al registrar el mecanizado del IESS.')),
+    });
+  }
+
   formatearFecha(fecha?: Date): string {
     if (!fecha) return '—';
     return new Date(fecha).toLocaleDateString('es-EC', { year: 'numeric', month: 'short' });
+  }
+
+  formatearFechaCompleta(fecha?: Date): string {
+    if (!fecha) return '—';
+    return new Date(fecha).toLocaleDateString('es-EC', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   }
 
   obtenerMarca(tipoDestino: string, claveDestino: string) {
