@@ -204,4 +204,27 @@ describe('ExperienciaLaboralComponent', () => {
     expect(component.mostrarFormulario()).toBe(true);
     expect(component.modelo.subindiceSeccionId).toBe('sub-exp-1');
   });
+
+  it('combobox_pais_permite_filtrar_seleccionar_y_sincronizar_al_editar', () => {
+    component.abrirFormulario();
+    expect(component.textoPais()).toBe('');
+    expect(component.mostrarDropdownPais()).toBe(false);
+
+    component.abrirDropdownPais();
+    expect(component.mostrarDropdownPais()).toBe(true);
+
+    component.onTextoPaisChange('Ecu');
+    expect(component.filtroPais()).toBe('Ecu');
+    expect(component.paisesFiltrados().length).toBe(1);
+
+    component.seleccionarPais(mockPaises[0]);
+    expect(component.modelo.paisId).toBe(601);
+    expect(component.textoPais()).toBe('Ecuador');
+    expect(component.mostrarDropdownPais()).toBe(false);
+
+    // Al editar experiencia existente con paisId, sincroniza textoPais
+    component.editar(mockExperiencia);
+    expect(component.textoPais()).toBe('Ecuador');
+    expect(component.modelo.paisId).toBe(601);
+  });
 });

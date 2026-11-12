@@ -143,27 +143,53 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
           <div class="grid-dos mt-3">
             <div class="form-group">
               <label for="paisExperiencia">País</label>
-              <input
-                type="search"
-                class="form-control mb-1"
-                [ngModel]="filtroPais()"
-                (ngModelChange)="filtroPais.set($event)"
-                placeholder="Buscar país..."
-                data-testid="input-buscar-pais-experiencia"
-                aria-label="Filtrar catálogo de países para experiencia laboral"
-              />
-              <select
-                [attr.aria-describedby]="'error-modelo-paisId'"
-                id="paisExperiencia"
-                class="form-control"
-                [(ngModel)]="modelo.paisId"
-                data-testid="select-pais-experiencia"
-              >
-                <option [ngValue]="undefined">Seleccione país...</option>
-                @for (p of paisesFiltrados(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.nombre }}</option>
+              <div class="combobox-pais-contenedor">
+                <div class="combobox-pais-input-wrapper">
+                  <input
+                    type="text"
+                    id="paisExperiencia"
+                    class="form-control combobox-pais-input"
+                    [attr.aria-describedby]="'error-modelo-paisId'"
+                    [ngModel]="textoPais()"
+                    (ngModelChange)="onTextoPaisChange($event)"
+                    (focus)="abrirDropdownPais()"
+                    (blur)="cerrarDropdownPais()"
+                    placeholder="Buscar o seleccionar país..."
+                    autocomplete="off"
+                    data-testid="input-buscar-pais-experiencia"
+                    aria-label="Buscar o seleccionar país para experiencia laboral"
+                  />
+                  <span class="combobox-pais-flecha" aria-hidden="true">▼</span>
+                </div>
+
+                @if (mostrarDropdownPais()) {
+                  <ul class="combobox-pais-lista" role="listbox">
+                    @for (p of paisesFiltrados(); track p.id) {
+                      <li
+                        class="combobox-pais-item"
+                        [class.seleccionado]="modelo.paisId === p.id"
+                        (mousedown)="seleccionarPais(p)"
+                        data-testid="opcion-pais"
+                      >
+                        <span>{{ p.nombre }}</span>
+                        @if (modelo.paisId === p.id) {
+                          <span class="text-sm">✓</span>
+                        }
+                      </li>
+                    }
+                    @if (paisesFiltrados().length === 0) {
+                      <li class="combobox-pais-vacio">
+                        No se encontraron países con "{{ filtroPais() }}"
+                      </li>
+                    }
+                  </ul>
                 }
-              </select>
+              </div>
+              <input
+                type="hidden"
+                [ngModel]="modelo.paisId"
+                data-testid="select-pais-experiencia"
+              />
               @if (validacion.mensaje(modelo, 'experiencia', 'paisId'); as mensaje) {
                 <small id="error-modelo-paisId" class="text-danger" role="alert">{{
                   mensaje
@@ -569,6 +595,68 @@ import { HojaDeVidaStateService } from '../../servicios/hoja-de-vida-state.servi
         color: #94a3b8;
         padding: 1.5rem !important;
       }
+      .combobox-pais-contenedor {
+        position: relative;
+        width: 100%;
+      }
+      .combobox-pais-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .combobox-pais-input {
+        padding-right: 2rem;
+      }
+      .combobox-pais-flecha {
+        position: absolute;
+        right: 0.75rem;
+        pointer-events: none;
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+      .combobox-pais-lista {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow:
+          0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 100;
+        margin: 0;
+        padding: 0.25rem 0;
+        list-style: none;
+      }
+      .combobox-pais-item {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: #1e293b;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.15s ease;
+      }
+      .combobox-pais-item:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+      }
+      .combobox-pais-item.seleccionado {
+        font-weight: 600;
+        color: var(--ammi-primary, #1d1e1c);
+        background-color: #f8fafc;
+      }
+      .combobox-pais-vacio {
+        padding: 0.75rem;
+        font-size: 0.8125rem;
+        color: #64748b;
+        text-align: center;
+      }
     `,
   ],
 })
@@ -601,6 +689,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
 
   readonly paises = signal<ElementoCatalogoDto[]>([]);
   readonly filtroPais = signal('');
+  readonly textoPais = signal('');
+  readonly mostrarDropdownPais = signal(false);
   readonly paisesFiltrados = computed(() =>
     filtrarCatalogo(this.paises(), this.filtroPais(), this.modelo.paisId),
   );
@@ -634,7 +724,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
         this.fechaFinStr ||
         this.modelo.archivoId ||
         this.modelo.ciudad?.trim() ||
-        this.modelo.funciones?.trim()
+        this.modelo.funciones?.trim() ||
+        this.modelo.paisId
       );
     }
     return false;
@@ -652,12 +743,70 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
   }
 
   ngOnInit(): void {
-    this.catalogos.paises().subscribe((p) => this.paises.set(p));
+    this.catalogos.paises().subscribe((p) => {
+      this.paises.set(p);
+      this.sincronizarTextoPais();
+    });
     this.state.registrarSeccion?.(this);
   }
 
   ngOnDestroy(): void {
     this.state.desregistrarSeccion?.(this);
+  }
+
+  private sincronizarTextoPais(): void {
+    if (this.modelo.paisId) {
+      const p = this.paises().find((x) => x.id === this.modelo.paisId);
+      if (p) {
+        this.textoPais.set(p.nombre ?? '');
+        return;
+      }
+    }
+    if (!this.modelo.paisId && !this.mostrarDropdownPais()) {
+      this.textoPais.set('');
+    }
+  }
+
+  abrirDropdownPais(): void {
+    this.filtroPais.set(this.textoPais());
+    this.mostrarDropdownPais.set(true);
+  }
+
+  cerrarDropdownPais(): void {
+    setTimeout(() => {
+      if (!this.textoPais().trim()) {
+        this.modelo.paisId = undefined;
+      } else {
+        const match = this.paises().find((p) => p.id === this.modelo.paisId);
+        if (match && this.textoPais() !== match.nombre) {
+          this.textoPais.set(match.nombre ?? '');
+        }
+      }
+      this.mostrarDropdownPais.set(false);
+    }, 200);
+  }
+
+  onTextoPaisChange(valor: string): void {
+    this.textoPais.set(valor);
+    this.filtroPais.set(valor);
+    this.mostrarDropdownPais.set(true);
+    if (!valor.trim()) {
+      this.modelo.paisId = undefined;
+      return;
+    }
+    const match = this.paises().find(
+      (p) => p.nombre?.toLowerCase().trim() === valor.toLowerCase().trim(),
+    );
+    if (match) {
+      this.modelo.paisId = match.id;
+    }
+  }
+
+  seleccionarPais(p: ElementoCatalogoDto): void {
+    this.modelo.paisId = p.id;
+    this.textoPais.set(p.nombre ?? '');
+    this.filtroPais.set('');
+    this.mostrarDropdownPais.set(false);
   }
 
   onFechaInicioChange(valor: string): void {
@@ -681,6 +830,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.idEdicion.set(undefined);
     this.errorFormulario.set('');
     this.filtroPais.set('');
+    this.textoPais.set('');
+    this.mostrarDropdownPais.set(false);
     this.fechaInicioStr = '';
     this.fechaFinStr = '';
     this.modelo = {
@@ -701,6 +852,9 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.idEdicion.set(e.id);
     this.errorFormulario.set('');
     this.filtroPais.set('');
+    this.mostrarDropdownPais.set(false);
+    const paisEncontrado = this.paises().find((x) => x.id === e.paisId);
+    this.textoPais.set(paisEncontrado?.nombre ?? '');
     this.modelo = {
       empleador: e.empleador,
       cargo: e.cargo,
@@ -731,6 +885,8 @@ export class ExperienciaLaboralComponent implements OnInit, OnDestroy, SeccionCo
     this.mostrarFormulario.set(false);
     this.idEdicion.set(undefined);
     this.filtroPais.set('');
+    this.textoPais.set('');
+    this.mostrarDropdownPais.set(false);
   }
 
   guardarObservable(): Observable<boolean> {
